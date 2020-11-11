@@ -2,7 +2,9 @@
   "name": "@roundforest/functional-commons",
   "version": "1.0.0",
   "description": "",
-  "main": "src/functional-commons.js",
+  "main": "./src/functional-commons.js",
+  "exports": "./src/functional-commons.js",
+  "type": "module",
   "engines": {
     "node": ">=15.0.0"
   },
@@ -10,7 +12,6 @@
     "src"
   ],
   "scripts": {
-    "build": "#",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
     "test:eslint": "eslint '**/*.js'",

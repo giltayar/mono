@@ -1,9 +1,11 @@
 'use strict'
-const {promisify: p} = require('util')
-const {describe, it} = require('mocha')
-const {expect} = require('chai')
+import {promisify as p} from 'util'
+import mocha from 'mocha'
+const {describe, it} = mocha
+import chai from 'chai'
+const {expect} = chai
 
-const {memo, memoAsync} = require('../..')
+import {memo, memoAsync} from '../../src/functional-commons.js'
 
 describe('functional-commons (unit)', function () {
   describe('cacheFunctionSync', async () => {

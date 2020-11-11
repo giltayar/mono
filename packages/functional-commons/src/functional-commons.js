@@ -1,11 +1,9 @@
-'use strict'
-
 /**
  * @template {any[]} P, T
  * @param {(...args: P) => T} syncCreationFunction
  * @returns {(...args: P) => T}
  */
-function memo(syncCreationFunction) {
+export function memo(syncCreationFunction) {
   /**@type {Map<string, T>} */
   const cacheMap = new Map()
 
@@ -33,7 +31,10 @@ function memo(syncCreationFunction) {
  *
  * @returns {(...args: P) => PromiseLike<T>}
  */
-function memoAsync(asyncCreationFunction, {expireAfterMs = undefined, nowService = Date.now} = {}) {
+export function memoAsync(
+  asyncCreationFunction,
+  {expireAfterMs = undefined, nowService = Date.now} = {},
+) {
   /**@type {Map<string, {value: T, creationTime: number}>} */
   const cacheMap = new Map()
 
@@ -63,7 +64,7 @@ function memoAsync(asyncCreationFunction, {expireAfterMs = undefined, nowService
  *
  * @returns {number[]}
  */
-function range(from, to, step = 1) {
+export function range(from, to, step = 1) {
   if (from >= to) return []
 
   return Array(Math.ceil((to - from) / step))
@@ -76,7 +77,7 @@ function range(from, to, step = 1) {
  * @param {number[]} numbers
  * @returns {number}
  */
-function sum(numbers) {
+export function sum(numbers) {
   return numbers.reduce((a, b) => a + b, 0)
 }
 
@@ -85,7 +86,7 @@ function sum(numbers) {
  * @param {Error} err
  * @returns {void}
  */
-function throw_(err) {
+export function throw_(err) {
   throw err
 }
 /**
@@ -99,7 +100,7 @@ function throw_(err) {
  * @param {T[]} list
  * @returns {Record<K, T[]>}
  */
-function group(prop, list) {
+export function group(prop, list) {
   //@ts-expect-error
   return list.reduce(function (grouped, item) {
     const key = item[prop]
@@ -123,7 +124,7 @@ function group(prop, list) {
  *
  * @returns {Record<L, W>}
  */
-function mapObject(object, mapFunction) {
+export function mapObject(object, mapFunction) {
   //@ts-expect-error
   return Object.fromEntries(Object.entries(object).map(([key, value]) => mapFunction(key, value)))
 }
@@ -137,7 +138,7 @@ function mapObject(object, mapFunction) {
  *
  * @returns {Record<K, W>}
  */
-function mapValues(object, mapFunction) {
+export function mapValues(object, mapFunction) {
   return mapObject(object, (key, value) => [key, mapFunction(value)])
 }
 
@@ -150,7 +151,7 @@ function mapValues(object, mapFunction) {
  *
  * @returns {Record<L, T>}
  */
-function mapKeys(object, mapFunction) {
+export function mapKeys(object, mapFunction) {
   return mapObject(object, (key, value) => [mapFunction(key), value])
 }
 
@@ -162,7 +163,7 @@ function mapKeys(object, mapFunction) {
  *
  * @returns {Record<K, T>}
  */
-function filterKeys(object, filterFunc) {
+export function filterKeys(object, filterFunc) {
   const ret = /**@type{Record<K, T>}*/ ({})
 
   for (const [k, v] of /**@type{[k: K, t: T][]}*/ (Object.entries(object))) {
@@ -182,7 +183,7 @@ function filterKeys(object, filterFunc) {
  *
  * @returns {Record<K, T>}
  */
-function filterValues(object, filterFunc) {
+export function filterValues(object, filterFunc) {
   const ret = /**@type{Record<K, T>}*/ ({})
 
   for (const [k, v] of /**@type{[k: K, t: T][]}*/ (Object.entries(object))) {
@@ -202,7 +203,7 @@ function filterValues(object, filterFunc) {
  *
  * @returns {Record<K, T>}
  */
-function filterEntries(object, filterFunc) {
+export function filterEntries(object, filterFunc) {
   const ret = /**@type{Record<K, T>}*/ ({})
 
   for (const [k, v] of /**@type{[k: K, t: T][]}*/ (Object.entries(object))) {
@@ -222,7 +223,7 @@ function filterEntries(object, filterFunc) {
  *
  * @returns {import('type-fest').Merge<P, Error>}
  */
-function makeError(error, properties) {
+export function makeError(error, properties) {
   if (typeof error === 'string') {
     error = new Error(error)
   }
@@ -238,7 +239,7 @@ function makeError(error, properties) {
  * @param  {T2[]} r
  * @returns {[T1, T2][]}
  */
-function zip(l, r) {
+export function zip(l, r) {
   const maxLength = [l, r].reduce(
     (maxTillNow, array) => (array.length > maxTillNow ? array.length : maxTillNow),
     0,
@@ -259,7 +260,7 @@ function zip(l, r) {
  * @param {T[]} smallArray
  * @param {(t: T) => T} keyMapper
  */
-function minus(bigArray = [], smallArray = [], keyMapper = (x) => x) {
+export function minus(bigArray = [], smallArray = [], keyMapper = (x) => x) {
   return bigArray.filter((item) => !smallArray.map(keyMapper).includes(keyMapper(item)))
 }
 
@@ -269,7 +270,7 @@ function minus(bigArray = [], smallArray = [], keyMapper = (x) => x) {
  * @param {T[]} right
  * @param {(t: T) => T} keyMapper
  */
-function diff(left = [], right = [], keyMapper = (x) => x) {
+export function diff(left = [], right = [], keyMapper = (x) => x) {
   const intersection = left.filter((item) => right.map(keyMapper).includes(keyMapper(item)))
   return minus(left.concat(right), intersection, keyMapper)
 }
@@ -282,7 +283,7 @@ function diff(left = [], right = [], keyMapper = (x) => x) {
  *
  * @returns {Pick<T, K> | undefined | null}
  */
-function pick(object, objectKeys) {
+export function pick(object, objectKeys) {
   if (object === undefined) return undefined
   if (object === null) return null
 
@@ -295,24 +296,4 @@ function pick(object, objectKeys) {
   }
 
   return ret
-}
-
-module.exports = {
-  memo,
-  memoAsync,
-  throw_,
-  range,
-  sum,
-  mapObject,
-  mapValues,
-  mapKeys,
-  filterKeys,
-  filterValues,
-  filterEntries,
-  makeError,
-  zip,
-  pick,
-  minus,
-  diff,
-  group,
 }

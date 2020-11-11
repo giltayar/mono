@@ -1,8 +1,9 @@
 'use strict'
-const {describe, it} = require('mocha')
-const {expect} = require('chai')
-
-const {
+import mocha from 'mocha'
+const {describe, it} = mocha
+import chai from 'chai'
+const {expect} = chai
+import {
   range,
   sum,
   throw_,
@@ -18,7 +19,7 @@ const {
   minus,
   diff,
   group,
-} = require('../..')
+} from '../../src/functional-commons.js'
 
 describe('functional-commons', function () {
   describe('range', () => {
