@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "create",
+			"path": "packages/create"
+		},
+		{
+			"name": "functional-commons",
+			"path": "packages/functional-commons"
+		},
+		{
+			"name": "promise-commons",
+			"path": "packages/promise-commons"
+		}
+	],
+	"settings": {}
+}
