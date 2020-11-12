@@ -1,5 +1,5 @@
 {
-  "name": "@roundforest/functional-commons",
+  "name": "@seasquared/functional-commons",
   "version": "1.0.0",
   "description": "",
   "main": "./src/functional-commons.js",
@@ -21,10 +21,11 @@
     "nodejs",
     "javascript"
   ],
-  "author": "Gil Tayar <gil.tayar@roundforest.com>",
+  "author": "Gil Tayar <giltayar@roundforest.com>",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/roundforest/rendering-grid",
+    "url": "https://github.com/roundforest/mono",
+    "directory": "packages/functional-commons",
     "type": "git"
   },
   "dependencies": {
