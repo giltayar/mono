@@ -1,0 +1,374 @@
+extends: '#default'
+jobs:
+  deploy:
+    steps:
+      before:
+        - name: 'check deployment'
+          run: 'echo deploying to $(kubectl config current-context)...'
+          condition:
+            function: |
+              async () => {
+                const {promisify} = require('util')
+                const {exec} = require('child_process')
+                const {stdout} = await promisify(exec)('kubectl config current-context')
+                const context = stdout.trim()
+                if (stdout === 'minikube' || stdout.includes('desktop'))
+                  throw new Error(`Trying to deploy to a non-production environment (${context})`)
+              }
+        - name: 'git pull'
+          enableOption: ['pull', 'git']
+          run: 'git pull --rebase --autostash'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+      after:
+        - name: 'git commit'
+          enableOption: ['commit', 'git']
+          parameterOption: 'message'
+          run: 'git commit --allow-empty -m "deploy: $BILT_OPTION_MESSAGE"'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'git pull (again)'
+          enableOption: ['pull', 'git']
+          run: 'git pull --rebase --autostash'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'git push'
+          enableOption: ['push', 'git']
+          run: 'git push'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'smoke test'
+          run: 'cd packages/rendering-grid-deployment && ./scripts/test-production.js -e $BILT_OPTION_CLUSTER'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+      during:
+        - name: 'npm install'
+          enableOption: 'install'
+          run: 'npm install'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'npm update'
+          enableOption: 'update'
+          run: 'npm update'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'npm audit fix'
+          enableOption: 'audit'
+          run: 'npm audit fix'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'increment version'
+          enableOption: 'publish'
+          run: "npm version $NEXT_VERSION --allow-same-version --no-git-tag-version"
+          env:
+            NEXT_VERSION:
+              function: |
+                async ({directory, biltin}) => {
+                  return await biltin.npm.nextVersion(directory)
+                }
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+        - name: 'npm run build'
+          enableOption: 'build'
+          run: 'npm run build'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return (packageJson.scripts || {}).build && !biltin.options.getOption('deploy-dry-run')
+              }
+        - name: 'test'
+          run: 'npm run test'
+          enableOption: 'test'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return (packageJson.scripts || {}).test && !biltin.options.getOption('deploy-dry-run')
+              }
+        - name: 'deploy'
+          enableOption: 'deploy'
+          parameterOption:
+            - 'deploy-dry-run'
+            - 'variation'
+            - 'cluster'
+          run: |
+            npm run deploy$KDEPLOY_VARIATION -- -c $BILT_OPTION_CLUSTER $KDEPLOY_DRY_RUN -w -m "$BILT_OPTION_MESSAGE"
+          env:
+            KDEPLOY_VARIATION:
+              function: |
+                ({biltin}) => biltin.options.getOption('variation') ? `:${biltin.options.getOption('variation')}` : ''
+            KDEPLOY_DRY_RUN:
+              function: |
+                ({biltin}) => biltin.options.getOption('deploy-dry-run') ? '--dry-run' : ''
+        - name: 'npm publish'
+          enableOption: 'publish'
+          run: 'npm publish --access=$ACCESS'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return !packageJson.private && !biltin.options.getOption('deploy-dry-run')
+              }
+          env:
+            ACCESS:
+              function: |
+                async ({directory}) => {
+                  const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                  const isPublic = (packageJson.publishConfig || {}).access !== 'restricted'
+
+                  return isPublic ? 'public' : 'restricted'
+                }
+        - name: 'stage files'
+          enableOption: ['git']
+          run: 'git add .'
+          condition:
+            function: |
+              ({biltin}) => !biltin.options.getOption('deploy-dry-run')
+
+  deploy-delete:
+    steps:
+      before:
+        - name: 'check deployment'
+          run: 'echo deploying to $(kubectl config current-context)...'
+          condition:
+            function: |
+              async () => {
+                const {promisify} = require('util')
+                const {exec} = require('child_process')
+                const {stdout} = await promisify(exec)('kubectl config current-context')
+                const context = stdout.trim()
+                if (stdout === 'minikube' || stdout.includes('desktop'))
+                  throw new Error(`Trying to deploy to a non-production environment (${context})`)
+              }
+        - name: 'git pull'
+          enableOption: ['pull', 'git']
+          run: 'git pull --rebase --autostash'
+      after:
+        - name: 'git commit'
+          enableOption: ['commit', 'git']
+          parameterOption: 'message'
+          run: 'git commit --allow-empty -m "deploy: $BILT_OPTION_MESSAGE"'
+        - name: 'git pull (again)'
+          enableOption: ['pull', 'git']
+          run: 'git pull --rebase --autostash'
+        - name: 'git push'
+          enableOption: ['push', 'git']
+          run: 'git push'
+      during:
+        - name: 'npm install'
+          enableOption: 'install'
+          run: 'npm install'
+        - name: 'npm update'
+          enableOption: 'update'
+          run: 'npm update'
+        - name: 'npm audit fix'
+          enableOption: 'audit'
+          run: 'npm audit fix'
+        - name: 'increment version'
+          enableOption: 'publish'
+          run: "npm version $NEXT_VERSION --allow-same-version --no-git-tag-version"
+          env:
+            NEXT_VERSION:
+              function: |
+                async ({directory, biltin}) => {
+                  return await biltin.npm.nextVersion(directory)
+                }
+        - name: 'npm run build'
+          enableOption: 'build'
+          run: 'npm run build'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return (packageJson.scripts || {}).build
+              }
+        - name: 'test'
+          run: 'npm run test'
+          enableOption: 'test'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return (packageJson.scripts || {}).test
+              }
+        - name: 'deploy'
+          enableOption: 'deploy'
+          parameterOption:
+            - 'variation'
+            - 'cluster'
+          run: |
+            KDEPLOY_COMMAND=delete npm run deploy$KDEPLOY_VARIATION -- -c $BILT_OPTION_CLUSTER $KDEPLOY_DRY_RUN -w
+          env:
+            KDEPLOY_VARIATION:
+              function: |
+                ({biltin}) => biltin.options.getOption('variation') ? `:${biltin.options.getOption('variation')}` : ''
+        - name: 'npm publish'
+          enableOption: 'publish'
+          run: 'npm publish --access=$ACCESS'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return !packageJson.private
+              }
+          env:
+            ACCESS:
+              function: |
+                async ({directory}) => {
+                  const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                  const isPublic = (packageJson.publishConfig || {}).access !== 'restricted'
+
+                  return isPublic ? 'public' : 'restricted'
+                }
+        - name: 'stage files'
+          enableOption: ['git']
+          run: 'git add .'
+
+  deploy-rollback:
+    steps:
+      before:
+        - name: 'check deployment'
+          run: 'echo deploying to $(kubectl config current-context)...'
+          condition:
+            function: |
+              async () => {
+                const {promisify} = require('util')
+                const {exec} = require('child_process')
+                const {stdout} = await promisify(exec)('kubectl config current-context')
+                const context = stdout.trim()
+                if (stdout === 'minikube' || stdout.includes('desktop'))
+                  throw new Error(`Trying to deploy to a non-production environment (${context})`)
+              }
+        - name: 'git pull'
+          enableOption: ['pull', 'git']
+          run: 'git pull --rebase --autostash'
+      after:
+        - name: 'git commit'
+          enableOption: ['commit', 'git']
+          parameterOption: 'message'
+          run: 'git commit --allow-empty -m "deploy: $BILT_OPTION_MESSAGE"'
+        - name: 'git pull (again)'
+          enableOption: ['pull', 'git']
+          run: 'git pull --rebase --autostash'
+        - name: 'git push'
+          enableOption: ['push', 'git']
+          run: 'git push'
+      during:
+        - name: 'npm install'
+          enableOption: 'install'
+          run: 'npm install'
+        - name: 'npm update'
+          enableOption: 'update'
+          run: 'npm update'
+        - name: 'npm audit fix'
+          enableOption: 'audit'
+          run: 'npm audit fix'
+        - name: 'increment version'
+          enableOption: 'publish'
+          run: "npm version $NEXT_VERSION --allow-same-version --no-git-tag-version"
+          env:
+            NEXT_VERSION:
+              function: |
+                async ({directory, biltin}) => {
+                  return await biltin.npm.nextVersion(directory)
+                }
+        - name: 'npm run build'
+          enableOption: 'build'
+          run: 'npm run build'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return (packageJson.scripts || {}).build
+              }
+        - name: 'test'
+          run: 'npm run test'
+          enableOption: 'test'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return (packageJson.scripts || {}).test
+              }
+        - name: 'deploy'
+          enableOption: 'deploy'
+          parameterOption:
+            - 'variation'
+            - 'cluster'
+          run: |
+            KDEPLOY_COMMAND=rollback npm run deploy$KDEPLOY_VARIATION -- -c $BILT_OPTION_CLUSTER $KDEPLOY_DRY_RUN -w
+          env:
+            KDEPLOY_VARIATION:
+              function: |
+                ({biltin}) => biltin.options.getOption('variation') ? `:${biltin.options.getOption('variation')}` : ''
+        - name: 'npm publish'
+          enableOption: 'publish'
+          run: 'npm publish --access=$ACCESS'
+          condition:
+            function: |
+              async ({directory, biltin}) => {
+                const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                return !packageJson.private
+              }
+          env:
+            ACCESS:
+              function: |
+                async ({directory}) => {
+                  const packageJson = JSON.parse(await require('fs').promises.readFile(directory + "/package.json"))
+
+                  const isPublic = (packageJson.publishConfig || {}).access !== 'restricted'
+
+                  return isPublic ? 'public' : 'restricted'
+                }
+        - name: 'stage files'
+          enableOption: ['git']
+          run: 'git add .'
+
+  deploy-history:
+    steps:
+      before:
+        - name: 'check deployment'
+          run: 'echo deploying to $(kubectl config current-context)...'
+          condition:
+            function: |
+              async () => {
+                const {promisify} = require('util')
+                const {exec} = require('child_process')
+                const {stdout} = await promisify(exec)('kubectl config current-context')
+                const context = stdout.trim()
+                if (stdout === 'minikube' || stdout.includes('desktop'))
+                  throw new Error(`Trying to deploy to a non-production environment (${context})`)
+              }
+      during:
+        - name: 'deploy'
+          enableOption: 'deploy'
+          parameterOption:
+            - 'cluster'
+            - 'variation'
+          run: |
+            KDEPLOY_COMMAND=history npm run deploy$KDEPLOY_VARIATION -- -c $BILT_OPTION_CLUSTER
+          env:
+            KDEPLOY_VARIATION:
+              function: |
+                ({biltin}) => biltin.options.getOption('variation') ? `:${biltin.options.getOption('variation')}` : ''
