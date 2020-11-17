@@ -1,21 +1,25 @@
 {
   "name": "@seasquared/promise-commons",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
+  "type": "module",
   "main": "./src/promise-commons.js",
   "exports": "./src/promise-commons.js",
-  "type": "module",
+  "types": "./types/src/promise-commons.d.ts",
   "engines": {
     "node": ">=15.0.0"
   },
   "files": [
-    "src"
+    "src",
+    "types"
   ],
   "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
     "test:eslint": "eslint '**/*.js'",
-    "test:typescript": "tsc"
+    "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
   "keywords": [
     "nodejs",
