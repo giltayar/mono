@@ -1,6 +1,10 @@
 {
 	"folders": [
 		{
+			"name": ".bilt",
+			"path": ".bilt"
+		},
+		{
 			"name": "create",
 			"path": "packages/create"
 		},
@@ -11,6 +15,10 @@
 		{
 			"name": "promise-commons",
 			"path": "packages/promise-commons"
+		},
+		{
+			"name": "scripting-commons",
+			"path": "packages/scripting-commons"
 		}
 	],
 	"settings": {}
