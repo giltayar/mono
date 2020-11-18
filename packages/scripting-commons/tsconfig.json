@@ -13,7 +13,8 @@
     "isolatedModules": true,
     "allowJs": true,
     "checkJs": true,
-    "noEmit": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "types",
     "maxNodeModuleJsDepth": 0
   },
   "include": ["src/**/*.js", "test/**/*.js"],
