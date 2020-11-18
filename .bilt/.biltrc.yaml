@@ -1,2 +1,2 @@
-packages: ["./packages/functional-commons", './packages/promise-commons', './packages/scripting-commons']
+packages: ["./packages/*"]
 jobs: './.bilt/jobs.yaml'
