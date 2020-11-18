@@ -1,0 +1,44 @@
+{
+  "name": "@applitools/templatetemplate-deployment",
+  "version": "1.0.0",
+  "description": "Deployment package for templatetemplate",
+  "engines": {
+    "node": ">=12.14.1"
+  },
+  "files": [
+    "deployment",
+    "scripts"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "scripts": {
+    "build": "npm run dump-dep-versions",
+    "deploy": "kdeploy templatetemplate ${npm_package_version} --packages @applitools/rg-deployment . -v ./deployment/dep-versions.yml",
+    "deploy(withvariations)": "npm-run-all -p \"deploy:* -- {@}\" --",
+    "dump-dep-versions": "write-dep-versions-to-file deployment/dep-versions.yml",
+    "deploy-base": "kdeploy templatetemplate-$DEPLOYMENT_NAME ${npm_package_version} --packages @applitools/rg-deployment . -v ./deployment/dep-versions.yml",
+    "deploy(withvariations):v-0(": "DEPLOYMENT_NAME=0 npm run deploy-base -- -v ./deployment/variations/v-0"
+  },
+  "keywords": [
+    "applitools",
+    "deploy",
+    "nodejs",
+    "javascript"
+  ],
+  "author": "Tomer Steinfeld <tomer.steinfeld@applitools.com>",
+  "license": "UNLICENSED",
+  "repository": {
+    "url": "https://github.com/applitools/mono",
+    "type": "git"
+  },
+  "dependencies": {
+    "@applitools/templatetemplate": "^3.0.70",
+    "@applitools/rg-deployment": "^2.0.27"
+  },
+  "devDependencies": {
+    "@applitools/build-commons": "^1.1.23",
+    "@applitools/kdeploy": "^3.5.0",
+    "npm-run-all": "^4.1.5"
+  }
+}
