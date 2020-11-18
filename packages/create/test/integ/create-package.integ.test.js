@@ -15,7 +15,7 @@ describe('create-package (integ)', function () {
   let close
   /**@type {any} */
   let registry
-  before(async () => ({close, registry} = await startNpmRegistry()))
+  before(async () => ({close, registry} = await startNpmRegistry({shouldProxyToNpmJs: true})))
   after(() => close ?? close())
 
   it('should create the "library" package', async () => {

@@ -12,12 +12,11 @@
       "args": [
         "--no-timeouts",
         "--exit",
-        "'test/unit/*.test.js'",
-        "'test/it/*.test.js'",
-        "'test/e2e/*.test.js'"
+        "test/unit/*.test.js",
+        "test/integ/*.test.js"
       ],
       "env": {
-        "DEBUG": "applitools:${workspaceFolderBasename}*"
+        "SOMEENV": "somevalue"
       },
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",

@@ -1,5 +1,3 @@
-'use strict'
-
-module.exports = {
-  //
+export function answerToLife() {
+  return 42
 }
