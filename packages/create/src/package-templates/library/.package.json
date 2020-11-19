@@ -4,6 +4,7 @@
   "description": "",
   "type": "module",
   "exports": "./src/templatetemplate.js",
+  "types": "./types/src/templatetemplate.d.ts",
   "engines": {
     "node": ">=15.0.0"
   },
