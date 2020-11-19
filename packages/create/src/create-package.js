@@ -57,6 +57,9 @@ console.log(`Copying files from: ${templateDir} to: ${targetDir}...`)
 await p(ncp)(templateDir, process.cwd())
 
 await fs.promises.rename(`${targetDir}/.package.json`, `${targetDir}/package.json`)
+if (fs.existsSync(`${targetDir}/..gitignore.json`)) {
+  await fs.promises.rename(`${targetDir}/..gitignore.json`, `${targetDir}/.gitignore.json`)
+}
 
 const allFiles = walkSync(targetDir)
 
