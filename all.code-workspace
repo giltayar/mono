@@ -13,6 +13,14 @@
 			"path": "packages/functional-commons"
 		},
 		{
+			"name": "http-commons",
+			"path": "packages/http-commons"
+		},
+		{
+			"name": "mocha-commons",
+			"path": "packages/mocha-commons"
+		},
+		{
 			"name": "promise-commons",
 			"path": "packages/promise-commons"
 		},
