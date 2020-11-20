@@ -22,8 +22,12 @@ const {
 export function before(f) {
   /**@type {T|undefined} */
   let returnValueFromF = undefined
+  // There is NO test for the situation where the "before" fails because
+  // the before hook needs to fail to check that, and that will fail the test...
+  let mochaBeforeCalled = false
 
   mochaBefore(() => {
+    mochaBeforeCalled = true
     //@ts-expect-error
     returnValueFromF = f()
 
@@ -44,9 +48,9 @@ export function before(f) {
     {
       get: function (_object, propertyName) {
         return () => {
-          if (returnValueFromF != null) {
+          if (mochaBeforeCalled) {
             //@ts-expect-error
-            return returnValueFromF[propertyName]
+            return returnValueFromF?.[propertyName]
           } else {
             throw new Error(
               `trying to access property ${String(propertyName)} before the "before happened`,
@@ -66,8 +70,12 @@ export function before(f) {
 export function beforeEach(f) {
   /**@type {T|undefined} */
   let returnValueFromF = undefined
+  // There is NO test for the situation where the "before" fails because
+  // the before hook needs to fail to check that, and that will fail the test...
+  let mochaBeforeCalled = false
 
   mochaBeforeEach(() => {
+    mochaBeforeCalled = true
     //@ts-expect-error
     returnValueFromF = f()
 
@@ -88,9 +96,9 @@ export function beforeEach(f) {
     {
       get: function (_object, propertyName) {
         return () => {
-          if (returnValueFromF != null) {
+          if (mochaBeforeCalled) {
             //@ts-expect-error
-            return returnValueFromF[propertyName]
+            return returnValueFromF?.[propertyName]
           } else {
             throw new Error(
               `trying to access property ${String(propertyName)} before the "before happened`,
@@ -106,3 +114,5 @@ export const describe = mochaDescribe
 export const it = mochaIt
 export const after = mochaAfter
 export const afterEach = mochaAfterEach
+
+console.log(`*********** mocha`, {describe, afterEach, it}) //@@@GIL

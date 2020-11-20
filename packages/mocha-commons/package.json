@@ -1,9 +1,10 @@
 {
   "name": "@seasquared/mocha-commons",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "type": "module",
   "exports": "./src/mocha-commons.js",
+  "main": "./src/mocha-commons.js",
   "types": "./types/src/mocha-commons.d.ts",
   "engines": {
     "node": ">=15.0.0"
@@ -38,7 +39,7 @@
     "type-fest": "^0.19.0"
   },
   "peerDependencies": {
-    "mocha": ">=8.0.0"
+    "mocha": "^8.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
@@ -54,7 +55,7 @@
     "eslint-plugin-mocha-no-only": "^1.1.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "mocha": "^8.2.1",
+    "mocha": "8.2.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.2.0",
     "typescript": "^4.1.2"
