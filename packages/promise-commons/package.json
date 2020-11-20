@@ -1,10 +1,10 @@
 {
   "name": "@seasquared/promise-commons",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "type": "module",
-  "main": "./src/promise-commons.js",
   "exports": "./src/promise-commons.js",
+  "main": "./src/promise-commons.js",
   "types": "./types/src/promise-commons.d.ts",
   "engines": {
     "node": ">=15.0.0"
