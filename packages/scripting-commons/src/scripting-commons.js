@@ -10,11 +10,11 @@ import {makeError} from '@seasquared/functional-commons'
 /**
  * @param {string} command
  * @param {{
- * cwd: string
+ * cwd?: string|undefined
  * env?: object|undefined
- * }} params
+ * }} [options]
  */
-export async function sh(command, {cwd, env}) {
+export async function sh(command, {cwd, env} = {}) {
   const childProcess = spawn(
     command,
     /**@type {import('child_process').SpawnOptions}*/ ({cwd, stdio: 'inherit', shell: true, env}),
@@ -36,11 +36,11 @@ export async function sh(command, {cwd, env}) {
 /**
  * @param {string} command
  * @param {{
- * cwd: string
+ * cwd?: string|undefined
  * env?: object|undefined
- * }} params
+ * }} [options]
  */
-export async function shWithOutput(command, {cwd, env}) {
+export async function shWithOutput(command, {cwd, env} = {}) {
   const {stdout} = await promisify(exec)(
     command,
     /**@type {import('child_process').ExecOptions}*/ ({cwd, env}),
