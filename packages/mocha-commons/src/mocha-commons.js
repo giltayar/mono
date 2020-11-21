@@ -114,5 +114,3 @@ export const describe = mochaDescribe
 export const it = mochaIt
 export const after = mochaAfter
 export const afterEach = mochaAfterEach
-
-console.log(`*********** mocha`, {describe, afterEach, it}) //@@@GIL

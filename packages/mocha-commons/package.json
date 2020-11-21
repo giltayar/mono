@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/mocha-commons",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "type": "module",
   "exports": "./src/mocha-commons.js",
@@ -21,7 +21,7 @@
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
-    "test:eslint": "eslint '**/*.js'",
+    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
   "keywords": [

@@ -13,7 +13,11 @@
   "extends": ["plugin:node/recommended"],
   "plugins": ["prettier", "mocha-no-only", "node"],
   "rules": {
-    "prettier/prettier": ["error"],
+    "prettier/prettier": ["warn"],
+    "no-warning-comments": [
+      "warn",
+      {"terms": ["fixme", "removeme", "xxx", "@@@"], "location": "anywhere"}
+    ],
     "no-process-exit": "off",
     "no-const-assign": "error",
     "no-this-before-super": "error",
