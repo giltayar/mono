@@ -4,6 +4,7 @@
   "description": "",
   "type": "module",
   "exports": "./src/templatetemplate.js",
+  "main": "./src/templatetemplate.js",
   "types": "./types/src/templatetemplate.d.ts",
   "engines": {
     "node": ">=15.0.0"
@@ -20,7 +21,7 @@
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
-    "test:eslint": "eslint '**/*.js'",
+    "test:eslint": "eslint  --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
   "keywords": [
