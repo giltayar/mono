@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/promise-commons",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "",
   "type": "module",
   "exports": "./src/promise-commons.js",
@@ -18,7 +18,7 @@
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
-    "test:eslint": "eslint '**/*.js'",
+    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
   "keywords": [
@@ -34,6 +34,9 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/eslint-parser": "^7.12.1",
+    "@babel/plugin-syntax-top-level-await": "^7.12.1",
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.0.4",
     "@types/node": "^14.14.7",
