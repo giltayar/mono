@@ -33,7 +33,7 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/roundforest/mono",
-    "directory": "packages/scripting-commons",
+    "directory": "packages/templatetemplate",
     "type": "git"
   },
   "dependencies": {
