@@ -52,18 +52,16 @@ const targetDir = process.cwd()
 const targetDirArr = targetDir.split('/')
 const packageName = targetDirArr[targetDirArr.length - 1]
 
-console.log(`Copying files from: ${templateDir} to: ${targetDir}...`)
+console.log(`Copying files from: ${templateDir} to: ${targetDir}`)
 
 await p(ncp)(templateDir, process.cwd())
 
 await fs.promises.rename(`${targetDir}/.package.json`, `${targetDir}/package.json`)
-if (fs.existsSync(`${targetDir}/..gitignore.json`)) {
-  await fs.promises.rename(`${targetDir}/..gitignore.json`, `${targetDir}/.gitignore.json`)
+if (fs.existsSync(`${targetDir}/..gitignore`)) {
+  await fs.promises.rename(`${targetDir}/..gitignore`, `${targetDir}/.gitignore`)
 }
 
 const allFiles = walkSync(targetDir)
-
-console.log('Replacing placeholders in files to package name: ' + packageName)
 
 for (const file of allFiles) {
   const newFileName = replaceAll(file, 'templatetemplate', packageName)
