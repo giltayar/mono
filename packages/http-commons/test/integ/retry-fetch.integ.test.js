@@ -2,38 +2,42 @@ import {makeError, throw_} from '@seasquared/functional-commons'
 import {presult} from '@seasquared/promise-commons'
 import chai from 'chai'
 import http from 'http'
-import mocha from 'mocha'
+import {describe, it, before, after} from '@seasquared/mocha-commons'
 import {fetchAsText, retryFetch} from '../../src/http-commons.js'
-const {describe, it, before, after} = mocha
 const {expect} = chai
 
 describe('retryFetch', function () {
   describe('real live server', () => {
-    /** @type {http.Server} */
-    let server
-    before((done) => {
-      server = http
-        .createServer((req, res) => {
-          if (req.url === '/404') {
-            res.statusCode = 404
-            res.end('')
-          } else if (req.url === '/500') {
-            res.statusCode = 500
-            res.end('bodybody')
-          } else if (req.url === '/socketkill') {
-            const socket = /**@type {import('net').Socket}*/ (res.socket)
-            socket.destroy()
-          } else {
-            res.end('')
-          }
-        })
-        .listen(0, done)
+    /** @type {{server: () => http.Server}} */
+    const {server} = before(async () => {
+      return {
+        server: await new Promise((resolve) => {
+          const server = http
+            .createServer((req, res) => {
+              if (req.url === '/404') {
+                res.statusCode = 404
+                res.end('')
+              } else if (req.url === '/500') {
+                res.statusCode = 500
+                res.end('bodybody')
+              } else if (req.url === '/socketkill') {
+                const socket = /**@type {import('net').Socket}*/ (res.socket)
+                socket.destroy()
+              } else {
+                res.end('')
+              }
+            })
+            .listen(0, () => resolve(server))
+        }),
+      }
     })
-    after((done) => server && server.close(done))
+    after(() =>
+      server() ? new Promise((resolve) => server()?.close(resolve)) : Promise.resolve(undefined),
+    )
 
     it('should not retry on 404', async () => {
       // @ts-expect-error
-      const url = `http://localhost:${server.address().port}`
+      const url = `http://localhost:${server().address().port}`
       let count = 0
       /** @param {Parameters<fetchAsText>} args */
       const f = (...args) => (++count, fetchAsText(...args))
@@ -46,7 +50,7 @@ describe('retryFetch', function () {
 
     it('should retry on 500', async () => {
       // @ts-expect-error
-      const url = `http://localhost:${server.address().port}`
+      const url = `http://localhost:${server().address().port}`
       let count = 0
       /** @param {Parameters<fetchAsText>} args */
       const f = (...args) => (++count, fetchAsText(...args))
@@ -62,7 +66,7 @@ describe('retryFetch', function () {
 
     it('should retry on ECONNREFUSED', async () => {
       // @ts-expect-error
-      const url = `http://localhost:${server.address().port + ((Math.random() * 100) | 0) + 1}`
+      const url = `http://localhost:${server().address().port + ((Math.random() * 100) | 0) + 1}`
       let count = 0
       /** @param {Parameters<fetchAsText>} args */
       const f = (...args) => (++count, fetchAsText(...args))

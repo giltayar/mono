@@ -1,10 +1,7 @@
-import mocha from 'mocha'
-const {describe, it, before, after} = mocha
+import {describe, it, before, after} from '@seasquared/mocha-commons'
 import chai from 'chai'
 const {expect} = chai
-import express from 'express'
-import bodyParser from 'body-parser'
-const {raw: rawBodyParser, json: jsonBodyParser} = bodyParser
+import fastify from 'fastify'
 
 import {
   fetch,
@@ -17,13 +14,12 @@ import {
 } from '../../src/http-commons.js'
 
 describe('http-commons', function () {
-  /**@type {import('http').Server} */
-  let server
-  before((done) => (server = createApp().listen(0, done)))
-  after((done) => server.close(done))
+  const {app, baseUrl} = before(async () => {
+    const app = createApp()
 
-  // @ts-expect-error
-  const baseUrl = () => `http://localhost:${server.address().port}`
+    return {app, baseUrl: await app.listen(0)}
+  })
+  after(() => app()?.close())
 
   it('should fetch http as buffer', async () => {
     expect(await fetchAsBuffer(`${baseUrl()}/buffer`)).to.eql(Buffer.from('GET'))
@@ -106,16 +102,17 @@ describe('http-commons', function () {
 })
 
 function createApp() {
-  const app = express()
+  const app = fastify()
 
-  app.all('/buffer', rawBodyParser({type: () => true}), (req, res) =>
-    res.send(Buffer.from(req.method)),
-  )
-  app.all('/text', (req, res) => res.send(req.method))
-  app.all('/json', (req, res) => res.json({method: req.method, headers: req.headers}))
-  app.all('/json-echo', jsonBodyParser(), (req, res) =>
-    res.json(Object.assign({}, {method: req.method}, req.body)),
-  )
+  app.all('/buffer', (req) => Promise.resolve(Buffer.from(req.method)))
+  app.all('/text', (req) => Promise.resolve(req.method))
+  app.all('/json', (req) => Promise.resolve({method: req.method, headers: req.headers}))
+
+  app.all('/json-echo', (req) => {
+    const body = /**@type {import('type-fest').JsonObject}*/ (req.body)
+
+    return Promise.resolve({method: req.method, ...body})
+  })
 
   return app
 }

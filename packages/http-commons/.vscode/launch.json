@@ -12,7 +12,6 @@
       "args": [
         "--no-timeouts",
         "--exit",
-        "test/unit/*.test.js",
         "test/integ/*.test.js"
       ],
       "env": {
