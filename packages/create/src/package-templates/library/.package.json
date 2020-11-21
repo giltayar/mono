@@ -19,8 +19,9 @@
   "scripts": {
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
-    "test": "run-p --aggregate-output 'test:*'",
+    "test": "run-p --aggregate-output test:eslint test:typescript test:mocha-parallel",
     "test:mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
+    "test:mocha-parallel": "npm run test:mocha -- --parallel",
     "test:eslint": "eslint  --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
