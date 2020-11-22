@@ -1,6 +1,5 @@
 import path from 'path'
-import mocha from 'mocha'
-const {describe, it, before, after} = mocha
+import {describe, it, before, after} from '@seasquared/mocha-commons'
 import chai from 'chai'
 const {expect} = chai
 import {makeTemporaryDirectory, readFileAsString, writeFile} from '@seasquared/scripting-commons'
@@ -11,15 +10,25 @@ const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
 describe('create-package (integ)', function () {
-  /**@type {any} */
-  let close
-  /**@type {any} */
-  let registry
-  before(async () => ({close, registry} = await startNpmRegistry({shouldProxyToNpmJs: true})))
-  after(() => close ?? close())
+  const {close, registry} = before(async () => await startNpmRegistry({shouldProxyToNpmJs: true}))
+  after(() => close()?.())
 
   it('should create the "library" package', async () => {
-    const {target, packageName} = await createPackage('library', registry)
+    const {target, packageName} = await createPackage('library', registry())
+
+    expect(await readFileAsString(['src', `${packageName}.js`], {cwd: target})).to.include('export')
+    await runScript('install', target)
+    await runScript('run build --if-present', target)
+    await runScript('test', target)
+    await runScript('publish', target)
+
+    expect(
+      await shWithOutput(`npm view @seasquared/${packageName} version`, {cwd: target}),
+    ).to.equal('1.0.0\n')
+  })
+
+  it('should create the "cli" package', async () => {
+    const {target, packageName} = await createPackage('cli', registry())
 
     expect(await readFileAsString(['src', `${packageName}.js`], {cwd: target})).to.include('export')
     await runScript('install', target)
