@@ -10,9 +10,16 @@ export async function app(argv, {shouldExitOnError = true} = {}) {
 
   const args = await commandLineOptions.exitProcess(shouldExitOnError).strict().help().parse()
 
-  if (args._ && args._[0]) {
-    // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    ;(await import(`./commands/${args._[0]}.js`)).default(args)
+  if (args._?.[0]) {
+    switch (args._[0]) {
+      case 'some-command':
+        // eslint-disable-next-line node/no-unsupported-features/es-syntax
+        ;(await import(`./commands/some-command.js`)).default(args)
+        break
+      default:
+        commandLineOptions.showHelp()
+        break
+    }
   }
 }
 
@@ -24,9 +31,15 @@ function getCommandLineOptions(argv) {
     'some-command <some-parameter>',
     'something something description',
     (yargs) =>
-      yargs.option('some-option', {
-        describe: 'some-option description',
-        type: 'string',
-      }),
+      yargs
+        .positional('some-parameter', {
+          describe: 'some-parameter description',
+          type: 'string',
+          demandOption: true,
+        })
+        .option('some-option', {
+          describe: 'some-option description',
+          type: 'string',
+        }),
   )
 }

@@ -1,7 +1,7 @@
 /**
  *
- * @param {{someParameter: string, someOption?: string}} options
+ * @param {{'some-parameter': string, 'some-option'?: string}} options
  */
-export default async function main({someParameter, someOption}) {
+export default async function main({'some-parameter': someParameter, 'some-option': someOption}) {
   console.log(`${someParameter}, ${someOption}`)
 }
