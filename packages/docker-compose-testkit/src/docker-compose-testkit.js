@@ -1,5 +1,7 @@
 import path from 'path'
 import crypto from 'crypto'
+import net from 'net'
+import {once} from 'events'
 import {sh, shWithOutput} from '@seasquared/scripting-commons'
 import retry from 'p-retry'
 import {fetch} from '@seasquared/http-commons'
@@ -120,4 +122,20 @@ export async function httpHealthCheck(address) {
   const response = await fetch(`http://${address}/`)
 
   await response.buffer()
+}
+
+/**
+ * @param {string} address
+ */
+export async function tcpHealthCheck(address) {
+  const [host, port] = address.split(':')
+
+  const socket = net.createConnection(parseInt(port, 10), host)
+
+  await Promise.race([
+    once(socket, 'connect'),
+    once(socket, 'error').then(([err]) => Promise.reject(err)),
+  ])
+
+  socket.destroy()
 }

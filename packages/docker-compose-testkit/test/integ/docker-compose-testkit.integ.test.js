@@ -8,7 +8,7 @@ import {presult} from '@seasquared/promise-commons'
 import chaiSubset from 'chai-subset'
 use(chaiSubset)
 
-import {runDockerCompose} from '../../src/docker-compose-testkit.js'
+import {runDockerCompose, tcpHealthCheck} from '../../src/docker-compose-testkit.js'
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
@@ -19,7 +19,7 @@ describe('docker-compose-testkit (integ)', function () {
       CONTENT_FOLDER: path.join(__dirname, 'nginx-test-content'),
     }
     const {teardown, findAddress} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose-nginx.yml'),
+      path.join(__dirname, 'docker-compose.yml'),
       {
         forceRecreate: true,
         env,
@@ -28,6 +28,7 @@ describe('docker-compose-testkit (integ)', function () {
 
     const nginxAddress = await findAddress('nginx')
     const nginx2Address = await findAddress('nginx2')
+    await findAddress('postgres', 5432, {healthCheck: tcpHealthCheck})
 
     expect(await fetchAsText(`http://${nginxAddress}`)).to.include('Welcome to nginx')
     expect(await fetchAsText(`http://${nginx2Address}`)).to.equal(
@@ -37,7 +38,7 @@ describe('docker-compose-testkit (integ)', function () {
     await teardown()
 
     const {teardown: teardown2, findAddress: findAddress2} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose-nginx.yml'),
+      path.join(__dirname, 'docker-compose.yml'),
       {env},
     )
 
@@ -50,7 +51,7 @@ describe('docker-compose-testkit (integ)', function () {
     await teardown2()
 
     const {teardown: teardown3, findAddress: findAddress3} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose-nginx.yml'),
+      path.join(__dirname, 'docker-compose.yml'),
       {forceRecreate: true, containerCleanup: true, env},
     )
 

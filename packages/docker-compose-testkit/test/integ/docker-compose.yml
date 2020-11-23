@@ -10,3 +10,9 @@ services:
       - '${CONTENT_FOLDER}:/usr/share/nginx/html:ro'
     ports:
         - 80
+  postgres:
+    image: postgres:9.6.20
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 5432
