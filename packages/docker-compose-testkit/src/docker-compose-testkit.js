@@ -27,7 +27,7 @@ export async function runDockerCompose(
 ) {
   const projectName = determineProjectName()
   const addresses = /**@type{Map<string, string>}*/ new Map()
-  const finalEnv = env ? {PATH: process.env.PATH, ...env} : {}
+  const finalEnv = env ? {PATH: process.env.PATH, ...env} : {PATH: process.env.PATH}
 
   await setup()
 
@@ -96,7 +96,7 @@ export async function runDockerCompose(
   function determineProjectName() {
     const hash = crypto.createHash('MD5').update(dockerComposeFile).digest('base64')
 
-    return `dct_${hash}`
+    return `dct_${hash.replace('==', '').replace('=', '')}`
   }
 }
 

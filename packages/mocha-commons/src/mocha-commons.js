@@ -34,7 +34,7 @@ export function before(f) {
     // @ts-expect-error
     if (returnValueFromF.then) {
       // @ts-expect-error
-      return f().then((v) => {
+      return returnValueFromF.then((v) => {
         returnValueFromF = v
         return Promise.resolve(v)
       })

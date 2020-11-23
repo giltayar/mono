@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/mocha-commons",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "type": "module",
   "exports": "./src/mocha-commons.js",
