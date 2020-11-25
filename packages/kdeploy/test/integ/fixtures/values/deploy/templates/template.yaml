@@ -1,0 +1,10 @@
+aPackageAClusterValue: {{aPackageAClusterValue}}
+aPackageValue: {{aPackageValue}}
+aPackageValueToOverride: {{aPackageValueToOverride}}
+anotherPackageValueToOverride: {{anotherPackageValueToOverride}}
+aClusterValue: {{aClusterValue}}
+aClusterValueToOverride: {{aClusterValueToOverride}}
+aClusterValueToNotOverride: {{aClusterValueToNotOverride}}
+valuesValue: {{valuesValue}}
+valuesValueToOverride: {{valuesValueToOverride}}
+moreValuesValue: {{moreValuesValue}}
