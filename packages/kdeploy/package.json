@@ -17,7 +17,7 @@
     "types"
   ],
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "scripts": {
     "build": "run-p 'build:*'",

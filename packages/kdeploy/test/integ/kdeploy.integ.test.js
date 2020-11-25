@@ -65,7 +65,7 @@ describe('kdeploy it', function () {
       .with.content('key: name is something-else and foo is bar')
   })
 
-  it.only('should work with value files', async () => {
+  it('should work with value files', async () => {
     const output = await makeTemporaryDirectory()
     await app([
       'generate-yaml',
@@ -92,6 +92,32 @@ aClusterValueToNotOverride: anotherClusterValueToOverrideV
 valuesValue: valuesValueV
 valuesValueToOverride: valuesValueToOverrideOverriden
 moreValuesValue: moreValuesValueV
+moreValuesValueNotToOverride: moreValuesValueNotToOverrideV
+    `.trim(),
+    )
+  })
+
+  it('should support partials', async () => {
+    const output = await makeTemporaryDirectory()
+    await app([
+      'generate-yaml',
+      '--name=hello',
+      '--cluster=a-cluster',
+      '--input',
+      path.resolve(__dirname, 'fixtures/partials'),
+      '--package=a-package',
+      '--output',
+      output,
+    ])
+
+    expect(output).to.be.a.directory().with.deep.files(['template.yaml'])
+    expect(path.join(output, 'template.yaml')).to.be.a.file().with.content(
+      `
+clusterPartials: aPackageValueV!
+More:
+  partial: yes!
+packagePartials: aPackageValueV!
+morePackageValues: yes!
     `.trim(),
     )
   })

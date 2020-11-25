@@ -61,7 +61,6 @@ function getCommandLineOptions(argv) {
           alias: 'v',
           describe: 'yaml file for values of chart (relative to input-directory)',
           type: 'string',
-          default: 'values.yaml',
           array: true,
         })
         .option('override', {

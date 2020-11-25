@@ -1,0 +1,5 @@
+{{>clusterPartials}}
+More:
+  {{>aPartial}}
+{{>package}}
+{{>morePackage}}

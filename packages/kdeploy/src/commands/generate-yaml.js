@@ -55,7 +55,7 @@ export default async function main({
 
 /**
  * @param {string} outputDirectory
- * @param {{ content: string; name: string; path: string; }[]} allTemplates
+ * @param {{content: string, path: string}[]} allTemplates
  * @param {Handlebars} handlebars
  * @param {Record<string, any>} values
  * @param {string} baseInputDirectory
@@ -99,8 +99,8 @@ function determineAdditionalFolders(baseInputDirectory, packageFolders, valueFil
     if (!pkg) throw new Error(`could not find package ${p}`)
 
     partialFolders = [
-      path.resolve(pkg, `deploy/partials}`),
-      ...(cluster ? [path.resolve(pkg, `deploy/partials/${cluster}`)] : []),
+      path.resolve(pkg, `deploy/partials`),
+      ...(cluster ? [path.resolve(pkg, `deploy/clusters/${cluster}/partials`)] : []),
       ...partialFolders,
     ]
 
@@ -125,7 +125,7 @@ function registerHelpersInHandlerbars(handlebars, partialFiles, cluster) {
       encoding: 'utf8',
     })
 
-    handlebars.registerPartial(normalizeKdeployFileNames(partialFile), partialContent)
+    handlebars.registerPartial(path.parse(partialFile).name, partialContent)
   }
 
   handlebars.registerHelper('helperMissing', function (context) {
@@ -158,7 +158,7 @@ function determinePartialFiles(partialFolders) {
       const files = fs.readdirSync(partialFolder)
       files.forEach((f) => {
         const filePath = path.join(partialFolder, f)
-        const name = normalizeKdeployFileNames(filePath)
+        const name = path.parse(filePath).name
 
         if (!hasPartialFileName.has(name)) {
           hasPartialFileName.set(name, true)
@@ -223,18 +223,7 @@ function readTemplates(templatesFolder) {
         content: fs.readFileSync(path.join(templatesFolder, t), {
           encoding: 'utf8',
         }),
-        name: path.parse(t).name.toLowerCase(),
         path: path.join(templatesFolder, t),
       }
     })
-}
-
-/**
- * @param {string} filePath
- * @returns {string}
- */
-function normalizeKdeployFileNames(filePath) {
-  const basename = path.basename(filePath).toLowerCase()
-
-  return basename.substr(0, basename.indexOf('.'))
 }
