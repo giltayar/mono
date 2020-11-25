@@ -5,8 +5,16 @@
 			"path": ".bilt"
 		},
 		{
+			"name": "console-tesktit",
+			"path": "packages/console-tesktit"
+		},
+		{
 			"name": "create",
 			"path": "packages/create"
+		},
+		{
+			"name": "docker-compose-testkit",
+			"path": "packages/docker-compose-testkit"
 		},
 		{
 			"name": "functional-commons",
@@ -15,6 +23,10 @@
 		{
 			"name": "http-commons",
 			"path": "packages/http-commons"
+		},
+		{
+			"name": "kdeploy",
+			"path": "packages/kdeploy"
 		},
 		{
 			"name": "mocha-commons",
@@ -27,6 +39,10 @@
 		{
 			"name": "scripting-commons",
 			"path": "packages/scripting-commons"
+		},
+		{
+			"name": "url-commons",
+			"path": "packages/url-commons"
 		}
 	],
 	"settings": {}
