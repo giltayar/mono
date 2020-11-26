@@ -33,6 +33,10 @@
 			"path": "packages/mocha-commons"
 		},
 		{
+			"name": "kubernetes-testkit",
+			"path": "packages/kubernetes-testkit"
+		},
+		{
 			"name": "promise-commons",
 			"path": "packages/promise-commons"
 		},
