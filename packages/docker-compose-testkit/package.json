@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/docker-compose-testkit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "type": "module",
   "exports": "./src/docker-compose-testkit.js",
@@ -36,7 +36,7 @@
     "type": "git"
   },
   "dependencies": {
-    "@seasquared/http-commons": "^1.0.2",
+    "@seasquared/http-commons": "^2.0.0",
     "@seasquared/scripting-commons": "^1.1.2",
     "p-retry": "^4.2.0"
   },
