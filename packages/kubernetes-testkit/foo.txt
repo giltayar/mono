@@ -1,0 +1,9 @@
+2020-11-27T21:48:13.383Z applitools:asdfdsf {"a":4}
+2020-11-27T21:48:13.440Z applitools:asdfdsf {"a":4}
+npm ERR! code 1
+npm ERR! path /Users/giltayar/code/mono/packages/kubernetes-testkit
+npm ERR! command failed
+npm ERR! command sh -c mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js' "-b"
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /Users/giltayar/.npm/_logs/2020-11-27T21_48_13_528Z-debug.log

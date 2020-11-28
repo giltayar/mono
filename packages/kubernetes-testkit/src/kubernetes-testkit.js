@@ -1,27 +1,34 @@
 import {memoAsync} from '@seasquared/functional-commons'
 import {fetch} from '@seasquared/http-commons'
-import {presult, unwrapPresult} from '@seasquared/promise-commons'
+import {delay} from '@seasquared/promise-commons'
 import {exec, execFile, spawn} from 'child_process'
 import crypto from 'crypto'
 import {once} from 'events'
 import net from 'net'
 import retry from 'p-retry'
+import path from 'path'
 import pino from 'pino'
 import {promisify} from 'util'
 
 const logger = pino()
 
 /**
- *
+ * @param {string} [dirOrFileToApplyToKubernetes]
  * @param {{
- *  namespace?: string,
- *  envCleanup?: boolean
+ *  namespaceCleanup?: boolean
+ *  forceRecreate?: boolean
  * }} [options]
  */
-export async function setupKubernetes({
-  namespace = generateRandomYetStableNamespace(),
-  envCleanup = false,
-} = {}) {
+export async function setupKubernetes(
+  dirOrFileToApplyToKubernetes,
+  {namespaceCleanup = false, forceRecreate = false} = {},
+) {
+  const namespace = generateRandomYetStableNamespace(
+    dirOrFileToApplyToKubernetes
+      ? path.resolve(dirOrFileToApplyToKubernetes, process.cwd())
+      : process.cwd(),
+  )
+
   if (!isDockerDesktop(await determineClusterType())) {
     logger.info('switching to Desktop Docker Kubernetes')
 
@@ -31,12 +38,44 @@ export async function setupKubernetes({
       throw new Error(`Failed to change kubectl context to 'docker-desktop'`)
   }
 
-  await createNamespaceWithLabeIfNeeded(namespace, 'deployed-with-kubernetes-testkit')
+  if (forceRecreate) {
+    logger.info('deleting namespace', namespace, 'to recreate it')
+
+    await deleteNamespace(namespace, true)
+
+    await delay(30000)
+  }
+
+  const created = await createNamespaceWithLabeIfNeeded(
+    namespace,
+    'deployed-with-kubernetes-testkit',
+  )
 
   const [clusterIp] = await Promise.all([
     determineClusterIp(),
-    setupDockerRegistrySecretForImagePull(namespace),
+    created ? Promise.resolve() : setupDockerRegistrySecretForImagePull(namespace),
   ])
+
+  if (dirOrFileToApplyToKubernetes) {
+    await applyToKubernetes(dirOrFileToApplyToKubernetes)
+  }
+
+  const findAddressAndHealthCheck = memoAsync(
+    async (clusterIp, name, {portIndex = 0, healthCheck, healthCheckTimeoutSec}) => {
+      const address = await findServiceAddressInNamespace(
+        namespace,
+        clusterIp,
+        name,
+        portIndex,
+        healthCheck,
+        healthCheckTimeoutSec,
+      )
+
+      if (!healthCheck) return address
+
+      return address
+    },
+  )
 
   return {
     namespace,
@@ -45,29 +84,44 @@ export async function setupKubernetes({
      * @param {string} name
      * @param {{
      *  portIndex?: number | undefined,
-     *  healthCheck?: (address) => Promise<void>
+     *  healthCheck?: (address: string) => Promise<void>
      *  healthCheckTimeoutSec?: number | undefined
-     * }} options
+     * }} [options]
      */
-    async findAddress(name, {portIndex, healthCheck, healthCheckTimeoutSec = 120}) {
-      return findAddressAndHealthCheck(namespace, clusterIp, name, {
+    async findAddress(
+      name,
+      {portIndex = 0, healthCheck = httpHealthCheck, healthCheckTimeoutSec = 120} = {},
+    ) {
+      return findAddressAndHealthCheck(clusterIp, name, {
         portIndex,
         healthCheck,
         healthCheckTimeoutSec,
       })
     },
+    applyToKubernetes,
+  }
+
+  /**
+   * @param {string} dirOrFile
+   */
+  async function applyToKubernetes(dirOrFile) {
+    return await applyToKubernetesNamespace(namespace, dirOrFile)
   }
 
   async function teardown() {
-    if (!envCleanup) return
+    if (!namespaceCleanup) return
+
     await deleteNamespace(namespace)
   }
 }
 
-function generateRandomYetStableNamespace() {
-  const hash = crypto.createHash('MD5').update(process.cwd()).digest('base64')
+/**
+ * @param {string} dirname
+ */
+function generateRandomYetStableNamespace(dirname) {
+  const hash = crypto.createHash('MD5').update(dirname).digest('base64')
 
-  return `kt_${hash.replace('==', '').replace('=', '')}`
+  return `kt-${hash.replace('==', '').replace('=', '').toLowerCase()}`
 }
 
 async function determineClusterType() {
@@ -100,17 +154,15 @@ async function determineClusterIp() {
  * @param {string} label
  */
 async function createNamespaceWithLabeIfNeeded(namespace, label) {
-  let skipLabeling = false
-
   try {
     await kubectlExec(undefined, 'create', 'namespace', namespace)
+    await kubectlSpawn(undefined, 'label', 'namespace', namespace, `${label}=true`)
+
+    return true
   } catch (err) {
     if (!err.message.includes('already exists')) throw err
-    skipLabeling = true
-  }
 
-  if (!skipLabeling) {
-    await kubectlSpawn(undefined, 'label', 'namespace', namespace, label)
+    return false
   }
 }
 
@@ -119,10 +171,20 @@ async function createNamespaceWithLabeIfNeeded(namespace, label) {
  * @param {boolean} [waitForIt]
  */
 async function deleteNamespace(namespace, waitForIt = false) {
-  const result = presult(kubectlExec(undefined, 'delete', 'namespace', namespace))
-
-  if (waitForIt) {
-    await unwrapPresult(result)
+  try {
+    await kubectlExec(
+      undefined,
+      'delete',
+      'namespace',
+      namespace,
+      '--grace-period=1',
+      `--wait=${waitForIt ? 'true' : 'true'}`,
+    )
+  } catch (err) {
+    if (err.message.includes('not found')) {
+      return
+    }
+    throw err
   }
 }
 
@@ -138,7 +200,7 @@ function isDockerDesktop(context) {
  * @param {string[]} args
  */
 async function kubectlExec(namespace, ...args) {
-  logger.info('executing kube command %d', args, {namespace})
+  logger.info('executing kube command %o', args, {namespace})
 
   return await promisify(execFile)('kubectl', [
     ...(namespace ? ['--namespace', namespace] : []),
@@ -151,7 +213,7 @@ async function kubectlExec(namespace, ...args) {
  * @param {string[]} args
  */
 async function kubectlSpawn(namespace, ...args) {
-  logger.info('executing kube command %d', args, {namespace})
+  logger.info('executing kube command %o', args, {namespace})
 
   await new Promise((resolve, reject) => {
     spawn('kubectl', [...(namespace ? ['--namespace', namespace] : []), ...args], {
@@ -213,23 +275,6 @@ async function getDockerRegistryInfo() {
   }
 }
 
-const findAddressAndHealthCheck = memoAsync(
-  async (namespace, clusterIp, name, {portIndex = 0, healthCheck, healthCheckTimeoutSec}) => {
-    const address = await findServiceAddressInNamespace(
-      namespace,
-      clusterIp,
-      name,
-      portIndex,
-      healthCheck,
-      healthCheckTimeoutSec,
-    )
-
-    if (!healthCheck) return address
-
-    return address
-  },
-)
-
 /**
  * @param {string} namespace
  * @param {string} clusterIp
@@ -254,7 +299,9 @@ async function findServiceAddressInNamespace(
   const serviceType = serviceConfig.spec.type
   if (serviceType === 'ClusterIP')
     throw new Error(
-      `Service type is 'ClusterIP', which means you created it as a service, and not app. You cannot get address of such`,
+      `
+Service type is 'ClusterIP', which means you created it as a service, and not app. You cannot get address of such.
+Specify {spec: {type: 'NodePort'}} in service yaml`,
     )
 
   const port = serviceConfig.spec.ports[exposedPortIndex].nodePort
@@ -266,7 +313,23 @@ async function findServiceAddressInNamespace(
 
   return address
 }
+/**
+ * @param {string} namespace
+ * @param {string} dirOrFile
+ */
+async function applyToKubernetesNamespace(namespace, dirOrFile) {
+  logger.info('applying', dirOrFile, 'to namespace', namespace)
 
+  await kubectlSpawn(
+    namespace,
+    'apply',
+    '--wait=true',
+    '--recursive=true',
+    '--record=true',
+    '-f',
+    dirOrFile,
+  )
+}
 /**
  * @param {string} address
  * @param {(address: string) => Promise<void>} healthCheck
@@ -279,7 +342,6 @@ async function waitUntilHealthy(address, healthCheck, healthCheckTimeoutSec) {
     minTimeout: 250,
   })
 }
-
 
 /**
  * @param {string} address
