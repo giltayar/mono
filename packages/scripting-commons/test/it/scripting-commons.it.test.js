@@ -27,6 +27,19 @@ describe('scripting-commons', function () {
     expect(lsOutput).to.equal('bar\nfoo\n')
   })
 
+  it('should support array commands', async () => {
+    const tmpDir = await makeTemporaryDirectory()
+
+    await sh(['echo', 'bart', '>bar'], {cwd: tmpDir})
+    await shWithOutput(['echo', 'bart', '>barbie'], {cwd: tmpDir})
+
+    const barOutput = await shWithOutput(['cat', 'bar'], {cwd: tmpDir})
+    const barbieOutput = await shWithOutput(['cat', 'barbie'], {cwd: tmpDir})
+
+    expect(barOutput).to.equal('bart\n')
+    expect(barbieOutput).to.equal('bart\n')
+  })
+
   it('should support env', async () => {
     const tmpDir = await makeTemporaryDirectory()
 

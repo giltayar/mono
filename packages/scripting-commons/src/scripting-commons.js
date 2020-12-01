@@ -4,21 +4,28 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import {once} from 'events'
-import {spawn, exec} from 'child_process'
+import {spawn, exec, execFile} from 'child_process'
 import {makeError} from '@seasquared/functional-commons'
 
 /**
- * @param {string} command
+ * @param {string|string[]} command
  * @param {{
  * cwd?: string|undefined
  * env?: Record<string, string|undefined>|undefined
  * }} [options]
  */
 export async function sh(command, {cwd, env} = {}) {
-  const childProcess = spawn(
-    command,
-    /**@type {import('child_process').SpawnOptions}*/ ({cwd, stdio: 'inherit', shell: true, env}),
-  )
+  /**@type {import('child_process').SpawnOptions}*/
+  const spawnOptions = {
+    cwd,
+    stdio: 'inherit',
+    shell: true,
+    env,
+  }
+  const childProcess = Array.isArray(command)
+    ? spawn(command[0], command.slice(1), spawnOptions)
+    : spawn(command, spawnOptions)
+
   const [result] = await Promise.race([once(childProcess, 'error'), once(childProcess, 'exit')])
   if (typeof result === 'number') {
     if (result !== 0) {
@@ -34,17 +41,20 @@ export async function sh(command, {cwd, env} = {}) {
 }
 
 /**
- * @param {string} command
+ * @param {string|string[]} command
  * @param {{
  * cwd?: string|undefined
  * env?: Record<string, string|undefined> | undefined
  * }} [options]
  */
 export async function shWithOutput(command, {cwd, env} = {}) {
-  const {stdout} = await promisify(exec)(
-    command,
-    /**@type {import('child_process').ExecOptions}*/ ({cwd, env}),
-  )
+  /**@type {import('child_process').ExecOptions}*/
+  // @ts-expect-error (bad definition of ExecOptions)
+  const execOptions = {cwd, env, shell: true}
+
+  const {stdout} = Array.isArray(command)
+    ? await promisify(execFile)(command[0], command.slice(1), execOptions)
+    : await promisify(exec)(command, execOptions)
 
   return stdout
 }
