@@ -29,7 +29,7 @@ describe('kdeploy it', function () {
   it('should generate correct yaml from handlebar templates', async () => {
     const output = await makeTemporaryDirectory()
     await app([
-      'generate-yaml',
+      'generate',
       '--name=hello',
       '--input',
       path.resolve(__dirname, 'fixtures/simple-template'),
@@ -49,7 +49,7 @@ describe('kdeploy it', function () {
   it('should work with overrides', async () => {
     const output = await makeTemporaryDirectory()
     await app([
-      'generate-yaml',
+      'generate',
       '--name=hello',
       '--input',
       path.resolve(__dirname, 'fixtures/overrides'),
@@ -68,7 +68,7 @@ describe('kdeploy it', function () {
   it('should work with value files', async () => {
     const output = await makeTemporaryDirectory()
     await app([
-      'generate-yaml',
+      'generate',
       '--name=hello',
       '--cluster=a-cluster',
       '--input',
@@ -100,7 +100,7 @@ moreValuesValueNotToOverride: moreValuesValueNotToOverrideV
   it('should work with folder packages', async () => {
     const output = await makeTemporaryDirectory()
     await app([
-      'generate-yaml',
+      'generate',
       '--name=hello',
       '--cluster=a-cluster',
       '--package=./deploy/variation-0',
@@ -119,7 +119,7 @@ moreValuesValueNotToOverride: moreValuesValueNotToOverrideV
   it('should support partials', async () => {
     const output = await makeTemporaryDirectory()
     await app([
-      'generate-yaml',
+      'generate',
       '--name=hello',
       '--cluster=a-cluster',
       '--input',

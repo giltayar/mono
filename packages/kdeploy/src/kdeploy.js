@@ -12,9 +12,9 @@ export async function app(argv, {shouldExitOnError = true} = {}) {
 
   if (args._?.[0]) {
     switch (args._[0]) {
-      case 'generate-yaml':
+      case 'generate':
         // eslint-disable-next-line node/no-unsupported-features/es-syntax
-        await (await import(`./commands/generate-yaml.js`)).default(args)
+        await (await import(`./commands/generate.js`)).default(args)
         break
       default:
         commandLineOptions.showHelp()
@@ -27,7 +27,7 @@ export async function app(argv, {shouldExitOnError = true} = {}) {
  * @param {readonly string[]} argv
  */
 function getCommandLineOptions(argv) {
-  return yargs(argv).command('generate-yaml', 'generates the yaml files for deploying', (yargs) =>
+  return yargs(argv).command('generate', 'generates the yaml files for deploying', (yargs) =>
     yargs
       .option('name', {
         describe: 'name of deployment',
