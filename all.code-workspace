@@ -29,12 +29,20 @@
 			"path": "packages/kdeploy"
 		},
 		{
+			"name": "kubernetes-testkit",
+			"path": "packages/kubernetes-testkit"
+		},
+		{
 			"name": "mocha-commons",
 			"path": "packages/mocha-commons"
 		},
 		{
-			"name": "kubernetes-testkit",
-			"path": "packages/kubernetes-testkit"
+			"name": "pino-global",
+			"path": "packages/pino-global"
+		},
+		{
+			"name": "pino-testkit",
+			"path": "packages/pino-testkit"
 		},
 		{
 			"name": "promise-commons",

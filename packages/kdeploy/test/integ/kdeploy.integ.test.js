@@ -97,6 +97,25 @@ moreValuesValueNotToOverride: moreValuesValueNotToOverrideV
     )
   })
 
+  it('should work with folder packages', async () => {
+    const output = await makeTemporaryDirectory()
+    await app([
+      'generate-yaml',
+      '--name=hello',
+      '--cluster=a-cluster',
+      '--package=./deploy/variation-0',
+      '--input',
+      path.resolve(__dirname, 'fixtures/folder-packages'),
+      '--output',
+      output,
+    ])
+
+    expect(output).to.be.a.directory().with.deep.files(['template.yaml'])
+    expect(path.join(output, 'template.yaml'))
+      .to.be.a.file()
+      .with.content(`aValue: valueFromValuesYaml`)
+  })
+
   it('should support partials', async () => {
     const output = await makeTemporaryDirectory()
     await app([
