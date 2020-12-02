@@ -46,14 +46,14 @@ export async function setupKubernetes(
     await delay(30000)
   }
 
-  const created = await createNamespaceWithLabeIfNeeded(
+  const alreadyCreated = await createNamespaceWithLabeIfNeeded(
     namespace,
     'deployed-with-kubernetes-testkit',
   )
 
   const [clusterIp] = await Promise.all([
     determineClusterIp(),
-    created ? Promise.resolve() : setupDockerRegistrySecretForImagePull(namespace),
+    alreadyCreated ? Promise.resolve() : setupDockerRegistrySecretForImagePull(namespace),
   ])
 
   if (dirOrFileToApplyToKubernetes) {
@@ -158,11 +158,11 @@ async function createNamespaceWithLabeIfNeeded(namespace, label) {
     await kubectlExec(undefined, 'create', 'namespace', namespace)
     await kubectlSpawn(undefined, 'label', 'namespace', namespace, `${label}=true`)
 
-    return true
+    return false
   } catch (err) {
     if (!err.message.includes('already exists')) throw err
 
-    return false
+    return true
   }
 }
 
@@ -319,6 +319,26 @@ Specify {spec: {type: 'NodePort'}} in service yaml`,
  */
 async function applyToKubernetesNamespace(namespace, dirOrFile) {
   logger.info('applying', dirOrFile, 'to namespace', namespace)
+
+  // Check for the situation that there are no files
+  // @ts-expect-error
+  const {noFiles} = await kubectlExec(
+    namespace,
+    'apply',
+    '--wait=true',
+    '--recursive=false',
+    '--record=true',
+    '--dry-run',
+    '-f',
+    dirOrFile,
+  ).catch((err) => {
+    if (err.stderr.includes('recognized file extensions are')) {
+      return {noFiles: true}
+    }
+  })
+  if (noFiles) {
+    return
+  }
 
   await kubectlSpawn(
     namespace,

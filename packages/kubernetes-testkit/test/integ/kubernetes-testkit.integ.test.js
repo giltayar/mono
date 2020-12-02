@@ -77,4 +77,16 @@ describe('kubernetes-testkit (integ)', function () {
       {code: 'ECONNREFUSED'},
     ])
   })
+
+  it('should work with empty dirs and _not_ recurse', async () => {
+    const nginxConfigurations = path.resolve(__dirname, 'fixtures/dir-with-no-yamls')
+
+    const {teardown, findAddress} = await setupKubernetes(nginxConfigurations, {})
+
+    const [err] = await presult(findAddress('nginx-service'))
+
+    expect(err.message).to.include('services "nginx-service" not found')
+
+    await teardown()
+  })
 })
