@@ -1,19 +1,20 @@
 import {sh, shWithOutput} from '@seasquared/scripting-commons'
 import inquirer from 'inquirer'
+import path from 'path'
 
 /**
  *
  * @param {{
- *  input: string
+ *  input?: string
  *  namespace: string
  *  message?: string,
- *  'rollout-version'?: string,
+ *  'rollout-version': string,
  *  'dry-run'?: boolean
  *  'docker-desktop': boolean
  * }} param0
  */
 export default async function deploy({
-  input: inputDirectory,
+  input: inputDirectory = path.resolve(process.cwd(), 'dist'),
   namespace,
   message,
   'rollout-version': version,

@@ -80,7 +80,6 @@ function getCommandLineOptions(argv) {
           describe: 'directory to apply to kubernetes',
           defaultDescription: 'current directory + "/dist"',
           type: 'string',
-          demandOption: true,
         })
         .option('namespace', {
           alias: 'n',
@@ -97,6 +96,7 @@ function getCommandLineOptions(argv) {
           alias: 'v',
           describe: 'deployment version',
           type: 'string',
+          demandOption: true,
         })
         .option('dry-run', {
           alias: 'd',
