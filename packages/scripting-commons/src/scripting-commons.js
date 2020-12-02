@@ -3,6 +3,9 @@ import {promisify} from 'util'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+//@ts-expect-error
+// eslint-disable-next-line node/no-missing-import
+import stream from 'stream/promises'
 import {once} from 'events'
 import {spawn, exec, execFile} from 'child_process'
 import {makeError} from '@seasquared/functional-commons'
@@ -102,8 +105,41 @@ export async function readFileAsJson(file, {cwd}) {
 }
 
 /**
+ * @param {string | undefined} [dirToCopy]
  * @returns {Promise<string>}
  */
-export async function makeTemporaryDirectory() {
-  return await fs.promises.mkdtemp(os.tmpdir() + '/')
+export async function makeTemporaryDirectory(dirToCopy) {
+  const ret = await fs.promises.mkdtemp(os.tmpdir() + '/')
+
+  if (dirToCopy != null) {
+    await copyDirectory(dirToCopy, ret)
+  }
+
+  return ret
+}
+
+/**
+ * @param {string} sourceDirectory
+ * @param {string} targetDirectory
+ */
+async function copyDirectory(sourceDirectory, targetDirectory) {
+  await fs.promises.mkdir(targetDirectory, {recursive: true})
+
+  const filesAndDirs = await fs.promises.readdir(sourceDirectory, {withFileTypes: true})
+
+  await Promise.all(
+    filesAndDirs.map((f) =>
+      f.isDirectory()
+        ? copyDirectory(path.join(sourceDirectory, f.name), path.join(targetDirectory, f.name))
+        : copyFile(path.join(sourceDirectory, f.name), path.join(targetDirectory, f.name)),
+    ),
+  )
+}
+
+/**
+ * @param {string} sourceFile
+ * @param {string} targetFile
+ */
+async function copyFile(sourceFile, targetFile) {
+  await stream.pipeline(fs.createReadStream(sourceFile), fs.createWriteStream(targetFile))
 }

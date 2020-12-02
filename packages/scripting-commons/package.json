@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/scripting-commons",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "",
   "type": "module",
   "exports": "./src/scripting-commons.js",
@@ -17,7 +17,7 @@
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
-    "test:mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
+    "test:mocha": "mocha --no-timeouts --colors --exit 'test/**/*.test.js'",
     "test:eslint": "eslint --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },

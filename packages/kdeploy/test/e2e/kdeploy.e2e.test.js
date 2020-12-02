@@ -4,7 +4,7 @@ const {describe, it} = mocha
 import chai from 'chai'
 const {expect} = chai
 import {setupKubernetes} from '@seasquared/kubernetes-testkit'
-import {sh, shWithOutput} from '@seasquared/scripting-commons'
+import {sh, shWithOutput, makeTemporaryDirectory} from '@seasquared/scripting-commons'
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
@@ -20,7 +20,9 @@ describe('kdeploy e2e', function () {
       `kubectl --namespace=${namespace} delete deployment nginx-deployment`,
     ).catch((err) => (err.stderr?.includes('not found') ? Promise.resolve() : Promise.reject(err)))
 
-    const deploymentPackage = path.join(__dirname, 'fixtures/sample-deployment-package')
+    const deploymentPackage = await makeTemporaryDirectory(
+      path.join(__dirname, 'fixtures/sample-deployment-package'),
+    )
 
     await sh(`${script} generate --cluster e2e --name nginx`, {
       cwd: deploymentPackage,

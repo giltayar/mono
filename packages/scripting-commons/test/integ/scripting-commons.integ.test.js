@@ -1,22 +1,25 @@
-'use strict'
-import mocha from 'mocha'
-const {describe, it} = mocha
-import chai from 'chai'
-const {expect, use} = chai
-import chaiSubset from 'chai-subset'
-use(chaiSubset)
 import {presult} from '@seasquared/promise-commons'
-
+import chai from 'chai'
+import chaiSubset from 'chai-subset'
+import mocha from 'mocha'
+import path from 'path'
+import fs from 'fs'
 import {
+  makeTemporaryDirectory,
+  readFileAsJson,
+  readFileAsString,
   sh,
   shWithOutput,
-  makeTemporaryDirectory,
   writeFile,
-  readFileAsString,
-  readFileAsJson,
 } from '../../src/scripting-commons.js'
+const {describe, it} = mocha
+const {expect, use} = chai
+use(chaiSubset)
 
-describe('scripting-commons', function () {
+const __filename = new URL(import.meta.url).pathname
+const __dirname = path.dirname(__filename)
+
+describe('scripting-commons (integ)', function () {
   it('should output command output', async () => {
     const tmpDir = await makeTemporaryDirectory()
 
@@ -79,5 +82,26 @@ describe('scripting-commons', function () {
     expect(await readFileAsString('foo.txt', {cwd})).to.equal('hello')
     expect(await readFileAsString(['bar', 'bar.txt'], {cwd})).to.equal('world')
     expect(await readFileAsJson(['foo.json'], {cwd})).to.eql({hello: 'world'})
+  })
+
+  it('should copy directory to temp', async () => {
+    const cwd = await makeTemporaryDirectory(path.resolve(__dirname, 'fixtures/source-dir'))
+
+    expect(fs.readdirSync(cwd)).to.have.length(3)
+    expect(fs.readdirSync(path.join(cwd, 'subdir'))).to.have.length(1)
+    expect(await readFileAsString('foo.txt', {cwd})).to.equal(
+      `
+ABC
+DEF
+GHI
+    `.trim(),
+    )
+    expect(await readFileAsString('bar.txt', {cwd})).to.equal(
+      `
+JKL
+MNO
+    `.trim(),
+    )
+    expect(await readFileAsString('subdir/gar.txt', {cwd})).to.equal(`PQR`)
   })
 })

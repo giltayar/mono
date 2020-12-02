@@ -3,7 +3,7 @@
     "lib": ["es2020", "DOM"],
     "target": "ES2020",
     "moduleResolution": "node",
-    "module": "es2020",
+    "module": "esnext",
     "strict": true,
     "declaration": true,
     "sourceMap": true,
