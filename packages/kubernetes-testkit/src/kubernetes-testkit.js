@@ -25,7 +25,7 @@ export async function setupKubernetes(
 ) {
   const namespace = generateRandomYetStableNamespace(
     dirOrFileToApplyToKubernetes
-      ? path.resolve(dirOrFileToApplyToKubernetes, process.cwd())
+      ? path.resolve(process.cwd(), dirOrFileToApplyToKubernetes)
       : process.cwd(),
   )
 
@@ -121,7 +121,7 @@ export async function setupKubernetes(
 function generateRandomYetStableNamespace(dirname) {
   const hash = crypto.createHash('MD5').update(dirname).digest('base64')
 
-  return `kt-${hash.replace('==', '').replace('=', '').toLowerCase()}`
+  return `kt-${hash.replaceAll('=', '').replaceAll('/', '').replaceAll('+', '').toLowerCase()}`
 }
 
 async function determineClusterType() {
