@@ -12,7 +12,7 @@ use(chaiFs)
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
-describe('kdeploy it', function () {
+describe('generate (integ))', function () {
   it('should show help', async () => {
     const consoleCapturer = captureConsole()
     await app(['--help'], {shouldExitOnError: false})
