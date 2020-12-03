@@ -55,6 +55,9 @@
 		{
 			"name": "url-commons",
 			"path": "packages/url-commons"
+		},
+		{
+			"path": "packages/templatetemplate"
 		}
 	],
 	"settings": {}

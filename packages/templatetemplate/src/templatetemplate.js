@@ -1,45 +1,47 @@
-import yargs from 'yargs'
+import fastify from 'fastify'
+import pg from 'pg'
+import retry from 'p-retry'
+import {
+  deleteEntity,
+  getEntity,
+  insertEntity,
+  listEntities,
+  updateEntity,
+} from './controllers/entity-controller.js'
+import {healthz} from './controllers/healthz-controller.js'
+import {makeMammothDb} from './models/entity-model.js'
+const {Pool} = pg
 
 /**
- *
- * @param {string[]} argv
- * @param {{shouldExitOnError?: boolean}} options
+ * @param {{
+ *  postgresConnectionString: string
+ * }} options
  */
-export async function app(argv, {shouldExitOnError = true} = {}) {
-  const commandLineOptions = getCommandLineOptions(argv)
+export async function makeWebApp({postgresConnectionString}) {
+  const app = fastify()
+  const pool = await connectToPostgres(postgresConnectionString)
+  const db = makeMammothDb(pool)
 
-  const args = await commandLineOptions.exitProcess(shouldExitOnError).strict().help().parse()
+  app.addHook('onClose', async () => await pool.end())
 
-  if (args._?.[0]) {
-    switch (args._[0]) {
-      case 'some-command':
-        // eslint-disable-next-line node/no-unsupported-features/es-syntax
-        await (await import(`./commands/some-command.js`)).default(args)
-        break
-      default:
-        commandLineOptions.showHelp()
-        break
-    }
-  }
+  app.get('/healthz', healthz(pool))
+
+  app.get('/entity', listEntities(db))
+  app.get('/entity/:id', getEntity(db))
+  app.post('/entity', insertEntity(db))
+  app.put('/entity/:id', updateEntity(db))
+  app.delete('/entity/:id', deleteEntity(db))
+
+  return {app, pool}
 }
 
 /**
- * @param {readonly string[]} argv
+ * @param {string} connectionString
  */
-function getCommandLineOptions(argv) {
-  return yargs(argv).command(
-    'some-command <some-parameter>',
-    'something something description',
-    (yargs) =>
-      yargs
-        .positional('some-parameter', {
-          describe: 'some-parameter description',
-          type: 'string',
-          demandOption: true,
-        })
-        .option('some-option', {
-          describe: 'some-option description',
-          type: 'string',
-        }),
-  )
+async function connectToPostgres(connectionString) {
+  const pool = new Pool({connectionString})
+
+  await retry(() => pool.query('select 42'))
+
+  return pool
 }

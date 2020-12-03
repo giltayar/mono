@@ -22,11 +22,11 @@
   "scripts": {
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
-    "test": "run-p --aggregate-output 'test:*'",
+    "test": "FULL_TEST=1 run-p --aggregate-output 'test:*'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
     "test:eslint": "eslint  --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
-    "mocha": "mocha --no-timeouts --exit --color 'test/unit/*.test.js' 'test/integ/*.test.js'"
+    "mocha": "mocha --no-timeouts --exit --color 'test/unit/*.test.js' 'test/integ/*.test.js' 'test/e2e/*.test.js'"
   },
   "keywords": [
     "javascript",
@@ -39,19 +39,20 @@
     "directory": "packages/templatetemplate",
     "type": "git"
   },
-  "dependencies": {
-    "yargs": "^16.1.1"
-  },
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/eslint-parser": "^7.12.1",
     "@babel/plugin-syntax-top-level-await": "^7.12.1",
     "@seasquared/console-tesktit": "^1.0.0",
+    "@seasquared/docker-compose-testkit": "^1.1.3",
+    "@seasquared/http-commons": "^2.0.1",
+    "@seasquared/mocha-commons": "^1.0.5",
     "@seasquared/scripting-commons": "^1.2.0",
     "@types/chai": "^4.2.14",
     "@types/chai-subset": "^1.3.3",
     "@types/mocha": "^8.0.4",
     "@types/node": "^14.14.10",
+    "@types/pg": "^7.14.7",
     "@types/yargs": "^15.0.10",
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
@@ -63,5 +64,15 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^2.2.1",
     "typescript": "^4.1.2"
+  },
+  "dependencies": {
+    "@ff00ff/mammoth": "^1.1.0",
+    "@seasquared/functional-commons": "^1.1.3",
+    "@seasquared/pino-global": "^1.0.1",
+    "fastify": "^3.9.0",
+    "p-retry": "^4.2.0",
+    "pg": "^8.5.1",
+    "pino": "^6.7.0",
+    "zod": "^1.11.11"
   }
 }
