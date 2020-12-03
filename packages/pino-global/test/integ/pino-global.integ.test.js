@@ -141,8 +141,8 @@ describe('pino-global (integ)', function () {
         },
       )
       expect(parsePinoOutput(output)).to.containSubset([
-        {a: 10, b: 11, c: 12, oooh: 'lala', name: 'envprefix:suffix'},
-        {a: 10, b: 11, c: 13, oooh: 'gaga', name: 'envprefix:suffix'},
+        {a: 10, b: 11, c: 12, init: 10, oooh: 'lala', name: 'envprefix:initprefix:suffix'},
+        {a: 10, b: 11, c: 13, init: 10, oooh: 'gaga', name: 'envprefix:initprefix:suffix'},
       ])
     })
   })

@@ -55,14 +55,34 @@ export function makeLogger(name, base = undefined, loggerOptions = undefined) {
  * }}
  */
 function determineGlobalConfig() {
-  if (process.env.GLOBAL_PINO_CONFIG) {
-    const x = JSON.parse(process.env.GLOBAL_PINO_CONFIG)
-    return x
-  } else {
-    return {
-      globalNamePrefix: globalThis.__pinoGlobalBaseName,
-      globalLoggerOptions: globalThis.__pinoGlobalLoggerOptions,
-      globalLoggerBase: globalThis.__pinoGlobalLoggerBase,
-    }
+  const envConfig = process.env.GLOBAL_PINO_CONFIG ? JSON.parse(process.env.GLOBAL_PINO_CONFIG) : {}
+
+  return {
+    globalNamePrefix: makeName(envConfig.globalNamePrefix, globalThis.__pinoGlobalBaseName),
+    globalLoggerOptions: {
+      ...envConfig.globalLoggerOptions,
+      ...globalThis.__pinoGlobalLoggerOptions,
+    },
+    globalLoggerBase: {...envConfig.globalLoggerBase, ...globalThis.__pinoGlobalLoggerBase},
   }
+}
+
+/**
+ * @param {string | undefined} envName
+ * @param {string | undefined} globalThisName
+ */
+function makeName(envName, globalThisName) {
+  if (!envName && !globalThisName) {
+    return undefined
+  }
+
+  if (!envName) {
+    return globalThisName
+  }
+
+  if (!globalThisName) {
+    return envName
+  }
+
+  return envName + globalThisName
 }

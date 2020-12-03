@@ -1,4 +1,6 @@
-import {makeLogger} from '../../../src/pino-global.js'
+import {makeLogger, initializeLoggerOptions} from '../../../src/pino-global.js'
+
+initializeLoggerOptions('initprefix:', {init: 10})
 
 const logger = makeLogger('suffix', {a: 10, b: 11}, {messageKey: 'oooh'})
 
