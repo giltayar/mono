@@ -11,7 +11,7 @@ import {fetch} from '@seasquared/http-commons'
  * @param {{
  *  containerCleanup?: boolean,
  *  forceRecreate?: boolean,
- *  env?: Record<string, string>,
+ *  env?: Record<string, string | undefined>,
  * }} [options]
  * @returns {Promise<{
  *  teardown: () => Promise<void>,
