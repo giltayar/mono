@@ -22,9 +22,10 @@
   "scripts": {
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
+    "build:docker": "./scripts/normalize-package-json.js; docker build -t seasquared/templatetemplate:${npm_package_version} --build-arg NPM_FILE=`cat ~/.npmrc` .",
     "test": "FULL_TEST=1 run-p --aggregate-output 'test:*'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint  --max-warnings=0 '**/*.js'",
+    "test:eslint": "eslint  --max-warnings=0 --color '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
     "mocha": "mocha --no-timeouts --exit --color 'test/unit/*.test.js' 'test/integ/*.test.js' 'test/e2e/*.test.js'"
   },

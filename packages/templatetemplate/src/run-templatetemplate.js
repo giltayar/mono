@@ -1,4 +1,8 @@
 #!/usr/bin/env node
 import {makeWebApp} from './templatetemplate.js'
 
-await app(process.argv.slice(2), {shouldExitOnError: true})
+const {app} = await makeWebApp({
+  postgresConnectionString: process.env.POSTGRESS_CONNECTION_STRING ?? '',
+})
+
+await app.listen(process.env.PORT || 3000, '0.0.0.0')

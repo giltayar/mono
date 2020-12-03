@@ -38,7 +38,7 @@ export async function makeWebApp({postgresConnectionString}) {
 /**
  * @param {string} connectionString
  */
-async function connectToPostgres(connectionString) {
+export async function connectToPostgres(connectionString) {
   const pool = new Pool({connectionString})
 
   await retry(() => pool.query('select 42'))

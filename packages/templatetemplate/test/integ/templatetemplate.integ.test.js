@@ -1,18 +1,25 @@
 import {runDockerCompose, tcpHealthCheck} from '@seasquared/docker-compose-testkit'
-import {fetchAsJson, fetchAsJsonWithJsonBody} from '@seasquared/http-commons'
+import {fetchAsJson} from '@seasquared/http-commons'
 import {after, afterEach, before, describe, it} from '@seasquared/mocha-commons'
 import chai from 'chai'
 import chaiSubset from 'chai-subset'
 import path from 'path'
 import {createDbSchema} from '../../src/models/db-schema.js'
 import {makeWebApp} from '../../src/templatetemplate.js'
+import {
+  addEntity,
+  getEntity,
+  listEntities,
+  updateEntity,
+  deleteEntity,
+} from '../commons/entity-operations.js'
 const {expect, use} = chai
 use(chaiSubset)
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
-describe.only('templatetemplate (integ)', function () {
+describe('templatetemplate (integ)', function () {
   const entity1 = {
     name: 'name1',
     value: 3,
@@ -36,7 +43,7 @@ describe.only('templatetemplate (integ)', function () {
     }),
   )
 
-  const {appAddress: baseUrl, app, pool} = before(async () => {
+  const {baseUrl, app, pool} = before(async () => {
     const postgresAddress = await findAddress()('postgres', 5432, {healthCheck: tcpHealthCheck})
 
     const {app, pool} = await makeWebApp({
@@ -46,7 +53,7 @@ describe.only('templatetemplate (integ)', function () {
     await createDbSchema(pool)
 
     return {
-      appAddress: await app.listen(0),
+      baseUrl: await app.listen(0),
       app,
       pool,
     }
@@ -141,45 +148,3 @@ describe.only('templatetemplate (integ)', function () {
     ])
   })
 })
-
-/**
- * @param {string} baseUrl
- */
-async function listEntities(baseUrl) {
-  return await fetchAsJson(new URL(`/entity`, baseUrl))
-}
-
-/**
- * @param {string} id1
- * @param {string} baseUrl
- */
-async function getEntity(id1, baseUrl) {
-  return await fetchAsJson(new URL(`/entity/${id1}`, baseUrl))
-}
-
-/**
- * @param {string} baseUrl
- * @param {import('../../src/models/entity-model').Entity} entity
- */
-async function addEntity(baseUrl, entity) {
-  return /**@type {{id: string}}*/ (await fetchAsJsonWithJsonBody(
-    new URL('/entity', baseUrl),
-    entity,
-  ))
-}
-
-/**
- * @param {string} baseUrl
- * @param {string} id
- */
-async function updateEntity(baseUrl, id, entity) {
-  await fetchAsJsonWithJsonBody(new URL(`/entity/${id}`, baseUrl), entity, {method: 'PUT'})
-}
-
-/**
- * @param {string} baseUrl
- * @param {string} id
- */
-async function deleteEntity(baseUrl, id) {
-  await fetchAsJson(new URL(`/entity/${id}`, baseUrl), {method: 'DELETE'})
-}
