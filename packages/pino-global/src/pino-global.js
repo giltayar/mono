@@ -132,9 +132,6 @@ function findAsyncLogger(logger, cache) {
  *
  */
 export function runWithChildLogger(logger, f) {
-  // const foundLogger = findAsyncLogger(logger)
-  // const bindings = foundLogger.bindings()
-
   return asyncLocalStorage.run(logger, f)
 }
 

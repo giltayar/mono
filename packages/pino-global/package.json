@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/pino-global",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "type": "module",
   "exports": "./src/pino-global.js",
