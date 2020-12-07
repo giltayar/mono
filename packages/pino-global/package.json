@@ -20,9 +20,9 @@
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output test:eslint test:typescript test:mocha-parallel",
-    "mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
+    "mocha": "mocha --no-timeouts --exit --colors 'test/unit/*.test.js' 'test/integ/*.test.js'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint  --max-warnings=0 '**/*.js'",
+    "test:eslint": "eslint  --max-warnings=0 --color '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
   "keywords": [
@@ -53,7 +53,7 @@
     "@types/pino": "*",
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
-    "eslint": "^7.14.0",
+    "eslint": "^7.15.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.2.0",
