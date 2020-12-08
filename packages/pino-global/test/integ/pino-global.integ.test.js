@@ -4,7 +4,13 @@ import chai from 'chai'
 import chaiSubset from 'chai-subset'
 import mocha from 'mocha'
 import path from 'path'
-import {initializeLoggerOptions, makeLogger, runWithChildLogger} from '../../src/pino-global.js'
+import {
+  initializeLoggerOptions,
+  makeLogger,
+  runWithChildLogger,
+  initializeForTesting,
+} from '../../src/pino-global.js'
+import {presult} from '@seasquared/promise-commons'
 const {describe, it, before} = mocha
 const {expect, use} = chai
 use(chaiSubset)
@@ -59,26 +65,36 @@ describe('pino-global (integ)', function () {
 
     it('makeLogger works with only name initialization and logger options', () => {
       const {record, playback, loggerOptionsForRecorder} = makeRecorder()
-      initializeLoggerOptions('prefix:', undefined, {
-        messageKey: 'event',
-        ...loggerOptionsForRecorder,
-      })
+      initializeLoggerOptions(
+        'prefix:',
+        undefined,
+        {
+          messageKey: 'event',
+          ...loggerOptionsForRecorder,
+        },
+        {allowMultipleInitializations: true},
+      )
 
       record()
-      const logger = makeLogger('suffix')
+      const logger = makeLogger({name: 'suffix'})
       logger.info({c: 6}, 'message')
       expect(playback()).to.containSubset([{c: 6, event: 'message', name: 'prefix:suffix'}])
     })
 
     it('makeLogger works with only logger options', () => {
       const {record, playback, loggerOptionsForRecorder} = makeRecorder()
-      initializeLoggerOptions(undefined, undefined, {
-        messageKey: 'event',
-        ...loggerOptionsForRecorder,
-      })
+      initializeLoggerOptions(
+        undefined,
+        undefined,
+        {
+          messageKey: 'event',
+          ...loggerOptionsForRecorder,
+        },
+        {allowMultipleInitializations: true},
+      )
 
       record()
-      const logger = makeLogger('suffix')
+      const logger = makeLogger({name: 'suffix'})
       logger.info({c: 6}, 'message')
       expect(playback()).to.containSubset([{c: 6, event: 'message', name: 'suffix'}])
     })
@@ -93,15 +109,41 @@ describe('pino-global (integ)', function () {
           messageKey: 'event',
           ...loggerOptionsForRecorder,
         },
+        {allowMultipleInitializations: true},
       )
 
-      const logger = makeLogger('suffix')
+      const logger = makeLogger({name: 'suffix'})
 
       record()
       logger.info({c: 6}, 'message')
       expect(playback()).to.containSubset([
         {a: 4, b: 5, c: 6, event: 'message', name: 'nameprefix:suffix'},
       ])
+    })
+
+    it('"makeLogger" with no name should use global name prefix', () => {
+      const {playback, loggerOptionsForRecorder} = makeRecorder()
+      initializeLoggerOptions('nameprefix:', undefined, loggerOptionsForRecorder, {
+        allowMultipleInitializations: true,
+      })
+
+      const logger = makeLogger()
+
+      logger.info('message')
+
+      expect(playback()).to.containSubset([{msg: 'message', name: 'nameprefix:'}])
+    })
+  })
+
+  describe('initialize for testing', () => {
+    it('should initializeForTesting', () => {
+      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
+      initializeForTesting(loggerOptionsForRecorder)
+
+      const logger = makeLogger()
+      record()
+      logger.info('hallelujah')
+      expect(playback()).to.containSubset([{msg: 'hallelujah', name: 'test'}])
     })
   })
 
@@ -112,11 +154,9 @@ describe('pino-global (integ)', function () {
         {
           cwd: __dirname,
           env: {
-            GLOBAL_PINO_CONFIG: JSON.stringify({
-              globalNamePrefix: 'envprefix:',
-              globalLoggerOptions: {messageKey: 'comingFromEnv'},
-              globalLoggerBase: {a: 4},
-            }),
+            PINO_GLOBAL_NAME_PREFIX: 'envprefix:',
+            PINO_GLOBAL_LOGGER_OPTIONS: JSON.stringify({messageKey: 'comingFromEnv'}),
+            PINO_GLOBAL_BASE_BINDINGS: JSON.stringify({a: 4}),
           },
         },
       )
@@ -124,6 +164,28 @@ describe('pino-global (integ)', function () {
         {a: 10, b: 11, c: 12, init: 10, oooh: 'lala', name: 'envprefix:initprefix:suffix'},
         {a: 10, b: 11, c: 13, init: 10, oooh: 'gaga', name: 'envprefix:initprefix:suffix'},
       ])
+    })
+  })
+
+  describe('initialize only once', () => {
+    it('should throw if "initializeLoggerOptions" was called twice without "allowMultipleInitializations:true"', async () => {
+      const [err] = await presult(
+        shWithOutput(`${process.execPath} fixtures/initialize-twice.js`, {cwd: __dirname}),
+      )
+
+      expect(err).to.not.be.undefined
+      expect(err.stderr).to.include(`"initializeLoggerOptions" called twice`)
+    })
+
+    it('should throw if "initializeLoggerOptions" was called once with "allowMultipleInitializations:false" and once with "allowMultipleInitializations:true"', async () => {
+      const [err] = await presult(
+        shWithOutput(`${process.execPath} fixtures/initialize-twice-with-false-then-true.js`, {
+          cwd: __dirname,
+        }),
+      )
+
+      expect(err).to.not.be.undefined
+      expect(err.stderr).to.include(`Cannot overturn it to be true`)
     })
   })
 
@@ -137,8 +199,9 @@ describe('pino-global (integ)', function () {
         {
           ...loggerOptionsForRecorder,
         },
+        {allowMultipleInitializations: true},
       )
-      const logger = makeLogger('logger', {b: 5})
+      const logger = makeLogger({name: 'logger', b: 5})
       logger.info('outside')
       const ret = await runWithChildLogger(logger.child({c: 6}), async () => {
         await 1
@@ -165,8 +228,9 @@ describe('pino-global (integ)', function () {
         {
           ...loggerOptionsForRecorder,
         },
+        {allowMultipleInitializations: true},
       )
-      const logger = makeLogger('logger', {b: 5})
+      const logger = makeLogger({name: 'logger', b: 5})
       logger.info('outside')
       const ret = await runWithChildLogger(logger.child({c: 6}), async () => {
         await 1
@@ -199,8 +263,9 @@ describe('pino-global (integ)', function () {
         {
           ...loggerOptionsForRecorder,
         },
+        {allowMultipleInitializations: true},
       )
-      const logger = makeLogger('logger', {b: 5})
+      const logger = makeLogger({name: 'logger', b: 5})
       logger.info('outside')
       const ret = await runWithChildLogger(logger.child({c: 6}), async () => {
         await 1

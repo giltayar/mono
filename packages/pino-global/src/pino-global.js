@@ -4,53 +4,92 @@ import pino from 'pino'
 
 /**
  * @typedef {{
- *  globalNamePrefix?: string | undefined;
- *  globalLoggerOptions?: pino.LoggerOptions | undefined;
- *  globalLoggerBase?: pino.Bindings | undefined;
+ *  globalNamePrefix?: string | undefined
+ *  globalLoggerOptions?: pino.LoggerOptions | undefined
+ *  globalLoggerBaseBindings?: pino.Bindings | undefined
+ *  errorInCaseOfMultipleInitializations?: Error | undefined
+ *  allowMultipleInitializations: boolean
  * }} GlobalConfig
  */
 
 /**
  * @type {GlobalConfig}
  */
-globalThis.__pinoGlobalConfig = {}
+globalThis.__pinoGlobalConfig = {
+  allowMultipleInitializations: true,
+}
 
 /**
  *
  * @param {string} [namesPrefix]
- * @param {pino.Bindings} [base]
+ * @param {pino.Bindings} [baseBindings]
  * @param {pino.LoggerOptions} [loggerOptions]
+ * @param {{allowMultipleInitializations?: boolean}} [options]
  */
 export function initializeLoggerOptions(
   namesPrefix = undefined,
-  base = undefined,
+  baseBindings = undefined,
   loggerOptions = undefined,
+  {allowMultipleInitializations = false} = {},
 ) {
+  if (!globalThis.__pinoGlobalConfig.allowMultipleInitializations && allowMultipleInitializations) {
+    throw new Error(
+      `"allowMultipleInitializations" initialized to false once. Cannot overturn it to be true.`,
+    )
+  }
+  if (
+    !allowMultipleInitializations &&
+    globalThis.__pinoGlobalConfig.errorInCaseOfMultipleInitializations
+  ) {
+    const previousStack = globalThis.__pinoGlobalConfig.errorInCaseOfMultipleInitializations?.stack
+
+    throw new Error(
+      `"initializeLoggerOptions" called twice. This is the call stack for the first time:
+${previousStack}`,
+    )
+  }
+
   globalThis.__pinoGlobalConfig = {
     globalNamePrefix: namesPrefix,
     globalLoggerOptions: loggerOptions,
-    globalLoggerBase: base,
+    globalLoggerBaseBindings: baseBindings,
+    errorInCaseOfMultipleInitializations: !allowMultipleInitializations
+      ? new Error('error for first call to "initializeLoggerOptions"')
+      : undefined,
+    allowMultipleInitializations,
   }
 }
 
 /**
- * @param {string} name
- * @param {pino.Bindings} [base]
+ * @param {pino.LoggerOptions} loggerOptionsFromPinoTestkit
+ */
+export function initializeForTesting(loggerOptionsFromPinoTestkit) {
+  return initializeLoggerOptions('test', undefined, loggerOptionsFromPinoTestkit, {
+    allowMultipleInitializations: true,
+  })
+}
+
+/**
+ * @param {pino.Bindings} [baseBindings]
  *
  * @returns {pino.Logger}
  */
-export function makeLogger(name, base = undefined) {
-  const {globalNamePrefix, globalLoggerOptions, globalLoggerBase} =
+export function makeLogger(baseBindings = undefined) {
+  const {globalNamePrefix, globalLoggerOptions, globalLoggerBaseBindings: globalLoggerBase} =
     cachedGlobalConfig ?? determineGlobalConfig()
 
   return /**@type{pino.Logger}*/ (makeLoggerThatCanRunWithChild(
     pino({
       ...globalLoggerOptions,
-      name: makeLoggerName(globalNamePrefix, name),
-      base: {host: os.hostname, ...globalLoggerBase, ...base},
+      name: baseBindings?.name
+        ? makeLoggerName(globalNamePrefix, baseBindings.name)
+        : globalNamePrefix,
+      base: {host: os.hostname, ...globalLoggerBase, ...baseBindings},
     }),
   ))
 }
+
+export default makeLogger
 
 /**
  * @param {pino.Logger} pinoLogger
@@ -139,18 +178,33 @@ export function runWithChildLogger(logger, f) {
  * @returns {GlobalConfig}
  */
 function determineGlobalConfig() {
-  const envConfig = process.env.GLOBAL_PINO_CONFIG ? JSON.parse(process.env.GLOBAL_PINO_CONFIG) : {}
+  const envConfig = {
+    globalNamePrefix: process.env.PINO_GLOBAL_NAME_PREFIX,
+    globalLoggerBaseBindings: JSON.parse(process.env.PINO_GLOBAL_BASE_BINDINGS ?? '{}'),
+    globalLoggerOptions: JSON.parse(process.env.PINO_GLOBAL_LOGGER_OPTIONS ?? '{}'),
+  }
 
   const initGlobalOptions = globalThis.__pinoGlobalConfig
 
-  return {
+  /**@type {GlobalConfig} */
+  const ret = {
     globalNamePrefix: makeName(envConfig.globalNamePrefix, initGlobalOptions.globalNamePrefix),
     globalLoggerOptions: {
       ...envConfig.globalLoggerOptions,
       ...initGlobalOptions.globalLoggerOptions,
     },
-    globalLoggerBase: {...envConfig.globalLoggerBase, ...initGlobalOptions.globalLoggerBase},
+    globalLoggerBaseBindings: {
+      ...envConfig.globalLoggerBaseBindings,
+      ...initGlobalOptions.globalLoggerBaseBindings,
+    },
+    allowMultipleInitializations: initGlobalOptions.allowMultipleInitializations,
   }
+
+  if (!initGlobalOptions.allowMultipleInitializations) {
+    cachedGlobalConfig = ret
+  }
+
+  return ret
 
   /**
    * @param {string | undefined} envName
@@ -184,4 +238,4 @@ function makeLoggerName(globalNamePrefix, name) {
 const asyncLocalStorage = new AsyncLocalStorage()
 
 /**@type {GlobalConfig | undefined} */
-const cachedGlobalConfig = undefined
+let cachedGlobalConfig = undefined
