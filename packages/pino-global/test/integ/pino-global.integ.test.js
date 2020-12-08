@@ -9,6 +9,8 @@ import {
   makeLogger,
   runWithChildLogger,
   initializeForTesting,
+  enterWithChildLogger,
+  exitFromChildLogger,
 } from '../../src/pino-global.js'
 import {presult} from '@seasquared/promise-commons'
 const {describe, it, before} = mocha
@@ -291,6 +293,122 @@ describe('pino-global (integ)', function () {
           {a: 4, b: 5, c: 6, msg: 'inside', name: 'nameprefix:logger'},
           {a: 4, b: 5, c: undefined, msg: 'outside again', name: 'nameprefix:logger'},
         ])
+    })
+  })
+
+  describe('enter/Exit child logger', () => {
+    it('should enter/exit with child logger', (done) => {
+      const {playback, loggerOptionsForRecorder} = makeRecorder()
+
+      initializeLoggerOptions(
+        'nameprefix:',
+        {a: 4},
+        {
+          ...loggerOptionsForRecorder,
+        },
+        {allowMultipleInitializations: true},
+      )
+      const logger = makeLogger({name: 'logger', b: 5})
+      logger.info('outside')
+      enterWithChildLogger(logger.child({c: 6}))
+      logger.info('inside')
+      exitFromChildLogger(() => {
+        logger.info('outside again')
+        try {
+          expect(playback())
+            .to.have.length(3)
+            .and.to.containSubset([
+              {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
+              {a: 4, b: 5, c: 6, msg: 'inside', name: 'nameprefix:logger'},
+              {a: 4, b: 5, c: undefined, msg: 'outside again', name: 'nameprefix:logger'},
+            ])
+        } catch (err) {
+          return done(err)
+        }
+        done()
+      })
+    })
+
+    it('chilld logger should work inside runWithChildLogger', (done) => {
+      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
+
+      initializeLoggerOptions(
+        'nameprefix:',
+        {a: 4},
+        {
+          ...loggerOptionsForRecorder,
+        },
+        {allowMultipleInitializations: true},
+      )
+      record()
+      const logger = makeLogger({name: 'logger', b: 5})
+      logger.info('outside')
+      enterWithChildLogger(logger.child({c: 6}))
+      logger.info('inside')
+      logger.child({d: 7}).info('child inside')
+      logger.child({x: 7, name: 'childname'}).info('child inside with name')
+      logger.child({x: 8, name: 'childname'}).child({y: 9, name: 'grandchild'}).info('grandchild')
+      exitFromChildLogger(() => {
+        logger.info('outside again')
+        try {
+          expect(playback())
+            .to.have.length(6)
+            .and.to.containSubset([
+              {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
+              {a: 4, b: 5, c: 6, msg: 'inside', name: 'nameprefix:logger'},
+              {a: 4, b: 5, c: 6, d: 7, msg: 'child inside', name: 'nameprefix:logger'},
+              {a: 4, b: 5, c: 6, x: 7, msg: 'child inside with name', name: 'nameprefix:childname'},
+              {a: 4, b: 5, c: 6, x: 8, y: 9, msg: 'grandchild', name: 'nameprefix:grandchild'},
+              {a: 4, b: 5, c: undefined, msg: 'outside again', name: 'nameprefix:logger'},
+            ])
+        } catch (err) {
+          return done(err)
+        }
+        done()
+      })
+    })
+
+    it('nested runWithChildLogger', (done) => {
+      const {playback, loggerOptionsForRecorder} = makeRecorder()
+
+      initializeLoggerOptions(
+        'nameprefix:',
+        {a: 4},
+        {
+          ...loggerOptionsForRecorder,
+        },
+        {allowMultipleInitializations: true},
+      )
+      const logger = makeLogger({name: 'logger', b: 5})
+      logger.info('outside')
+      enterWithChildLogger(logger.child({c: 6}))
+      logger.info('inside')
+      enterWithChildLogger(logger.child({d: 7}))
+      logger.info('nested inside')
+      logger.child({e: 8, name: 'nested'}).info('nested inside 2')
+      exitFromChildLogger(() => {
+        logger.info('inside')
+        exitFromChildLogger(() => {
+          logger.info('outside again')
+          logger.child({e: 8, name: 'logger2'}).info('nested outside 2')
+          try {
+            expect(playback())
+              .to.have.length(7)
+              .and.to.containSubset([
+                {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
+                {a: 4, b: 5, c: 6, msg: 'inside', name: 'nameprefix:logger'},
+                {a: 4, b: 5, c: 6, d: 7, msg: 'nested inside', name: 'nameprefix:logger'},
+                {a: 4, b: 5, c: 6, d: 7, e: 8, msg: 'nested inside 2', name: 'nameprefix:nested'},
+                {a: 4, b: 5, c: 6, msg: 'inside', name: 'nameprefix:logger'},
+                {a: 4, b: 5, c: undefined, msg: 'outside again', name: 'nameprefix:logger'},
+                {a: 4, b: 5, c: undefined, msg: 'nested outside 2', name: 'nameprefix:logger2'},
+              ])
+          } catch (err) {
+            return done(err)
+          }
+          done()
+        })
+      })
     })
   })
 })

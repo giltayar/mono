@@ -92,6 +92,32 @@ export function makeLogger(baseBindings = undefined) {
 export default makeLogger
 
 /**
+ * @template T
+ * @param {pino.Logger} logger
+ * @param {() => T} f
+ *
+ */
+export function runWithChildLogger(logger, f) {
+  return asyncLocalStorage.run(logger, f)
+}
+
+/**
+ * @param {pino.Logger} logger
+ *
+ */
+export function enterWithChildLogger(logger) {
+  return asyncLocalStorage.enterWith(logger)
+}
+
+/**
+ *
+ * @param {() => void} callback child logger will be exited only in the callback
+ */
+export function exitFromChildLogger(callback) {
+  asyncLocalStorage.exit(callback)
+}
+
+/**
  * @param {pino.Logger} pinoLogger
  */
 function makeLoggerThatCanRunWithChild(pinoLogger) {
@@ -162,16 +188,6 @@ function findAsyncLogger(logger, cache) {
     foundLogger = logger
   }
   return foundLogger
-}
-
-/**
- * @template T
- * @param {pino.Logger} logger
- * @param {() => T} f
- *
- */
-export function runWithChildLogger(logger, f) {
-  return asyncLocalStorage.run(logger, f)
 }
 
 /**
