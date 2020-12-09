@@ -78,7 +78,7 @@ export function makeLogger(baseBindings = undefined) {
   const {globalNamePrefix, globalLoggerOptions, globalLoggerBaseBindings: globalLoggerBase} =
     cachedGlobalConfig ?? determineGlobalConfig()
 
-  return /**@type{pino.Logger}*/ (makeLoggerThatCanRunWithChild(
+  return /**@type{pino.Logger}*/ (makeLoggerThatCanRunWithChild(() =>
     pino({
       ...globalLoggerOptions,
       name: baseBindings?.name
@@ -117,14 +117,29 @@ export function exitFromChildLogger(callback) {
   asyncLocalStorage.exit(callback)
 }
 
+const somePinoLogger = pino()
+
 /**
- * @param {pino.Logger} pinoLogger
+ * @param {pino.Logger | (() => pino.Logger)} pinoLogger
  */
 function makeLoggerThatCanRunWithChild(pinoLogger) {
   /**@type {WeakMap<pino.Logger, pino.Logger>} */
   const cache = new WeakMap()
+  /**@type{pino.Logger|undefined} */
+  let pinoLoggerCache = undefined
 
-  return Object.assign(Object.create(Object.getPrototypeOf(pinoLogger)), pinoLogger, {
+  /**
+   * @returns {pino.Logger}
+   */
+  const finalPinoLogger = () => {
+    // if (pinoLoggerCache) return pinoLoggerCache
+    pinoLoggerCache = typeof pinoLogger === 'function' ? pinoLogger() : pinoLogger
+    return pinoLoggerCache
+  }
+
+  const mirrorPinoLogger = typeof pinoLogger === 'function' ? somePinoLogger : pinoLogger
+
+  return Object.assign(Object.create(Object.getPrototypeOf(mirrorPinoLogger)), mirrorPinoLogger, {
     debug: makeLoggingFunction('debug'),
     trace: makeLoggingFunction('trace'),
     info: makeLoggingFunction('info'),
@@ -135,11 +150,11 @@ function makeLoggerThatCanRunWithChild(pinoLogger) {
      * @param {pino.Bindings} bindings
      */
     child(bindings) {
-      const foundLogger = findAsyncLogger(pinoLogger, cache)
+      const foundLogger = findAsyncLogger(finalPinoLogger(), cache)
       const newBindings = {...foundLogger.bindings(), ...bindings}
 
       return makeLoggerThatCanRunWithChild(
-        pinoLogger.child(
+        finalPinoLogger().child(
           bindings.name
             ? {
                 ...newBindings,
@@ -156,7 +171,7 @@ function makeLoggerThatCanRunWithChild(pinoLogger) {
    */
   function makeLoggingFunction(level) {
     return /** @param {any[]} args */ function (...args) {
-      const foundLogger = findAsyncLogger(pinoLogger, cache)
+      const foundLogger = findAsyncLogger(finalPinoLogger(), cache)
 
       //@ts-expect-error
       return foundLogger[level](...args)
