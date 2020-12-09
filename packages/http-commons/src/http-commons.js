@@ -5,7 +5,11 @@ import {memo, makeError} from '@seasquared/functional-commons'
 import {delay} from '@seasquared/promise-commons'
 
 /**
- * @typedef {(url: string | URL, init?: import('node-fetch').RequestInit) =>
+ * @typedef {import('node-fetch').RequestInit & {requestId?: string}} RequestInitWithRequestId
+ */
+
+/**
+ * @typedef {(url: string | URL, init?: RequestInitWithRequestId) =>
  *  Promise<import('node-fetch').Response>}
  * FetchFunction
  * */
@@ -31,13 +35,11 @@ export async function throwErrorFromBadStatus(url, response) {
 /**
  *
  * @param {string | URL} url
- * @param {import('node-fetch').RequestInit} [init]
- * @param {{alternativeFetch?: FetchFunction}} [options]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<Buffer>}
  */
-export async function fetchAsBuffer(url, init, {alternativeFetch} = {}) {
-  const finalFetch = alternativeFetch || fetch
-  const response = await finalFetch(url, init)
+export async function fetchAsBuffer(url, init) {
+  const response = await fetch(url, init)
 
   if (!response.ok) await throwErrorFromBadStatus(url, response)
 
@@ -46,13 +48,11 @@ export async function fetchAsBuffer(url, init, {alternativeFetch} = {}) {
 
 /**
  * @param {string | URL} url
- * @param {import('node-fetch').RequestInit} [init]
- * @param {{alternativeFetch?: FetchFunction}} [options]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<import('type-fest').JsonValue>}
  */
-export async function fetchAsJson(url, init, {alternativeFetch = undefined} = {}) {
-  const finalFetch = alternativeFetch || fetch
-  const response = await finalFetch(url, merge({headers: {Accept: 'application/json'}}, init))
+export async function fetchAsJson(url, init) {
+  const response = await fetch(url, merge({headers: {Accept: 'application/json'}}, init))
 
   if (!response.ok) await throwErrorFromBadStatus(url, response)
 
@@ -61,13 +61,11 @@ export async function fetchAsJson(url, init, {alternativeFetch = undefined} = {}
 
 /**
  * @param {string | URL} url
- * @param {import('node-fetch').RequestInit} [init]
- * @param {{alternativeFetch?: FetchFunction}} [options]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<string>}
  */
-export async function fetchAsText(url, init, {alternativeFetch} = {}) {
-  const finalFetch = alternativeFetch || fetch
-  const response = await finalFetch(url, init)
+export async function fetchAsText(url, init) {
+  const response = await fetch(url, init)
 
   if (!response.ok) await throwErrorFromBadStatus(url, response)
 
@@ -77,13 +75,11 @@ export async function fetchAsText(url, init, {alternativeFetch} = {}) {
 /**
  * @param {string | URL} url
  * @param {import('type-fest').JsonValue} json
- * @param {import('node-fetch').RequestInit} [init]
- * @param {{alternativeFetch?: FetchFunction}} [options]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<string>}
  */
-export async function fetchAsTextWithJsonBody(url, json, init, {alternativeFetch} = {}) {
-  const finalFetch = alternativeFetch || fetch
-  const response = await finalFetch(
+export async function fetchAsTextWithJsonBody(url, json, init) {
+  const response = await fetch(
     url,
     merge(
       {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json)},
@@ -99,13 +95,11 @@ export async function fetchAsTextWithJsonBody(url, json, init, {alternativeFetch
 /**
  * @param {string | URL} url
  * @param {import('type-fest').JsonValue} json
- * @param {import('node-fetch').RequestInit} [init]
- * @param {{alternativeFetch?: FetchFunction}} [options]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<Buffer>}
  */
-export async function fetchAsBufferWithJsonBody(url, json, init, {alternativeFetch} = {}) {
-  const finalFetch = alternativeFetch || fetch
-  const response = await finalFetch(
+export async function fetchAsBufferWithJsonBody(url, json, init) {
+  const response = await fetch(
     url,
     merge(
       {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(json)},
@@ -121,13 +115,11 @@ export async function fetchAsBufferWithJsonBody(url, json, init, {alternativeFet
 /**
  * @param {string | URL} url
  * @param {import('type-fest').JsonValue} json
- * @param {import('node-fetch').RequestInit} [init]
- * @param {{alternativeFetch?: FetchFunction}} [options]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<import('type-fest').JsonValue>}
  */
-export async function fetchAsJsonWithJsonBody(url, json, init, {alternativeFetch} = {}) {
-  const finalFetch = alternativeFetch ?? fetch
-  const response = await finalFetch(
+export async function fetchAsJsonWithJsonBody(url, json, init) {
+  const response = await fetch(
     url,
     merge(
       {
@@ -146,14 +138,22 @@ export async function fetchAsJsonWithJsonBody(url, json, init, {alternativeFetch
 /**
  *
  * @param {string | URL} url
- * @param {import('node-fetch').RequestInit} [init]
+ * @param {RequestInitWithRequestId} [init]
  * @returns {Promise<import('node-fetch').Response>}
  */
 export async function fetch(url, init) {
   return await nodeFetch(url, {
     //@ts-expect-error
     agent: defaultAgent(url?.protocol ?? new URL(url).protocol),
-    ...init,
+    ...(init?.requestId != null
+      ? {
+          ...init,
+          headers: {
+            'x-request-id': init.requestId,
+            ...init.headers,
+          },
+        }
+      : init),
   })
 }
 

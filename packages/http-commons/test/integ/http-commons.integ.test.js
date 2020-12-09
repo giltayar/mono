@@ -1,7 +1,9 @@
 import {describe, it, before, after} from '@seasquared/mocha-commons'
 import chai from 'chai'
-const {expect} = chai
+const {expect, use} = chai
+import chaiSubset from 'chai-subset'
 import fastify from 'fastify'
+use(chaiSubset)
 
 import {
   fetch,
@@ -99,6 +101,23 @@ describe('http-commons', function () {
   it('should work with https urls', async () => {
     expect(await fetchAsText('https://www.google.com')).to.not.be.empty
   })
+
+  describe('requestId', () => {
+    it('should send a request id', async () => {
+      expect(
+        await fetchAsJson(new URL('/headers-echo', baseUrl()), {requestId: '123'}),
+      ).to.containSubset({'x-request-id': '123'})
+    })
+
+    it('should send a request id along with other headers', async () => {
+      expect(
+        await fetchAsJson(new URL('/headers-echo', baseUrl()), {
+          requestId: '123',
+          headers: {'x-other': '456'},
+        }),
+      ).to.containSubset({'x-request-id': '123', 'x-other': '456'})
+    })
+  })
 })
 
 function createApp() {
@@ -113,6 +132,8 @@ function createApp() {
 
     return Promise.resolve({method: req.method, ...body})
   })
+
+  app.all('/headers-echo', (req) => Promise.resolve(req.headers))
 
   return app
 }
