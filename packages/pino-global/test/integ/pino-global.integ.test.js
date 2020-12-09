@@ -1,4 +1,4 @@
-import {makeRecorder} from '@seasquared/pino-testkit'
+import {loggerOptionsForRecorder, playbackLogs, recordLogs} from '@seasquared/pino-testkit'
 import {shWithOutput} from '@seasquared/scripting-commons'
 import chai from 'chai'
 import chaiSubset from 'chai-subset'
@@ -13,7 +13,7 @@ import {
   exitFromChildLogger,
 } from '../../src/pino-global.js'
 import {presult} from '@seasquared/promise-commons'
-const {describe, it, before} = mocha
+const {describe, it, before, beforeEach} = mocha
 const {expect, use} = chai
 use(chaiSubset)
 
@@ -21,6 +21,7 @@ const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
 describe('pino-global (integ)', function () {
+  beforeEach(recordLogs)
   describe('explicit initialization', () => {
     before(() => {
       delete process.env.GLOBAL_PINO_CONFIG
@@ -66,7 +67,6 @@ describe('pino-global (integ)', function () {
     })
 
     it('makeLogger works with only name initialization and logger options', () => {
-      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
       initializeLoggerOptions(
         'prefix:',
         undefined,
@@ -77,14 +77,12 @@ describe('pino-global (integ)', function () {
         {allowMultipleInitializations: true},
       )
 
-      record()
       const logger = makeLogger({name: 'suffix'})
       logger.info({c: 6}, 'message')
-      expect(playback()).to.containSubset([{c: 6, event: 'message', name: 'prefix:suffix'}])
+      expect(playbackLogs()).to.containSubset([{c: 6, event: 'message', name: 'prefix:suffix'}])
     })
 
     it('makeLogger works with only logger options', () => {
-      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
       initializeLoggerOptions(
         undefined,
         undefined,
@@ -95,15 +93,12 @@ describe('pino-global (integ)', function () {
         {allowMultipleInitializations: true},
       )
 
-      record()
       const logger = makeLogger({name: 'suffix'})
       logger.info({c: 6}, 'message')
-      expect(playback()).to.containSubset([{c: 6, event: 'message', name: 'suffix'}])
+      expect(playbackLogs()).to.containSubset([{c: 6, event: 'message', name: 'suffix'}])
     })
 
     it('makeLogger works with everything initialized', () => {
-      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4, b: 5},
@@ -116,15 +111,13 @@ describe('pino-global (integ)', function () {
 
       const logger = makeLogger({name: 'suffix'})
 
-      record()
       logger.info({c: 6}, 'message')
-      expect(playback()).to.containSubset([
+      expect(playbackLogs()).to.containSubset([
         {a: 4, b: 5, c: 6, event: 'message', name: 'nameprefix:suffix'},
       ])
     })
 
     it('"makeLogger" with no name should use global name prefix', () => {
-      const {playback, loggerOptionsForRecorder} = makeRecorder()
       initializeLoggerOptions('nameprefix:', undefined, loggerOptionsForRecorder, {
         allowMultipleInitializations: true,
       })
@@ -133,19 +126,17 @@ describe('pino-global (integ)', function () {
 
       logger.info('message')
 
-      expect(playback()).to.containSubset([{msg: 'message', name: 'nameprefix:'}])
+      expect(playbackLogs()).to.containSubset([{msg: 'message', name: 'nameprefix:'}])
     })
   })
 
   describe('initialize for testing', () => {
     it('should initializeForTesting', () => {
-      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
       initializeForTesting(loggerOptionsForRecorder)
 
       const logger = makeLogger()
-      record()
       logger.info('hallelujah')
-      expect(playback()).to.containSubset([{msg: 'hallelujah', name: 'test'}])
+      expect(playbackLogs()).to.containSubset([{msg: 'hallelujah', name: 'test'}])
     })
   })
 
@@ -193,8 +184,6 @@ describe('pino-global (integ)', function () {
 
   describe('runWithChildLogger', () => {
     it('should run with child logger', async () => {
-      const {playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4},
@@ -212,7 +201,7 @@ describe('pino-global (integ)', function () {
       })
       logger.info('outside again')
       expect(ret).to.equal(42)
-      expect(playback())
+      expect(playbackLogs())
         .to.have.length(3)
         .and.to.containSubset([
           {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
@@ -222,8 +211,6 @@ describe('pino-global (integ)', function () {
     })
 
     it('chilld logger should work inside runWithChildLogger', async () => {
-      const {playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4},
@@ -244,7 +231,7 @@ describe('pino-global (integ)', function () {
       })
       logger.info('outside again')
       expect(ret).to.equal(42)
-      expect(playback())
+      expect(playbackLogs())
         .to.have.length(6)
         .and.to.containSubset([
           {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
@@ -257,8 +244,6 @@ describe('pino-global (integ)', function () {
     })
 
     it('nested runWithChildLogger', async () => {
-      const {playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4},
@@ -283,7 +268,7 @@ describe('pino-global (integ)', function () {
       })
       logger.info('outside again')
       expect(ret).to.equal(42)
-      expect(playback())
+      expect(playbackLogs())
         .to.have.length(6)
         .and.to.containSubset([
           {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
@@ -298,8 +283,6 @@ describe('pino-global (integ)', function () {
 
   describe('enter/Exit child logger', () => {
     it('should enter/exit with child logger', (done) => {
-      const {playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4},
@@ -315,7 +298,7 @@ describe('pino-global (integ)', function () {
       exitFromChildLogger(() => {
         logger.info('outside again')
         try {
-          expect(playback())
+          expect(playbackLogs())
             .to.have.length(3)
             .and.to.containSubset([
               {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
@@ -330,8 +313,6 @@ describe('pino-global (integ)', function () {
     })
 
     it('chilld logger should work inside runWithChildLogger', (done) => {
-      const {record, playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4},
@@ -340,7 +321,6 @@ describe('pino-global (integ)', function () {
         },
         {allowMultipleInitializations: true},
       )
-      record()
       const logger = makeLogger({name: 'logger', b: 5})
       logger.info('outside')
       enterWithChildLogger(logger.child({c: 6}))
@@ -351,7 +331,7 @@ describe('pino-global (integ)', function () {
       exitFromChildLogger(() => {
         logger.info('outside again')
         try {
-          expect(playback())
+          expect(playbackLogs())
             .to.have.length(6)
             .and.to.containSubset([
               {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
@@ -369,8 +349,6 @@ describe('pino-global (integ)', function () {
     })
 
     it('nested runWithChildLogger', (done) => {
-      const {playback, loggerOptionsForRecorder} = makeRecorder()
-
       initializeLoggerOptions(
         'nameprefix:',
         {a: 4},
@@ -392,7 +370,7 @@ describe('pino-global (integ)', function () {
           logger.info('outside again')
           logger.child({e: 8, name: 'logger2'}).info('nested outside 2')
           try {
-            expect(playback())
+            expect(playbackLogs())
               .to.have.length(7)
               .and.to.containSubset([
                 {a: 4, b: 5, c: undefined, msg: 'outside', name: 'nameprefix:logger'},
