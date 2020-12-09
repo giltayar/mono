@@ -32,7 +32,7 @@ export function before(f) {
     returnValueFromF = f()
 
     // @ts-expect-error
-    if (returnValueFromF.then) {
+    if (returnValueFromF?.then) {
       // @ts-expect-error
       return returnValueFromF.then((v) => {
         returnValueFromF = v
@@ -80,7 +80,7 @@ export function beforeEach(f) {
     returnValueFromF = f()
 
     // @ts-expect-error
-    if (returnValueFromF.then) {
+    if (returnValueFromF?.then) {
       // @ts-expect-error
       return f().then((v) => {
         returnValueFromF = v

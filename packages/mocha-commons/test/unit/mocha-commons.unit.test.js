@@ -1,7 +1,7 @@
 import chai from 'chai'
 const {expect} = chai
 
-import {before, after, describe, it, afterEach} from '../../src/mocha-commons.js'
+import {before, after, describe, it, afterEach, beforeEach} from '../../src/mocha-commons.js'
 
 describe('mocha-commons (unit)', function () {
   let count = 0
@@ -11,6 +11,8 @@ describe('mocha-commons (unit)', function () {
     count: ++count,
   }))
   before(() => expect(count).to.equal(1))
+  before(() => undefined)
+  beforeEach(() => undefined)
   const {c, d} = before(async () => ({
     c: 4,
     d: {z: 5},
