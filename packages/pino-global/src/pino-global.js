@@ -75,18 +75,18 @@ export function initializeForTesting(loggerOptionsFromPinoTestkit) {
  * @returns {pino.Logger}
  */
 export function makeLogger(baseBindings = undefined) {
-  const {globalNamePrefix, globalLoggerOptions, globalLoggerBaseBindings: globalLoggerBase} =
-    cachedGlobalConfig ?? determineGlobalConfig()
+  return /**@type{pino.Logger}*/ (makeLoggerThatCanRunWithChild(() => {
+    const {globalNamePrefix, globalLoggerOptions, globalLoggerBaseBindings: globalLoggerBase} =
+      cachedGlobalConfig ?? determineGlobalConfig()
 
-  return /**@type{pino.Logger}*/ (makeLoggerThatCanRunWithChild(() =>
-    pino({
+    return pino({
       ...globalLoggerOptions,
       name: baseBindings?.name
         ? makeLoggerName(globalNamePrefix, baseBindings.name)
         : globalNamePrefix,
       base: {host: os.hostname, ...globalLoggerBase, ...baseBindings},
-    }),
-  ))
+    })
+  }))
 }
 
 export default makeLogger
@@ -132,7 +132,7 @@ function makeLoggerThatCanRunWithChild(pinoLogger) {
    * @returns {pino.Logger}
    */
   const finalPinoLogger = () => {
-    // if (pinoLoggerCache) return pinoLoggerCache
+    if (pinoLoggerCache) return pinoLoggerCache
     pinoLoggerCache = typeof pinoLogger === 'function' ? pinoLogger() : pinoLogger
     return pinoLoggerCache
   }
