@@ -13,7 +13,6 @@ export async function app(argv, {shouldExitOnError = true} = {}) {
   if (args._?.[0]) {
     switch (args._[0]) {
       case 'some-command':
-        // eslint-disable-next-line node/no-unsupported-features/es-syntax
         await (await import(`./commands/some-command.js`)).default(args)
         break
       default:

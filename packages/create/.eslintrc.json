@@ -26,6 +26,9 @@
     "constructor-super": "warn",
     "valid-typeof": "warn",
     "mocha-no-only/mocha-no-only": "error",
+    "node/no-unsupported-features/es-syntax": ["error", {
+      "ignores": ["dynamicImport", "modules"]
+    }],
     "node/exports-style": ["error", "module.exports"]
   }
 }
