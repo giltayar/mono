@@ -13,11 +13,9 @@ export async function app(argv, {shouldExitOnError = true} = {}) {
   if (args._?.[0]) {
     switch (args._[0]) {
       case 'generate':
-        // eslint-disable-next-line node/no-unsupported-features/es-syntax
         await (await import(`./commands/generate.js`)).default(args)
         break
       case 'deploy':
-        // eslint-disable-next-line node/no-unsupported-features/es-syntax
         await (await import(`./commands/deploy.js`)).default(args)
         break
       default:
