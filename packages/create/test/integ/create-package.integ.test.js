@@ -40,6 +40,20 @@ describe('create-package (integ)', function () {
       await shWithOutput(`npm view @seasquared/${packageName} version`, {cwd: target}),
     ).to.equal('1.0.0\n')
   })
+
+  it('should create the "fastify-plugin" package', async () => {
+    const {target, packageName} = await createPackage('fastify-plugin', registry())
+
+    expect(await readFileAsString(['src', `${packageName}.js`], {cwd: target})).to.include('export')
+    await runScript('install', target)
+    await runScript('run build --if-present', target)
+    await runScript('test', target)
+    await runScript('publish', target)
+
+    expect(
+      await shWithOutput(`npm view @seasquared/${packageName} version`, {cwd: target}),
+    ).to.equal('1.0.0\n')
+  })
 })
 
 /**

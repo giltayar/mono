@@ -1,12 +1,11 @@
 {
-  "name": "@seasquared/create",
-  "version": "1.3.0",
+  "name": "@seasquared/templatetemplate",
+  "version": "1.0.0",
   "description": "",
   "type": "module",
-  "exports": [],
-  "bin": {
-    "create": "src/create-package.js"
-  },
+  "exports": "./src/templatetemplate.js",
+  "main": "./src/templatetemplate.js",
+  "types": "./types/src/templatetemplate.d.ts",
   "engines": {
     "node": ">=15.0.0"
   },
@@ -14,15 +13,17 @@
     "src",
     "types"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
-    "test": "run-p --aggregate-output test:eslint test:typescript test:mocha-parallel",
-    "mocha": "mocha --no-timeouts --color --exit 'test/**/*.test.js'",
+    "test": "run-p --aggregate-output 'test:*'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint '**/*.js'",
+    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
-    "upgrade-templates": "node ./dev/upgrade-templates.js"
+    "mocha": "mocha --no-timeouts --exit --color 'test/unit/*.test.js' 'test/integ/*.test.js'"
   },
   "keywords": [
     "javascript",
@@ -32,36 +33,34 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/roundforest/mono",
-    "directory": "packages/create",
+    "directory": "packages/templatetemplate",
     "type": "git"
-  },
-  "dependencies": {
-    "@seasquared/functional-commons": "^1.1.2",
-    "ncp": "^2.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/eslint-parser": "^7.12.1",
     "@babel/plugin-syntax-top-level-await": "^7.12.1",
-    "@bilt/npm-testkit": "^1.4.0",
-    "@seasquared/mocha-commons": "^1.0.4",
-    "@seasquared/promise-commons": "^1.1.2",
-    "@seasquared/scripting-commons": "^1.3.0",
+    "@seasquared/http-commons": "^2.1.0",
+    "@seasquared/promise-commons": "^1.1.3",
     "@types/chai": "^4.2.14",
     "@types/chai-subset": "^1.3.3",
-    "@types/mocha": "^8.0.4",
-    "@types/ncp": "^2.0.4",
-    "@types/node": "^14.14.10",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.11",
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
-    "eslint": "^7.14.0",
+    "eslint": "^7.15.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-prettier": "^3.2.0",
     "mocha": "^8.2.1",
-    "npm-check-updates": "^10.2.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.2.1",
     "typescript": "^4.1.2"
+  },
+  "peerDependencies": {
+    "fastify": "^3.9.1"
+  },
+  "dependencies": {
+    "fastify-plugin": "^3.0.0"
   }
 }
