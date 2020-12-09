@@ -7,11 +7,11 @@ export async function listEntities(baseUrl) {
   return await fetchAsJson(new URL(`/entity`, baseUrl))
 }
 /**
- * @param {string} id1
  * @param {string} baseUrl
+ * @param {string} id
  */
-export async function getEntity(id1, baseUrl) {
-  return await fetchAsJson(new URL(`/entity/${id1}`, baseUrl))
+export async function getEntity(baseUrl, id) {
+  return await fetchAsJson(new URL(`/entity/${id}`, baseUrl))
 }
 /**
  * @param {string} baseUrl

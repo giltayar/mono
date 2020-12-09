@@ -1,20 +1,26 @@
 import {runDockerCompose, tcpHealthCheck} from '@seasquared/docker-compose-testkit'
 import {fetchAsJson} from '@seasquared/http-commons'
-import {after, afterEach, before, describe, it} from '@seasquared/mocha-commons'
+import {after, afterEach, before, beforeEach, describe, it} from '@seasquared/mocha-commons'
+import {initializeForTesting} from '@seasquared/pino-global'
+import {loggerOptionsForRecorder, playbackLogs, recordLogs} from '@seasquared/pino-testkit'
+import {presult} from '@seasquared/promise-commons'
 import chai from 'chai'
 import chaiSubset from 'chai-subset'
 import path from 'path'
+import {v4 as uuid, validate} from 'uuid'
 import {createDbSchema} from '../../src/models/db-schema.js'
 import {makeWebApp} from '../../src/templatetemplate.js'
 import {
   addEntity,
+  deleteEntity,
   getEntity,
   listEntities,
   updateEntity,
-  deleteEntity,
 } from '../commons/entity-operations.js'
 const {expect, use} = chai
 use(chaiSubset)
+
+initializeForTesting(loggerOptionsForRecorder)
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
@@ -45,7 +51,6 @@ describe('templatetemplate (integ)', function () {
 
   const {baseUrl, app, pool} = before(async () => {
     const postgresAddress = await findAddress()('postgres', 5432, {healthCheck: tcpHealthCheck})
-
     const {app, pool} = await makeWebApp({
       postgresConnectionString: `postgres://postgres:password@${postgresAddress}/postgres`,
     })
@@ -59,6 +64,8 @@ describe('templatetemplate (integ)', function () {
     }
   })
 
+  beforeEach(recordLogs)
+
   after(async () => process.env.FULL_TEST && (await app()?.close()))
   afterEach(() => pool()?.query(`DELETE FROM entity_table`))
 
@@ -71,21 +78,45 @@ describe('templatetemplate (integ)', function () {
   it('should add and get entities', async () => {
     const start = Date.now()
     const {id: id1} = await addEntity(baseUrl(), entity1)
+    expect(playbackLogs())
+      .to.have.length(1)
+      .and.to.containSubset([{method: 'POST', statusCode: 200, success: true, requestId: validate}])
     const {id: id2} = await addEntity(baseUrl(), entity2)
 
     expect(id1).to.not.be.undefined
     expect(id2).to.not.be.undefined
 
-    expect(await getEntity(id1, baseUrl())).to.containSubset({
+    expect(await getEntity(baseUrl(), id1)).to.containSubset({
       id: id1,
       lastModified: /**@param {string} x*/ (x) => new Date(x).getTime() >= start,
       ...entity1,
     })
-    expect(await getEntity(id2, baseUrl())).to.containSubset({
+    expect(await getEntity(baseUrl(), id2)).to.containSubset({
       id: id2,
       lastModified: /**@param {string} x*/ (x) => new Date(x).getTime() >= start,
       ...entity2,
     })
+  })
+
+  it('should return 404 on get unknown entity', async () => {
+    const [err] = await presult(getEntity(baseUrl(), uuid()))
+
+    expect(err.status).to.equal(404)
+    expect(playbackLogs())
+      .to.have.length(1)
+      .and.to.containSubset([{method: 'GET', statusCode: 404, success: true, requestId: validate}])
+  })
+
+  it('should fail with 400 on add bad entity', async () => {
+    const [err] = await presult(
+      // @ts-expect-error
+      addEntity(baseUrl(), {...entity1, value: 'this-should-be-a-number'}),
+    )
+
+    expect(err.status).to.equal(400)
+    expect(playbackLogs())
+      .to.have.length(1)
+      .and.to.containSubset([{method: 'POST', statusCode: 400, success: true, requestId: validate}])
   })
 
   it('should list entities', async () => {
@@ -132,6 +163,12 @@ describe('templatetemplate (integ)', function () {
     ])
   })
 
+  it('should return 404 on update unknownn entity', async () => {
+    const [err] = await presult(updateEntity(baseUrl(), uuid(), entity1))
+
+    expect(err.status).to.equal(404)
+  })
+
   it('should delete entities', async () => {
     const start = Date.now()
     const {id: id1} = await addEntity(baseUrl(), entity1)
@@ -146,5 +183,11 @@ describe('templatetemplate (integ)', function () {
         ...entity1,
       },
     ])
+  })
+
+  it('should return 404 on delete unknownn entity', async () => {
+    const [err] = await presult(deleteEntity(baseUrl(), uuid()))
+
+    expect(err.status).to.equal(404)
   })
 })

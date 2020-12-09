@@ -5,7 +5,7 @@ import {makeError} from '@seasquared/functional-commons'
  * @param {ReturnType<typeof import('../models/entity-model').makeMammothDb>} db
  *
  */
-export function listEntities(db) {
+export function listEntitiesRoute(db) {
   /**
    * @returns {Promise<import('../models/entity-model').Entity[]>}
    */
@@ -30,7 +30,7 @@ export function listEntities(db) {
  * @param {ReturnType<typeof import('../models/entity-model').makeMammothDb>} db
  *
  */
-export function getEntity(db) {
+export function getEntityRoute(db) {
   /**
    * @param {import('fastify').FastifyRequest<{Params: {id: string}}>} req
    * @returns {Promise<import('../models/entity-model').Entity|null>}
@@ -62,7 +62,7 @@ export function getEntity(db) {
 /**
  * @param {ReturnType<typeof import('../models/entity-model').makeMammothDb>} db
  */
-export function insertEntity(db) {
+export function addEntityRoute(db) {
   return /**@param {import('fastify').FastifyRequest} req */ async (req) => {
     const entity = entitySchema.parse(req.body)
 
@@ -81,17 +81,23 @@ export function insertEntity(db) {
 /**
  * @param {ReturnType<typeof import('../models/entity-model').makeMammothDb>} db
  */
-export function updateEntity(db) {
+export function updateEntityRoute(db) {
   return /**@param {import('fastify').FastifyRequest<{Params: {id: string}}>} req */ async (
     req,
   ) => {
     const entity = entitySchema.parse(req.body)
     const id = req.params.id
 
-    await db
+    const updateCount = await db
       .update(db.entityTable)
       .set({name: entity.name, value: entity.value, lastModified: new Date(), data: entity.data})
       .where(db.entityTable.id.eq(id))
+
+    if (updateCount === 0) {
+      throw makeError('entity not found', {statusCode: 404})
+    } else if (updateCount > 1) {
+      throw makeError(`update returned wrong number of rows (${updateCount})`, {statusCode: 500})
+    }
 
     return {}
   }
@@ -100,19 +106,21 @@ export function updateEntity(db) {
 /**
  * @param {ReturnType<typeof import('../models/entity-model').makeMammothDb>} db
  */
-export function deleteEntity(db) {
+export function deleteEntityRoute(db) {
   return /**@param {import('fastify').FastifyRequest<{Params: {id: string}}>} req */ async (
     req,
   ) => {
     const id = req.params.id
 
-    const countDeleted = await db.deleteFrom(db.entityTable).where(db.entityTable.id.eq(id))
+    const deleteCount = await db.deleteFrom(db.entityTable).where(db.entityTable.id.eq(id))
 
-    if (countDeleted == 1) {
-      return {}
-    } else {
+    if (deleteCount === 0) {
       throw makeError('entity not found', {statusCode: 404})
+    } else if (deleteCount > 1) {
+      throw makeError(`delete returned wrong number of rows (${deleteCount})`, {statusCode: 500})
     }
+
+    return {}
   }
 }
 
