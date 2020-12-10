@@ -4,7 +4,7 @@ export function recordLogs() {
 }
 
 /**
- * @returns {import('type-fest').JsonObject}
+ * @returns {import('type-fest').JsonObject[]}
  */
 export function playbackLogs() {
   //@ts-expect-error

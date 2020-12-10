@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/pino-testkit",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "",
   "type": "module",
   "exports": "./src/pino-testkit.js",
@@ -44,7 +44,7 @@
     "@types/pino": "^6.3.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
+    "@babel/core": "^7.12.10",
     "@babel/eslint-parser": "^7.12.1",
     "@babel/plugin-syntax-top-level-await": "^7.12.1",
     "@types/chai": "^4.2.14",
