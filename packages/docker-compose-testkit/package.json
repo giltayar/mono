@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/docker-compose-testkit",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "type": "module",
   "exports": "./src/docker-compose-testkit.js",

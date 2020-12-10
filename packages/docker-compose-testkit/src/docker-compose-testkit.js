@@ -116,6 +116,7 @@ async function waitUntilHealthy(address, healthCheck, healthCheckTimeoutSec) {
     maxRetryTime: healthCheckTimeoutSec * 1000,
     maxTimeout: 250,
     minTimeout: 250,
+    retries: 1000000,
   })
 }
 
