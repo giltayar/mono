@@ -12,6 +12,7 @@ import {fetch} from '@seasquared/http-commons'
  *  containerCleanup?: boolean,
  *  forceRecreate?: boolean,
  *  env?: Record<string, string | undefined>,
+ *  variation?: string
  * }} [options]
  * @returns {Promise<{
  *  teardown: () => Promise<void>,
@@ -25,7 +26,7 @@ import {fetch} from '@seasquared/http-commons'
  */
 export async function runDockerCompose(
   dockerComposeFile,
-  {containerCleanup, forceRecreate, env} = {},
+  {containerCleanup, forceRecreate, env, variation} = {},
 ) {
   const projectName = determineProjectName()
   const addresses = /**@type{Map<string, string>}*/ new Map()
@@ -96,9 +97,12 @@ export async function runDockerCompose(
   }
 
   function determineProjectName() {
-    const hash = crypto.createHash('MD5').update(dockerComposeFile).digest('base64')
+    const hash = crypto
+      .createHash('MD5')
+      .update(dockerComposeFile + (env ? JSON.stringify(env) : '') + (variation ?? ''))
+      .digest('base64')
 
-    return `dct_${hash.replace('==', '').replace('=', '')}`
+    return `dct_${hash.replaceAll('=', '').replaceAll('/', '').replaceAll('+', '')}`
   }
 }
 

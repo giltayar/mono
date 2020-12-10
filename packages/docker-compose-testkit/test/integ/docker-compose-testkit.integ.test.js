@@ -71,4 +71,43 @@ describe('docker-compose-testkit (integ)', function () {
       {code: 'ECONNREFUSED'},
     ])
   })
+
+  it('should work with multiple docker composes in parallel', async () => {
+    const {teardown: teardown1, findAddress: findAddress1} = await runDockerCompose(
+      path.join(__dirname, 'docker-compose.yml'),
+      {
+        forceRecreate: true,
+        env: {
+          CONTENT_FOLDER: path.join(__dirname, 'nginx-test-content'),
+        },
+      },
+    )
+    const {teardown: teardown2, findAddress: findAddress2} = await runDockerCompose(
+      path.join(__dirname, 'docker-compose.yml'),
+      {
+        forceRecreate: true,
+        env: {
+          CONTENT_FOLDER: path.join(__dirname, './nginx-test-content-2'),
+        },
+      },
+    )
+    const {teardown: teardown3, findAddress: findAddress3} = await runDockerCompose(
+      path.join(__dirname, 'docker-compose.yml'),
+      {
+        forceRecreate: true,
+        env: {
+          CONTENT_FOLDER: path.join(__dirname, 'nginx-test-content'),
+        },
+        variation: '2',
+      },
+    )
+
+    await findAddress1('nginx', 80)
+    await findAddress2('nginx', 80)
+    await findAddress3('nginx', 80)
+
+    await teardown3()
+    await teardown2()
+    await teardown1()
+  })
 })
