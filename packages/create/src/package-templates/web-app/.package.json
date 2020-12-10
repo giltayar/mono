@@ -44,7 +44,6 @@
     "@babel/core": "^7.12.10",
     "@babel/eslint-parser": "^7.12.1",
     "@babel/plugin-syntax-top-level-await": "^7.12.1",
-    "@seasquared/console-tesktit": "^1.0.1",
     "@seasquared/docker-compose-testkit": "^1.2.2",
     "@seasquared/http-commons": "^2.1.0",
     "@seasquared/mocha-commons": "^1.0.6",
@@ -55,9 +54,7 @@
     "@types/chai-subset": "^1.3.3",
     "@types/mocha": "^8.2.0",
     "@types/node": "^14.14.11",
-    "@types/pg": "^7.14.7",
     "@types/uuid": "^8.3.0",
-    "@types/yargs": "^15.0.11",
     "chai": "^4.2.0",
     "chai-subset": "^1.6.0",
     "eslint": "^7.15.0",
@@ -71,7 +68,6 @@
     "uuid": "^8.3.2"
   },
   "dependencies": {
-    "@ff00ff/mammoth": "^1.1.0",
     "@seasquared/functional-commons": "^1.1.3",
     "@seasquared/log-request-fastify-plugin": "^1.0.0",
     "@seasquared/pino-global": "^2.1.3",
@@ -79,9 +75,6 @@
     "@seasquared/request-id-logger-fastify-plugin": "^1.0.0",
     "fastify": "^3.9.1",
     "fastify-helmet": "^5.0.3",
-    "p-retry": "^4.2.0",
-    "pg": "^8.5.1",
-    "pino": "^6.7.0",
-    "zod": "^1.11.11"
+    "pino": "^6.7.0"
   }
 }

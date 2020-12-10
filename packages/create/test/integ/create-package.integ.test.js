@@ -68,8 +68,26 @@ describe('create-package (integ)', function () {
     ).to.equal('1.0.0\n')
   })
 
-  it('should create the "app-with-crud" package', async () => {
-    const {target, packageName} = await createPackage('app-with-crud')
+  it('should create the "web-app" package', async () => {
+    const {target, packageName} = await createPackage('web-app')
+
+    expect(await readFileAsString(['src', `${packageName}.js`], {cwd: target})).to.include('export')
+    await runScript('install', target)
+    await runScript('run build --if-present', target)
+    await runScript('test', target)
+    await runScriptForNpmPublishing('publish', target, registry())
+
+    expect(
+      await npmWithOutputForNpmPublishing(
+        `view @seasquared/${packageName} version`,
+        target,
+        registry(),
+      ),
+    ).to.equal('1.0.0\n')
+  })
+
+  it('should create the "web-app-with-crud" package', async () => {
+    const {target, packageName} = await createPackage('web-app-with-crud')
 
     expect(await readFileAsString(['src', `${packageName}.js`], {cwd: target})).to.include('export')
     await runScript('install', target)

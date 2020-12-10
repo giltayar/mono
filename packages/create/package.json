@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/create",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "description": "",
   "type": "module",
   "exports": [],
@@ -20,7 +20,7 @@
     "test": "run-p --aggregate-output test:eslint test:typescript test:mocha-parallel",
     "mocha": "mocha --no-timeouts --color --exit 'test/**/*.test.js'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint '**/*.js'",
+    "test:eslint": "eslint --color --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
     "upgrade-templates": "node ./dev/upgrade-templates.js"
   },
