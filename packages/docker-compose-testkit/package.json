@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/docker-compose-testkit",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "",
   "type": "module",
   "exports": "./src/docker-compose-testkit.js",
@@ -20,8 +20,9 @@
     "build": "run-p 'build:*'",
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
-    "mocha": "mocha --no-timeouts --exit 'test/integ/*.test.js'",
-    "test:eslint": "eslint '**/*.js'",
+    "test:mocha-parallel": "npm run mocha -- --parallel",
+    "mocha": "mocha --no-timeouts --color --exit 'test/integ/*.test.js'",
+    "test:eslint": "eslint --color '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
   },
   "keywords": [
