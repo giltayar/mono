@@ -1,5 +1,4 @@
 import {runDockerCompose, tcpHealthCheck} from '@seasquared/docker-compose-testkit'
-import {fetchAsJson} from '@seasquared/http-commons'
 import {after, afterEach, before, beforeEach, describe, it} from '@seasquared/mocha-commons'
 import {initializeForTesting} from '@seasquared/pino-global'
 import {loggerOptionsForRecorder, playbackLogs, recordLogs} from '@seasquared/pino-testkit'
@@ -71,16 +70,9 @@ describe('templatetemplate (integ)', function () {
 
   after(() => teardown()())
 
-  it('should be healthy', async () => {
-    expect(await fetchAsJson(new URL('/healthz', baseUrl()))).to.eql({})
-  })
-
   it('should add and get entities', async () => {
     const start = Date.now()
     const {id: id1} = await addEntity(baseUrl(), entity1)
-    expect(playbackLogs())
-      .to.have.length(1)
-      .and.to.containSubset([{method: 'POST', statusCode: 200, success: true, requestId: validate}])
     const {id: id2} = await addEntity(baseUrl(), entity2)
 
     expect(id1).to.not.be.undefined
@@ -102,9 +94,6 @@ describe('templatetemplate (integ)', function () {
     const [err] = await presult(getEntity(baseUrl(), uuid()))
 
     expect(err.status).to.equal(404)
-    expect(playbackLogs())
-      .to.have.length(1)
-      .and.to.containSubset([{method: 'GET', statusCode: 404, success: true, requestId: validate}])
   })
 
   it('should fail with 400 on add bad entity', async () => {

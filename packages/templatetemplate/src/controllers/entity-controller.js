@@ -6,24 +6,24 @@ import {makeError} from '@seasquared/functional-commons'
  *
  */
 export function listEntitiesRoute(db) {
-  /**
-   * @returns {Promise<import('../models/entity-model').Entity[]>}
-   */
-  async function handler() {
-    const result = await db
-      .select(
-        db.entityTable.id,
-        db.entityTable.lastModified,
-        db.entityTable.name,
-        db.entityTable.value,
-        db.entityTable.data,
-      )
-      .from(db.entityTable)
+  return (
+    /**
+     * @returns {Promise<import('../models/entity-model').Entity[]>}
+     */
+    async function () {
+      const result = await db
+        .select(
+          db.entityTable.id,
+          db.entityTable.lastModified,
+          db.entityTable.name,
+          db.entityTable.value,
+          db.entityTable.data,
+        )
+        .from(db.entityTable)
 
-    return result.map(entitySelectedToEntity)
-  }
-
-  return handler
+      return result.map(entitySelectedToEntity)
+    }
+  )
 }
 
 /**
@@ -31,32 +31,32 @@ export function listEntitiesRoute(db) {
  *
  */
 export function getEntityRoute(db) {
-  /**
-   * @param {import('fastify').FastifyRequest<{Params: {id: string}}>} req
-   * @returns {Promise<import('../models/entity-model').Entity|null>}
-   */
-  async function handler(req) {
-    const id = req.params.id
+  return (
+    /**
+     * @param {import('fastify').FastifyRequest<{Params: {id: string}}>} req
+     * @returns {Promise<import('../models/entity-model').Entity|null>}
+     */
+    async function (req) {
+      const id = req.params.id
 
-    const result = await db
-      .select(
-        db.entityTable.id,
-        db.entityTable.lastModified,
-        db.entityTable.name,
-        db.entityTable.value,
-        db.entityTable.data,
-      )
-      .from(db.entityTable)
-      .where(db.entityTable.id.eq(id))
+      const result = await db
+        .select(
+          db.entityTable.id,
+          db.entityTable.lastModified,
+          db.entityTable.name,
+          db.entityTable.value,
+          db.entityTable.data,
+        )
+        .from(db.entityTable)
+        .where(db.entityTable.id.eq(id))
 
-    if (result[0]) {
-      return entitySelectedToEntity(result[0])
-    } else {
-      throw makeError('entity not found', {statusCode: 404})
+      if (result[0]) {
+        return entitySelectedToEntity(result[0])
+      } else {
+        throw makeError('entity not found', {statusCode: 404})
+      }
     }
-  }
-
-  return handler
+  )
 }
 
 /**

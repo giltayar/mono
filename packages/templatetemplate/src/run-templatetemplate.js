@@ -1,11 +1,20 @@
 #!/usr/bin/env node
-import {initializeLoggerOptions} from '@seasquared/pino-global'
+import makeLogger, {initializeLoggerOptions} from '@seasquared/pino-global'
 import {makeWebApp} from './templatetemplate.js'
 
 initializeLoggerOptions('templatetemplate:')
+const logger = makeLogger({name: 'run'})
 
-const {app} = await makeWebApp({
+const config = {
   postgresConnectionString: process.env.POSTGRESS_CONNECTION_STRING ?? '',
-})
+}
+const {app} = await makeWebApp(config)
 
-await app.listen(process.env.PORT || 3000, '0.0.0.0')
+const port = process.env.PORT || 3000
+try {
+  const baseUrl = await app.listen(port, '0.0.0.0')
+
+  logger.info({event: 'app-listening', baseUrl, port, config, success: true})
+} catch (error) {
+  logger.error({event: 'app-listening', port, config, success: false})
+}

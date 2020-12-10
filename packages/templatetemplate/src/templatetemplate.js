@@ -1,10 +1,11 @@
 import fastify from 'fastify'
 import pg from 'pg'
 import retry from 'p-retry'
-import makeLogger, {enterWithChildLogger, exitFromChildLogger} from '@seasquared/pino-global'
-import {v4 as uuid} from 'uuid'
+import makeLogger from '@seasquared/pino-global'
 import fastifyHelmet from 'fastify-helmet'
 import logRequestFastifyPlugin from '@seasquared/log-request-fastify-plugin'
+import requestIdFastifyPlugin from '@seasquared/request-id-fastify-plugin'
+import requestIdLoggerFastifyPlugin from '@seasquared/request-id-logger-fastify-plugin'
 import {
   deleteEntityRoute,
   getEntityRoute,
@@ -30,18 +31,14 @@ export async function makeWebApp({postgresConnectionString}) {
 
   app.register(fastifyHelmet)
   app.register(logRequestFastifyPlugin, {logger})
+  app.register(requestIdFastifyPlugin, {})
+  app.register(requestIdLoggerFastifyPlugin, {logger})
 
   app.addHook('onClose', async () => await pool.end())
 
-  app.addHook('onError', zodErrorHandler)
-
-  app.decorateRequest('requestId', '')
-  app.addHook('onRequest', setRequestIdHandler)
-
-  app.addHook('onRequest', logWithRequestIdEnterHandler)
-  app.addHook('onResponse', logWithRequestIdExitHandler)
-
   app.get('/healthz', healthz(pool))
+
+  app.addHook('onError', zodErrorHandler)
 
   app.get('/entity', listEntitiesRoute(db))
   app.get('/entity/:id', getEntityRoute(db))
@@ -75,39 +72,4 @@ function zodErrorHandler(_req, reply, error, done) {
   }
 
   done()
-}
-
-/**
- * @param {import('fastify').FastifyRequest} req
- * @param {any} _reply
- * @param {import('fastify').HookHandlerDoneFunction} done
- */
-function setRequestIdHandler(req, _reply, done) {
-  const requestId = /**@type{string}*/ (req.headers['x-request-id'] ?? uuid())
-
-  req.requestId = requestId
-
-  done()
-}
-
-/**
- * @param {import('fastify').FastifyRequest} req
- * @param {any} _reply
- * @param {import('fastify').HookHandlerDoneFunction} done
- */
-function logWithRequestIdEnterHandler(req, _reply, done) {
-  const requestId = /**@type{string}*/ (req.headers['x-request-id'] ?? uuid())
-
-  enterWithChildLogger(logger.child({requestId}))
-
-  done()
-}
-
-/**
- * @param {import('fastify').FastifyRequest} _req
- * @param {any} _reply
- * @param {import('fastify').HookHandlerDoneFunction} done
- */
-function logWithRequestIdExitHandler(_req, _reply, done) {
-  exitFromChildLogger(done)
 }
