@@ -33,6 +33,10 @@
 			"path": "packages/kubernetes-testkit"
 		},
 		{
+			"name": "log-request-fastify-plugin",
+			"path": "packages/log-request-fastify-plugin"
+		},
+		{
 			"name": "mocha-commons",
 			"path": "packages/mocha-commons"
 		},
@@ -49,15 +53,20 @@
 			"path": "packages/promise-commons"
 		},
 		{
+			"name": "request-id-fastify-plugin",
+			"path": "packages/request-id-fastify-plugin"
+		},
+		{
+			"name": "request-id-logger-fastify-plugin",
+			"path": "packages/request-id-logger-fastify-plugin"
+		},
+		{
 			"name": "scripting-commons",
 			"path": "packages/scripting-commons"
 		},
 		{
 			"name": "url-commons",
 			"path": "packages/url-commons"
-		},
-		{
-			"path": "packages/templatetemplate"
 		}
 	],
 	"settings": {}
