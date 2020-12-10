@@ -21,7 +21,7 @@
     "build:typescript": "rm -rf types && tsc",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
+    "test:eslint": "eslint --color --max-warnings=0 '**/*.js'",
     "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
     "mocha": "mocha --no-timeouts --exit --color 'test/unit/*.test.js' 'test/integ/*.test.js'"
   },
@@ -39,7 +39,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
+    "@babel/core": "^7.12.10",
     "@babel/eslint-parser": "^7.12.1",
     "@babel/plugin-syntax-top-level-await": "^7.12.1",
     "@types/chai": "^4.2.14",

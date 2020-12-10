@@ -42,7 +42,7 @@ async function createFromTemplate(templateName, {onlyCopyFiles = false} = {}) {
   }
 
   const targetDirArr = targetDir.split('/')
-  const packageName = targetDirArr[targetDirArr.length - 1]
+  const packageName = targetDirArr[targetDirArr.length - 1].toLowerCase()
 
   await fs.promises.rename(`${targetDir}/.package.json`, `${targetDir}/package.json`)
   if (fs.existsSync(`${targetDir}/..gitignore`)) {
