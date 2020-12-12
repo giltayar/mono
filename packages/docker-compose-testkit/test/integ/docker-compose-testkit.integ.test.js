@@ -16,10 +16,10 @@ const __dirname = path.dirname(__filename)
 describe('docker-compose-testkit (integ)', function () {
   it('should work with a simple docker-compose', async () => {
     const env = {
-      CONTENT_FOLDER: path.join(__dirname, 'nginx-test-content'),
+      CONTENT_FOLDER: path.join(__dirname, 'fixtures/nginx-test-content'),
     }
     const {teardown, findAddress} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose.yml'),
+      path.join(__dirname, 'fixtures/docker-compose.yml'),
       {
         forceRecreate: true,
         env,
@@ -38,7 +38,7 @@ describe('docker-compose-testkit (integ)', function () {
     await teardown()
 
     const {teardown: teardown2, findAddress: findAddress2} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose.yml'),
+      path.join(__dirname, 'fixtures/docker-compose.yml'),
       {env},
     )
 
@@ -51,7 +51,7 @@ describe('docker-compose-testkit (integ)', function () {
     await teardown2()
 
     const {teardown: teardown3, findAddress: findAddress3} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose.yml'),
+      path.join(__dirname, 'fixtures/docker-compose.yml'),
       {forceRecreate: true, containerCleanup: true, env},
     )
 
@@ -74,29 +74,29 @@ describe('docker-compose-testkit (integ)', function () {
 
   it('should work with multiple docker composes in parallel', async () => {
     const {teardown: teardown1, findAddress: findAddress1} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose.yml'),
+      path.join(__dirname, 'fixtures/docker-compose.yml'),
       {
         forceRecreate: true,
         env: {
-          CONTENT_FOLDER: path.join(__dirname, 'nginx-test-content'),
+          CONTENT_FOLDER: path.join(__dirname, 'fixtures/nginx-test-content'),
         },
       },
     )
     const {teardown: teardown2, findAddress: findAddress2} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose.yml'),
+      path.join(__dirname, 'fixtures/docker-compose.yml'),
       {
         forceRecreate: true,
         env: {
-          CONTENT_FOLDER: path.join(__dirname, './nginx-test-content-2'),
+          CONTENT_FOLDER: path.join(__dirname, './fixtures/nginx-test-content-2'),
         },
       },
     )
     const {teardown: teardown3, findAddress: findAddress3} = await runDockerCompose(
-      path.join(__dirname, 'docker-compose.yml'),
+      path.join(__dirname, 'fixtures/docker-compose.yml'),
       {
         forceRecreate: true,
         env: {
-          CONTENT_FOLDER: path.join(__dirname, 'nginx-test-content'),
+          CONTENT_FOLDER: path.join(__dirname, 'fixtures/nginx-test-content'),
         },
         variation: '2',
       },

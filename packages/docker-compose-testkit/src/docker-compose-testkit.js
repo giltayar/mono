@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import net from 'net'
 import {once} from 'events'
 import {sh, shWithOutput} from '@seasquared/scripting-commons'
+import {getDependencyInformation} from '@seasquared/dependencies-commons'
 import retry from 'p-retry'
 import {fetch} from '@seasquared/http-commons'
 /**
@@ -30,7 +31,12 @@ export async function runDockerCompose(
 ) {
   const projectName = determineProjectName()
   const addresses = /**@type{Map<string, string>}*/ new Map()
-  const finalEnv = env ? {PATH: process.env.PATH, ...env} : {PATH: process.env.PATH}
+  const envForDependencies = Object.fromEntries(
+    Object.values(getDependencyInformation(dockerComposeFile)).map((x) => [x.envName, x.version]),
+  )
+  const finalEnv = env
+    ? {...envForDependencies, ...env, PATH: process.env.PATH}
+    : {...envForDependencies, PATH: process.env.PATH}
 
   await setup()
 
