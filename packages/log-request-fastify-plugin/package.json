@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/log-request-fastify-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "type": "module",
   "exports": "./src/log-request-fastify-plugin.js",
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc",
+    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
     "test": "run-p --aggregate-output 'test:*'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
     "test:eslint": "eslint --max-warnings=0 '**/*.js'",
