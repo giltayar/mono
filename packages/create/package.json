@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/create",
-  "version": "1.6.1",
+  "version": "1.6.3",
   "description": "",
   "type": "module",
   "exports": [],
@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc",
+    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
     "test": "run-p --aggregate-output test:eslint test:typescript test:mocha-parallel",
     "mocha": "mocha --no-timeouts --color --exit 'test/**/*.test.js'",
     "test:mocha-parallel": "npm run mocha -- --parallel",
