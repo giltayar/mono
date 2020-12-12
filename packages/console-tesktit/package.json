@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/console-tesktit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "type": "module",
   "exports": "./src/console-tesktit.js",
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc",
+    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
     "test": "run-p --aggregate-output 'test:*'",
     "mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
     "test:eslint": "eslint '**/*.js'",
