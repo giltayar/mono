@@ -13,6 +13,10 @@
 			"path": "packages/create"
 		},
 		{
+			"name": "dependencies-commons",
+			"path": "packages/dependencies-commons"
+		},
+		{
 			"name": "docker-compose-testkit",
 			"path": "packages/docker-compose-testkit"
 		},
