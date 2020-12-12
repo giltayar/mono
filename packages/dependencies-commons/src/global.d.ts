@@ -1,4 +1,4 @@
-declare interface DependencyInformation {
+export interface DependencyInformation {
   version: string
   cleanName: string
   envName: string

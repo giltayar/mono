@@ -6,7 +6,7 @@ import {cleanName, envName} from './names.js'
 /**
  * @param {string} packageDir
  * @param {Record<string, string>} versionInfo
- * @returns {Record<string, DependencyInformation>}
+ * @returns {Record<string, import('./global.js').DependencyInformation>}
  */
 export function getDependencies(packageDir, versionInfo) {
   return mapObject(versionInfo, (k, _v) => [

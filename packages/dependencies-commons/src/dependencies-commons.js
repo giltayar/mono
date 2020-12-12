@@ -4,7 +4,7 @@ import {getDependencies} from './get-dependencies.js'
 
 /**
  * @param {string} fileOrDir
- * @returns {Record<string, DependencyInformation>}
+ * @returns {Record<string, import('./global.js').DependencyInformation>}
  */
 export function getDependencyInformation(fileOrDir) {
   const dir = path.resolve(
