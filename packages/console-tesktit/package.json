@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/console-tesktit",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "type": "module",
   "exports": "./src/console-tesktit.js",
@@ -22,16 +22,17 @@
     "test": "run-p --aggregate-output 'test:*'",
     "mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
     "test:eslint": "eslint '**/*.js'",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
+    "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
+    "test:mocha": "npm run mocha"
   },
   "keywords": [
     "javascript",
     "nodejs"
   ],
-  "author": "Gil Tayar <giltayar@roundforest.com>",
+  "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/roundforest/mono",
+    "url": "https://github.com/giltyaar/mono",
     "directory": "packages/console-testkit",
     "type": "git"
   },
