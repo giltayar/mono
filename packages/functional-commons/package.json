@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/functional-commons",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "",
   "type": "module",
   "main": "./src/functional-commons.js",
@@ -26,10 +26,10 @@
     "nodejs",
     "javascript"
   ],
-  "author": "Gil Tayar <giltayar@roundforest.com>",
+  "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/roundforest/mono",
+    "url": "https://github.com/giltayar/mono",
     "directory": "packages/functional-commons",
     "type": "git"
   },
