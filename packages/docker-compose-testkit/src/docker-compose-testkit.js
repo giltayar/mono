@@ -14,7 +14,7 @@ import {fetch} from '@seasquared/http-commons'
  *  forceRecreate?: boolean,
  *  env?: Record<string, string | undefined>,
  *  variation?: string
- * }} [options]
+ * }} options
  * @returns {Promise<{
  *  teardown: () => Promise<void>,
  *  findAddress: (
@@ -47,20 +47,20 @@ export async function runDockerCompose(
 
   async function setup() {
     await sh(
-      `docker-compose  --file "${dockerComposeFile}" --project-name "${projectName}" up --detach ${
+      `docker compose --file "${dockerComposeFile}" --project-name "${projectName}" up --detach ${
         forceRecreate ? '--force-recreate' : ''
       }`,
       {
         cwd: path.dirname(dockerComposeFile),
         env: finalEnv,
       },
-    )
+    ).catch((err) => console.log(err))
   }
 
   async function teardown() {
     if (!containerCleanup) return
     await sh(
-      `docker-compose --file "${dockerComposeFile}" --project-name "${projectName}" down --volumes --remove-orphans`,
+      `docker compose --file "${dockerComposeFile}" --project-name "${projectName}" down --volumes --remove-orphans`,
       {
         cwd: path.dirname(dockerComposeFile),
         env: finalEnv,
@@ -75,7 +75,7 @@ export async function runDockerCompose(
    *  serviceIndex?: number,
    *  healthCheck?: (address: string) => Promise<void>,
    *  healthCheckTimeoutSec?: number
-   * }} [options]
+   * }} options
    */
   async function findAddress(
     serviceName,
@@ -87,7 +87,7 @@ export async function runDockerCompose(
       return addresses.get(serviceKey)
     }
     const addressOutput = await shWithOutput(
-      `docker-compose --file "${dockerComposeFile}" --project-name "${projectName}" port  --index=${serviceIndex} ${serviceName} ${port}`,
+      `docker compose --file "${dockerComposeFile}" --project-name "${projectName}" port  --index=${serviceIndex} ${serviceName} ${port}`,
       {
         cwd: path.dirname(dockerComposeFile),
         env: finalEnv,
@@ -107,6 +107,7 @@ export async function runDockerCompose(
       .createHash('MD5')
       .update(dockerComposeFile + (env ? JSON.stringify(env) : '') + (variation ?? ''))
       .digest('base64')
+      .toLowerCase()
 
     return `dct_${hash.replaceAll('=', '').replaceAll('/', '').replaceAll('+', '')}`
   }
@@ -132,7 +133,7 @@ async function waitUntilHealthy(address, healthCheck, healthCheckTimeoutSec) {
 export async function httpHealthCheck(address) {
   const response = await fetch(`http://${address}/`)
 
-  await response.buffer()
+  await response.arrayBuffer()
 }
 
 /**

@@ -1,11 +1,11 @@
 version: '3'
 services:
   nginx:
-    image: nginx:${NGINX_VERSION}
+    image: nginx:latest
     ports:
         - 80
   nginx2:
-    image: nginx:${NGINX_VERSION}
+    image: nginx:latest
     volumes:
       - '${CONTENT_FOLDER}:/usr/share/nginx/html:ro'
     ports:
