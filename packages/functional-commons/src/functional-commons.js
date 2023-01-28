@@ -27,7 +27,7 @@ export function memo(syncCreationFunction) {
 /**
  * @template {any[]} P, T
  * @param {(...args: P) => PromiseLike<T>} asyncCreationFunction
- * @param {{expireAfterMs?: number, nowService?: () => number}} [options]
+ * @param {{expireAfterMs?: number, nowService?: () => number}} options
  *
  * @returns {(...args: P) => PromiseLike<T>}
  */
@@ -219,17 +219,18 @@ export function filterEntries(object, filterFunc) {
  * @template {ObjectKeyType} K, T
  * @template {Record<K, T>} P
  * @param {Error|string} error
- * @param {P} [properties=undefined]
+ * @param {P} [properties]
  *
  * @returns {import('type-fest').Merge<P, Error>}
  */
-export function makeError(error, properties) {
+export function makeError(error, properties = undefined) {
   if (typeof error === 'string') {
     error = new Error(error)
   }
   // @ts-expect-error
   if (!properties) return error
 
+  // @ts-expect-error
   return Object.assign(error, properties)
 }
 
