@@ -1,6 +1,6 @@
 {
   "name": "@seasquared/promise-commons",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "",
   "type": "module",
   "exports": "./src/promise-commons.js",
@@ -19,35 +19,32 @@
     "test": "run-p --aggregate-output 'test:*'",
     "mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
     "test:eslint": "eslint --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
+    "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
+    "test:mocha": "npm run mocha -- --parallel"
   },
   "keywords": [
     "nodejs",
     "javascript"
   ],
-  "author": "Gil Tayar <giltayar@roundforest.com>",
+  "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/roundforest/mono",
+    "url": "https://github.com/giltayar/mono",
     "directory": "packages/functional-commons",
     "type": "git"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.12.3",
-    "@babel/eslint-parser": "^7.12.1",
-    "@babel/plugin-syntax-top-level-await": "^7.12.1",
-    "@types/chai": "^4.2.14",
-    "@types/mocha": "^8.0.4",
-    "@types/node": "^14.14.7",
-    "chai": "^4.2.0",
-    "eslint": "^7.13.0",
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.11.18",
+    "chai": "^4.3.7",
+    "eslint": "^8.32.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "mocha": "^8.2.1",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "mocha": "^10.2.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.1.2",
-    "typescript": "^4.0.5"
+    "prettier": "^2.8.3",
+    "typescript": "^4.9.4"
   }
 }
