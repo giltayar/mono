@@ -3,8 +3,6 @@ import {promisify} from 'util'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-//@ts-expect-error
-// eslint-disable-next-line node/no-missing-import
 import stream from 'stream/promises'
 import {once} from 'events'
 import {spawn, exec, execFile} from 'child_process'
@@ -15,7 +13,7 @@ import {makeError} from '@seasquared/functional-commons'
  * @param {{
  * cwd?: string|undefined
  * env?: Record<string, string|undefined>|undefined
- * }} [options]
+ * }} options
  */
 export async function sh(command, {cwd, env} = {}) {
   /**@type {import('child_process').SpawnOptions}*/
@@ -48,7 +46,7 @@ export async function sh(command, {cwd, env} = {}) {
  * @param {{
  * cwd?: string|undefined
  * env?: Record<string, string|undefined> | undefined
- * }} [options]
+ * }} options
  */
 export async function shWithOutput(command, {cwd, env} = {}) {
   /**@type {import('child_process').ExecOptions}*/
