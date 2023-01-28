@@ -1,12 +1,11 @@
-import mocha from 'mocha'
-const {
-  before: mochaBefore,
-  beforeEach: mochaBeforeEach,
-  describe: mochaDescribe,
-  it: mochaIt,
-  after: mochaAfter,
-  afterEach: mochaAfterEach,
-} = mocha
+import {
+  before as mochaBefore,
+  beforeEach as mochaBeforeEach,
+  describe as mochaDescribe,
+  it as mochaIt,
+  after as mochaAfter,
+  afterEach as mochaAfterEach,
+} from 'mocha'
 
 /**
  * @template T
@@ -17,7 +16,7 @@ const {
 /**
  * @template T
  * @param {(f: Parameters<import('mocha').Func>) => T} f
- * @returns {T extends Promise<any> ? Functionify<import('type-fest').PromiseValue<T>> : Functionify<T>}
+ * @returns {T extends Promise<any> ? Functionify<Awaited<T>> : Functionify<T>}
  */
 export function before(f) {
   /**@type {T|undefined} */
@@ -43,29 +42,31 @@ export function before(f) {
     }
   })
 
-  return /**@type {T extends Promise<any> ? Functionify<import('type-fest').PromiseValue<T>> : Functionify<T>}*/ (new Proxy(
-    {},
-    {
-      get: function (_object, propertyName) {
-        return () => {
-          if (mochaBeforeCalled) {
-            //@ts-expect-error
-            return returnValueFromF?.[propertyName]
-          } else {
-            throw new Error(
-              `trying to access property ${String(propertyName)} before the "before happened`,
-            )
+  return /**@type {T extends Promise<any> ? Functionify<Awaited<T>> : Functionify<T>}*/ (
+    new Proxy(
+      {},
+      {
+        get: function (_object, propertyName) {
+          return () => {
+            if (mochaBeforeCalled) {
+              //@ts-expect-error
+              return returnValueFromF?.[propertyName]
+            } else {
+              throw new Error(
+                `trying to access property ${String(propertyName)} before the "before happened`,
+              )
+            }
           }
-        }
+        },
       },
-    },
-  ))
+    )
+  )
 }
 
 /**
  * @template T
  * @param {(f: Parameters<import('mocha').Func>) => T} f
- * @returns {T extends Promise<any> ? Functionify<import('type-fest').PromiseValue<T>> : Functionify<T>}
+ * @returns {T extends Promise<any> ? Functionify<Awaited<T>> : Functionify<T>}
  */
 export function beforeEach(f) {
   /**@type {T|undefined} */
@@ -91,23 +92,25 @@ export function beforeEach(f) {
     }
   })
 
-  return /**@type {T extends Promise<any> ? Functionify<import('type-fest').PromiseValue<T>> : Functionify<T>}*/ (new Proxy(
-    {},
-    {
-      get: function (_object, propertyName) {
-        return () => {
-          if (mochaBeforeCalled) {
-            //@ts-expect-error
-            return returnValueFromF?.[propertyName]
-          } else {
-            throw new Error(
-              `trying to access property ${String(propertyName)} before the "before happened`,
-            )
+  return /**@type {T extends Promise<any> ? Functionify<Awaited<T>> : Functionify<T>}*/ (
+    new Proxy(
+      {},
+      {
+        get: function (_object, propertyName) {
+          return () => {
+            if (mochaBeforeCalled) {
+              //@ts-expect-error
+              return returnValueFromF?.[propertyName]
+            } else {
+              throw new Error(
+                `trying to access property ${String(propertyName)} before the "before happened`,
+              )
+            }
           }
-        }
+        },
       },
-    },
-  ))
+    )
+  )
 }
 
 export const describe = mochaDescribe
