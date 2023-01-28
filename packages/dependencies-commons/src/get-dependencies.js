@@ -35,7 +35,7 @@ function getVersion(basePackageDir, packageName) {
       JSON.parse(versionFile).version ??
       throw_(new Error(`version file at ${versionFileLocation} has no "version" field`))
     )
-  } catch (error) {
+  } catch (/**@type {any}*/ error) {
     if (error instanceof SyntaxError) {
       throw new Error(`version file at ${versionFileLocation} is not JSON-parseable`)
     } else if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') {
@@ -52,7 +52,7 @@ function getVersion(basePackageDir, packageName) {
       JSON.parse(packageJsonAsString).version ??
       `unknown version because package.json at ${packageJsonLocation} has no "version" field`
     )
-  } catch (error) {
+  } catch (/**@type {any}*/ error) {
     if (error instanceof SyntaxError) {
       throw new Error(`package.json at ${packageJsonLocation} is not JSON-parseable`)
     } else if (error.code === 'ENOENT' || error.code === 'ENOTDIR') {

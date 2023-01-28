@@ -28,7 +28,7 @@ export function getDependencyInformation(fileOrDir) {
         throw error
       }
     }
-  } catch (error) {
+  } catch (/**@type {any}*/ error) {
     if (error.code === 'ENOENT') {
       return getDependencyInformation(path.dirname(dir))
     } else {
