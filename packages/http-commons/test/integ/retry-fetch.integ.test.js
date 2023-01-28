@@ -59,7 +59,7 @@ describe('retryFetch', function () {
 
       expect(err.status).to.equal(500)
       expect(err.statusText).to.equal('Internal Server Error')
-      expect(err.headers).to.have.deep.property('connection', ['keep-alive'])
+      expect(err.headers).to.have.deep.property('connection', 'keep-alive')
       expect(count).to.equal(2)
       expect(err.body).to.equal('bodybody')
     })

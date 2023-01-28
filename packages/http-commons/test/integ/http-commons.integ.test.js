@@ -24,8 +24,12 @@ describe('http-commons', function () {
   after(() => app()?.close())
 
   it('should fetch http as buffer', async () => {
-    expect(await fetchAsBuffer(`${baseUrl()}/buffer`)).to.eql(Buffer.from('GET'))
-    expect(await fetchAsBuffer(`${baseUrl()}/buffer`, {method: 'POST'})).to.eql(Buffer.from('POST'))
+    expect(await fetchAsBuffer(`${baseUrl()}/buffer`)).to.eql(
+      new TextEncoder().encode('GET').buffer,
+    )
+    expect(await fetchAsBuffer(`${baseUrl()}/buffer`, {method: 'POST'})).to.eql(
+      new TextEncoder().encode('POST').buffer,
+    )
   })
 
   it('should fetch http as text', async () => {
@@ -38,9 +42,11 @@ describe('http-commons', function () {
     expect(getResponse.method).to.eql('GET')
     expect(getResponse.headers.accept).to.eql('application/json')
 
-    const postResponse = /**@type {any} */ (await fetchAsJson(`${baseUrl()}/json`, {
-      method: 'POST',
-    }))
+    const postResponse = /**@type {any} */ (
+      await fetchAsJson(`${baseUrl()}/json`, {
+        method: 'POST',
+      })
+    )
     expect(postResponse.method).to.eql('POST')
     expect(postResponse.headers.accept).to.eql('application/json')
   })
@@ -60,7 +66,9 @@ describe('http-commons', function () {
   it('should send json http as json and return a buffer', async () => {
     expect(
       JSON.parse(
-        String(await fetchAsBufferWithJsonBody(`${baseUrl()}/json-echo`, {hello: 'world'})),
+        new TextDecoder().decode(
+          await fetchAsBufferWithJsonBody(`${baseUrl()}/json-echo`, {hello: 'world'}),
+        ),
       ),
     ).to.eql({method: 'POST', hello: 'world'})
 
@@ -69,8 +77,8 @@ describe('http-commons', function () {
       {hello: 'world'},
       {method: 'PUT'},
     )
-    expect(buffer).to.be.instanceof(Buffer)
-    expect(JSON.parse(String(buffer))).to.eql({method: 'PUT', hello: 'world'})
+    expect(buffer).to.be.instanceof(ArrayBuffer)
+    expect(JSON.parse(new TextDecoder().decode(buffer))).to.eql({method: 'PUT', hello: 'world'})
   })
 
   it('should send json http as json and return json', async () => {
@@ -91,15 +99,15 @@ describe('http-commons', function () {
 
   it('should also replace the real fetch', async () => {
     expect(await fetch('http://example.com')).to.satisfy(
-      /**@param {import('node-fetch').Response} response */ (response) => response.ok,
+      /**@param {Response} response */ (response) => response.ok,
     )
     expect(await fetch('http://example.com')).to.satisfy(
-      /**@param {import('node-fetch').Response} response */ (response) => response.ok,
+      /**@param {Response} response */ (response) => response.ok,
     )
   })
 
   it('should work with https urls', async () => {
-    expect(await fetchAsText('https://www.google.com')).to.not.be.empty
+    expect(await fetchAsText('https://www.example.com')).to.not.be.empty
   })
 
   describe('requestId', () => {

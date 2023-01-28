@@ -1,23 +1,22 @@
-import nodeFetch from 'node-fetch'
 import {default as Agent, HttpsAgent} from 'agentkeepalive'
 import merge from 'lodash.merge'
 import {memo, makeError} from '@seasquared/functional-commons'
 import {delay} from '@seasquared/promise-commons'
 
 /**
- * @typedef {import('node-fetch').RequestInit & {requestId?: string}} RequestInitWithRequestId
+ * @typedef {RequestInit & {requestId?: string}} RequestInitWithRequestId
  */
 
 /**
  * @typedef {(url: string | URL, init?: RequestInitWithRequestId) =>
- *  Promise<import('node-fetch').Response>}
+ *  Promise<Response>}
  * FetchFunction
  * */
 
 /**
  *
  * @param {string | URL} url
- * @param {import('node-fetch').Response} response
+ * @param {Response} response
  * @returns {Promise<void>}
  */
 export async function throwErrorFromBadStatus(url, response) {
@@ -27,7 +26,8 @@ export async function throwErrorFromBadStatus(url, response) {
     code: 'ERR_X_STATUS_CODE_NOT_OK',
     status: response.status,
     statusText: response.statusText,
-    headers: response.headers.raw(),
+    // @ts-expect-error
+    headers: Object.fromEntries(response.headers.entries()),
     body: body,
   })
 }
@@ -36,14 +36,14 @@ export async function throwErrorFromBadStatus(url, response) {
  *
  * @param {string | URL} url
  * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<Buffer>}
+ * @returns {Promise<ArrayBuffer>}
  */
 export async function fetchAsBuffer(url, init) {
   const response = await fetch(url, init)
 
   if (!response.ok) await throwErrorFromBadStatus(url, response)
 
-  return await response.buffer()
+  return await response.arrayBuffer()
 }
 
 /**
@@ -96,7 +96,7 @@ export async function fetchAsTextWithJsonBody(url, json, init) {
  * @param {string | URL} url
  * @param {import('type-fest').JsonValue} json
  * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<Buffer>}
+ * @returns {Promise<ArrayBuffer>}
  */
 export async function fetchAsBufferWithJsonBody(url, json, init) {
   const response = await fetch(
@@ -109,7 +109,7 @@ export async function fetchAsBufferWithJsonBody(url, json, init) {
 
   if (!response.ok) await throwErrorFromBadStatus(url, response)
 
-  return await response.buffer()
+  return await response.arrayBuffer()
 }
 
 /**
@@ -135,31 +135,36 @@ export async function fetchAsJsonWithJsonBody(url, json, init) {
 
   return await response.json()
 }
+
 /**
  *
  * @param {string | URL} url
  * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<import('node-fetch').Response>}
+ * @returns {Promise<Response>}
  */
 export async function fetch(url, init) {
-  return await nodeFetch(url, {
-    //@ts-expect-error
-    agent: defaultAgent(url?.protocol ?? new URL(url).protocol),
-    ...(init?.requestId != null
-      ? {
-          ...init,
-          headers: {
-            'x-request-id': init.requestId,
-            ...init.headers,
-          },
-        }
-      : init),
-  })
+  return await globalThis
+    .fetch(url, {
+      //@ts-expect-error
+      agent: defaultAgent(url?.protocol ?? new URL(url).protocol),
+      ...(init?.requestId != null
+        ? {
+            ...init,
+            headers: {
+              'x-request-id': init.requestId,
+              ...init.headers,
+            },
+          }
+        : init),
+    })
+    .catch((err) =>
+      (!err.status || !err.code) && err.cause ? Promise.reject(err.cause) : Promise.reject(err),
+    )
 }
 
 /**
  * @param {Function} f
- * @param {{retries?: number, sleepTime?: number, backoff?: number, idempotent?: boolean}} [options]
+ * @param {{retries?: number, sleepTime?: number, backoff?: number, idempotent?: boolean}} options
  */
 export async function retryFetch(
   f,
@@ -171,10 +176,11 @@ export async function retryFetch(
     }
     try {
       return await f(retry)
-    } catch (err) {
-      if (CONNECTION_ERROR_CODES.has(err.code) || CONNECTION_ERROR_CODES.has(err.type)) {
+    } catch (/**@type {any} */ err) {
+      const code = err.code ?? err.cause?.code
+      if (CONNECTION_ERROR_CODES.has(code) || CONNECTION_ERROR_CODES.has(err.type)) {
         // retry
-      } else if (err.code === 'ERR_X_STATUS_CODE_NOT_OK') {
+      } else if (code === 'ERR_X_STATUS_CODE_NOT_OK') {
         if (err.status >= 300 && err.status < 500) {
           throw err
         }
