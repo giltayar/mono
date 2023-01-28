@@ -5,13 +5,12 @@
     "node": true,
     "browser": true
   },
-  "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "ecmaVersion": 2020,
+    "ecmaVersion": 2022,
     "sourceType": "module"
   },
-  "extends": ["plugin:node/recommended"],
-  "plugins": ["prettier", "mocha-no-only", "node"],
+  "extends": ["plugin:n/recommended"],
+  "plugins": ["prettier", "mocha-no-only", "n"],
   "rules": {
     "prettier/prettier": ["error"],
     "no-process-exit": "off",
@@ -26,6 +25,6 @@
     "constructor-super": "warn",
     "valid-typeof": "warn",
     "mocha-no-only/mocha-no-only": "error",
-    "node/exports-style": ["error", "module.exports"]
+    "n/exports-style": ["error", "module.exports"]
   }
 }

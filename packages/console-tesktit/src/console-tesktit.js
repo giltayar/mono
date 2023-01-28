@@ -18,18 +18,21 @@ export function captureConsole({silent = true} = {}) {
   /**@type {ConsoleCapturer} */
   const consoleCapturer = {originals: {log: console.log, error: console.error}, logOutput: []}
 
-  const captureOutput = /**@param {import('stream').Writable} stream */ (
-    stream,
-  ) => /**@param {any} format @param {any[]} args*/ (format, ...args) => {
-    const output = util.format(format, ...args)
+  const captureOutput =
+    /**@param {import('stream').Writable} stream */
 
-    consoleCapturer.logOutput.push(output)
 
-    if (!silent) {
-      stream.write(output)
-      stream.write('\n')
-    }
-  }
+      (stream) =>
+      /**@param {any} format @param {any[]} args*/ (format, ...args) => {
+        const output = util.format(format, ...args)
+
+        consoleCapturer.logOutput.push(output)
+
+        if (!silent) {
+          stream.write(output)
+          stream.write('\n')
+        }
+      }
 
   console.log = captureOutput(process.stdout)
   console.error = captureOutput(process.stderr)
@@ -64,7 +67,7 @@ export function uncaptureConsole({consoleCapturer}) {
  *
  * @param {(f: () => void) => void} before
  * @param {(f: () => void) => void} after
- * @param {{silent?: boolean}} [options]
+ * @param {{silent?: boolean}} options
  */
 export function captureConsoleInTest(before, after, {silent} = {}) {
   /**@type {ConsoleCapturer} */

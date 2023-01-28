@@ -32,11 +32,11 @@ export function uncaptureConsole({ consoleCapturer }: {
  *
  * @param {(f: () => void) => void} before
  * @param {(f: () => void) => void} after
- * @param {{silent?: boolean}} [options]
+ * @param {{silent?: boolean}} options
  */
 export function captureConsoleInTest(before: (f: () => void) => void, after: (f: () => void) => void, { silent }?: {
-    silent?: boolean | undefined;
-} | undefined): {
+    silent?: boolean;
+}): {
     consoleOutputAsString: ({ isLastTime }?: {
         isLastTime?: boolean | undefined;
     }) => string;
