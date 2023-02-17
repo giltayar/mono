@@ -71,6 +71,9 @@
 		{
 			"name": "url-commons",
 			"path": "packages/url-commons"
+		},
+		{
+			"path": "packages/webdriverio-testkit"
 		}
 	],
 	"settings": {}
