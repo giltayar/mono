@@ -2,10 +2,10 @@ import path from 'path'
 import crypto from 'crypto'
 import net from 'net'
 import {once} from 'events'
-import {sh, shWithOutput} from '@seasquared/scripting-commons'
-import {getDependencyInformation} from '@seasquared/dependencies-commons'
+import {sh, shWithOutput} from '@giltayar/scripting-commons'
+import {getDependencyInformation} from '@giltayar/dependencies-commons'
 import retry from 'p-retry'
-import {fetch} from '@seasquared/http-commons'
+import {fetch} from '@giltayar/http-commons'
 /**
  *
  * @param {string} dockerComposeFile

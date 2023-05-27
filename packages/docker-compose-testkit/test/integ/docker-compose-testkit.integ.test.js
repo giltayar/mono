@@ -3,8 +3,8 @@ import mocha from 'mocha'
 const {describe, it} = mocha
 import chai from 'chai'
 const {expect, use} = chai
-import {fetchAsText} from '@seasquared/http-commons'
-import {presult} from '@seasquared/promise-commons'
+import {fetchAsText} from '@giltayar/http-commons'
+import {presult} from '@giltayar/promise-commons'
 import chaiSubset from 'chai-subset'
 use(chaiSubset)
 

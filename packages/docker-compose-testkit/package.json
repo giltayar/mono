@@ -1,5 +1,5 @@
 {
-  "name": "@seasquared/docker-compose-testkit",
+  "name": "@giltayar/docker-compose-testkit",
   "version": "1.3.1",
   "description": "",
   "type": "module",
@@ -37,27 +37,27 @@
     "type": "git"
   },
   "dependencies": {
-    "@seasquared/dependencies-commons": "^1.0.5",
-    "@seasquared/http-commons": "^2.1.2",
-    "@seasquared/scripting-commons": "^1.3.5",
+    "@giltayar/dependencies-commons": "^1.1.1",
+    "@giltayar/http-commons": "^2.1.3",
+    "@giltayar/scripting-commons": "^1.3.6",
     "p-retry": "^5.1.2"
   },
   "devDependencies": {
-    "@seasquared/promise-commons": "^1.1.6",
-    "@types/chai": "^4.3.4",
+    "@giltayar/promise-commons": "^1.1.6",
+    "@types/chai": "^4.3.5",
     "@types/chai-subset": "^1.3.3",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^18.11.18",
-    "@types/node-fetch": "^2.6.2",
+    "@types/node": "^20.2.5",
+    "@types/node-fetch": "^2.6.4",
     "chai": "^4.3.7",
     "chai-subset": "^1.6.0",
-    "eslint": "^8.32.0",
+    "eslint": "^8.41.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
-    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-n": "^16.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "mocha": "^10.2.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.8.3",
-    "typescript": "^4.9.4"
+    "prettier": "^2.8.8",
+    "typescript": "^5.0.4"
   }
 }
