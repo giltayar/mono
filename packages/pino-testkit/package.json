@@ -1,5 +1,5 @@
 {
-  "name": "@seasquared/pino-testkit",
+  "name": "@giltayar/pino-testkit",
   "version": "2.0.2",
   "description": "",
   "type": "module",
@@ -38,29 +38,31 @@
     "type": "git"
   },
   "dependencies": {
-    "type-fest": "^0.20.2"
+    "split": "^1.0.1",
+    "type-fest": "^3.11.0"
   },
   "peerDependencies": {
-    "@types/pino": "^6.3.4"
+    "@types/pino": "^6.3.12"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/eslint-parser": "^7.12.1",
-    "@babel/plugin-syntax-top-level-await": "^7.12.1",
-    "@types/chai": "^4.2.14",
+    "@babel/core": "^7.22.1",
+    "@babel/eslint-parser": "^7.21.8",
+    "@babel/plugin-syntax-top-level-await": "^7.14.5",
+    "@types/chai": "^4.3.5",
     "@types/chai-subset": "^1.3.3",
-    "@types/mocha": "^8.2.0",
-    "@types/node": "^14.14.11",
-    "chai": "^4.2.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.2.5",
+    "@types/split": "^1.0.2",
+    "chai": "^4.3.7",
     "chai-subset": "^1.6.0",
-    "eslint": "^7.15.0",
+    "eslint": "^8.41.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.2.0",
-    "mocha": "^8.2.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "mocha": "^10.2.0",
     "npm-run-all": "^4.1.5",
-    "pino": "^6.7.0",
-    "prettier": "^2.2.1",
-    "typescript": "^4.1.2"
+    "pino": "^8.14.1",
+    "prettier": "^2.8.8",
+    "typescript": "^5.0.4"
   }
 }

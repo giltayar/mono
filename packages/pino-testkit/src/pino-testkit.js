@@ -1,3 +1,5 @@
+import split from 'split'
+
 export function recordLogs() {
   //@ts-expect-error
   globalThis[pinoTestkitGlobalSymbol] = []
@@ -8,18 +10,19 @@ export function recordLogs() {
  */
 export function playbackLogs() {
   //@ts-expect-error
-  return globalThis[pinoTestkitGlobalSymbol]
+  return [...globalThis[pinoTestkitGlobalSymbol]]
 }
 
-export const loggerOptionsForRecorder = {
-  prettifier: () => /** @param {import('type-fest').JsonObject} log */ (log) => {
-    // @ts-expect-error
-    globalThis[pinoTestkitGlobalSymbol].push(log)
+/** @type {any} */
+export const loggerOptionsForRecorder = split(
+  /** @param {import('type-fest').JsonObject} log */ (log) => {
+    //@ts-expect-error
+    globalThis[pinoTestkitGlobalSymbol].push(JSON.parse(log))
 
-    return JSON.stringify(log) + '\n'
+    console.log(log)
+    return log + '\n'
   },
-  prettyPrint: true,
-}
+)
 
 const pinoTestkitGlobalSymbol = Symbol('pino-testkit-globals')
 
