@@ -3,7 +3,7 @@ import mocha from 'mocha'
 const {describe, it} = mocha
 import chai from 'chai'
 const {expect} = chai
-import {shWithOutput} from '@seasquared/scripting-commons'
+import {shWithOutput} from '@giltayar/scripting-commons'
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)

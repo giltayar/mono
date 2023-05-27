@@ -1,4 +1,4 @@
-import {mapObject, throw_} from '@seasquared/functional-commons'
+import {mapObject, throw_} from '@giltayar/functional-commons'
 import fs from 'fs'
 import path from 'path'
 import {cleanName, envName} from './names.js'
