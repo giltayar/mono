@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/functional-commons",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "",
   "type": "module",
   "main": "./src/functional-commons.js",
@@ -28,7 +28,6 @@
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
-  "homepage": "https://github.com/giltayar/mono/packages/functional-commons",
   "repository": {
     "url": "https://github.com/giltayar/mono",
     "directory": "packages/functional-commons",
