@@ -1,4 +1,4 @@
-import {presult} from '@seasquared/promise-commons'
+import {presult} from '@giltayar/promise-commons'
 import chai from 'chai'
 import chaiSubset from 'chai-subset'
 import mocha from 'mocha'

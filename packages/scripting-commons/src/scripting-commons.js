@@ -6,7 +6,7 @@ import path from 'path'
 import stream from 'stream/promises'
 import {once} from 'events'
 import {spawn, exec, execFile} from 'child_process'
-import {makeError} from '@seasquared/functional-commons'
+import {makeError} from '@giltayar/functional-commons'
 
 /**
  * @param {string|string[]} command

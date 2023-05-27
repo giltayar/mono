@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/functional-commons",
-  "version": "1.1.11",
+  "version": "1.1.12",
   "description": "",
   "type": "module",
   "main": "./src/functional-commons.js",
@@ -33,9 +33,6 @@
     "url": "https://github.com/giltayar/mono",
     "directory": "packages/functional-commons",
     "type": "git"
-  },
-  "dependencies": {
-    "type-fest": "^3.11.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.5",

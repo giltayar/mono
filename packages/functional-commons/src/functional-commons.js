@@ -221,7 +221,7 @@ export function filterEntries(object, filterFunc) {
  * @param {Error|string} error
  * @param {P} [properties]
  *
- * @returns {import('type-fest').Merge<P, Error>}
+ * @returns {P & Error}
  */
 export function makeError(error, properties = undefined) {
   if (typeof error === 'string') {
@@ -230,7 +230,6 @@ export function makeError(error, properties = undefined) {
   // @ts-expect-error
   if (!properties) return error
 
-  // @ts-expect-error
   return Object.assign(error, properties)
 }
 
