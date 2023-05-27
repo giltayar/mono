@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/functional-commons",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "description": "",
   "type": "module",
   "main": "./src/functional-commons.js",

@@ -297,3 +297,38 @@ export function pick(object, objectKeys) {
 
   return ret
 }
+
+/**
+ * @template T
+ * @param {T} value
+ * @returns {T}
+ */
+export function clone(value) {
+  if (typeof value === 'object') {
+    if (value == null) {
+      return value
+    } else if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return value
+      } else {
+        //@ts-expect-error
+        return value.map(clone)
+      }
+    } else if (value.constructor?.name === 'Date') {
+      // @ts-expect-error
+      return new Date(value.getTime())
+    } else {
+      const ret = Object.create(Object.getPrototypeOf(value))
+
+      for (const key in value) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+          ret[key] = clone(value[key])
+        }
+      }
+
+      return ret
+    }
+  } else {
+    return value
+  }
+}

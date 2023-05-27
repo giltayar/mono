@@ -19,6 +19,7 @@ import {
   minus,
   diff,
   group,
+  clone,
 } from '../../src/functional-commons.js'
 
 describe('functional-commons', function () {
@@ -272,6 +273,73 @@ describe('functional-commons', function () {
 
     it('group will return an empty object on an empty array', () => {
       expect(group('foo', [])).to.eql({})
+    })
+  })
+
+  describe('clone', () => {
+    it('should "clone" a primitive', () => {
+      expect(clone(4)).to.equal(4)
+      expect(clone('4')).to.equal('4')
+      expect(clone(4n)).to.equal(4n)
+      expect(new Date(4000)).to.eql(new Date(4000))
+      const s = Symbol()
+      expect(clone(s)).to.equal(s)
+      expect(clone(null)).to.equal(null)
+      expect(clone(undefined)).to.equal(undefined)
+      const f = () => 1
+      expect(clone(f)).to.equal(f)
+      expect(clone(true)).to.equal(true)
+      expect(clone(false)).to.equal(false)
+    })
+
+    it('should clone an array', () => {
+      const array = [undefined, 4, 'sdfsdf', true]
+
+      expect(clone(array)).to.eql(array)
+    })
+
+    it('should clone an empty array', () => {
+      expect(clone([])).to.eql([])
+    })
+
+    it('should clone an object', () => {
+      const object = {
+        a: '4',
+        b: 5,
+        c: ['a', 'b', 'c'],
+      }
+      expect(clone(object)).to.eql(object)
+    })
+
+    it('should clone an object, without the prototype members', () => {
+      const prototype = Object.create({
+        a: '4',
+        b: 5,
+      })
+      const object = Object.create(prototype)
+      object.c = ['a', 'b', 'c']
+
+      expect(clone(object)).to.eql(object)
+      expect(clone(object).hasOwnProperty('a')).to.equal(false)
+      expect(clone(object).hasOwnProperty('b')).to.equal(false)
+    })
+
+    it('should clone an object with no prototype', () => {
+      const object = Object.create(null)
+      object.c = ['a', 'b', 'c']
+
+      expect(clone(object)).to.eql(object)
+    })
+
+    it('all together now', () => {
+      const object = [
+        {
+          a: 4,
+          b: {a: 5, c: [5, 'gil', 'tayar', {eee: 4n, ddd: true, fff: undefined}]},
+          c: null,
+        },
+      ]
+      expect(clone(object)).to.eql(object)
     })
   })
 })
