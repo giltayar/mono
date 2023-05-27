@@ -1,8 +1,8 @@
-import {makeError, throw_} from '@seasquared/functional-commons'
-import {presult} from '@seasquared/promise-commons'
+import {makeError, throw_} from '@giltayar/functional-commons'
+import {presult} from '@giltayar/promise-commons'
 import chai from 'chai'
 import http from 'http'
-import {describe, it, before, after} from '@seasquared/mocha-commons'
+import {describe, it, before, after} from '@giltayar/mocha-commons'
 import {fetchAsText, retryFetch} from '../../src/http-commons.js'
 const {expect} = chai
 

@@ -1,7 +1,7 @@
 import {default as Agent, HttpsAgent} from 'agentkeepalive'
 import merge from 'lodash.merge'
-import {memo, makeError} from '@seasquared/functional-commons'
-import {delay} from '@seasquared/promise-commons'
+import {memo, makeError} from '@giltayar/functional-commons'
+import {delay} from '@giltayar/promise-commons'
 
 /**
  * @typedef {RequestInit & {requestId?: string}} RequestInitWithRequestId

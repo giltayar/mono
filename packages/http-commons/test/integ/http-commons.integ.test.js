@@ -1,4 +1,4 @@
-import {describe, it, before, after} from '@seasquared/mocha-commons'
+import {describe, it, before, after} from '@giltayar/mocha-commons'
 import chai from 'chai'
 const {expect, use} = chai
 import chaiSubset from 'chai-subset'
@@ -93,21 +93,21 @@ describe('http-commons', function () {
   })
 
   it('should send deal with a real url', async () => {
-    expect(await fetchAsText('http://example.com')).to.include('Example Domain')
-    expect(await fetchAsText('http://example.com')).to.include('Example Domain')
+    expect(await fetchAsText('http://www.google.com')).to.include('Gmail')
+    expect(await fetchAsText('http://www.google.com')).to.include('Gmail')
   })
 
   it('should also replace the real fetch', async () => {
-    expect(await fetch('http://example.com')).to.satisfy(
+    expect(await fetch('http://www.google.com')).to.satisfy(
       /**@param {Response} response */ (response) => response.ok,
     )
-    expect(await fetch('http://example.com')).to.satisfy(
+    expect(await fetch('http://www.google.com')).to.satisfy(
       /**@param {Response} response */ (response) => response.ok,
     )
   })
 
   it('should work with https urls', async () => {
-    expect(await fetchAsText('https://www.example.com')).to.not.be.empty
+    expect(await fetchAsText('https://www.google.com')).to.not.be.empty
   })
 
   describe('requestId', () => {
