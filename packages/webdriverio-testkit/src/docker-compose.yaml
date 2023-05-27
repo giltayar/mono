@@ -1,9 +1,0 @@
-version: '3'
-services:
-  firefox:
-    image: ${IMAGE}
-    shm_size: 2g
-    ports:
-      - 4444
-    extra_hosts:
-    - '${HOST_DOCKER_INTERNAL}'

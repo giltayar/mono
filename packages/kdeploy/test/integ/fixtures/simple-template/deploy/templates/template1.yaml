@@ -1,2 +1,0 @@
-{{!This comment should not appear in the output}}
-key: this text should appear there {{name}} 1
