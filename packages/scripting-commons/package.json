@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/scripting-commons",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "",
   "type": "module",
   "exports": "./src/scripting-commons.js",
@@ -34,7 +34,7 @@
     "type": "git"
   },
   "dependencies": {
-    "@giltayar/functional-commons": "^1.1.12"
+    "@giltayar/functional-commons": "^1.1.13"
   },
   "devDependencies": {
     "@giltayar/promise-commons": "^1.1.6",
