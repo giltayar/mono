@@ -5,11 +5,12 @@ import mocha from 'mocha'
 import path from 'path'
 import fs from 'fs'
 import {
+  pathComponents,
+  findFileThatMatches,
   makeTemporaryDirectory,
   readFileAsJson,
   readFileAsString,
-  sh,
-  shWithOutput,
+  replaceInFile,
   writeFile,
 } from '../../src/scripting-commons.js'
 const {describe, it} = mocha
@@ -20,88 +21,123 @@ const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
 
 describe('scripting-commons (integ)', function () {
-  it('should output command output', async () => {
-    const tmpDir = await makeTemporaryDirectory()
-
-    await sh('touch bar', {cwd: tmpDir})
-    await sh('touch foo', {cwd: tmpDir})
-    const lsOutput = await shWithOutput('ls', {cwd: tmpDir})
-
-    expect(lsOutput).to.equal('bar\nfoo\n')
+  describe('pathComponents', () => {
+    it('should extract path components from path', () => {
+      expect(pathComponents('/foo/bar/baz.txt')).to.eql({
+        dirname: '/foo/bar',
+        basename: 'baz.txt',
+        extname: '.txt',
+        filename: 'baz',
+      })
+      expect(pathComponents('/foo/bar/baz')).to.eql({
+        dirname: '/foo/bar',
+        basename: 'baz',
+        extname: '',
+        filename: 'baz',
+      })
+      expect(pathComponents('./foo/bar/baz.txt')).to.eql({
+        dirname: './foo/bar',
+        basename: 'baz.txt',
+        extname: '.txt',
+        filename: 'baz',
+      })
+      expect(pathComponents('baz.txt')).to.eql({
+        dirname: '.',
+        basename: 'baz.txt',
+        extname: '.txt',
+        filename: 'baz',
+      })
+    })
   })
 
-  it('should support array commands', async () => {
-    const tmpDir = await makeTemporaryDirectory()
+  describe('read/write/makeTemporaryDirectory', () => {
+    it('should read/write files and make temporary dirs', async () => {
+      const cwd = await makeTemporaryDirectory()
 
-    await sh(['echo', 'bart', '>bar'], {cwd: tmpDir})
-    await shWithOutput(['echo', 'bart', '>barbie'], {cwd: tmpDir})
+      await writeFile('foo.txt', 'hello', {cwd})
+      await writeFile(['bar', 'bar.txt'], 'world', {cwd})
+      await writeFile('foo.json', {hello: 'world'}, {cwd})
 
-    const barOutput = await shWithOutput(['cat', 'bar'], {cwd: tmpDir})
-    const barbieOutput = await shWithOutput(['cat', 'barbie'], {cwd: tmpDir})
+      expect(await readFileAsString('foo.txt', {cwd})).to.equal('hello')
+      expect(await readFileAsString(['bar', 'bar.txt'], {cwd})).to.equal('world')
+      expect(await readFileAsJson(['foo.json'], {cwd})).to.eql({hello: 'world'})
+    })
 
-    expect(barOutput).to.equal('bart\n')
-    expect(barbieOutput).to.equal('bart\n')
-  })
+    it('should copy directory to temp', async () => {
+      const cwd = await makeTemporaryDirectory(path.resolve(__dirname, 'fixtures/source-dir'))
 
-  it('should support env', async () => {
-    const tmpDir = await makeTemporaryDirectory()
-
-    await sh('echo bart > $BAR', {cwd: tmpDir, env: {BAR: 'bar'}})
-    const lsOutput = await shWithOutput('cat $BAR', {cwd: tmpDir, env: {BAR: 'bar'}})
-
-    expect(lsOutput).to.equal('bart\n')
-  })
-
-  it('should fail on bad command', async () => {
-    expect(
-      await presult(sh('this-executable-should-not-exist', {cwd: process.cwd()})),
-    ).to.containSubset([{message: (m = 's') => /not found/.test(m), code: 127}, undefined])
-
-    expect(
-      await presult(shWithOutput('this-executable-should-not-exist', {cwd: process.cwd()})),
-    ).to.containSubset([{message: (m = 's') => /not found/.test(m), code: 127}, undefined])
-  })
-
-  it('should fail on command that returns bad exit code', async () => {
-    expect(
-      await presult(sh('ls this-file-should-not-exist', {cwd: process.cwd()})),
-    ).to.containSubset([{message: (m = 's') => /Command failed/.test(m)}, undefined])
-
-    expect(
-      await presult(shWithOutput('ls this-file-should-not-exist', {cwd: process.cwd()})),
-    ).to.containSubset([{message: (m = 's') => /No such file or directory/.test(m)}, undefined])
-  })
-
-  it('should read/write files and make temporary dirs', async () => {
-    const cwd = await makeTemporaryDirectory()
-
-    await writeFile('foo.txt', 'hello', {cwd})
-    await writeFile(['bar', 'bar.txt'], 'world', {cwd})
-    await writeFile('foo.json', {hello: 'world'}, {cwd})
-
-    expect(await readFileAsString('foo.txt', {cwd})).to.equal('hello')
-    expect(await readFileAsString(['bar', 'bar.txt'], {cwd})).to.equal('world')
-    expect(await readFileAsJson(['foo.json'], {cwd})).to.eql({hello: 'world'})
-  })
-
-  it('should copy directory to temp', async () => {
-    const cwd = await makeTemporaryDirectory(path.resolve(__dirname, 'fixtures/source-dir'))
-
-    expect(fs.readdirSync(cwd)).to.have.length(3)
-    expect(fs.readdirSync(path.join(cwd, 'subdir'))).to.have.length(1)
-    expect(await readFileAsString('foo.txt', {cwd})).to.equal(
-      `
+      expect(fs.readdirSync(cwd)).to.have.length(3)
+      expect(fs.readdirSync(path.join(cwd, 'subdir'))).to.have.length(1)
+      expect(await readFileAsString('foo.txt', {cwd})).to.equal(
+        `
 ABC
 DEF
 GHI
     `.trim(),
-    )
-    expect(await readFileAsString('bar.txt', {cwd})).to.equal(
-      `
+      )
+      expect(await readFileAsString('bar.txt', {cwd})).to.equal(
+        `
 JKL
 MNO
+JKLAGAIN
     `.trim(),
-    )
-    expect(await readFileAsString('subdir/gar.txt', {cwd})).to.equal(`PQR`)
+      )
+      expect(await readFileAsString('subdir/gar.txt', {cwd})).to.equal(`PQR`)
+    })
+
+    it('should copy with replacements', async () => {
+      const cwd = await makeTemporaryDirectory(path.resolve(__dirname, 'fixtures/source-dir'), {
+        JKL: 'LKJ',
+        DEF: 'FED',
+      })
+
+      expect(fs.readdirSync(cwd)).to.have.length(3)
+      expect(fs.readdirSync(path.join(cwd, 'subdir'))).to.have.length(1)
+      expect(await readFileAsString('foo.txt', {cwd})).to.equal(
+        `
+ABC
+FED
+GHI
+    `.trim(),
+      )
+      expect(await readFileAsString('bar.txt', {cwd})).to.equal(
+        `
+LKJ
+MNO
+LKJAGAIN
+    `.trim(),
+      )
+      expect(await readFileAsString('subdir/gar.txt', {cwd})).to.equal(`PQR`)
+    })
+
+    it('should replaceInfFile', async () => {
+      const expectedTransform = 'Hello, wurld. You are a wonderful wurld!'
+      const cwd = await makeTemporaryDirectory(path.join(__dirname, 'fixtures/replace-in-file'))
+
+      expect(await replaceInFile('a-file.txt', 'world', 'wurld', {cwd})).to.equal(expectedTransform)
+
+      expect(await readFileAsString('a-file.txt', {cwd})).to.equal(expectedTransform)
+    })
+  })
+  describe('findFileThatMatches', () => {
+    it('should find a file in a dir', async () => {
+      const dir = path.join(__dirname, 'fixtures/source-dir')
+      expect(await findFileThatMatches(dir, /^ba/)).to.equal(path.join(dir, 'bar.txt'))
+    })
+
+    it('should return undefined if no file', async () => {
+      const dir = path.join(__dirname, 'fixtures/source-dir')
+      expect(await findFileThatMatches(dir, /^none/)).to.equal(undefined)
+    })
+
+    it('should throw if more than one file matches', async () => {
+      const dir = path.join(__dirname, 'fixtures/source-dir')
+      expect((await presult(findFileThatMatches(dir, /txt$/)))[0].message).to.equal(
+        'more than one file matches /txt$/: bar.txt,foo.txt',
+      )
+      expect((await presult(findFileThatMatches(dir, /txt$/)))[0].code).to.equal(
+        'ERR_MORE_THAN_ONE_FILE_MATCH',
+      )
+    })
   })
 })
