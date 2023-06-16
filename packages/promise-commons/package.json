@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/promise-commons",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "",
   "type": "module",
   "exports": "./src/promise-commons.js",
@@ -36,9 +36,9 @@
   "devDependencies": {
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^18.16.16",
+    "@types/node": "^18.16.18",
     "chai": "^4.3.7",
-    "eslint": "^8.41.0",
+    "eslint": "^8.42.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-prettier": "^4.2.1",

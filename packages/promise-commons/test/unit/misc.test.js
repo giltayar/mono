@@ -33,6 +33,12 @@ describe('functional-commons', function () {
     it('should return an error when the promise is rejected', async () => {
       const err = new Error('hi there')
       expect(await presult(Promise.reject(err))).to.eql([err, undefined])
+
+      const [err2, value] = await presult(Promise.resolve(42))
+
+      if (err2) {
+        value
+      }
     })
 
     it('should return the value as second array item when the promise is resolved', async () => {

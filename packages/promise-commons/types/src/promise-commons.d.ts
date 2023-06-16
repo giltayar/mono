@@ -10,17 +10,17 @@ export function failAfter(ms: number, errFactory: () => any): Promise<void>;
  * @template TErr
  * @param {Promise<T>} promise
  *
- * @returns {Promise<[err: TErr|undefined, value: T|undefined]>}
+ * @returns {Promise<[err: TErr, value: undefined] | [err: undefined, value: T]>}
  */
-export function presult<T, TErr>(promise: Promise<T>): Promise<[err: TErr | undefined, value: T | undefined]>;
+export function presult<T, TErr>(promise: Promise<T>): Promise<[err: TErr, value: undefined] | [err: undefined, value: T]>;
 /**
  * @template T
  * @template TErr
- * @param {Promise<[err: TErr|undefined, value: T|undefined]>} presultPromise
+ * @param {Promise<[err: TErr, value: undefined] | [err: undefined, value: T]>} presultPromise
  *
  * @returns {Promise<T | Promise<never>>}
  */
-export function unwrapPresult<T, TErr>(presultPromise: Promise<[err: TErr | undefined, value: T | undefined]>): Promise<T | Promise<never>>;
+export function unwrapPresult<T, TErr>(presultPromise: Promise<[err: TErr, value: undefined] | [err: undefined, value: T]>): Promise<T | Promise<never>>;
 /**
  *
  * @param {number} ms

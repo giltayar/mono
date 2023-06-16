@@ -18,7 +18,7 @@ export async function failAfter(ms, errFactory) {
  * @template TErr
  * @param {Promise<T>} promise
  *
- * @returns {Promise<[err: TErr|undefined, value: T|undefined]>}
+ * @returns {Promise<[err: TErr, value: undefined] | [err: undefined, value: T]>}
  */
 export function presult(promise) {
   return promise.then(
@@ -30,7 +30,7 @@ export function presult(promise) {
 /**
  * @template T
  * @template TErr
- * @param {Promise<[err: TErr|undefined, value: T|undefined]>} presultPromise
+ * @param {Promise<[err: TErr, value: undefined] | [err: undefined, value: T]>} presultPromise
  *
  * @returns {Promise<T | Promise<never>>}
  */
