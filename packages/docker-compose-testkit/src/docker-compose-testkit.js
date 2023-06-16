@@ -2,9 +2,9 @@ import path from 'path'
 import crypto from 'crypto'
 import net from 'net'
 import {once} from 'events'
-import {sh, shWithOutput} from '@giltayar/scripting-commons'
 import {getDependencyInformation} from '@giltayar/dependencies-commons'
 import retry from 'p-retry'
+import {$} from 'execa'
 import {fetch} from '@giltayar/http-commons'
 /**
  *
@@ -46,26 +46,21 @@ export async function runDockerCompose(
   }
 
   async function setup() {
-    await sh(
-      `docker compose --file "${dockerComposeFile}" --project-name "${projectName}" up --detach ${
-        forceRecreate ? '--force-recreate' : ''
-      }`,
-      {
-        cwd: path.dirname(dockerComposeFile),
-        env: finalEnv,
-      },
-    ).catch((err) => console.log(err))
+    await $({
+      cwd: path.dirname(dockerComposeFile),
+      env: finalEnv,
+    })`docker compose --file ${dockerComposeFile} --project-name ${projectName} up --detach ${
+      forceRecreate ? '--force-recreate' : '--force-recreate=0'
+    }`
   }
 
   async function teardown() {
     if (!containerCleanup) return
-    await sh(
-      `docker compose --file "${dockerComposeFile}" --project-name "${projectName}" down --volumes --remove-orphans`,
-      {
-        cwd: path.dirname(dockerComposeFile),
-        env: finalEnv,
-      },
-    )
+
+    await $({
+      cwd: path.dirname(dockerComposeFile),
+      env: finalEnv,
+    })`docker compose --file ${dockerComposeFile} --project-name ${projectName} down --volumes --remove-orphans`
   }
 
   /**
@@ -86,13 +81,11 @@ export async function runDockerCompose(
     if (addresses.has(serviceKey)) {
       return addresses.get(serviceKey)
     }
-    const addressOutput = await shWithOutput(
-      `docker compose --file "${dockerComposeFile}" --project-name "${projectName}" port  --index=${serviceIndex} ${serviceName} ${port}`,
-      {
-        cwd: path.dirname(dockerComposeFile),
-        env: finalEnv,
-      },
-    )
+    const {stdout: addressOutput} = await $({
+      cwd: path.dirname(dockerComposeFile),
+      env: finalEnv,
+    })`docker compose --file ${dockerComposeFile} --project-name ${projectName} port  --index=${serviceIndex} ${serviceName} ${port}`
+
     const address = addressOutput.trim()
 
     await waitUntilHealthy(address, healthCheck, healthCheckTimeoutSec)
