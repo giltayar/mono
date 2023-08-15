@@ -20,6 +20,7 @@ import {
   diff,
   group,
   clone,
+  sresult,
 } from '../../src/functional-commons.js'
 
 describe('functional-commons', function () {
@@ -340,6 +341,23 @@ describe('functional-commons', function () {
         },
       ]
       expect(clone(object)).to.eql(object)
+    })
+  })
+
+  describe('sresult', () => {
+    it('should result a valid result', () => {
+      const [err, result] = sresult(() => ({a: 1}))
+      expect(result).to.have.property('a').and.to.eql(1)
+      expect(err).to.be.undefined
+    })
+
+    it('should return an error object when an internal function throws', () => {
+      const [err, result] = sresult(() => {
+        throw new Error('I should be in the err object')
+      })
+      expect(result).to.be.undefined
+      expect(err).to.be.instanceOf(Error)
+      expect(err?.message).to.eql('I should be in the err object')
     })
   })
 })
