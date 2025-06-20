@@ -1,0 +1,52 @@
+{
+	"folders": [
+		{
+			"name": ".bilt",
+			"path": ".bilt"
+		},
+		{
+			"name": "console-tesktit",
+			"path": "packages/console-tesktit"
+		},
+		{
+			"name": "dependencies-commons",
+			"path": "packages/dependencies-commons"
+		},
+		{
+			"name": "docker-compose-testkit",
+			"path": "packages/docker-compose-testkit"
+		},
+		{
+			"name": "functional-commons",
+			"path": "packages/functional-commons"
+		},
+		{
+			"name": "http-commons",
+			"path": "packages/http-commons"
+		},
+		{
+			"name": "mocha-commons",
+			"path": "packages/mocha-commons"
+		},
+		{
+			"name": "pino-testkit",
+			"path": "packages/pino-testkit"
+		},
+		{
+			"name": "promise-commons",
+			"path": "packages/promise-commons"
+		},
+		{
+			"name": "scripting-commons",
+			"path": "packages/scripting-commons"
+		},
+		{
+			"name": "url-commons",
+			"path": "packages/url-commons"
+		},
+		{
+			"path": "packages/carmel-tools/whatsapp-integration"
+		}
+	],
+	"settings": {}
+}

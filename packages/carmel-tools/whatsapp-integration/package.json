@@ -1,0 +1,59 @@
+{
+  "name": "@giltayar/carmel-tools-whatsapp-integration",
+  "version": "1.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/whatsapp-integration.d.ts",
+      "import": "./dist/whatsapp-integration.js"
+    }
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsgo --noCheck",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
+    "test:typescript": "tsgo --noEmit true"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "whatsapp"
+  ],
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/carmel-tools/whatsapp-integration",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmel-tools/whatsapp-integration",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.29.0",
+    "@types/node": "^24.0.3",
+    "chai": "^5.2.0",
+    "eslint": "^9.29.0",
+    "eslint-plugin-n": "^17.20.0",
+    "eslint-plugin-prettier": "^5.5.0",
+    "globals": "^16.2.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@giltayar/functional-commons": "^1.4.0",
+    "@typescript/native-preview": "7.0.0-dev.20250620.1"
+  }
+}
