@@ -13,7 +13,7 @@
     "allowJs": true,
     "checkJs": true,
     "emitDeclarationOnly": true,
-    "declarationDir": "types",
+    "declarationDir": "dist",
     "maxNodeModuleJsDepth": 0,
     "declarationMap": true
   },

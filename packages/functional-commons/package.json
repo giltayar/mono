@@ -6,7 +6,7 @@
   "main": "./src/functional-commons.js",
   "exports": {
     ".": {
-      "types": "./types/src/functional-commons.d.ts",
+      "types": "./dist/src/functional-commons.d.ts",
       "import": "./src/functional-commons.js"
     }
   },
@@ -15,11 +15,11 @@
   },
   "files": [
     "src",
-    "types"
+    "dist"
   ],
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
+    "build:typescript": "rm -rf dist && tsc && cp src/*.d.ts dist/src",
     "test": "run-p --aggregate-output 'test:*'",
     "mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
     "test:eslint": "eslint --max-warnings=0 '**/*.js'",
