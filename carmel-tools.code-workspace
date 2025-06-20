@@ -49,6 +49,9 @@
 		},
 		{
 			"path": "packages/carmel-tools/cardcom-integration"
+		},
+		{
+			"path": "packages/carmel-tools/smoove-integration"
 		}
 	],
 	"settings": {}
