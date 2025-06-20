@@ -1,9 +1,7 @@
 'use strict'
 import {promisify as p} from 'util'
-import mocha from 'mocha'
-const {describe, it} = mocha
-import chai from 'chai'
-const {expect} = chai
+import {describe, it} from 'mocha'
+import {expect} from 'chai'
 
 import {memo, memoAsync} from '../../src/functional-commons.js'
 

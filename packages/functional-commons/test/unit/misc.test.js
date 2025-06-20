@@ -1,8 +1,6 @@
 'use strict'
-import mocha from 'mocha'
-const {describe, it} = mocha
-import chai from 'chai'
-const {expect} = chai
+import {describe, it} from 'mocha'
+import {expect} from 'chai'
 import {
   range,
   sum,
