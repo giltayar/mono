@@ -84,7 +84,7 @@ export function sum(numbers) {
 /**
  *
  * @param {Error} err
- * @returns {void}
+ * @returns {never}
  */
 export function throw_(err) {
   throw err

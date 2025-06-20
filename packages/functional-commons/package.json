@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/functional-commons",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "",
   "type": "module",
   "main": "./src/functional-commons.js",
@@ -37,7 +37,7 @@
     "url": "https://github.com/giltayar/mono",
     "directory": "packages/functional-commons"
   },
-    "publishConfig": {
+  "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com/"
   },
