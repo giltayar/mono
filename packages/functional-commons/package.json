@@ -35,8 +35,11 @@
   "homepage": "https://github.com/giltayar/mono/tree/master/packages/functional-commons",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/functional-commons",
-    "type": "git"
+    "directory": "packages/functional-commons"
+  },
+    "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com/"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
