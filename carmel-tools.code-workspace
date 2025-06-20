@@ -46,6 +46,9 @@
 		},
 		{
 			"path": "packages/carmel-tools/whatsapp-integration"
+		},
+		{
+			"path": "packages/carmel-tools/cardcom-integration"
 		}
 	],
 	"settings": {}
