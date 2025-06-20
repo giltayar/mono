@@ -55,5 +55,6 @@
   "dependencies": {
     "@giltayar/functional-commons": "^1.4.0",
     "@typescript/native-preview": "7.0.0-dev.20250620.1"
-  }
+  },
+  "packageManager": "pnpm@10.10.0"
 }
