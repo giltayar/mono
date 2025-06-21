@@ -1,11 +1,11 @@
 {
-  "name": "@giltayar/carmel-tools-whatsapp-integration",
-  "version": "1.1.1",
+  "name": "@giltayar/carmel-tools-academys-integration",
+  "version": "1.0.1",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/whatsapp-integration.d.ts",
-      "import": "./dist/whatsapp-integration.js"
+      "types": "./dist/academy-integration.d.ts",
+      "import": "./dist/academy-integration.js"
     }
   },
   "engines": {
@@ -25,14 +25,14 @@
   "keywords": [
     "nodejs",
     "javascript",
-    "whatsapp"
+    "academy"
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
-  "homepage": "https://github.com/giltayar/mono/tree/master/packages/carmel-tools/whatsapp-integration",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/carmel-tools/academy-integration",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/carmel-tools/whatsapp-integration",
+    "directory": "packages/carmel-tools/academy-integration",
     "type": "git"
   },
   "publishConfig": {
@@ -53,7 +53,7 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
-    "@giltayar/functional-commons": "^1.4.0"
+    "@giltayar/functional-commons": "^1.4.1"
   },
   "packageManager": "pnpm@10.12.1"
 }

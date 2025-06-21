@@ -52,6 +52,9 @@
 		},
 		{
 			"path": "packages/carmel-tools/smoove-integration"
+		},
+		{
+			"path": "packages/carmel-tools/academy-integration"
 		}
 	],
 	"settings": {}
