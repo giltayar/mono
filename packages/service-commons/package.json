@@ -1,11 +1,11 @@
 {
   "name": "@giltayar/service-commons",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/src/service-commons.d.ts",
-      "import": "./dist/src/service-commons.js"
+    "./bind": {
+      "types": "./dist/src/bind.d.ts",
+      "import": "./dist/src/bind.js"
     }
   },
   "engines": {

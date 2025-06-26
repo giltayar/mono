@@ -1,6 +1,6 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert'
-import {bind, type ServiceFunction} from '../src/bind.ts'
+import {bind, type ServiceFunction} from '@giltayar/service-commons/bind'
 
 namespace FooBarService {
   export interface Context {
