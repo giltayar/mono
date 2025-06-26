@@ -65,8 +65,7 @@
 			"path": "packages/carmel-tools/academy-integration"
 		},
 		{
-			"name": "club",
-			"path": "packages/carmel-tools/club"
+			"path": "packages/carmel-tools/club-service"
 		}
 	],
 	"settings": {}
