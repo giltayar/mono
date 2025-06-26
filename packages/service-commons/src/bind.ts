@@ -9,3 +9,7 @@ export function bind<ServiceData, TArgs extends unknown[], TReturn>(
 ) {
   return fn.bind(service, service) as (..._args: TArgs) => TReturn
 }
+
+export type ServiceBind<ServiceData> = <TArgs extends unknown[], TReturn>(
+  _f: ServiceFunction<ServiceData, TArgs, TReturn>,
+) => (..._args: TArgs) => TReturn

@@ -1,6 +1,6 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert'
-import {bind, type ServiceFunction} from '@giltayar/service-commons/bind'
+import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 namespace FooBarService {
   export interface Context {
@@ -21,14 +21,12 @@ type ServiceData = {
 function createFooBarService(context: FooBarService.Context) {
   const state = {counter: 0}
 
-  const sBind = <TArgs extends unknown[], TReturn>(
-    f: ServiceFunction<ServiceData, TArgs, TReturn>,
-  ) => bind(f, {context, state})
+  const sBind: ServiceBind<ServiceData> = (f) => bind(f, {context, state})
 
   return {
     increment: sBind(increment),
     decrement: sBind(decrement),
-    counter: sBind(counter),
+    counter: sBind((s) => s.state.counter),
   }
 }
 
@@ -42,10 +40,6 @@ function decrement(s: ServiceData) {
   s.state.counter--
 
   return `args: ${1}, context: ${JSON.stringify(s.context)}`
-}
-
-function counter(s: ServiceData) {
-  return s.state.counter
 }
 
 describe('FooBarService', () => {
