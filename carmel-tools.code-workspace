@@ -21,6 +21,10 @@
 			"path": "packages/functional-commons"
 		},
 		{
+			"name": "service-commons",
+			"path": "packages/service-commons"
+		},
+		{
 			"name": "http-commons",
 			"path": "packages/http-commons"
 		},
@@ -45,16 +49,24 @@
 			"path": "packages/url-commons"
 		},
 		{
+			"name": "whatsapp-integration",
 			"path": "packages/carmel-tools/whatsapp-integration"
 		},
 		{
+			"name": "cardcom-integration",
 			"path": "packages/carmel-tools/cardcom-integration"
 		},
 		{
+			"name": "smoove-integration",
 			"path": "packages/carmel-tools/smoove-integration"
 		},
 		{
+			"name": "academy-integration",
 			"path": "packages/carmel-tools/academy-integration"
+		},
+		{
+			"name": "club",
+			"path": "packages/carmel-tools/club"
 		}
 	],
 	"settings": {}
