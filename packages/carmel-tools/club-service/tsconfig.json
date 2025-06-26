@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "lib": ["ESNext"],
+    "target": "esnext",
+    "module": "nodenext",
+    "strict": true,
+    "declaration": true,
+    "sourceMap": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "declarationDir": "dist",
+    "maxNodeModuleJsDepth": 0,
+    "declarationMap": true,
+    "outDir": "dist",
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "typeAcquisition": {"enable": true}
+}
