@@ -1,15 +1,28 @@
 {
   "name": "@giltayar/carmel-tools-whatsapp-integration",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/whatsapp-integration.d.ts",
-      "import": "./dist/whatsapp-integration.js"
-    }
+    "./service": {
+      "types": "./dist/src/whatsapp-integration.d.ts",
+      "import": "./dist/src/whatsapp-integration.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "import": "./dist/src/types.js"
+    },
+    "./utils": {
+      "types": "./dist/src/utils.d.ts",
+      "import": "./dist/src/utils.js"
+    },
+    "./testkit": {
+      "types": "./dist/testkit/whatsapp-integration-testkit.d.ts",
+      "import": "./dist/testkit/whatsapp-integration-testkit.js"
+    },
+    "./package.json": "./package.json"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.3.0"
   },
   "files": [
     "src",
@@ -17,10 +30,11 @@
   ],
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf dist && tsgo --noCheck",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsgo --noEmit true"
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
     "nodejs",
@@ -42,6 +56,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.29.0",
+    "@giltayar/service-commons": "^1.1.0",
     "@types/node": "^24.0.3",
     "@typescript/native-preview": "7.0.0-dev.20250620.1",
     "chai": "^5.2.0",
@@ -55,5 +70,5 @@
   "dependencies": {
     "@giltayar/functional-commons": "^1.4.0"
   },
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.12.4"
 }

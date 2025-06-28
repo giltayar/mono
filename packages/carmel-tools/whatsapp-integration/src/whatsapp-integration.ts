@@ -1,23 +1,36 @@
-import {throw_} from '@giltayar/functional-commons'
+import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
+import type {WhatsAppGroupId, WhatsAppContactId} from '@giltayar/carmel-tools-whatsapp-integration/types'
 
-const GREEN_API_KEY = process.env.GREEN_API_KEY ?? throw_(new Error('GREEN_API_KEY is not set'))
-const GREEN_API_INSTANCE_ID = 7105239970
-const GREEN_API_BASE_URL = `https://7105.api.greenapi.com/waInstance${GREEN_API_INSTANCE_ID}/getContacts/${GREEN_API_KEY}`
-
-export type WhatsAppContactId = `972${string}@c.us`
-export type WhatsAppGroupId = `${string}@g.us`
-
-export interface WhatsAppContact {
-  id: WhatsAppContactId | WhatsAppGroupId
-  name: string
+export interface WhatsAppIntegrationServiceContext {
+  greenApiKey: string
+  greenApiInstanceId: number
+  greenApiBaseUrl: URL
 }
 
-/**
- * Fetches WhatsApp groups from the Green API
- * @returns Promise with an array of WhatsApp groups
- */
-export async function fetchWhatsAppGroups(): Promise<{id: WhatsAppGroupId; name: string}[]> {
-  const url = new URL(GREEN_API_BASE_URL)
+type WhatsAppIntegrationServiceData = {
+  context: WhatsAppIntegrationServiceContext
+}
+
+export function createWhatsAppIntegrationService(context: WhatsAppIntegrationServiceContext) {
+  const sBind: ServiceBind<WhatsAppIntegrationServiceData> = (f) => bind(f, {context})
+
+  return {
+    fetchWhatsAppGroups: sBind(fetchWhatsAppGroups),
+    removeParticipantFromGroup: sBind(removeParticipantFromGroup),
+    addParticipantToGroup: sBind(addParticipantToGroup),
+    fetchLastWhatsappGroupsThatWereSentMessage: sBind(fetchLastWhatsappGroupsThatWereSentMessage),
+    fetchLastWhatsappGroupsThatWereReceivedMessage: sBind(
+      fetchLastWhatsappGroupsThatWereReceivedMessage,
+    ),
+  }
+}
+
+export type WhatsAppIntegrationService = ReturnType<typeof createWhatsAppIntegrationService>
+
+export async function fetchWhatsAppGroups(
+  s: WhatsAppIntegrationServiceData,
+): Promise<{id: WhatsAppGroupId; name: string}[]> {
+  const url = new URL(s.context.greenApiBaseUrl)
   url.searchParams.append('group', 'true')
 
   const response = await fetch(url, {
@@ -36,39 +49,12 @@ export async function fetchWhatsAppGroups(): Promise<{id: WhatsAppGroupId; name:
   }))
 }
 
-/**
- * Converts a human-readable Israeli phone number to a WhatsApp contact ID
- * @param phoneNumber The phone number to convert
- * @returns WhatsApp contact ID
- */
-export function humanIsraeliPhoneNumberToWhatsAppId(phoneNumber: string): WhatsAppContactId {
-  phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
-
-  if (phoneNumber.startsWith('0')) {
-    phoneNumber = '972' + phoneNumber.slice(1)
-  } else if (!phoneNumber.startsWith('972')) {
-    phoneNumber = '972' + phoneNumber
-  }
-
-  if (phoneNumber.charAt(3) === '0') {
-    phoneNumber = phoneNumber.slice(0, 3) + phoneNumber.slice(4)
-  }
-  return `${phoneNumber}@c.us` as WhatsAppContactId
-}
-
-/**
- * Removes a participant from a WhatsApp group
- * @param groupId The ID of the group
- * @param participantId The ID of the participant to remove
- * @returns The API response
- */
 export async function removeParticipantFromGroup(
+  s: WhatsAppIntegrationServiceData,
   groupId: WhatsAppGroupId,
   participantId: WhatsAppContactId,
-): Promise<any> {
-  const url = new URL(
-    `https://7105.api.green-api.com/waInstance${GREEN_API_INSTANCE_ID}/removeGroupParticipant/${GREEN_API_KEY}`,
-  )
+) {
+  const url = createApiUrl(s, 'removeGroupParticipant')
 
   const response = await fetch(url, {
     method: 'POST',
@@ -83,22 +69,15 @@ export async function removeParticipantFromGroup(
     throw new Error(`Failed to remove participant: ${response.status} ${await response.text()}`)
   }
 
-  return await response.json()
+  await response.json()
 }
 
-/**
- * Adds a participant to a WhatsApp group
- * @param groupId The ID of the group
- * @param participantId The ID of the participant to add
- * @returns The API response
- */
 export async function addParticipantToGroup(
+  s: WhatsAppIntegrationServiceData,
   groupId: WhatsAppGroupId,
   participantId: WhatsAppContactId,
-): Promise<any> {
-  const url = new URL(
-    `https://7105.api.green-api.com/waInstance${GREEN_API_INSTANCE_ID}/addGroupParticipant/${GREEN_API_KEY}`,
-  )
+) {
+  const url = createApiUrl(s, 'addGroupParticipant')
 
   const response = await fetch(url, {
     method: 'POST',
@@ -113,10 +92,10 @@ export async function addParticipantToGroup(
     throw new Error(`Failed to add participant: ${response.status} ${await response.text()}`)
   }
 
-  return await response.json()
+  await response.json()
 }
 
-interface WhatsAppMessage {
+export interface WhatsAppMessage {
   chatId: string
   textMessage: string
 }
@@ -125,12 +104,10 @@ interface WhatsAppMessage {
  * Fetches the last WhatsApp groups that were sent a message
  * @returns A grouped object of messages by chat ID
  */
-export async function fetchLastWhatsappGroupsThatWereSentMessage(): Promise<
-  Record<string, WhatsAppMessage[]>
-> {
-  const url = new URL(
-    `https://7105.api.green-api.com/waInstance${GREEN_API_INSTANCE_ID}/lastOutgoingMessages/${GREEN_API_KEY}`,
-  )
+export async function fetchLastWhatsappGroupsThatWereSentMessage(
+  s: WhatsAppIntegrationServiceData,
+): Promise<Record<string, WhatsAppMessage[]>> {
+  const url = createApiUrl(s, 'lastOutgoingMessages')
 
   const response = await fetch(url)
 
@@ -154,12 +131,10 @@ export async function fetchLastWhatsappGroupsThatWereSentMessage(): Promise<
  * Fetches the last WhatsApp groups that received a message
  * @returns A grouped object of messages by chat ID
  */
-export async function fetchLastWhatsappGroupsThatWereReceivedMessage(): Promise<
-  Record<string, WhatsAppMessage[]>
-> {
-  const url = new URL(
-    `https://7105.api.green-api.com/waInstance${GREEN_API_INSTANCE_ID}/lastIncomingMessages/${GREEN_API_KEY}`,
-  )
+export async function fetchLastWhatsappGroupsThatWereReceivedMessage(
+  s: WhatsAppIntegrationServiceData,
+): Promise<Record<string, WhatsAppMessage[]>> {
+  const url = createApiUrl(s, 'lastIncomingMessages')
 
   const response = await fetch(url)
 
@@ -176,5 +151,12 @@ export async function fetchLastWhatsappGroupsThatWereReceivedMessage(): Promise<
       .filter((d) => d.typeMessage === 'textMessage')
       .map((d) => ({chatId: d.chatId, textMessage: d.textMessage})),
     (d) => d.chatId,
+  )
+}
+
+function createApiUrl(s: WhatsAppIntegrationServiceData, endpoint: string): URL {
+  return new URL(
+    `/waInstance${s.context.greenApiInstanceId}/${endpoint}/${s.context.greenApiKey}`,
+    s.context.greenApiBaseUrl,
   )
 }

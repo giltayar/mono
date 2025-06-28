@@ -11,9 +11,6 @@ importers:
       '@giltayar/functional-commons':
         specifier: ^1.4.0
         version: 1.4.0
-      '@typescript/native-preview':
-        specifier: 7.0.0-dev.20250620.1
-        version: 7.0.0-dev.20250620.1
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.1
@@ -21,9 +18,15 @@ importers:
       '@eslint/js':
         specifier: ^9.29.0
         version: 9.29.0
+      '@giltayar/service-commons':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@types/node':
         specifier: ^24.0.3
         version: 24.0.3
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20250620.1
+        version: 7.0.0-dev.20250620.1
       chai:
         specifier: ^5.2.0
         version: 5.2.0
@@ -45,9 +48,6 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
 
 packages:
 
@@ -96,6 +96,10 @@ packages:
   '@giltayar/functional-commons@1.4.0':
     resolution: {integrity: sha512-vtZV2iIR6XAdLhYsiu99jF/lfTtpfTEm6I08q7sA93FnCsfUyR3QAlVbxMEH7O5UL+l8VxkH2zmn882grYTN+Q==}
     engines: {node: '>=15.0.0'}
+
+  '@giltayar/service-commons@1.1.0':
+    resolution: {integrity: sha512-H+A9WHdK9Vp+B4rJo2z0k2AKNqMfjD2VkmGmudj4Aer2BxWmbeyx3HWxwD2s3DiVgO5nlN8mXng/kQD18JOX7A==, tarball: https://npm.pkg.github.com/download/@giltayar/service-commons/1.1.0/ad3f48c441fce7a3acd4ab93d7bbe6b7b12ba91a}
+    engines: {node: '>=24.3.0'}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1223,6 +1227,8 @@ snapshots:
       levn: 0.4.1
 
   '@giltayar/functional-commons@1.4.0': {}
+
+  '@giltayar/service-commons@1.1.0': {}
 
   '@humanfs/core@0.19.1': {}
 
