@@ -12,10 +12,10 @@ import {
 } from '@giltayar/carmel-tools-cardcom-integration'
 import {
   humanIsraeliPhoneNumberToWhatsAppId,
-  removeParticipantFromGroup,
-} from '@giltayar/carmel-tools-whatsapp-integration'
+} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
 export async function dealWithUsersWithDebt(s: ClubServiceData) {
+  const {context: {services}} = s
   const subscribedContacts = await fetchContactsOfList(s.context.subscribedSmooveListId)
 
   let i = 1
@@ -50,7 +50,7 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
     )
 
     console.log('removing', smooveContact.email, 'from WhatsApp group')
-    await removeParticipantFromGroup(
+    await services.whatsapp.removeParticipantFromGroup(
       s.context.whatsappGroupId,
       humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
     ).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))

@@ -6,10 +6,10 @@ import type {ClubServiceData} from './club-service-types.ts'
 import {removeContactFromAllCourses} from '@giltayar/carmel-tools-academy-integration'
 import {
   humanIsraeliPhoneNumberToWhatsAppId,
-  removeParticipantFromGroup,
-} from '@giltayar/carmel-tools-whatsapp-integration'
+} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
 export async function paymentExpiration(s: ClubServiceData) {
+  const {context: {services}} = s
   const contactsInCancelledList = await fetchContactsOfList(s.context.cancelledSmooveListId)
 
   const currentMonth = new Date().getMonth() + 1
@@ -42,7 +42,7 @@ export async function paymentExpiration(s: ClubServiceData) {
       ')',
     )
 
-    await removeParticipantFromGroup(
+    await services.whatsapp.removeParticipantFromGroup(
       s.context.whatsappGroupId,
       humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
     ).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))

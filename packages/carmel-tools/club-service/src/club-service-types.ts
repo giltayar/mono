@@ -1,7 +1,7 @@
-import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration'
+import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
-export namespace ClubService {
-  export interface Context {
+  export interface ClubServiceContext {
     subscribedSmooveListId: number // מנוי מועדון
     cancellingSmooveListId: number // מבטלות מנוי מועדון
     cancelledSmooveListId: number // מבוטלות מנוי מועדון
@@ -10,9 +10,12 @@ export namespace ClubService {
     cardcomProductId: number
     academyCourse: string[]
     whatsappGroupId: WhatsAppGroupId
+    services: {
+      whatsapp: WhatsAppIntegrationService
+    }
   }
-}
+
 
 export type ClubServiceData = {
-  context: ClubService.Context
+  context: ClubServiceContext
 }

@@ -7,14 +7,14 @@ import {enableDisableRecurringPayment} from '@giltayar/carmel-tools-cardcom-inte
 import {removeContactFromAllCourses} from '@giltayar/carmel-tools-academy-integration'
 import {
   humanIsraeliPhoneNumberToWhatsAppId,
-  removeParticipantFromGroup,
-} from '@giltayar/carmel-tools-whatsapp-integration'
+} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
 export async function removeUser(s: ClubServiceData, email: string) {
   if (!email) {
     throw new Error('Email must be provided as the first argument')
   }
 
+  const {context: {services}} = s
   const smooveContact = await fetchSmooveContact(email, {by: 'email'})
 
   if (smooveContact.cardcomRecurringPaymentId) {
@@ -44,7 +44,7 @@ export async function removeUser(s: ClubServiceData, email: string) {
     ')',
   )
 
-  await removeParticipantFromGroup(
+  await services.whatsapp.removeParticipantFromGroup(
     s.context.whatsappGroupId,
     humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
   ).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
