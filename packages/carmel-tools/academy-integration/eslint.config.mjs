@@ -6,6 +6,7 @@ import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import js from '@eslint/js'
 import {FlatCompat} from '@eslint/eslintrc'
+import tseslint from 'typescript-eslint'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,10 +16,10 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 })
 
-export default defineConfig([
+export default tseslint.config([
   {
-    files: ['src/**', 'test/**'],
-    extends: compat.extends('plugin:n/recommended'),
+    files: ['src/**/*.*', 'testkit/**/*.*', 'test/**/*.*'],
+    extends: [...compat.extends('plugin:n/recommended'), ...tseslint.configs.recommended],
 
     plugins: {prettier, n},
 
@@ -43,11 +44,15 @@ export default defineConfig([
       'no-undef': 'warn',
       'no-unreachable': 'warn',
 
-      'no-unused-vars': ['warn', {varsIgnorePattern: '^_', args: 'all', argsIgnorePattern: '^_'}],
-
       'constructor-super': 'warn',
       'valid-typeof': 'warn',
       'n/exports-style': ['error', 'module.exports'],
+      '@typescript-eslint/no-namespace': 'off',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {varsIgnorePattern: '^_', args: 'all', argsIgnorePattern: '^_'},
+      ],
     },
   },
 ])

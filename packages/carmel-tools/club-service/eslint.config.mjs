@@ -44,13 +44,15 @@ export default tseslint.config([
       'no-undef': 'warn',
       'no-unreachable': 'warn',
 
-      'no-unused-vars': ['warn', {varsIgnorePattern: '^_', args: 'all', argsIgnorePattern: '^_'}],
-
       'constructor-super': 'warn',
       'valid-typeof': 'warn',
       'n/exports-style': ['error', 'module.exports'],
       '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {varsIgnorePattern: '^_', args: 'all', argsIgnorePattern: '^_'},
+      ],
     },
   },
 ])
