@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-cardcom-integration",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "exports": {
     "./service": {
@@ -61,7 +61,7 @@
   },
   "dependencies": {
     "@giltayar/functional-commons": "^1.4.1",
-    "@giltayar/service-commons": "^1.1.0",
+    "@giltayar/service-commons": "^1.1.1",
     "execa": "^9.6.0"
   },
   "packageManager": "pnpm@10.10.0"
