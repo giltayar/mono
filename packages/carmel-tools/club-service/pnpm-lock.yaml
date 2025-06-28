@@ -9,23 +9,23 @@ importers:
   .:
     dependencies:
       '@giltayar/carmel-tools-academy-integration':
-        specifier: ^1.0.1
-        version: 1.0.1
-      '@giltayar/carmel-tools-cardcom-integration':
-        specifier: ^1.1.0
-        version: 1.1.0
-      '@giltayar/carmel-tools-smoove-integration':
-        specifier: ^1.1.0
-        version: 1.1.0
-      '@giltayar/carmel-tools-whatsapp-integration':
         specifier: ^2.0.0
         version: 2.0.0
+      '@giltayar/carmel-tools-cardcom-integration':
+        specifier: ^2.0.1
+        version: 2.0.1
+      '@giltayar/carmel-tools-smoove-integration':
+        specifier: ^2.0.1
+        version: 2.0.1
+      '@giltayar/carmel-tools-whatsapp-integration':
+        specifier: ^2.1.2
+        version: 2.1.2
       '@giltayar/functional-commons':
         specifier: ^1.4.1
         version: 1.4.1
       '@giltayar/service-commons':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.1.2
+        version: 1.1.2
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -37,11 +37,11 @@ importers:
         specifier: ^9.30.0
         version: 9.30.0
       '@types/node':
-        specifier: ^24.0.6
-        version: 24.0.6
+        specifier: ^24.0.7
+        version: 24.0.7
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20250627.1
-        version: 7.0.0-dev.20250627.1
+        specifier: 7.0.0-dev.20250628.1
+        version: 7.0.0-dev.20250628.1
       chai:
         specifier: ^5.2.0
         version: 5.2.0
@@ -111,28 +111,28 @@ packages:
     resolution: {integrity: sha512-1+WqvgNMhmlAambTvT3KPtCl/Ibr68VldY2XY40SL1CE0ZXiakFR/cbTspaF5HsnpDMvcYYoJHfl4980NBjGag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@giltayar/carmel-tools-academy-integration@1.0.1':
-    resolution: {integrity: sha512-b5Gy+2iGEhLw3RJsLqenDP/WPJ7l5ea94d4sXTSoGJ/zjDSoem83HzaltuHQaVvaTsWVv+xJFWJA8kQrfbaNNA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/1.0.1/11a4b641f81b03ec61085b2fcd365c033b0552d9}
-    engines: {node: '>=24.0.0'}
+  '@giltayar/carmel-tools-academy-integration@2.0.0':
+    resolution: {integrity: sha512-2DuofbKvOO+/PdA7gdaUUorYk/jS/8UEfHV0zFWiiRJKDGEH9Sr9rdfujCzsDQm68vXuRFBUlTP2bDDSgkRE5g==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/2.0.0/78e19e8ac6d7f04d5cc5a00f952b133cda17782f}
+    engines: {node: '>=24.3.0'}
 
-  '@giltayar/carmel-tools-cardcom-integration@1.1.0':
-    resolution: {integrity: sha512-s7lRtZKCZ+gUBQ3dtrzSbSgtvpP3Aookaq9/1/hF7RFC0N8y3l5M9AXXROKdHfgvKrwBeVNhVQyLWXU85qNwVw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/1.1.0/555698ba5a713e34a4bcb13104d47331a6b5377a}
-    engines: {node: '>=24.0.0'}
+  '@giltayar/carmel-tools-cardcom-integration@2.0.1':
+    resolution: {integrity: sha512-dAO2bW/r6Q1D0RCQBcsp+RYc9f35S++AoYTYme+L9E5pHpnI9kuMRwlXoRT1Aey/vmMqAJNJoCFTpVHodIazAA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/2.0.1/50c4355e1b4154902c908a0b57f2bf9e2b959f70}
+    engines: {node: '>=24.3.0'}
 
-  '@giltayar/carmel-tools-smoove-integration@1.1.0':
-    resolution: {integrity: sha512-Ljg6qcoLiocYcemmIUZXM1uQJcH4UVpf9Y2iuN6/H2e43AMtZv/L/xZeoUOGoa3eKYCpzNsuf46vc3JOiV8xDg==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-smoove-integration/1.1.0/665ab66901aa8dff29db0a36da1480c35c5e4e96}
-    engines: {node: '>=24.0.0'}
+  '@giltayar/carmel-tools-smoove-integration@2.0.1':
+    resolution: {integrity: sha512-wMEK+zudE8m7xTweZHEIe3JTZrKLDQafrA2xkqDxhr/FqHfAXIMVZMPJ8PPfQF3yqqgiIAXm8aB9sIoz7gNixA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-smoove-integration/2.0.1/e6a5681cd178f30fdea75c4d5b6282847a8f3722}
+    engines: {node: '>=24.3.0'}
 
-  '@giltayar/carmel-tools-whatsapp-integration@2.0.0':
-    resolution: {integrity: sha512-mGvPNfU2XmK3jN10lJ6+lXcRo2EwRukhmpJbRvBO6D8KxP1QS+BlKvS9nfkvzhmMqi7N4+a/F8kcJyHQnLFe2Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-whatsapp-integration/2.0.0/fbd96eac8cc297fc2543fd24483823e5b14d26dc}
+  '@giltayar/carmel-tools-whatsapp-integration@2.1.2':
+    resolution: {integrity: sha512-7ZsWALgBmvtTUhZncEYXc+ZGclT7bxtbN8DS7SNCeLzebOpmEtX09I13ZeZBiVBWvQxxKJ1ISwte2hI1QjOsXQ==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-whatsapp-integration/2.1.2/656207be6773ed84f7912c20445efb4420ced2d8}
     engines: {node: '>=24.3.0'}
 
   '@giltayar/functional-commons@1.4.1':
     resolution: {integrity: sha512-LNz9RMXj+3HB7PNN/yV0mFVV1Aj3ccBEcikKIhKPMF6c8WW6/LbUeYS7UxNv3OG8SbVIP7QSZEL07s5zgdyP7Q==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/1.4.1/bc04283bb3f72545197b49386502855733cfebd4}
     engines: {node: '>=15.0.0'}
 
-  '@giltayar/service-commons@1.1.0':
-    resolution: {integrity: sha512-H+A9WHdK9Vp+B4rJo2z0k2AKNqMfjD2VkmGmudj4Aer2BxWmbeyx3HWxwD2s3DiVgO5nlN8mXng/kQD18JOX7A==, tarball: https://npm.pkg.github.com/download/@giltayar/service-commons/1.1.0/ad3f48c441fce7a3acd4ab93d7bbe6b7b12ba91a}
+  '@giltayar/service-commons@1.1.2':
+    resolution: {integrity: sha512-n02GZtlKeWgmygkYjPoo6HvRiqEFnMrI/fsHjt0W55D3mxj+hEbue70u4TiHxflMoMGg/+ybT7nHIVujFXuQ6w==, tarball: https://npm.pkg.github.com/download/@giltayar/service-commons/1.1.2/9354131ef37631904a278f91ae26065f29805d4f}
     engines: {node: '>=24.3.0'}
 
   '@humanfs/core@0.19.1':
@@ -184,8 +184,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/node@24.0.6':
-    resolution: {integrity: sha512-ZOyn+gOs749xU7ovp+Ibj0g1o3dFRqsfPnT22C2t5JzcRvgsEDpGawPbCISGKLudJk9Y0wiu9sYd6kUh0pc9TA==}
+  '@types/node@24.0.7':
+    resolution: {integrity: sha512-YIEUUr4yf8q8oQoXPpSlnvKNVKDQlPMWrmOcgzoduo7kvA2UF0/BwJ/eMKFTiTtkNL17I0M6Xe2tvwFU7be6iw==}
 
   '@typescript-eslint/eslint-plugin@8.35.0':
     resolution: {integrity: sha512-ijItUYaiWuce0N1SoSMrEd0b6b6lYkYt99pqCPfybd+HKVXtEvYhICfLdwp42MhiI5mp0oq7PKEL+g1cNiz/Eg==}
@@ -246,97 +246,50 @@ packages:
     resolution: {integrity: sha512-zTh2+1Y8ZpmeQaQVIc/ZZxsx8UzgKJyNg1PTvjzC7WMhPSVS8bfDX34k1SrwOf016qd5RU3az2UxUNue3IfQ5g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-z5WlrwpHTr8lfshW+0z+LNdnAI9GCGkOzpjp8SY3jO91ZFJJrB/DAwghOonFe/0b8QpX2t3QnEKt8rSEp3OgFA==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-uIYl7JRK4oogp6gtdJfvHk6eqmyRj7ReMH69pzmpF2Os029v4T/B4ubEStJZeipNV5i0H5S22ke7nB2n/fdwOg==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-8w8H+fr30gDXrm6NF6q0qa/tNB7JwNE+Xjk3OzM7+XEma0G227ct5x8mXAfCQStrSQQZeje2yLavqsxvr7N8fA==}
-    engines: {node: '>=20.6.0'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-LfYl7DsRUKWGUEio6mtNtpcTXfcV9JGJEMkzpnwwacEgiZUORmYD4Ls4k+9Wo4qRm6F5LZo/RnkTnkAoOWtJnA==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-yA6urzWberCtOA0p5ZHTDgDIRgWOTlLdIuyJT7wEAzmTp4iAcXlbjtlqHO48YbPY6u8QQO2gkPb63xUVkgXTOw==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-H0E4VyrhabXHkxTulOxy8HElhgr1R2OopxvjZueLMI2lgDb3Mvx6zQuF8zOgBZoLjtke39sTFvuscGXmkXSWrQ==}
-    engines: {node: '>=20.6.0'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-Tq/DaRtPoddNUJbz/lqRFcz6Radppek2KV/J/g+KPCK3Y4tV8MFPnwLRNaUz21PunJEgnZYmZdhXBRz4PK2ckA==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-4jLcHUaDDU7Pq35/lfNgVIKoixAoWJb4XOviVNmsBUBDbOCRpC6w3NEm3WkLp/FlSwHWxdxvS5ZxGfl0tQBU6w==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-GKN/Us7d+L2RQu7HPiOAZkf5poUwlkmZ66nDjH244jY94YW3zCHc0AFHKR7Ae5cM/m6eB1UU39c9PUl4zlVzqg==}
-    engines: {node: '>=20.6.0'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-bLJOwKPX3opO951S2G4lBl+TqoiPAaUHNgCfudP0jkIXjy+LIcxZ+myztzba9rtrfQOXRjtE9Pdb+BTQBLzQ9g==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-Yj0Lx5ObYtlnDhlRVjxZqUOBlWA3yjd2YuDqxLVwfwfpgY/J6TDPRiw2FNKA4U8AbpQfOp9w9w2zzuVPcnK5Eg==}
     engines: {node: '>=20.6.0'}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-7A97lKcVoCHHdpuXG7W1LHQ610xxYTvx8uO+NxxWrXo9GIZgAyx2uBRsx3VWqXdw2vwvG/u33x+jl9cUMHs9+Q==}
-    engines: {node: '>=20.6.0'}
-    cpu: [arm]
-    os: [linux]
-
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-klR9Ab0dntvWUR3/D+CnW/ub66WgnbZHcCbtxuGKYtmfZqjeJMpuEE6WNDxBKMmAAElsr1LL4C+jKCy7rU+D6A==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-eTQyMTocik0bzTZU78955U+/yXOnVtPkobkIw3ItJll4OvK7C7xxUkciyN68cgl0+AcXmAKUVuwZy2bkIxNelQ==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-iXiDvw+z7LQQkj6k9lwq2YIzwWMDdyZ28LWRV6gbEZz+GksYUrEs24q7F4DNMR5nyaxXaCGZA9AN1FVWocUHKA==}
-    engines: {node: '>=20.6.0'}
-    cpu: [x64]
-    os: [linux]
-
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-SOTYzbc9VBhl+3OZaJWhPmAzzJccoveqnH4UgwZL8P89DGgyPAG0gvK0xTYZ/aJTVnrPvJmCZJy9kVsvEPKONA==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-fn1fsJOU1ZeR9XKrU4m77ofKYOhdInoB5WmIn877m23i9wJgDf0khnbsl+K0sBJRm3qkjCFTGhVufNbny0WBqg==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-MH71qaNp1XcQfUbpt6RsqR9pP6xoS9pTevUcdOCkh4s51bk9vULd0SIG1PLHjmyzNrdHEXuZUYOHXWJa7PnL0A==}
-    engines: {node: '>=20.6.0'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-pgUNzOWHRxZBwh5QbJl4xi3J5Wznh/u8z1YnzDE3jhnLsmEJpzSR4K3p3otEtEwd2FfUqoFmdWV5YCved2lDHA==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-ioHfytkBTHobTmDZqjgiCT/OaYyi3a24a9g0bC/m6wle/31BKUAnIMn3EByMsydkU0cycVdADImK4+BX3zei7A==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-geSWJB2COOfnUCQ2Xo+YPo1UfIrO0rxTvMgc2o1mDHnOMNMw1PM07A1s2cMrMSDwIcl7jXecwV9qDneULGE36Q==}
-    engines: {node: '>=20.6.0'}
-    cpu: [x64]
-    os: [win32]
-
-  '@typescript/native-preview@7.0.0-dev.20250620.1':
-    resolution: {integrity: sha512-fsQK/Id+L63vyrk4lQagXeqpLcTf3TPYcJUUmhK7A2wHQovJ4eQCEiD+aOQFKJ8v8feC2k7bLRdX1MO4+ZH6UQ==}
-    engines: {node: '>=20.6.0'}
-    hasBin: true
-
-  '@typescript/native-preview@7.0.0-dev.20250627.1':
-    resolution: {integrity: sha512-XcmY1FjAdTwnkPz95bTsDf9DaVOiyTfMPZ1CzcJ/1yW5/utoC0SJEjRvUodpQRWR6BHqEYDk2s13gVVx99WGNw==}
+  '@typescript/native-preview@7.0.0-dev.20250628.1':
+    resolution: {integrity: sha512-NcrPSdEV1E0oNgKBMnEK/N+/YN5ry2RuG9lIyYfmTzw1RJT9lUGCibPwHD9jd0nL6qyoPY3EeWu0SNHLiXHZzw==}
     engines: {node: '>=20.6.0'}
     hasBin: true
 
@@ -1413,27 +1366,30 @@ snapshots:
       '@eslint/core': 0.15.1
       levn: 0.4.1
 
-  '@giltayar/carmel-tools-academy-integration@1.0.1':
+  '@giltayar/carmel-tools-academy-integration@2.0.0':
     dependencies:
       '@giltayar/functional-commons': 1.4.1
+      '@giltayar/service-commons': 1.1.2
 
-  '@giltayar/carmel-tools-cardcom-integration@1.1.0':
+  '@giltayar/carmel-tools-cardcom-integration@2.0.1':
     dependencies:
       '@giltayar/functional-commons': 1.4.1
-      '@typescript/native-preview': 7.0.0-dev.20250620.1
+      '@giltayar/service-commons': 1.1.2
       execa: 9.6.0
 
-  '@giltayar/carmel-tools-smoove-integration@1.1.0':
+  '@giltayar/carmel-tools-smoove-integration@2.0.1':
     dependencies:
       '@giltayar/functional-commons': 1.4.1
+      '@giltayar/service-commons': 1.1.2
 
-  '@giltayar/carmel-tools-whatsapp-integration@2.0.0':
+  '@giltayar/carmel-tools-whatsapp-integration@2.1.2':
     dependencies:
       '@giltayar/functional-commons': 1.4.1
+      '@giltayar/service-commons': 1.1.2
 
   '@giltayar/functional-commons@1.4.1': {}
 
-  '@giltayar/service-commons@1.1.0': {}
+  '@giltayar/service-commons@1.1.2': {}
 
   '@humanfs/core@0.19.1': {}
 
@@ -1470,7 +1426,7 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
-  '@types/node@24.0.6':
+  '@types/node@24.0.7':
     dependencies:
       undici-types: 7.8.0
 
@@ -1566,67 +1522,36 @@ snapshots:
       '@typescript-eslint/types': 8.35.0
       eslint-visitor-keys: 4.2.1
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250620.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250627.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250620.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250627.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250620.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250627.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250620.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250628.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250627.1':
-    optional: true
-
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250620.1':
-    optional: true
-
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250627.1':
-    optional: true
-
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250620.1':
-    optional: true
-
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250627.1':
-    optional: true
-
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250620.1':
-    optional: true
-
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250627.1':
-    optional: true
-
-  '@typescript/native-preview@7.0.0-dev.20250620.1':
+  '@typescript/native-preview@7.0.0-dev.20250628.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250620.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250620.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250620.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250620.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250620.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250620.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250620.1
-
-  '@typescript/native-preview@7.0.0-dev.20250627.1':
-    optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250627.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250627.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250627.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250627.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250627.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250627.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250627.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250628.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250628.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250628.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250628.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250628.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250628.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250628.1
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:

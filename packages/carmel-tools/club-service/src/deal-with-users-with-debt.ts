@@ -1,22 +1,15 @@
 import pc from 'picocolors'
 import type {ClubServiceData} from './club-service-types.ts'
-import {
-  changeContactLinkedLists,
-  fetchContactsOfList,
-  type SmooveContactInList,
-} from '@giltayar/carmel-tools-smoove-integration'
-import {removeContactFromAllCourses} from '@giltayar/carmel-tools-academy-integration'
-import {
-  enableDisableRecurringPayment,
-  fetchRecurringPaymentBadPayments,
-} from '@giltayar/carmel-tools-cardcom-integration'
-import {
-  humanIsraeliPhoneNumberToWhatsAppId,
-} from '@giltayar/carmel-tools-whatsapp-integration/utils'
+import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
+import type {SmooveContactInList} from '@giltayar/carmel-tools-smoove-integration/types'
 
 export async function dealWithUsersWithDebt(s: ClubServiceData) {
-  const {context: {services}} = s
-  const subscribedContacts = await fetchContactsOfList(s.context.subscribedSmooveListId)
+  const {
+    context: {services},
+  } = s
+  const subscribedContacts = await services.smoove.fetchContactsOfList(
+    s.context.subscribedSmooveListId,
+  )
 
   let i = 1
   for (const smooveContact of subscribedContacts) {
@@ -40,31 +33,35 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
     }
 
     console.log('removing', smooveContact.email, 'from all courses')
-    await removeContactFromAllCourses(smooveContact.email, s.context.academyCourse).catch((error) =>
-      console.log(`${smooveContact.email}: ${error.message}`),
-    )
+    await services.academy
+      .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
 
     console.log('disabling', smooveContact.email, 'recurring payments')
-    await enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable').catch(
-      (error) => console.log(`${smooveContact.email}: ${error.message}`),
-    )
+    await services.cardcom
+      .enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable')
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
 
     console.log('removing', smooveContact.email, 'from WhatsApp group')
-    await services.whatsapp.removeParticipantFromGroup(
-      s.context.whatsappGroupId,
-      humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
-    ).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+    await services.whatsapp
+      .removeParticipantFromGroup(
+        s.context.whatsappGroupId,
+        humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
+      )
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
 
     console.log('\nmoving', smooveContact.email, 'from רשומות to לא שילמו')
-    await changeContactLinkedLists(smooveContact, {
-      unsubscribeFrom: [s.context.subscribedSmooveListId],
-      subscribeTo: [s.context.recurringPaymentNotPayedListId],
-    }).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+    await services.smoove
+      .changeContactLinkedLists(smooveContact, {
+        unsubscribeFrom: [s.context.subscribedSmooveListId],
+        subscribeTo: [s.context.recurringPaymentNotPayedListId],
+      })
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
   }
 }
 
 async function hasContactPayed(s: ClubServiceData, smooveContact: SmooveContactInList) {
-  const badPayments = await fetchRecurringPaymentBadPayments(
+  const badPayments = await s.context.services.cardcom.fetchRecurringPaymentBadPayments(
     smooveContact.cardcomAccountId,
     String(s.context.cardcomProductId),
   )

@@ -1,16 +1,13 @@
-import {
-  changeContactLinkedLists,
-  fetchContactsOfList,
-} from '@giltayar/carmel-tools-smoove-integration'
 import type {ClubServiceData} from './club-service-types.ts'
-import {removeContactFromAllCourses} from '@giltayar/carmel-tools-academy-integration'
-import {
-  humanIsraeliPhoneNumberToWhatsAppId,
-} from '@giltayar/carmel-tools-whatsapp-integration/utils'
+import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
 export async function paymentExpiration(s: ClubServiceData) {
-  const {context: {services}} = s
-  const contactsInCancelledList = await fetchContactsOfList(s.context.cancelledSmooveListId)
+  const {
+    context: {services},
+  } = s
+  const contactsInCancelledList = await services.smoove.fetchContactsOfList(
+    s.context.cancelledSmooveListId,
+  )
 
   const currentMonth = new Date().getMonth() + 1
 
@@ -29,9 +26,9 @@ export async function paymentExpiration(s: ClubServiceData) {
 
     console.log('removing', smooveContact.email, 'from all courses')
 
-    await removeContactFromAllCourses(smooveContact.email, s.context.academyCourse).catch((error) =>
-      console.log(`${smooveContact.email}: ${error.message}`),
-    )
+    await services.academy
+      .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
 
     console.log(
       'removing',
@@ -42,16 +39,20 @@ export async function paymentExpiration(s: ClubServiceData) {
       ')',
     )
 
-    await services.whatsapp.removeParticipantFromGroup(
-      s.context.whatsappGroupId,
-      humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
-    ).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+    await services.whatsapp
+      .removeParticipantFromGroup(
+        s.context.whatsappGroupId,
+        humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
+      )
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
 
     console.log('moving', smooveContact.email, 'from מבוטלות to הוסרו')
 
-    await changeContactLinkedLists(smooveContact, {
-      unsubscribeFrom: [s.context.cancelledSmooveListId],
-      subscribeTo: [s.context.unubscribedSmooveListId],
-    }).catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+    await services.smoove
+      .changeContactLinkedLists(smooveContact, {
+        unsubscribeFrom: [s.context.cancelledSmooveListId],
+        subscribeTo: [s.context.unubscribedSmooveListId],
+      })
+      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
   }
 }
