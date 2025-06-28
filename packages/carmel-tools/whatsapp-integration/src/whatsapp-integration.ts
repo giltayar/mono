@@ -1,5 +1,8 @@
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
-import type {WhatsAppGroupId, WhatsAppContactId} from '@giltayar/carmel-tools-whatsapp-integration/types'
+import type {
+  WhatsAppGroupId,
+  WhatsAppContactId,
+} from '@giltayar/carmel-tools-whatsapp-integration/types'
 
 export interface WhatsAppIntegrationServiceContext {
   greenApiKey: string
@@ -117,7 +120,7 @@ export async function fetchLastWhatsappGroupsThatWereSentMessage(
     )
   }
 
-  const data = (await response.json()) as any[]
+  const data = (await response.json()) as GreenApiMessage[]
 
   return Object.groupBy(
     data
@@ -144,7 +147,7 @@ export async function fetchLastWhatsappGroupsThatWereReceivedMessage(
     )
   }
 
-  const data = (await response.json()) as any[]
+  const data = (await response.json()) as GreenApiMessage[]
 
   return Object.groupBy(
     data
@@ -159,4 +162,10 @@ function createApiUrl(s: WhatsAppIntegrationServiceData, endpoint: string): URL 
     `/waInstance${s.context.greenApiInstanceId}/${endpoint}/${s.context.greenApiKey}`,
     s.context.greenApiBaseUrl,
   )
+}
+
+interface GreenApiMessage {
+  typeMessage: string
+  chatId: string
+  textMessage: string
 }
