@@ -1,26 +1,42 @@
-import {throw_} from '@giltayar/functional-commons'
+import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 import {$} from 'execa'
+import type {
+  RecurringPaymentInfo,
+  BadPayment,
+} from '@giltayar/carmel-tools-cardcom-integration/types'
 
-export const CARDCOM_API_KEY =
-  process.env.CARDCOM_API_KEY ?? throw_(new Error('CARDCOM_API_KEY env variable must be defined'))
-export const CARDCOM_API_KEY_PASSWORD =
-  process.env.CARDCOM_API_KEY_PASSWORD ??
-  throw_(new Error('CARDCOM_API_KEY_PASSWORD env variable must be defined'))
-export const CARDCOM_TERMINAL_NUMBER = '150067'
-export const CARDCOM_ADD_OR_UPDATE_RECURRING_PAYMENT_URL =
-  'https://secure.cardcom.solutions/Interface/RecurringPayment.aspx'
-export const CARDCOM_GET_RECURRING_PAYMENT_HISTORY_URL =
-  'https://secure.cardcom.solutions/api/v11/RecuringPayments/GetRecurringPaymentHistory'
+export interface CardcomIntegrationServiceContext {
+  apiKey: string
+  apiKeyPassword: string
+  terminalNumber: string
+}
+
+type CardcomIntegrationServiceData = {
+  context: CardcomIntegrationServiceContext
+}
+
+export function createCardcomIntegrationService(context: CardcomIntegrationServiceContext) {
+  const sBind: ServiceBind<CardcomIntegrationServiceData> = (f) => bind(f, {context})
+
+  return {
+    enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
+    fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
+    fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
+  }
+}
+
+export type CardcomIntegrationService = ReturnType<typeof createCardcomIntegrationService>
 
 export async function enableDisableRecurringPayment(
+  s: CardcomIntegrationServiceData,
   cardcomRecurringPaymentId: string,
   action: 'enable' | 'disable',
 ): Promise<Record<string, string>> {
-  const url = new URL(CARDCOM_ADD_OR_UPDATE_RECURRING_PAYMENT_URL)
+  const url = new URL('https://secure.cardcom.solutions/Interface/RecurringPayment.aspx')
 
   const bodyParams = new URL('https://dummy-url.example.com').searchParams
-  bodyParams.append('terminalnumber', CARDCOM_TERMINAL_NUMBER)
-  bodyParams.append('username', CARDCOM_API_KEY)
+  bodyParams.append('terminalnumber', s.context.terminalNumber)
+  bodyParams.append('username', s.context.apiKey)
   bodyParams.append('codepage', '65001') // unicode
   bodyParams.append('Operation', 'update')
   bodyParams.append('RecurringPayments.RecurringId', cardcomRecurringPaymentId)
@@ -48,11 +64,8 @@ export async function enableDisableRecurringPayment(
   }
 }
 
-interface RecurringPaymentInfo {
-  recurringPaymentId: string
-}
-
 export async function fetchRecurringPaymentInformation(
+  s: CardcomIntegrationServiceData,
   accountId: string,
 ): Promise<RecurringPaymentInfo | undefined> {
   const url = new URL(
@@ -62,8 +75,8 @@ export async function fetchRecurringPaymentInformation(
   const {stdout} = await $`curl -s ${
     url.href
   } -H ${'Content-Type: application/json'} --request GET --data ${JSON.stringify({
-    apiUserName: CARDCOM_API_KEY,
-    apiPassword: CARDCOM_API_KEY_PASSWORD,
+    apiUserName: s.context.apiKey,
+    apiPassword: s.context.apiKeyPassword,
     accountId,
   })}`
 
@@ -72,7 +85,7 @@ export async function fetchRecurringPaymentInformation(
   interface UpdateItem {
     InternalDecription: string
     RecurringId: string
-    [key: string]: any
+    [key: string]: unknown
   }
 
   const moadonHakodRecurringPayment = result.UpdateList?.find((u: UpdateItem) =>
@@ -88,12 +101,8 @@ export async function fetchRecurringPaymentInformation(
   }
 }
 
-interface BadPayment {
-  date: Date
-  badPaymentCount: number
-}
-
 export async function fetchRecurringPaymentBadPayments(
+  s: CardcomIntegrationServiceData,
   accountId: string,
   productId: string,
 ): Promise<BadPayment[] | undefined> {
@@ -104,8 +113,8 @@ export async function fetchRecurringPaymentBadPayments(
   const {stdout} = await $`curl -s ${
     url.href
   } -H ${'Content-Type: application/json'} --request GET --data ${JSON.stringify({
-    apiUserName: CARDCOM_API_KEY,
-    apiPassword: CARDCOM_API_KEY_PASSWORD,
+    apiUserName: s.context.apiKey,
+    apiPassword: s.context.apiKeyPassword,
     accountId,
     FromDate: '01012020',
     ToDate: '01012040',
@@ -118,7 +127,7 @@ export async function fetchRecurringPaymentBadPayments(
     CreateDate: string
     Status: string
     BillingAttempts: number
-    [key: string]: any
+    [key: string]: unknown
   }
 
   const moadonHakodRecurringPayment = result.RecurringPaymentHistory?.filter(

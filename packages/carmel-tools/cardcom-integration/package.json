@@ -1,26 +1,32 @@
 {
   "name": "@giltayar/carmel-tools-cardcom-integration",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/cardcom-integration.d.ts",
-      "import": "./dist/cardcom-integration.js"
-    }
+    "./service": {
+      "types": "./dist/src/cardcom-integration.d.ts",
+      "import": "./dist/src/cardcom-integration.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "import": "./dist/src/types.js"
+    },
+    "./package.json": "./package.json"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.3.0"
   },
   "files": [
     "src",
+    "testkit",
     "dist"
   ],
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf dist && tsgo --noCheck",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
-    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsgo --noEmit true"
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo"
   },
   "keywords": [
     "nodejs",
@@ -41,19 +47,21 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.29.0",
-    "@types/node": "^24.0.3",
+    "@eslint/js": "^9.30.0",
+    "@types/node": "^24.0.7",
+    "@typescript/native-preview": "7.0.0-dev.20250628.1",
     "chai": "^5.2.0",
-    "eslint": "^9.29.0",
+    "eslint": "^9.30.0",
     "eslint-plugin-n": "^17.20.0",
-    "eslint-plugin-prettier": "^5.5.0",
+    "eslint-plugin-prettier": "^5.5.1",
     "globals": "^16.2.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.5.3",
-    "@typescript/native-preview": "7.0.0-dev.20250620.1"
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.35.0"
   },
   "dependencies": {
     "@giltayar/functional-commons": "^1.4.1",
+    "@giltayar/service-commons": "^1.1.0",
     "execa": "^9.6.0"
   },
   "packageManager": "pnpm@10.10.0"
