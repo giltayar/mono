@@ -18,7 +18,7 @@ const compat = new FlatCompat({
 
 export default tseslint.config([
   {
-    files: ['src/**/*.*', 'test/**/*.*'],
+    files: ['src/**/*.*', 'testkit/**/*.*', 'test/**/*.*'],
     extends: [...compat.extends('plugin:n/recommended'), ...tseslint.configs.recommended],
 
     plugins: {prettier, n},
