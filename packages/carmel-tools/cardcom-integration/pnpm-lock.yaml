@@ -12,8 +12,8 @@ importers:
         specifier: ^1.4.1
         version: 1.4.1
       '@giltayar/service-commons':
-        specifier: ^1.1.1
-        version: 1.1.1
+        specifier: ^1.1.2
+        version: 1.1.2
       execa:
         specifier: ^9.6.0
         version: 9.6.0
@@ -103,8 +103,8 @@ packages:
     resolution: {integrity: sha512-LNz9RMXj+3HB7PNN/yV0mFVV1Aj3ccBEcikKIhKPMF6c8WW6/LbUeYS7UxNv3OG8SbVIP7QSZEL07s5zgdyP7Q==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/1.4.1/bc04283bb3f72545197b49386502855733cfebd4}
     engines: {node: '>=15.0.0'}
 
-  '@giltayar/service-commons@1.1.1':
-    resolution: {integrity: sha512-cPT4asCSaMJSLWAQuJWcd2WaMTMXkN8ZsTQXoVdqVVTFhaBssIhjhXV5liEFjtWdsBMLhz022C8atAlQSAaAxw==, tarball: https://npm.pkg.github.com/download/@giltayar/service-commons/1.1.1/ff8b40f39aa6882c113dbfa16f253a5ff9c6d4e2}
+  '@giltayar/service-commons@1.1.2':
+    resolution: {integrity: sha512-n02GZtlKeWgmygkYjPoo6HvRiqEFnMrI/fsHjt0W55D3mxj+hEbue70u4TiHxflMoMGg/+ybT7nHIVujFXuQ6w==, tarball: https://npm.pkg.github.com/download/@giltayar/service-commons/1.1.2/9354131ef37631904a278f91ae26065f29805d4f}
     engines: {node: '>=24.3.0'}
 
   '@humanfs/core@0.19.1':
@@ -1337,7 +1337,7 @@ snapshots:
 
   '@giltayar/functional-commons@1.4.1': {}
 
-  '@giltayar/service-commons@1.1.1': {}
+  '@giltayar/service-commons@1.1.2': {}
 
   '@humanfs/core@0.19.1': {}
 

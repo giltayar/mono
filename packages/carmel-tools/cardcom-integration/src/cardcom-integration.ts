@@ -67,6 +67,7 @@ export async function enableDisableRecurringPayment(
 export async function fetchRecurringPaymentInformation(
   s: CardcomIntegrationServiceData,
   accountId: string,
+  nameMatch: RegExp,
 ): Promise<RecurringPaymentInfo | undefined> {
   const url = new URL(
     'https://secure.cardcom.solutions/api/v11/RecuringPayments/GetRecurringPayment',
@@ -89,7 +90,7 @@ export async function fetchRecurringPaymentInformation(
   }
 
   const moadonHakodRecurringPayment = result.UpdateList?.find((u: UpdateItem) =>
-    u.InternalDecription.includes('הקוד הקוונטי'),
+    nameMatch.test(u.InternalDecription),
   )
 
   if (!moadonHakodRecurringPayment) {
