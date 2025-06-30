@@ -3,66 +3,64 @@
   "version": "2.0.2",
   "description": "",
   "type": "module",
-  "exports": "./src/pino-testkit.js",
-  "main": "./src/pino-testkit.js",
-  "types": "./types/src/pino-testkit.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/pino-testkit.d.ts",
+      "import": "./dist/src/pino-testkit.js"
+    }
+  },
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=24.3.0"
   },
   "files": [
     "src",
-    "types"
+    "dist"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
-    "test": "run-p --aggregate-output test:eslint test:typescript test:mocha-parallel",
-    "mocha": "mocha --no-timeouts --exit 'test/unit/*.test.js' 'test/integ/*.test.js'",
-    "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint  --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false"
+    "build:typescript": "rm -rf dist && tsgo --noCheck --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo --noEmit true",
+    "test:node": "node --test"
   },
   "keywords": [
     "javascript",
     "nodejs",
     "pino"
   ],
-  "author": "Gil Tayar <giltayar@roundforest.com>",
+  "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/pino-testkit",
   "repository": {
-    "url": "https://github.com/roundforest/mono",
+    "url": "https://github.com/giltayar/mono",
     "directory": "packages/pino-testkit",
     "type": "git"
   },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
   "dependencies": {
-    "split": "^1.0.1",
-    "type-fest": "^3.11.0"
+    "split": "^1.0.1"
   },
   "peerDependencies": {
     "@types/pino": "^6.3.12"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.1",
-    "@babel/eslint-parser": "^7.21.8",
-    "@babel/plugin-syntax-top-level-await": "^7.14.5",
-    "@types/chai": "^4.3.5",
-    "@types/chai-subset": "^1.3.3",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "^20.2.5",
-    "@types/split": "^1.0.2",
-    "chai": "^4.3.7",
-    "chai-subset": "^1.6.0",
-    "eslint": "^8.41.0",
-    "eslint-plugin-mocha-no-only": "^1.1.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "mocha": "^10.2.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.30.0",
+    "@types/node": "^24.0.7",
+    "@types/split": "^1.0.5",
+    "@typescript/native-preview": "7.0.0-dev.20250630.1",
+    "eslint": "^9.30.0",
+    "eslint-plugin-n": "^17.20.0",
+    "eslint-plugin-prettier": "^5.5.1",
+    "globals": "^16.2.0",
     "npm-run-all": "^4.1.5",
-    "pino": "^8.14.1",
-    "prettier": "^2.8.8",
-    "typescript": "^5.0.4"
-  }
+    "pino": "^9.7.0",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.35.1"
+  },
+  "packageManager": "pnpm@10.12.3"
 }
