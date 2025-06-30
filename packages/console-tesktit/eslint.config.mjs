@@ -1,4 +1,3 @@
-import {defineConfig} from 'eslint/config'
 import prettier from 'eslint-plugin-prettier'
 import n from 'eslint-plugin-n'
 import globals from 'globals'
