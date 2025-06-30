@@ -7,7 +7,7 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
   const {
     context: {services},
   } = s
-  const logger = services.logger
+  const logger = services.logger.child({operation: 'deal-with-users-with-debt'})
   const subscribedContacts = await services.smoove.fetchContactsOfList(
     s.context.subscribedSmooveListId,
   )

@@ -9,18 +9,18 @@ export async function removeUser(s: ClubServiceData, email: string) {
   const {
     context: {services},
   } = s
-  const logger = services.logger
+  const logger = services.logger.child({operation: 'remove-user', email})
   const smooveContact = await services.smoove.fetchSmooveContact(email, {by: 'email'})
 
   if (smooveContact.cardcomRecurringPaymentId) {
-    logger.info({email: smooveContact.email}, 'deactivating recurring payment in cardcom')
+    logger.info('deactivating recurring payment in cardcom')
 
     await services.cardcom
       .enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable')
       .catch((error) => logger.error({err: error, email: smooveContact.email}))
   }
 
-  logger.info({email: smooveContact.email}, 'moving contact from מבטלות to מבוטלות')
+  logger.info('moving contact from מבטלות to מבוטלות')
   await services.smoove
     .changeContactLinkedLists(smooveContact, {
       unsubscribeFrom: [s.context.cancellingSmooveListId],
@@ -44,7 +44,7 @@ export async function removeUser(s: ClubServiceData, email: string) {
     )
     .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-  logger.info({email: smooveContact.email}, 'moving from מבוטלות to הוסרו')
+  logger.info('moving from מבוטלות to הוסרו')
   await services.smoove
     .changeContactLinkedLists(smooveContact, {
       unsubscribeFrom: [s.context.cancelledSmooveListId],

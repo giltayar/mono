@@ -5,7 +5,7 @@ export async function paymentExpiration(s: ClubServiceData) {
   const {
     context: {services},
   } = s
-  const logger = services.logger
+  const logger = services.logger.child({operation: 'payment-expiration'})
   const contactsInCancelledList = await services.smoove.fetchContactsOfList(
     s.context.cancelledSmooveListId,
   )
