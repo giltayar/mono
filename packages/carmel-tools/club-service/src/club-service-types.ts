@@ -3,6 +3,7 @@ import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-i
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {Logger} from 'pino'
 
 export interface ClubServiceContext {
   subscribedSmooveListId: number // מנוי מועדון
@@ -18,6 +19,7 @@ export interface ClubServiceContext {
     cardcom: CardcomIntegrationService
     smoove: SmooveIntegrationService
     academy: AcademyIntegrationService
+    logger: Logger
   }
 }
 

@@ -5,6 +5,7 @@ export async function paymentExpiration(s: ClubServiceData) {
   const {
     context: {services},
   } = s
+  const logger = services.logger
   const contactsInCancelledList = await services.smoove.fetchContactsOfList(
     s.context.cancelledSmooveListId,
   )
@@ -15,28 +16,27 @@ export async function paymentExpiration(s: ClubServiceData) {
 
   for (const smooveContact of contactsInCancelledList) {
     if (currentMonth <= smooveContact.signupDate.getMonth() + 1) {
-      console.log('skipping', smooveContact.email, 'because they signed up this month')
+      logger.info({email: smooveContact.email}, 'skipping because they signed up this month')
       continue
     }
 
     if (emailsNotToRemove.includes(smooveContact.email)) {
-      console.log('skipping', smooveContact.email, 'because it is in the emailsNotToRemove list')
+      logger.info(
+        {email: smooveContact.email},
+        'skipping because it is in the emailsNotToRemove list',
+      )
       continue
     }
 
-    console.log('removing', smooveContact.email, 'from all courses')
+    logger.info({email: smooveContact.email}, 'removing from all courses')
 
     await services.academy
       .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    console.log(
-      'removing',
-      smooveContact.email,
-      'from WhatsApp group',
-      '(',
-      smooveContact.telephone,
-      ')',
+    logger.info(
+      {email: smooveContact.email, telephone: smooveContact.telephone},
+      'removing from WhatsApp group',
     )
 
     await services.whatsapp
@@ -44,15 +44,15 @@ export async function paymentExpiration(s: ClubServiceData) {
         s.context.whatsappGroupId,
         humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
       )
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    console.log('moving', smooveContact.email, 'from מבוטלות to הוסרו')
+    logger.info({email: smooveContact.email}, 'moving from מבוטלות to הוסרו')
 
     await services.smoove
       .changeContactLinkedLists(smooveContact, {
         unsubscribeFrom: [s.context.cancelledSmooveListId],
         subscribeTo: [s.context.unubscribedSmooveListId],
       })
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
   }
 }

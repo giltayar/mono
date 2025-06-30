@@ -7,6 +7,7 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
   const {
     context: {services},
   } = s
+  const logger = services.logger
   const subscribedContacts = await services.smoove.fetchContactsOfList(
     s.context.subscribedSmooveListId,
   )
@@ -32,31 +33,34 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
         break
     }
 
-    console.log('removing', smooveContact.email, 'from all courses')
+    logger.info({email: smooveContact.email}, 'removing from all courses')
     await services.academy
       .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    console.log('disabling', smooveContact.email, 'recurring payments')
+    logger.info({email: smooveContact.email}, 'disabling recurring payments')
     await services.cardcom
       .enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable')
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    console.log('removing', smooveContact.email, 'from WhatsApp group')
+    logger.info(
+      {email: smooveContact.email, telephone: smooveContact.telephone},
+      'removing from WhatsApp group',
+    )
     await services.whatsapp
       .removeParticipantFromGroup(
         s.context.whatsappGroupId,
         humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
       )
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    console.log('\nmoving', smooveContact.email, 'from רשומות to לא שילמו')
+    logger.info({email: smooveContact.email}, 'moving from רשומות to לא שילמו')
     await services.smoove
       .changeContactLinkedLists(smooveContact, {
         unsubscribeFrom: [s.context.subscribedSmooveListId],
         subscribeTo: [s.context.recurringPaymentNotPayedListId],
       })
-      .catch((error) => console.log(`${smooveContact.email}: ${error.message}`))
+      .catch((error) => logger.error({err: error, email: smooveContact.email}))
   }
 }
 
