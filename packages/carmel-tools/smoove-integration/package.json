@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-smoove-integration",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "type": "module",
   "exports": {
     "./service": {
@@ -10,6 +10,10 @@
     "./types": {
       "types": "./dist/src/types.d.ts",
       "import": "./dist/src/types.js"
+    },
+    "./testkit": {
+      "types": "./dist/testkit/smoove-integration-testkit.d.ts",
+      "import": "./dist/testkit/smoove-integration-testkit.js"
     },
     "./package.json": "./package.json"
   },
@@ -26,7 +30,8 @@
     "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
-    "test:typescript": "tsgo"
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
     "nodejs",
@@ -49,7 +54,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.30.0",
     "@types/node": "^24.0.7",
-    "@typescript/native-preview": "7.0.0-dev.20250628.1",
+    "@typescript/native-preview": "7.0.0-dev.20250630.1",
     "chai": "^5.2.0",
     "eslint": "^9.30.0",
     "eslint-plugin-n": "^17.20.0",
@@ -61,7 +66,7 @@
   },
   "dependencies": {
     "@giltayar/functional-commons": "^1.4.1",
-    "@giltayar/service-commons": "^1.1.0"
+    "@giltayar/service-commons": "^1.1.2"
   },
   "packageManager": "pnpm@10.10.0"
 }
