@@ -4,7 +4,6 @@ import {removeUser} from './club-remove-user.ts'
 import {dealWithCancelRequests} from './deal-with-cancel-requests.ts'
 import {dealWithUsersWithDebt} from './deal-with-users-with-debt.ts'
 import {paymentExpiration} from './club-payment-expiration.ts'
-import {log} from 'console'
 
 export type {ClubServiceContext}
 
