@@ -28,7 +28,7 @@ export type AcademyIntegrationService = ReturnType<typeof createAcademyIntegrati
 export async function removeContactFromAllCourses(
   s: AcademyIntegrationServiceData,
   email: string,
-  academyCourses: string[],
+  academyCourses: readonly string[],
 ): Promise<void> {
   for (const course of academyCourses) {
     console.log('removing', email, 'course', course)

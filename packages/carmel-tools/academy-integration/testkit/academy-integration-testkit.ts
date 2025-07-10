@@ -48,7 +48,7 @@ export function createFakeAcademyIntegrationService(context: {
 async function removeContactFromAllCourses(
   s: AcademyIntegrationServiceData,
   email: string,
-  academyCourses: string[],
+  academyCourses: readonly string[],
 ): Promise<void> {
   for (const courseId of academyCourses) {
     const course = s.state.courses[courseId]
