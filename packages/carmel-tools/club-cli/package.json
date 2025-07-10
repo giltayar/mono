@@ -1,0 +1,67 @@
+{
+  "name": "@giltayar/carmel-tools-club-cli",
+  "version": "2.1.2",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/club-cli.d.ts",
+      "import": "./dist/club-cli.js"
+    }
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
+    "test:typescript": "tsgo"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "club"
+  ],
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/carmel-tools/club-cli",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmel-tools/club-cli",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.30.1",
+    "@types/node": "^24.0.12",
+    "@typescript/native-preview": "7.0.0-dev.20250710.1",
+    "chai": "^5.2.1",
+    "eslint": "^9.30.1",
+    "eslint-plugin-n": "^17.21.0",
+    "eslint-plugin-prettier": "^5.5.1",
+    "globals": "^16.3.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.36.0"
+  },
+  "dependencies": {
+    "@giltayar/carmel-tools-academy-integration": "^2.1.0",
+    "@giltayar/carmel-tools-cardcom-integration": "^3.0.1",
+    "@giltayar/carmel-tools-club-service": "^2.1.3",
+    "@giltayar/carmel-tools-smoove-integration": "^2.1.0",
+    "@giltayar/carmel-tools-whatsapp-integration": "^2.1.2",
+    "@giltayar/functional-commons": "^1.4.1",
+    "pino": "^9.7.0",
+    "zod": "^4.0.2"
+  },
+  "packageManager": "pnpm@10.12.4"
+}
