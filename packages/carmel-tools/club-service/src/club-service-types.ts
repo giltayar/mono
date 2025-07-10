@@ -12,7 +12,7 @@ export interface ClubServiceContext {
   unubscribedSmooveListId: number // הוסרו ממנוי מועדון
   recurringPaymentNotPayedListId: number // תשלומים שלא בוצעו מנוי מועדון
   cardcomProductId: number
-  academyCourse: string[]
+  academyCourse: readonly string[]
   whatsappGroupId: WhatsAppGroupId
   services: {
     whatsapp: WhatsAppIntegrationService

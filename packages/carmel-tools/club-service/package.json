@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-club-service",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "type": "module",
   "exports": {
     ".": {
@@ -54,11 +54,11 @@
     "typescript-eslint": "^8.36.0"
   },
   "dependencies": {
-    "@giltayar/carmel-tools-academy-integration": "^2.1.0",
+    "@giltayar/carmel-tools-academy-integration": "^2.2.0",
     "@giltayar/carmel-tools-cardcom-integration": "^3.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^2.1.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.1.2",
-    "@giltayar/functional-commons": "^1.4.1",
+    "@giltayar/functional-commons": "^1.4.2",
     "@giltayar/service-commons": "^1.1.2",
     "picocolors": "^1.1.1",
     "pino": "^9.7.0"

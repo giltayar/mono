@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@giltayar/carmel-tools-academy-integration':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.2.0
+        version: 2.2.0
       '@giltayar/carmel-tools-cardcom-integration':
         specifier: ^3.0.1
         version: 3.0.1
@@ -21,8 +21,8 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2
       '@giltayar/functional-commons':
-        specifier: ^1.4.1
-        version: 1.4.1
+        specifier: ^1.4.2
+        version: 1.4.2
       '@giltayar/service-commons':
         specifier: ^1.1.2
         version: 1.1.2
@@ -114,8 +114,8 @@ packages:
     resolution: {integrity: sha512-1+WqvgNMhmlAambTvT3KPtCl/Ibr68VldY2XY40SL1CE0ZXiakFR/cbTspaF5HsnpDMvcYYoJHfl4980NBjGag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@giltayar/carmel-tools-academy-integration@2.1.0':
-    resolution: {integrity: sha512-aP3Yaqa8Y5ymhf7sZwLdpAT81eaAY4B7vnJvUBrAC1MkTl07kBodlA6mfo3Gc9953r471FfQNmWLfwTd1G8vgg==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/2.1.0/ee358544076f54dc2c1c0d43ca13455944d31ddb}
+  '@giltayar/carmel-tools-academy-integration@2.2.0':
+    resolution: {integrity: sha512-hNhg1SQBY/4OMUOcB0PLX6wgW2ah1C+QzX8/d7hQzV6cXcSTh8uo91DK1VpqyLbEus+TElvhwTFxtCyJj4fAWg==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/2.2.0/091093e5b13d185401cc9a4ab9a93ba1c87e5fbb}
     engines: {node: '>=24.3.0'}
 
   '@giltayar/carmel-tools-cardcom-integration@3.0.1':
@@ -130,8 +130,8 @@ packages:
     resolution: {integrity: sha512-7ZsWALgBmvtTUhZncEYXc+ZGclT7bxtbN8DS7SNCeLzebOpmEtX09I13ZeZBiVBWvQxxKJ1ISwte2hI1QjOsXQ==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-whatsapp-integration/2.1.2/656207be6773ed84f7912c20445efb4420ced2d8}
     engines: {node: '>=24.3.0'}
 
-  '@giltayar/functional-commons@1.4.1':
-    resolution: {integrity: sha512-LNz9RMXj+3HB7PNN/yV0mFVV1Aj3ccBEcikKIhKPMF6c8WW6/LbUeYS7UxNv3OG8SbVIP7QSZEL07s5zgdyP7Q==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/1.4.1/bc04283bb3f72545197b49386502855733cfebd4}
+  '@giltayar/functional-commons@1.4.2':
+    resolution: {integrity: sha512-jOzy/GzWeA1GnIFLZqEDMTMzgUhyiF4AkWPAPoXW53dI80BFa1LceFBn2R/RAoq8yM2TM2lrO4e+n2tBhtMEtw==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/1.4.2/52273a1dd0c4cda82a78739e780dbeca57b27af6}
     engines: {node: '>=15.0.0'}
 
   '@giltayar/service-commons@1.1.2':
@@ -1415,28 +1415,28 @@ snapshots:
       '@eslint/core': 0.15.1
       levn: 0.4.1
 
-  '@giltayar/carmel-tools-academy-integration@2.1.0':
+  '@giltayar/carmel-tools-academy-integration@2.2.0':
     dependencies:
-      '@giltayar/functional-commons': 1.4.1
+      '@giltayar/functional-commons': 1.4.2
       '@giltayar/service-commons': 1.1.2
 
   '@giltayar/carmel-tools-cardcom-integration@3.0.1':
     dependencies:
-      '@giltayar/functional-commons': 1.4.1
+      '@giltayar/functional-commons': 1.4.2
       '@giltayar/service-commons': 1.1.2
       execa: 9.6.0
 
   '@giltayar/carmel-tools-smoove-integration@2.1.0':
     dependencies:
-      '@giltayar/functional-commons': 1.4.1
+      '@giltayar/functional-commons': 1.4.2
       '@giltayar/service-commons': 1.1.2
 
   '@giltayar/carmel-tools-whatsapp-integration@2.1.2':
     dependencies:
-      '@giltayar/functional-commons': 1.4.1
+      '@giltayar/functional-commons': 1.4.2
       '@giltayar/service-commons': 1.1.2
 
-  '@giltayar/functional-commons@1.4.1': {}
+  '@giltayar/functional-commons@1.4.2': {}
 
   '@giltayar/service-commons@1.1.2': {}
 
