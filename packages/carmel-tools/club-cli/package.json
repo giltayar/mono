@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-club-cli",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "type": "module",
   "exports": {
     ".": {
@@ -8,8 +8,11 @@
       "import": "./dist/club-cli.js"
     }
   },
+  "bin": {
+    "club": "./dist/club-cli.js"
+  },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.3.0"
   },
   "files": [
     "src",
@@ -21,9 +24,9 @@
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
-    "daily": "node src/club-handle-cancel-requests.ts",
-    "weekly": "node node src/club-debt-check.ts",
-    "monthly": "node src/club-payment-expiration.ts"
+    "daily": "node src/club-cli.ts handle-cancel-requests --club inspiredLivingDaily",
+    "weekly": "node src/club-cli.ts handle-debt --club inspiredLivingDaily",
+    "monthly": "node src/club-cli.ts expire-subscriptions --club inspiredLivingDaily"
   },
   "keywords": [
     "nodejs",
