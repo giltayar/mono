@@ -67,6 +67,9 @@
 		{
 			"name": "club-service",
 			"path": "packages/carmel-tools/club-service"
+		},
+		{
+			"path": "packages/carmel-tools/club-cli"
 		}
 	],
 	"settings": {}
