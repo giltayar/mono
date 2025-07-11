@@ -105,7 +105,7 @@ export async function fetchRecurringPaymentInformation(
 export async function fetchRecurringPaymentBadPayments(
   s: CardcomIntegrationServiceData,
   accountId: string,
-  productId: string,
+  productIds: string[],
 ): Promise<BadPayment[] | undefined> {
   const url = new URL(
     'https://secure.cardcom.solutions/api/v11/RecuringPayments/GetRecurringPaymentHistory',
@@ -132,7 +132,7 @@ export async function fetchRecurringPaymentBadPayments(
   }
 
   const moadonHakodRecurringPayment = result.RecurringPaymentHistory?.filter(
-    (u: RecurringPaymentHistoryItem) => u.ProductID === productId,
+    (u: RecurringPaymentHistoryItem) => productIds.includes(u.ProductID),
   )
 
   if (!moadonHakodRecurringPayment || moadonHakodRecurringPayment.length === 0) {

@@ -96,13 +96,14 @@ async function fetchRecurringPaymentInformation(
 async function fetchRecurringPaymentBadPayments(
   s: CardcomIntegrationServiceData,
   accountId: string,
-  productId: string,
+  productIds: string[],
 ): Promise<BadPayment[] | undefined> {
   const account = s.state.accounts[accountId]
   if (!account) return undefined
 
-  const badPayments = account.badPayments[productId]
-  if (!badPayments || badPayments.length === 0) return undefined
+  const badPayments = productIds.map((id) => account.badPayments[id] ?? []).flat()
+
+  if (badPayments.length === 0) return undefined
 
   // Return sorted by date (oldest first)
   return [...badPayments].sort((a, b) => a.date.getTime() - b.date.getTime())

@@ -135,7 +135,7 @@ describe('Cardcom Integration Testkit', () => {
     it('should return bad payments sorted by date', async () => {
       const service = createTestService()
 
-      const result = await service.fetchRecurringPaymentBadPayments(testAccountId, testProductId)
+      const result = await service.fetchRecurringPaymentBadPayments(testAccountId, [testProductId])
 
       assert.ok(result)
       assert.strictEqual(result.length, 3)
@@ -154,10 +154,9 @@ describe('Cardcom Integration Testkit', () => {
     it('should return undefined for non-existent account', async () => {
       const service = createTestService()
 
-      const result = await service.fetchRecurringPaymentBadPayments(
-        'non-existent-account',
+      const result = await service.fetchRecurringPaymentBadPayments('non-existent-account', [
         testProductId,
-      )
+      ])
 
       assert.strictEqual(result, undefined)
     })
@@ -165,10 +164,9 @@ describe('Cardcom Integration Testkit', () => {
     it('should return undefined for non-existent product', async () => {
       const service = createTestService()
 
-      const result = await service.fetchRecurringPaymentBadPayments(
-        testAccountId,
+      const result = await service.fetchRecurringPaymentBadPayments(testAccountId, [
         'non-existent-product',
-      )
+      ])
 
       assert.strictEqual(result, undefined)
     })
@@ -176,7 +174,9 @@ describe('Cardcom Integration Testkit', () => {
     it('should return undefined for product with no bad payments', async () => {
       const service = createTestService()
 
-      const result = await service.fetchRecurringPaymentBadPayments('empty-account', 'any-product')
+      const result = await service.fetchRecurringPaymentBadPayments('empty-account', [
+        'any-product',
+      ])
 
       assert.strictEqual(result, undefined)
     })
