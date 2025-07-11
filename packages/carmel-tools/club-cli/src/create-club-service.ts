@@ -37,6 +37,8 @@ export function createClubServiceFromClub(club: ClubInformation) {
   const smooveService = createSmooveIntegrationService({
     apiKey: env.SMOOVE_API_KEY,
     apiUrl: 'https://rest.smoove.io/v1/',
+    cardComRecurringPaymentIdCustomFieldId: club.smooveFieldForCardComRecurringPaymentId,
+    cardComAccountIdCustomFieldId: club.smooveFieldForCardComAcountId,
   })
 
   const academyService = createAcademyIntegrationService({baseUrl: 'https://www.mypages.co.il'})
@@ -47,7 +49,7 @@ export function createClubServiceFromClub(club: ClubInformation) {
     cancelledSmooveListId: club.cancelledSmooveListId,
     unubscribedSmooveListId: club.unubscribedSmooveListId,
     recurringPaymentNotPayedListId: club.recurringPaymentNotPayedListId,
-    cardcomProductId: club.cardcomProductId,
+    cardcomProductIds: club.cardcomProductId,
     academyCourse: club.academyCourse,
     whatsappGroupId: club.whatsappGroupId,
     services: {

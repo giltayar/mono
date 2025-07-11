@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-club-cli",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "type": "module",
   "exports": {
     ".": {
@@ -46,7 +46,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.30.1",
     "@types/node": "^24.0.13",
-    "@typescript/native-preview": "7.0.0-dev.20250710.1",
+    "@typescript/native-preview": "7.0.0-dev.20250711.1",
     "eslint": "^9.30.1",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-prettier": "^5.5.1",
@@ -57,9 +57,9 @@
   },
   "dependencies": {
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
-    "@giltayar/carmel-tools-cardcom-integration": "^3.0.2",
-    "@giltayar/carmel-tools-club-service": "^2.2.1",
-    "@giltayar/carmel-tools-smoove-integration": "^2.1.1",
+    "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
+    "@giltayar/carmel-tools-club-service": "^4.0.0",
+    "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.1.4",
     "@giltayar/functional-commons": "^1.4.2",
     "@types/yargs": "^17.0.33",

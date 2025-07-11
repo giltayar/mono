@@ -6,7 +6,9 @@ export const inspiredLivingDaily = {
   cancelledSmooveListId: 1032114,
   unubscribedSmooveListId: 1034610,
   recurringPaymentNotPayedListId: 1037875,
-  cardcomProductId: 16370,
+  cardcomProductId: [16370, 16547],
+  smooveFieldForCardComRecurringPaymentId: 'i12',
+  smooveFieldForCardComAcountId: 'i13',
   academyCourse: ['2a99a66fd59bb0b45b74c73fe4ec3169', '2770d99539749c9850a561359e481ca7'],
   whatsappGroupId: '120363389808236299@g.us' as WhatsAppGroupId,
 }
@@ -19,7 +21,9 @@ export const inspiredBusinessDaily: ClubInformation = {
   cancelledSmooveListId: 1055113,
   unubscribedSmooveListId: 1055112,
   recurringPaymentNotPayedListId: 1055135, // TBD
-  cardcomProductId: NaN, // TBD and used to look for bad payments. Look for it in the recurring payments once there is one
+  cardcomProductId: [16810],
+  smooveFieldForCardComRecurringPaymentId: 'i16',
+  smooveFieldForCardComAcountId: 'i17',
   academyCourse: ['9dc2c9bae45f07d65cf8980c13ec2521'],
   whatsappGroupId: '120363400920106353@g.us',
 }
