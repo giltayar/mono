@@ -31,7 +31,7 @@ export function createClubServiceFromClub(club: ClubInformation) {
 
   const smooveService = createSmooveIntegrationService({
     apiKey: env.SMOOVE_API_KEY,
-    apiUrl: 'https://rest.smoove.io',
+    apiUrl: 'https://rest.smoove.io/v1/',
   })
 
   const academyService = createAcademyIntegrationService({baseUrl: 'https://www.mypages.co.il'})
