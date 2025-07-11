@@ -2,26 +2,31 @@ import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-in
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {createClubService} from '@giltayar/carmel-tools-club-service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
-import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
-import type {ClubInformation} from './clubs.ts'
+import {createWhatsAppIntegrationService as createWhatsAppIntegrationService_} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {ClubInformation} from './clubs/clubs.ts'
 import * as z from 'zod'
 import {pino} from 'pino'
 
 const environmentVariablesSchema = z.object({
   GREEN_API_KEY: z.string(),
+  GREEN_API_INSTANCE: z.string().transform((val) => parseInt(val, 10)),
   CARDCOM_API_KEY: z.string(),
   CARDCOM_API_KEY_PASSWORD: z.string(),
   SMOOVE_API_KEY: z.string(),
 })
 
-export function createClubServiceFromClub(club: ClubInformation) {
-  const env = environmentVariablesSchema.parse(process.env)
+const env = environmentVariablesSchema.parse(process.env)
 
-  const whatsappService = createWhatsAppIntegrationService({
+export function createWhatsAppIntegrationService() {
+  return createWhatsAppIntegrationService_({
     greenApiKey: env.GREEN_API_KEY,
-    greenApiInstanceId: 7105239970,
+    greenApiInstanceId: env.GREEN_API_INSTANCE,
     greenApiBaseUrl: new URL('https://7105.api.greenapi.com'),
   })
+}
+
+export function createClubServiceFromClub(club: ClubInformation) {
+  const whatsappService = createWhatsAppIntegrationService()
 
   const cardcomService = createCardcomIntegrationService({
     apiKey: env.CARDCOM_API_KEY,

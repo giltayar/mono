@@ -1,5 +1,5 @@
 import {parseArgs} from 'node:util'
-import * as clubs from './clubs.ts'
+import * as clubs from './clubs/clubs.ts'
 import {createClubServiceFromClub} from './create-club-service.ts'
 
 // Parse command line arguments
@@ -37,6 +37,6 @@ if (!emailRegex.test(email)) {
   process.exit(1)
 }
 
-const clubService = createClubServiceFromClub(clubs['hakavodHakvanti'])
+const clubService = createClubServiceFromClub(clubs['inspiredLivingDaily'])
 
 await clubService.removeUser(email)
