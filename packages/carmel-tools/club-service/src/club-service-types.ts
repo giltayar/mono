@@ -11,7 +11,7 @@ export interface ClubServiceContext {
   cancelledSmooveListId: number // מבוטלות מנוי מועדון
   unubscribedSmooveListId: number // הוסרו ממנוי מועדון
   recurringPaymentNotPayedListId: number // תשלומים שלא בוצעו מנוי מועדון
-  cardcomProductId: number
+  cardcomProductIds: number[]
   academyCourse: readonly string[]
   whatsappGroupId: WhatsAppGroupId
   services: {

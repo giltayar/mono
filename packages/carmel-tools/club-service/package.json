@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-club-service",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "type": "module",
   "exports": {
     ".": {
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
-    "@giltayar/carmel-tools-cardcom-integration": "^3.0.2",
+    "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.1.4",
     "@giltayar/functional-commons": "^1.4.2",

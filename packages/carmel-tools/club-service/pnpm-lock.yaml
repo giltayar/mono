@@ -12,8 +12,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       '@giltayar/carmel-tools-cardcom-integration':
-        specifier: ^3.0.2
-        version: 3.0.2
+        specifier: ^4.0.1
+        version: 4.0.1
       '@giltayar/carmel-tools-smoove-integration':
         specifier: ^3.0.0
         version: 3.0.0
@@ -115,8 +115,8 @@ packages:
     resolution: {integrity: sha512-hNhg1SQBY/4OMUOcB0PLX6wgW2ah1C+QzX8/d7hQzV6cXcSTh8uo91DK1VpqyLbEus+TElvhwTFxtCyJj4fAWg==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/2.2.0/091093e5b13d185401cc9a4ab9a93ba1c87e5fbb}
     engines: {node: '>=24.3.0'}
 
-  '@giltayar/carmel-tools-cardcom-integration@3.0.2':
-    resolution: {integrity: sha512-h3DW+DAXlutWrf8+kzsCd88VZF/V5aYzOQ8Ub+jkFWXl21Pck8hipnXkMqbY11FpBlzudMBbhsKGx3xN1yJdsg==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/3.0.2/419d0d2bc115ff3eb01bdf2c48a53ee2aa6cd22d}
+  '@giltayar/carmel-tools-cardcom-integration@4.0.1':
+    resolution: {integrity: sha512-HX4GPUS3IWiqs8gFQkGvxzQp2byPn1M8wjIq3mw0A+OHeKocgYTbZRo8ZO7a4LGiSDhIMKxM98kZhjS/oTA7pA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/4.0.1/e6115049b44a4c7029c6fda5692fdbf1814bd025}
     engines: {node: '>=24.3.0'}
 
   '@giltayar/carmel-tools-smoove-integration@3.0.0':
@@ -1394,7 +1394,7 @@ snapshots:
       '@giltayar/functional-commons': 1.4.2
       '@giltayar/service-commons': 1.1.2
 
-  '@giltayar/carmel-tools-cardcom-integration@3.0.2':
+  '@giltayar/carmel-tools-cardcom-integration@4.0.1':
     dependencies:
       '@giltayar/functional-commons': 1.4.2
       '@giltayar/service-commons': 1.1.2

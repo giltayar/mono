@@ -67,7 +67,7 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
 async function hasContactPayed(s: ClubServiceData, smooveContact: SmooveContactInList) {
   const badPayments = await s.context.services.cardcom.fetchRecurringPaymentBadPayments(
     smooveContact.cardcomAccountId,
-    String(s.context.cardcomProductId),
+    s.context.cardcomProductIds.map(String),
   )
 
   if (!badPayments || badPayments.length === 0) {
