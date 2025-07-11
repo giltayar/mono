@@ -4,7 +4,6 @@ export interface SmooveContact {
   telephone: string
   cardcomRecurringPaymentId: string
   cardcomAccountId: string
-  cardcomRecurringPaymentStartDate: Date
   lists_Linked: number[]
 }
 

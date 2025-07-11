@@ -19,6 +19,8 @@ export type {
 export interface SmooveIntegrationServiceContext {
   apiKey: string
   apiUrl: string
+  cardComRecurringPaymentIdCustomFieldId: string
+  cardComAccountIdCustomFieldId: string
 }
 
 type SmooveIntegrationServiceData = {
@@ -48,7 +50,7 @@ export async function fetchContactsOfList(
     phone: string
     cellPhone: string
     lists_Linked: number[]
-    customFields: {i12: string; i13: string; i14: string}
+    customFields: Record<string, string>
     listAssociationTime: string
   }
 
@@ -65,10 +67,9 @@ export async function fetchContactsOfList(
   return fullResults.map((c: SmooveApiContact) => ({
     id: c.id,
     email: c.email,
-    cardcomRecurringPaymentId: c.customFields.i12,
-    cardcomAccountId: c.customFields.i13,
+    cardcomRecurringPaymentId: c.customFields[s.context.cardComRecurringPaymentIdCustomFieldId],
+    cardcomAccountId: c.customFields[s.context.cardComAccountIdCustomFieldId],
     telephone: c.cellPhone || c.phone,
-    cardcomRecurringPaymentStartDate: new Date(c.customFields.i14),
     signupDate: maybeIsoToDate(c.listAssociationTime),
     lists_Linked: c.lists_Linked,
   }))
@@ -125,7 +126,7 @@ export async function fetchSmooveContact(
     id: number
     email: string
     lists_Linked: number[]
-    customFields: {i12: string; i13: string; i14: string}
+    customFields: Record<string, string>
     cellPhone: string
     phone: string
   }
@@ -134,10 +135,10 @@ export async function fetchSmooveContact(
     id: result.id,
     email: result.email,
     lists_Linked: result.lists_Linked,
-    cardcomRecurringPaymentId: result.customFields.i12,
-    cardcomAccountId: result.customFields.i13,
+    cardcomRecurringPaymentId:
+      result.customFields[s.context.cardComRecurringPaymentIdCustomFieldId],
+    cardcomAccountId: result.customFields[s.context.cardComAccountIdCustomFieldId],
     telephone: result.cellPhone || result.phone,
-    cardcomRecurringPaymentStartDate: new Date(result.customFields.i14),
   }
 }
 
@@ -168,7 +169,6 @@ export async function updateSmooveContactWithRecurringPayment(
   email: string,
   accountId: string,
   recurringPaymentId: string,
-  recurringPaymentStartDate: Date,
 ): Promise<'blacklisted' | 'not-exists' | unknown> {
   const url = new URL(`Contacts/${encodeURIComponent(email)}?by=Email`, s.context.apiUrl)
   const response = await fetch(url, {
@@ -180,9 +180,8 @@ export async function updateSmooveContactWithRecurringPayment(
     body: JSON.stringify({
       email,
       customFields: {
-        i12: recurringPaymentId,
-        i13: parseInt(accountId),
-        i14: recurringPaymentStartDate.toISOString(),
+        [s.context.cardComRecurringPaymentIdCustomFieldId]: recurringPaymentId,
+        [s.context.cardComAccountIdCustomFieldId]: parseInt(accountId),
       },
     }),
   })

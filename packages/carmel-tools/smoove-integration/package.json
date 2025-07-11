@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-smoove-integration",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "type": "module",
   "exports": {
     "./service": {
@@ -67,5 +67,5 @@
     "@giltayar/functional-commons": "^1.4.2",
     "@giltayar/service-commons": "^1.1.2"
   },
-  "packageManager": "pnpm@10.10.0"
+  "packageManager": "pnpm@10.13.1"
 }

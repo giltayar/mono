@@ -20,7 +20,6 @@ export function createFakeSmooveIntegrationService(context: {
       telephone: string
       cardcomRecurringPaymentId: string
       cardcomAccountId: string
-      cardcomRecurringPaymentStartDate: Date
       lists: number[]
       signupDate: Date
       isBlacklisted?: boolean
@@ -49,7 +48,6 @@ export function createFakeSmooveIntegrationService(context: {
       telephone: string
       cardcomRecurringPaymentId: string
       cardcomAccountId: string
-      cardcomRecurringPaymentStartDate: Date
       lists: number[]
       signupDate: Date
       isBlacklisted?: boolean
@@ -80,7 +78,6 @@ async function fetchContactsOfList(
       telephone: contact.telephone,
       cardcomRecurringPaymentId: contact.cardcomRecurringPaymentId,
       cardcomAccountId: contact.cardcomAccountId,
-      cardcomRecurringPaymentStartDate: contact.cardcomRecurringPaymentStartDate,
       lists_Linked: [...contact.lists],
       signupDate: contact.signupDate,
     }))
@@ -110,7 +107,6 @@ async function fetchSmooveContact(
     telephone: contact.telephone,
     cardcomRecurringPaymentId: contact.cardcomRecurringPaymentId,
     cardcomAccountId: contact.cardcomAccountId,
-    cardcomRecurringPaymentStartDate: contact.cardcomRecurringPaymentStartDate,
     lists_Linked: [...contact.lists],
   }
 }
@@ -148,7 +144,6 @@ async function updateSmooveContactWithRecurringPayment(
   email: string,
   accountId: string,
   recurringPaymentId: string,
-  recurringPaymentStartDate: Date,
 ): Promise<'blacklisted' | 'not-exists' | unknown> {
   const contact = Object.values(s.state.contacts).find((c) => c.email === email)
 
@@ -163,7 +158,6 @@ async function updateSmooveContactWithRecurringPayment(
   // Update the contact
   contact.cardcomAccountId = accountId
   contact.cardcomRecurringPaymentId = recurringPaymentId
-  contact.cardcomRecurringPaymentStartDate = recurringPaymentStartDate
 
   return {success: true}
 }

@@ -17,7 +17,6 @@ describe('Smoove Integration Testkit', () => {
           telephone: '972501234567',
           cardcomRecurringPaymentId: 'recurring-123',
           cardcomAccountId: 'account-456',
-          cardcomRecurringPaymentStartDate: new Date('2024-01-01'),
           lists: [testListId],
           signupDate: new Date('2024-01-01'),
         },
@@ -27,7 +26,6 @@ describe('Smoove Integration Testkit', () => {
           telephone: '972509876543',
           cardcomRecurringPaymentId: 'recurring-789',
           cardcomAccountId: 'account-999',
-          cardcomRecurringPaymentStartDate: new Date('2024-02-01'),
           lists: [anotherListId],
           signupDate: new Date('2024-02-01'),
         },
@@ -37,7 +35,6 @@ describe('Smoove Integration Testkit', () => {
           telephone: '972501111111',
           cardcomRecurringPaymentId: '',
           cardcomAccountId: '',
-          cardcomRecurringPaymentStartDate: new Date('2024-03-01'),
           lists: [],
           signupDate: new Date('2024-03-01'),
           isBlacklisted: true,
@@ -48,7 +45,6 @@ describe('Smoove Integration Testkit', () => {
           telephone: '972501234567',
           cardcomRecurringPaymentId: '',
           cardcomAccountId: '',
-          cardcomRecurringPaymentStartDate: new Date('2024-04-01'),
           lists: [testListId],
           signupDate: new Date('2024-04-02'),
         },
@@ -75,7 +71,6 @@ describe('Smoove Integration Testkit', () => {
           telephone: '972501234567',
           cardcomRecurringPaymentId: '',
           cardcomAccountId: '',
-          cardcomRecurringPaymentStartDate: new Date('2024-04-01'),
           signupDate: new Date('2024-04-02'),
           lists_Linked: [testListId],
         },
@@ -85,7 +80,6 @@ describe('Smoove Integration Testkit', () => {
           telephone: '972501234567',
           cardcomRecurringPaymentId: 'recurring-123',
           cardcomAccountId: 'account-456',
-          cardcomRecurringPaymentStartDate: new Date('2024-01-01'),
           signupDate: new Date('2024-01-01'),
           lists_Linked: [testListId],
         },
@@ -110,7 +104,6 @@ describe('Smoove Integration Testkit', () => {
         telephone: '972501111111',
         cardcomRecurringPaymentId: 'recurring-highest',
         cardcomAccountId: 'account-highest',
-        cardcomRecurringPaymentStartDate: new Date('2024-04-01'),
         lists: [testListId],
         signupDate: new Date('2024-04-01'),
       })
@@ -240,7 +233,6 @@ describe('Smoove Integration Testkit', () => {
         telephone: '972501111111',
         cardcomRecurringPaymentId: '',
         cardcomAccountId: '',
-        cardcomRecurringPaymentStartDate: new Date(),
         lists_Linked: [],
       }
 
@@ -260,13 +252,11 @@ describe('Smoove Integration Testkit', () => {
       const service = createTestService()
       const newAccountId = 'new-account-123'
       const newRecurringPaymentId = 'new-recurring-456'
-      const newStartDate = new Date('2024-05-01')
 
       const result = await service.updateSmooveContactWithRecurringPayment(
         testEmail,
         newAccountId,
         newRecurringPaymentId,
-        newStartDate,
       )
 
       assert.deepStrictEqual(result, {success: true})
@@ -275,10 +265,6 @@ describe('Smoove Integration Testkit', () => {
       assert.ok(updatedContact)
       assert.strictEqual(updatedContact.cardcomAccountId, newAccountId)
       assert.strictEqual(updatedContact.cardcomRecurringPaymentId, newRecurringPaymentId)
-      assert.strictEqual(
-        updatedContact.cardcomRecurringPaymentStartDate.getTime(),
-        newStartDate.getTime(),
-      )
     })
 
     it('should return "not-exists" for non-existent contact', async () => {
@@ -288,7 +274,6 @@ describe('Smoove Integration Testkit', () => {
         'nonexistent@example.com',
         'account-123',
         'recurring-456',
-        new Date(),
       )
 
       assert.strictEqual(result, 'not-exists')
@@ -301,7 +286,6 @@ describe('Smoove Integration Testkit', () => {
         'blacklisted@example.com',
         'account-123',
         'recurring-456',
-        new Date(),
       )
 
       assert.strictEqual(result, 'blacklisted')
@@ -361,7 +345,6 @@ describe('Smoove Integration Testkit', () => {
         telephone: '972501234567',
         cardcomRecurringPaymentId: 'recurring-new',
         cardcomAccountId: 'account-new',
-        cardcomRecurringPaymentStartDate: new Date('2024-06-01'),
         lists: [testListId],
         signupDate: new Date('2024-06-01'),
       }
@@ -406,7 +389,6 @@ describe('Smoove Integration Testkit', () => {
         testEmail,
         'account-123',
         'recurring-456',
-        new Date(),
       )
 
       assert.strictEqual(result, 'blacklisted')
@@ -425,7 +407,6 @@ describe('Smoove Integration Testkit', () => {
         'blacklisted@example.com',
         'account-123',
         'recurring-456',
-        new Date(),
       )
 
       assert.deepStrictEqual(result, {success: true})
