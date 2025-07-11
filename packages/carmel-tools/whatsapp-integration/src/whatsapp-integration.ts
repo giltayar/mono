@@ -33,7 +33,7 @@ export type WhatsAppIntegrationService = ReturnType<typeof createWhatsAppIntegra
 export async function fetchWhatsAppGroups(
   s: WhatsAppIntegrationServiceData,
 ): Promise<{id: WhatsAppGroupId; name: string}[]> {
-  const url = new URL(s.context.greenApiBaseUrl)
+  const url = createApiUrl(s, 'getContacts')
   url.searchParams.append('group', 'true')
 
   const response = await fetch(url, {

@@ -122,7 +122,6 @@ describe('WhatsApp Integration Testkit', () => {
 
       const participants = await service._test_listParticipantsInGroup(testGroupId)
       assert.strictEqual(participants.length, 2)
-      //@ts-expect-error bug in tsgo!
       assert.strictEqual(participants.filter((p) => p === testParticipant1).length, 1)
     })
 
