@@ -19,7 +19,7 @@ export const inspiredBusinessDaily: ClubInformation = {
   cancelledSmooveListId: 1055113,
   unubscribedSmooveListId: 1055112,
   recurringPaymentNotPayedListId: NaN, // TBD
-  cardcomProductId: NaN, // TBD
+  cardcomProductId: NaN, // TBD and used to look for bad payments. Look for it in the recurring payments once there is one
   academyCourse: ['9dc2c9bae45f07d65cf8980c13ec2521'],
   whatsappGroupId: '120363400920106353@g.us',
 }

@@ -4,14 +4,10 @@ import yargs from 'yargs'
 import type {Clubs} from './clubs/club-types.ts'
 
 const args = yargs()
-  .scriptName('remove-user')
+  .scriptName('handle-debt')
   .option('club', {
     type: 'string',
     choices: Object.keys(clubs) as Clubs[],
-    demandOption: true,
-  })
-  .positional('user-email', {
-    type: 'string',
     demandOption: true,
   })
   .strict()
@@ -20,4 +16,4 @@ const args = yargs()
 
 const clubService = createClubServiceFromClub(clubs[args.club])
 
-await clubService.removeUser(args['user-email'])
+clubService.dealWithUsersWithDebt()
