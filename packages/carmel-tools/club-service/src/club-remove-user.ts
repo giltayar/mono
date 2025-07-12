@@ -13,14 +13,14 @@ export async function removeUser(s: ClubServiceData, email: string) {
   const smooveContact = await services.smoove.fetchSmooveContact(email, {by: 'email'})
 
   if (smooveContact.cardcomRecurringPaymentId) {
-    logger.info('deactivating recurring payment in cardcom')
+    logger.info('deactivating-recurring-payment-in-cardcom')
 
     await services.cardcom
       .enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable')
       .catch((error) => logger.error({err: error, email: smooveContact.email}))
   }
 
-  logger.info('moving contact from מבטלות to מבוטלות')
+  logger.info('moving-from-cancelling-to-cancelled')
   await services.smoove
     .changeContactLinkedLists(smooveContact, {
       unsubscribeFrom: [s.context.cancellingSmooveListId],
@@ -34,7 +34,7 @@ export async function removeUser(s: ClubServiceData, email: string) {
 
   logger.info(
     {email: smooveContact.email, telephone: smooveContact.telephone},
-    'removing from WhatsApp group',
+    'removing-from-whatsapp-group',
   )
 
   await services.whatsapp
@@ -44,7 +44,7 @@ export async function removeUser(s: ClubServiceData, email: string) {
     )
     .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-  logger.info('moving from מבוטלות to הוסרו')
+  logger.info('moving-from-cancelled-to-unsubscribed')
   await services.smoove
     .changeContactLinkedLists(smooveContact, {
       unsubscribeFrom: [s.context.cancelledSmooveListId],

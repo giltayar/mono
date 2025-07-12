@@ -16,7 +16,7 @@ export async function paymentExpiration(s: ClubServiceData) {
 
   for (const smooveContact of contactsInCancelledList) {
     if (currentMonth <= smooveContact.signupDate.getMonth() + 1) {
-      logger.info({email: smooveContact.email}, 'skipping because they signed up this month')
+      logger.info({email: smooveContact.email}, 'skipping-because-they-signed-up-this-month')
       continue
     }
 
@@ -28,7 +28,7 @@ export async function paymentExpiration(s: ClubServiceData) {
       continue
     }
 
-    logger.info({email: smooveContact.email}, 'removing from all courses')
+    logger.info({email: smooveContact.email}, 'removing-from-all-courses')
 
     await services.academy
       .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
@@ -36,7 +36,7 @@ export async function paymentExpiration(s: ClubServiceData) {
 
     logger.info(
       {email: smooveContact.email, telephone: smooveContact.telephone},
-      'removing from WhatsApp group',
+      'removing-from-whatsapp-group',
     )
 
     await services.whatsapp
@@ -46,7 +46,7 @@ export async function paymentExpiration(s: ClubServiceData) {
       )
       .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    logger.info({email: smooveContact.email}, 'moving from מבוטלות to הוסרו')
+    logger.info({email: smooveContact.email}, 'moving-cancelled-to-unsubscribed')
 
     await services.smoove
       .changeContactLinkedLists(smooveContact, {

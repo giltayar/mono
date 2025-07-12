@@ -1,4 +1,3 @@
-import pc from 'picocolors'
 import type {ClubServiceData} from './club-service-types.ts'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import type {SmooveContactInList} from '@giltayar/carmel-tools-smoove-integration/types'
@@ -12,40 +11,28 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
     s.context.subscribedSmooveListId,
   )
 
-  let i = 1
   for (const smooveContact of subscribedContacts) {
-    process.stdout.write(
-      `[${i++}/${subscribedContacts.length}] checking ${smooveContact.email} (${
-        smooveContact.cardcomAccountId
-      })... `,
-    )
+    logger.info({email: smooveContact.email}, 'checking-contact')
     const hasPayed = await hasContactPayed(s, smooveContact)
+    logger.info({email: smooveContact.email, hasPayed}, 'checked-contact')
 
-    switch (hasPayed) {
-      case 'no-payments':
-        console.log(pc.yellow('no payments'))
-        continue
-      case 'has-payments':
-        console.log('has payments')
-        continue
-      case 'bad-payments':
-        console.log(pc.red('bad payments'))
-        break
+    if (hasPayed !== 'bad-payments') {
+      continue
     }
 
-    logger.info({email: smooveContact.email}, 'removing from all courses')
+    logger.info({email: smooveContact.email}, 'removing-from-all-courses')
     await services.academy
       .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
       .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    logger.info({email: smooveContact.email}, 'disabling recurring payments')
+    logger.info({email: smooveContact.email}, 'disabling-recurring-payments')
     await services.cardcom
       .enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable')
       .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
     logger.info(
       {email: smooveContact.email, telephone: smooveContact.telephone},
-      'removing from WhatsApp group',
+      'removing-from-whatsApp-group',
     )
     await services.whatsapp
       .removeParticipantFromGroup(
@@ -54,7 +41,7 @@ export async function dealWithUsersWithDebt(s: ClubServiceData) {
       )
       .catch((error) => logger.error({err: error, email: smooveContact.email}))
 
-    logger.info({email: smooveContact.email}, 'moving from רשומות to לא שילמו')
+    logger.info({email: smooveContact.email}, 'moving-from-subscribed-to-notpaid')
     await services.smoove
       .changeContactLinkedLists(smooveContact, {
         unsubscribeFrom: [s.context.subscribedSmooveListId],

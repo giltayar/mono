@@ -9,7 +9,7 @@ export async function dealWithCancelRequests(s: ClubServiceData) {
 
   for (const smooveContact of contacts) {
     if (smooveContact.cardcomRecurringPaymentId) {
-      logger.info({email: smooveContact.email}, 'deactivating recurring payment in cardcom')
+      logger.info({email: smooveContact.email}, 'deactivating-recurring-payment-in-cardcom')
 
       const result = await services.cardcom
         .enableDisableRecurringPayment(smooveContact.cardcomRecurringPaymentId, 'disable')
@@ -18,7 +18,7 @@ export async function dealWithCancelRequests(s: ClubServiceData) {
       if (!result) continue
     }
 
-    logger.info({email: smooveContact.email}, 'moving contact from מבטלות to מבוטלות')
+    logger.info({email: smooveContact.email}, 'moving-cancelling-to-cancelled')
     await services.smoove
       .changeContactLinkedLists(smooveContact, {
         unsubscribeFrom: [s.context.cancellingSmooveListId],
