@@ -7,17 +7,9 @@ import type {ClubInformation} from './clubs/clubs.ts'
 import * as z from 'zod'
 import {pino} from 'pino'
 
-const environmentVariablesSchema = z.object({
-  GREEN_API_KEY: z.string(),
-  GREEN_API_INSTANCE: z.string().transform((val) => parseInt(val, 10)),
-  CARDCOM_API_KEY: z.string(),
-  CARDCOM_API_KEY_PASSWORD: z.string(),
-  SMOOVE_API_KEY: z.string(),
-})
-
-const env = environmentVariablesSchema.parse(process.env)
-
 export function createWhatsAppIntegrationService() {
+  const env = loadEnvironmentVariables()
+
   return createWhatsAppIntegrationService_({
     greenApiKey: env.GREEN_API_KEY,
     greenApiInstanceId: env.GREEN_API_INSTANCE,
@@ -26,6 +18,8 @@ export function createWhatsAppIntegrationService() {
 }
 
 export function createClubServiceFromClub(club: ClubInformation, logger: pino.Logger) {
+  const env = loadEnvironmentVariables()
+
   const whatsappService = createWhatsAppIntegrationService()
 
   const cardcomService = createCardcomIntegrationService({
@@ -62,4 +56,16 @@ export function createClubServiceFromClub(club: ClubInformation, logger: pino.Lo
   })
 
   return clubService
+}
+
+function loadEnvironmentVariables() {
+  const environmentVariablesSchema = z.object({
+    GREEN_API_KEY: z.string(),
+    GREEN_API_INSTANCE: z.string().transform((val) => parseInt(val, 10)),
+    CARDCOM_API_KEY: z.string(),
+    CARDCOM_API_KEY_PASSWORD: z.string(),
+    SMOOVE_API_KEY: z.string(),
+  })
+
+  return environmentVariablesSchema.parse(process.env)
 }

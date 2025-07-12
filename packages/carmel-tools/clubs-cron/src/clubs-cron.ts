@@ -5,17 +5,21 @@ import {pino} from 'pino'
 
 const cronBatch = crypto.randomUUID()
 
+const mainLogger = pino({level: process.env.LOG_LEVEL || 'info'})
+
+mainLogger.info({cronBatch}, 'start-clubs-cron')
+
 for (const club of Object.keys(clubs) as Clubs[]) {
-  const logger = pino({level: process.env.LOG_LEVEL || 'info'}).child({
+  const logger = mainLogger.child({
     club,
     cronBatch,
     clubBatch: crypto.randomUUID(),
   })
-  logger.info({event: 'start-club-batch'})
+  logger.info('start-club-batch')
 
-  await doOperation('payment-expiration', 'paymentExpiration', club, logger)
   await doOperation('cancel-requests', 'dealWithCancelRequests', club, logger)
-  await doOperation('users-with-debt', 'dealWithUsersWithDebt', club, logger)
+  // await doOperation('payment-expiration', 'paymentExpiration', club, logger)
+  // await doOperation('users-with-debt', 'dealWithUsersWithDebt', club, logger)
 }
 
 async function doOperation(
@@ -30,13 +34,13 @@ async function doOperation(
     operation: functionName,
   })
 
-  operationLogger.info({event: `start-${name}`})
+  operationLogger.info(`start-${name}`)
 
   const clubService = createClubServiceFromClub(clubs[club], operationLogger)
   const func = clubService[functionName]
 
   await func().then(
-    () => logger.info({event: `end-${name}`}),
-    (err) => logger.error(err, {event: `end-${name}`}),
+    () => logger.info(`end-${name}`),
+    (err) => logger.error(`end-${name}`, {err}),
   )
 }
