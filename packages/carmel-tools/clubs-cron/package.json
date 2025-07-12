@@ -1,15 +1,12 @@
 {
   "name": "@giltayar/carmel-tools-clubs-cron",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/clubs-cron.d.ts",
       "import": "./dist/clubs-cron.js"
     }
-  },
-  "bin": {
-    "club": "./dist/clubs-cron.js"
   },
   "engines": {
     "node": ">=24.3.0"
@@ -48,7 +45,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.31.0",
     "@types/node": "^24.0.13",
-    "@typescript/native-preview": "7.0.0-dev.20250711.1",
+    "@typescript/native-preview": "7.0.0-dev.20250712.1",
     "eslint": "^9.31.0",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-prettier": "^5.5.1",
@@ -60,7 +57,7 @@
   "dependencies": {
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
     "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
-    "@giltayar/carmel-tools-club-service": "^4.0.0",
+    "@giltayar/carmel-tools-club-service": "^4.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.1.4",
     "@giltayar/functional-commons": "^1.4.2",
