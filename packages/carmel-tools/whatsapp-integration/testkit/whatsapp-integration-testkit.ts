@@ -6,7 +6,17 @@ import type {
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 type WhatsAppIntegrationServiceData = {
-  state: Parameters<typeof createFakeWhatsAppIntegrationService>[0]
+  state: {
+    groups: Record<
+      WhatsAppGroupId,
+      {
+        name: string
+        recentSentMessages: string[]
+        recentReceivedMessages: string[]
+        participants: WhatsAppContactId[]
+      }
+    >
+  }
 }
 
 export function createFakeWhatsAppIntegrationService(context: {
@@ -33,6 +43,7 @@ export function createFakeWhatsAppIntegrationService(context: {
     ),
     removeParticipantFromGroup: sBind(removeParticipantFromGroup),
     addParticipantToGroup: sBind(addParticipantToGroup),
+    sendMessageToGroup: sBind(sendMessageToGroup),
   }
 
   return {
@@ -42,6 +53,12 @@ export function createFakeWhatsAppIntegrationService(context: {
       if (!group) throw new Error(`Group ${groupId} not found`)
 
       return group.participants
+    },
+    _test_getSentMessages: async (groupId: WhatsAppGroupId) => {
+      const group = state.groups[groupId]
+      if (!group) throw new Error(`Group ${groupId} not found`)
+
+      return group.recentSentMessages
     },
   }
 }
@@ -102,4 +119,15 @@ async function addParticipantToGroup(
   }
 
   group.participants.push(participantId)
+}
+
+async function sendMessageToGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+  message: string,
+) {
+  const group = s.state.groups[groupId]
+  if (!group) throw new Error(`Group ${groupId} not found`)
+
+  group.recentSentMessages.push(message)
 }

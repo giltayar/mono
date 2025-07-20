@@ -25,6 +25,7 @@ export function createWhatsAppIntegrationService(context: WhatsAppIntegrationSer
     fetchLastWhatsappGroupsThatWereReceivedMessage: sBind(
       fetchLastWhatsappGroupsThatWereReceivedMessage,
     ),
+    sendMessageToGroup: sBind(sendMessageToGroup),
   }
 }
 
@@ -162,6 +163,29 @@ function createApiUrl(s: WhatsAppIntegrationServiceData, endpoint: string): URL 
     `/waInstance${s.context.greenApiInstanceId}/${endpoint}/${s.context.greenApiKey}`,
     s.context.greenApiBaseUrl,
   )
+}
+
+async function sendMessageToGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+  message: string,
+): Promise<void> {
+  const url = createApiUrl(s, 'sendMessage')
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      chatId: groupId,
+      message,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to send message: ${response.status} ${await response.text()}`)
+  }
+
+  await response.json()
 }
 
 interface GreenApiMessage {

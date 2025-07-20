@@ -135,4 +135,41 @@ describe('WhatsApp Integration Testkit', () => {
       )
     })
   })
+
+  describe('sendMessageToGroup', () => {
+    it('should send a message to the group', async () => {
+      const service = createTestService()
+      const testMessage = 'Hello from test!'
+
+      await service.sendMessageToGroup(testGroupId, testMessage)
+
+      const sentMessages = await service._test_getSentMessages(testGroupId)
+      assert.strictEqual(sentMessages.length, 3) // 2 initial + 1 new
+      assert.strictEqual(sentMessages[2], testMessage) // New message is at the end
+    })
+
+    it('should accumulate multiple messages sent to the group', async () => {
+      const service = createTestService()
+      const message1 = 'First message'
+      const message2 = 'Second message'
+
+      await service.sendMessageToGroup(testGroupId, message1)
+      await service.sendMessageToGroup(testGroupId, message2)
+
+      const sentMessages = await service._test_getSentMessages(testGroupId)
+      assert.strictEqual(sentMessages.length, 4) // 2 initial + 2 new
+      assert.strictEqual(sentMessages[2], message1) // First new message
+      assert.strictEqual(sentMessages[3], message2) // Second new message
+    })
+
+    it('should throw error if group not found', async () => {
+      const service = createTestService()
+      const nonExistentGroup = '999999999999999999@g.us' as WhatsAppGroupId
+
+      await assert.rejects(
+        () => service.sendMessageToGroup(nonExistentGroup, 'test message'),
+        /Group .* not found/,
+      )
+    })
+  })
 })
