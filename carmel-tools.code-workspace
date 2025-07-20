@@ -61,6 +61,10 @@
 			"path": "packages/carmel-tools/smoove-integration"
 		},
 		{
+			"name": "google-sheets-integration",
+			"path": "packages/carmel-tools/google-sheets-integration"
+		},
+		{
 			"name": "academy-integration",
 			"path": "packages/carmel-tools/academy-integration"
 		},
@@ -69,9 +73,11 @@
 			"path": "packages/carmel-tools/club-service"
 		},
 		{
+			"name": "club-cli",
 			"path": "packages/carmel-tools/club-cli"
 		},
 		{
+			"name": "clubs-cron",
 			"path": "packages/carmel-tools/clubs-cron"
 		}
 	],

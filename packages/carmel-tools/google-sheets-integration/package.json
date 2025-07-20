@@ -1,0 +1,72 @@
+{
+  "name": "@giltayar/carmel-tools-google-sheets-integration",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./service": {
+      "types": "./dist/src/google-sheets-integration.d.ts",
+      "import": "./dist/src/google-sheets-integration.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "import": "./dist/src/types.js"
+    },
+    "./utils": {
+      "types": "./dist/src/utils.d.ts",
+      "import": "./dist/src/utils.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=24.3.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "google-sheets"
+  ],
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/carmel-tools/google-sheets-integration",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmel-tools/google-sheets-integration",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.31.0",
+    "@types/node": "^24.0.15",
+    "@typescript/native-preview": "7.0.0-dev.20250720.1",
+    "eslint": "^9.31.0",
+    "eslint-plugin-n": "^17.21.0",
+    "eslint-plugin-prettier": "^5.5.3",
+    "globals": "^16.3.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.37.0"
+  },
+  "dependencies": {
+    "@giltayar/functional-commons": "^1.4.2",
+    "@giltayar/service-commons": "^1.1.2",
+    "@google-cloud/local-auth": "^3.0.1",
+    "googleapis": "^153.0.0"
+  },
+  "packageManager": "pnpm@10.13.1"
+}
