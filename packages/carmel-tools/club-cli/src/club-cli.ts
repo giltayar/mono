@@ -54,6 +54,21 @@ await yargs()
       await clubService.removeUser(args['user-email'])
     },
   )
+  .command(
+    'send-message <message>',
+    'Send a message to the WhatsApp group of a club',
+    (yargs) =>
+      yargs.positional('message', {
+        type: 'string',
+        demandOption: true,
+        describe: 'Message to send to the club WhatsApp group',
+      }),
+    async (args) => {
+      const clubService = createClubServiceFromClub(clubs[args.club])
+
+      await clubService.sendMessageToClub(args.message)
+    },
+  )
   .strict()
   .help()
   .parseAsync(process.argv.slice(2))
