@@ -9,7 +9,7 @@ export async function sendWhatsAppMessage(s: ClubServiceData, message: string) {
     groupId: whatsappGroupId,
   })
 
-  logger.info({message: message.slice(10)}, 'sending-message-to-club')
+  logger.info({message: message.slice(0, 10)}, 'sending-message-to-club')
 
   await services.whatsapp
     .sendMessageToGroup(whatsappGroupId, message)
