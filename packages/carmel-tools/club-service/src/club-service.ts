@@ -4,6 +4,7 @@ import {removeUser} from './club-remove-user.ts'
 import {dealWithCancelRequests} from './deal-with-cancel-requests.ts'
 import {dealWithUsersWithDebt} from './deal-with-users-with-debt.ts'
 import {paymentExpiration} from './club-payment-expiration.ts'
+import {sendWhatsAppMessage} from './club-send-whatsapp-message.ts'
 
 export type {ClubServiceContext}
 
@@ -24,5 +25,6 @@ export function createClubService(context: ClubServiceContext) {
     dealWithCancelRequests: sBind(dealWithCancelRequests),
     dealWithUsersWithDebt: sBind(dealWithUsersWithDebt),
     paymentExpiration: sBind(paymentExpiration),
+    sendMessageToClub: sBind(sendWhatsAppMessage),
   }
 }
