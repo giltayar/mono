@@ -25,7 +25,9 @@ export async function createGoogleSheetsIntegrationService(
   }
 }
 
-export type GoogleSheetsIntegrationService = ReturnType<typeof createGoogleSheetsIntegrationService>
+export type GoogleSheetsIntegrationService = Awaited<
+  ReturnType<typeof createGoogleSheetsIntegrationService>
+>
 
 interface GoogleSheetInformationRead {
   columnHeaders: string[]

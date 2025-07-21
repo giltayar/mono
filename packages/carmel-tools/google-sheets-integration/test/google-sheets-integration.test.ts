@@ -1,6 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert'
 import {createGoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
+import type {GoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
 
 test('Google Sheets integration - write and read values', async () => {
   const privateKeyJson = process.env.GOOGLE_SHEETS_API_KEY
@@ -8,7 +9,7 @@ test('Google Sheets integration - write and read values', async () => {
     throw new Error('GOOGLE_SHEETS_API_KEY environment variable not set')
   }
 
-  const service = await createGoogleSheetsIntegrationService({
+  const service: GoogleSheetsIntegrationService = await createGoogleSheetsIntegrationService({
     privateKeyJson,
   })
 
