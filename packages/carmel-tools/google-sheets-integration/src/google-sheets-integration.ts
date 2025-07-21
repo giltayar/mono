@@ -1,31 +1,27 @@
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 import {google} from 'googleapis'
-import {authenticate} from '@google-cloud/local-auth'
+import path from 'node:path'
+import os from 'node:os'
+import fs from 'node:fs/promises'
 
 export interface GoogleSheetsIntegrationServiceContext {
-  /**
-   * Google API Key for accessing Google Sheets API
-   * This can be obtained from Google Cloud Console:
-   * 1. Go to https://console.cloud.google.com/
-   * 2. Create a new project or select an existing one
-   * 3. Enable the Google Sheets API
-   * 4. Go to "Credentials" and create an API key
-   * 5. Restrict the API key to Google Sheets API for security
-   */
-  apiKey: string
+  privateKeyJson: string
 }
 
 type GoogleSheetsIntegrationServiceData = {
   context: GoogleSheetsIntegrationServiceContext
+  sheets: Awaited<ReturnType<typeof initializeSheetsApi>>
 }
 
-export function createGoogleSheetsIntegrationService(
+export async function createGoogleSheetsIntegrationService(
   context: GoogleSheetsIntegrationServiceContext,
 ) {
-  const sBind: ServiceBind<GoogleSheetsIntegrationServiceData> = (f) => bind(f, {context})
+  const sheets = await initializeSheetsApi(context)
+  const sBind: ServiceBind<GoogleSheetsIntegrationServiceData> = (f) => bind(f, {context, sheets})
 
   return {
     readGoogleSheet: sBind(readGoogleSheet),
+    writeGoogleSheet: sBind(writeGoogleSheet),
   }
 }
 
@@ -41,21 +37,10 @@ export async function readGoogleSheet(
   url: URL,
   options: {numberOfColumns: number; sheetIndex: number; maxRows: number},
 ): Promise<GoogleSheetInformationRead> {
-  const sheets = google.sheets({version: 'v4', auth: s.context.apiKey})
+  const sheets = s.sheets
 
-  // Extract spreadsheet ID from URL
   const spreadsheetId = extractSpreadsheetIdFromUrl(url)
-
-  // Get basic spreadsheet information to determine the sheet name
-  const spreadsheetInfo = await sheets.spreadsheets.get({
-    spreadsheetId,
-  })
-
-  // Use the first sheet if no specific sheet is specified
-  const sheetName = spreadsheetInfo.data.sheets?.[options.sheetIndex]?.properties?.title
-  if (!sheetName) {
-    throw new Error('No sheets found in the spreadsheet')
-  }
+  const sheetName = await findSheetNameByIndex(s, spreadsheetId, options.sheetIndex)
 
   const range = `${sheetName}!R1C1:R${options.maxRows}C${options.numberOfColumns}`
 
@@ -99,30 +84,48 @@ export async function writeGoogleSheet(
   url: URL,
   options: {sheetIndex: number; dataToWrite: {row: number; column: number; value: string}[]},
 ): Promise<void> {
-  const sheets = google.sheets({version: 'v4', auth: s.context.apiKey})
+  const sheets = s.sheets
   const spreadsheetId = extractSpreadsheetIdFromUrl(url)
-  const requests = options.dataToWrite.map(({row, column, value}) => ({
-    updateCells: {
-      range: {
-        sheetId: options.sheetIndex,
-        startRowIndex: row - 1,
-        endRowIndex: row,
-        startColumnIndex: column - 1,
-        endColumnIndex: column,
-      },
-      rows: [{values: [{userEnteredValue: {stringValue: value}}]}],
-      fields: 'userEnteredValue',
-    },
-  }))
+  const sheetName = await findSheetNameByIndex(s, spreadsheetId, options.sheetIndex)
 
-  const batchUpdateRequest = {
+  await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId,
-    resource: {
-      requests,
+    requestBody: {
+      valueInputOption: 'RAW',
+      data: options.dataToWrite.map(({row, column, value}) => ({
+        range: `${sheetName}!R${row}C${column}`,
+        majorDimension: 'ROWS',
+        values: [[value]],
+      })),
     },
-  }
+  })
+}
 
-  await sheets.spreadsheets.batchUpdate(batchUpdateRequest)
+async function initializeSheetsApi(s: GoogleSheetsIntegrationServiceContext) {
+  return google.sheets({
+    version: 'v4',
+    auth: new google.auth.GoogleAuth({
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+      keyFilename: await generateKeyFile(s.privateKeyJson),
+    }),
+  })
+}
+
+async function findSheetNameByIndex(
+  s: GoogleSheetsIntegrationServiceData,
+  spreadsheetId: string,
+  sheetIndex: number,
+) {
+  const spreadsheetInfo = await s.sheets.spreadsheets.get({
+    spreadsheetId,
+  })
+
+  // Use the first sheet if no specific sheet is specified
+  const sheetName = spreadsheetInfo.data.sheets?.[sheetIndex]?.properties?.title
+  if (!sheetName) {
+    throw new Error('No sheets found in the spreadsheet')
+  }
+  return sheetName
 }
 
 function extractSpreadsheetIdFromUrl(url: URL): string {
@@ -138,4 +141,12 @@ function extractSpreadsheetIdFromUrl(url: URL): string {
   }
 
   return match[1]
+}
+
+async function generateKeyFile(privateKeyJson: string): Promise<string> {
+  const keyFilePath = path.join(os.tmpdir(), `keyfile-${crypto.randomUUID()}.json`)
+
+  await fs.writeFile(keyFilePath, privateKeyJson)
+
+  return keyFilePath
 }

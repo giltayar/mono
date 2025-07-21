@@ -7,14 +7,6 @@
       "types": "./dist/src/google-sheets-integration.d.ts",
       "import": "./dist/src/google-sheets-integration.js"
     },
-    "./types": {
-      "types": "./dist/src/types.d.ts",
-      "import": "./dist/src/types.js"
-    },
-    "./utils": {
-      "types": "./dist/src/utils.d.ts",
-      "import": "./dist/src/utils.js"
-    },
     "./package.json": "./package.json"
   },
   "engines": {
@@ -53,7 +45,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.31.0",
     "@types/node": "^24.0.15",
-    "@typescript/native-preview": "7.0.0-dev.20250720.1",
+    "@typescript/native-preview": "7.0.0-dev.20250721.1",
     "eslint": "^9.31.0",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-prettier": "^5.5.3",
@@ -65,7 +57,6 @@
   "dependencies": {
     "@giltayar/functional-commons": "^1.4.2",
     "@giltayar/service-commons": "^1.1.2",
-    "@google-cloud/local-auth": "^3.0.1",
     "googleapis": "^153.0.0"
   },
   "packageManager": "pnpm@10.13.1"

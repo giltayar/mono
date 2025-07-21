@@ -3,5 +3,6 @@
   "compilerOptions": {
     "noEmit": false,
     "noCheck": true
-  }
+  },
+  "exclude": ["test"]
 }
