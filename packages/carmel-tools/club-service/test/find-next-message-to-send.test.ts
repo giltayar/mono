@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import {Temporal} from 'temporal-polyfill'
 import {findNextMessageToSend} from '../src/find-next-message-to-send.ts'
 
-describe('processDailyMessages', () => {
+describe('findNextMessageToSend', () => {
   const todayStr = Temporal.Now.zonedDateTimeISO('Asia/Jerusalem')
     .toPlainDate()
     .toLocaleString('he-IL')
