@@ -29,8 +29,6 @@ export async function sendDailyWhatsAppMessage(s: ClubServiceData): Promise<void
 
   const rowInSheet = rowIndex + 2 // +2 because of header row and 1-based indexing
 
-  logger.info(`Found unsent message at row ${rowInSheet}`) // +2 because of header row and 1-based indexing
-
   logger.info('sending-message', {whatsappGroupId, message: message.slice(0, 20)})
 
   // Send the WhatsApp message
