@@ -31,5 +31,5 @@ export const inspiredBusinessDaily: ClubInformation = {
   whatsappGroupId: '120363400920106353@g.us',
   dailyMessagesGoogleSheet:
     'https://docs.google.com/spreadsheets/d/1eShTuk7F_Ckc6SFvGyolgVSyAZREE1KICJtKJGXXyBc/edit?gid=1341595384#gid=1341595384',
-  dailyMessagesGoogleSheetTabIndex: 0,
+  dailyMessagesGoogleSheetTabIndex: 1,
 }
