@@ -1,24 +1,17 @@
 import {Temporal} from 'temporal-polyfill'
 
-interface MessageToProcess {
-  rowIndex: number
-  message: string
-  dateStr: string
-  timeStr: string
-}
-
 type ProcessMessageResult =
   | {
-      shouldSend: false
+      found: false
       reason: string
     }
   | {
-      shouldSend: true
+      found: true
+      rowIndex: number
       message: string
-      messageToProcess: MessageToProcess
     }
 
-export function processDailyMessages(rows: string[][]): ProcessMessageResult {
+export function findNextMessageToSend(rows: string[][]): ProcessMessageResult {
   // Parse the current date and time using Temporal API for Israel timezone
   const israelTimeZone = 'Asia/Jerusalem'
   const now = Temporal.Now.zonedDateTimeISO(israelTimeZone)
@@ -39,7 +32,7 @@ export function processDailyMessages(rows: string[][]): ProcessMessageResult {
     }
 
     // Parse and validate the message date
-    const [day, month, year] = date.split('/').map(Number)
+    const [day, month, year] = date.split(/[/.]/).map(Number)
     const messageDate = Temporal.PlainDate.from({day, month, year})
 
     // Skip if message date is not today
@@ -62,20 +55,15 @@ export function processDailyMessages(rows: string[][]): ProcessMessageResult {
 
     // Found a valid message to send
     return {
-      shouldSend: true,
-      message,
-      messageToProcess: {
-        rowIndex: i,
-        message,
-        dateStr: date,
-        timeStr: time,
-      },
+      found: true,
+      rowIndex: i,
+      message: message,
     }
   }
 
   // No valid messages found
   return {
-    shouldSend: false,
+    found: false,
     reason: 'No unsent messages found',
   }
 }

@@ -1,26 +1,31 @@
 import {test, describe} from 'node:test'
 import assert from 'node:assert'
 import {Temporal} from 'temporal-polyfill'
-import {processDailyMessages} from '../src/process-daily-messages.ts'
+import {findNextMessageToSend} from '../src/find-next-message-to-send.ts'
 
 describe('processDailyMessages', () => {
   const todayStr = Temporal.Now.zonedDateTimeISO('Asia/Jerusalem')
     .toPlainDate()
-    .toLocaleString('en-GB')
+    .toLocaleString('he-IL')
+    .replaceAll('.', '/')
   const tomorrowStr = Temporal.Now.zonedDateTimeISO('Asia/Jerusalem')
     .add({days: 1})
     .toPlainDate()
-    .toLocaleString('en-GB')
+    .toLocaleString('he-IL')
   const yesterdayStr = Temporal.Now.zonedDateTimeISO('Asia/Jerusalem')
     .subtract({days: 1})
     .toPlainDate()
-    .toLocaleString('en-GB')
+    .toLocaleString('he-IL')
+  const dayBeforeYesterdayStr = Temporal.Now.zonedDateTimeISO('Asia/Jerusalem')
+    .subtract({days: 2})
+    .toPlainDate()
+    .toLocaleString('he-IL')
 
   test('should return no unsent messages when all rows are empty', () => {
     const rows: string[][] = []
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: false,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: false,
       reason: 'No unsent messages found',
     })
   })
@@ -32,8 +37,8 @@ describe('processDailyMessages', () => {
       [todayStr, '12:00', 'y', 'Test message 3'],
     ]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: false,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: false,
       reason: 'No unsent messages found',
     })
   })
@@ -45,8 +50,8 @@ describe('processDailyMessages', () => {
       [todayStr, '12:00', '', ''],
     ]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: false,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: false,
       reason: 'No unsent messages found',
     })
   })
@@ -54,8 +59,8 @@ describe('processDailyMessages', () => {
   test('should skip message when date is not today (future date)', () => {
     const rows = [[tomorrowStr, '10:00', '', 'Test message for tomorrow']]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: false,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: false,
       reason: 'No unsent messages found',
     })
   })
@@ -63,8 +68,8 @@ describe('processDailyMessages', () => {
   test('should skip message when date is not today (past date)', () => {
     const rows = [[yesterdayStr, '10:00', '', 'Test message for yesterday']]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: false,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: false,
       reason: 'No unsent messages found',
     })
   })
@@ -73,8 +78,8 @@ describe('processDailyMessages', () => {
     const futureTime = '23:59'
     const rows = [[todayStr, futureTime, '', 'Test message for later today']]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: false,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: false,
       reason: 'No unsent messages found',
     })
   })
@@ -85,15 +90,10 @@ describe('processDailyMessages', () => {
     const testMessage = 'Good morning message'
     const rows = [[todayStr, pastTime, '', testMessage]]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: true,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: true,
+      rowIndex: 0,
       message: testMessage,
-      messageToProcess: {
-        rowIndex: 0,
-        message: testMessage,
-        dateStr: todayStr,
-        timeStr: pastTime,
-      },
     })
   })
 
@@ -106,15 +106,10 @@ describe('processDailyMessages', () => {
       [todayStr, pastTime, '', secondMessage],
     ]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: true,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: true,
+      rowIndex: 0,
       message: firstMessage,
-      messageToProcess: {
-        rowIndex: 0,
-        message: firstMessage,
-        dateStr: todayStr,
-        timeStr: pastTime,
-      },
     })
   })
 
@@ -128,15 +123,27 @@ describe('processDailyMessages', () => {
       [todayStr, pastTime, '', 'Another unsent message'],
     ]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: true,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: true,
+      rowIndex: 2,
       message: unsentMessage,
-      messageToProcess: {
-        rowIndex: 2,
-        message: unsentMessage,
-        dateStr: todayStr,
-        timeStr: pastTime,
-      },
+    })
+  })
+
+  test('should handle regular scenario', () => {
+    const pastTime = '00:01'
+    const testMessage = 'Regular message'
+    const rows = [
+      [dayBeforeYesterdayStr, '05:00', 'x', 'a message'],
+      [yesterdayStr, '05:00', 'x', 'another message'],
+      [todayStr, pastTime, '', testMessage], // This is the message we want
+      [tomorrowStr, pastTime, '', 'yet another message'], // Not this one
+    ]
+
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: true,
+      rowIndex: 2,
+      message: testMessage,
     })
   })
 
@@ -152,15 +159,10 @@ describe('processDailyMessages', () => {
       [todayStr, pastTime, '', validMessage],
     ]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: true,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: true,
+      rowIndex: 4,
       message: validMessage,
-      messageToProcess: {
-        rowIndex: 4,
-        message: validMessage,
-        dateStr: todayStr,
-        timeStr: pastTime,
-      },
     })
   })
 
@@ -168,14 +170,14 @@ describe('processDailyMessages', () => {
     const rows = [['invalid-date', '10:00', '', 'Test message']]
 
     // This should throw an error due to invalid date format
-    assert.throws(() => processDailyMessages(rows))
+    assert.throws(() => findNextMessageToSend(rows))
   })
 
   test('should handle malformed time formats gracefully', () => {
     const rows = [[todayStr, 'invalid-time', '', 'Test message']]
 
     // This should throw an error due to invalid time format
-    assert.throws(() => processDailyMessages(rows))
+    assert.throws(() => findNextMessageToSend(rows))
   })
 
   test('should handle empty sent column as unsent', () => {
@@ -187,15 +189,10 @@ describe('processDailyMessages', () => {
       [todayStr, pastTime, '', 'Third message'], // Empty string instead of undefined
     ]
 
-    assert.partialDeepStrictEqual(processDailyMessages(rows), {
-      shouldSend: true,
+    assert.partialDeepStrictEqual(findNextMessageToSend(rows), {
+      found: true,
+      rowIndex: 0,
       message: testMessage,
-      messageToProcess: {
-        rowIndex: 0,
-        message: testMessage,
-        dateStr: todayStr,
-        timeStr: pastTime,
-      },
     })
   })
 
@@ -207,17 +204,12 @@ describe('processDailyMessages', () => {
       [todayStr, pastTime, '\t', 'Another message'], // Tab
       [todayStr, pastTime, '\n', 'Third message'], // Newline
     ]
-    const result = processDailyMessages(rows)
+    const result = findNextMessageToSend(rows)
 
     assert.partialDeepStrictEqual(result, {
-      shouldSend: true,
+      found: true,
+      rowIndex: 0,
       message: testMessage,
-      messageToProcess: {
-        rowIndex: 0,
-        message: testMessage,
-        dateStr: todayStr,
-        timeStr: pastTime,
-      },
     })
   })
 })
