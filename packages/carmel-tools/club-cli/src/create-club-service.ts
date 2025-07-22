@@ -61,6 +61,8 @@ export async function createClubServiceFromClub(club: ClubInformation) {
     cardcomProductIds: club.cardcomProductId,
     academyCourse: club.academyCourse,
     whatsappGroupId: club.whatsappGroupId,
+    dailyMessagesGoogleSheet: new URL(club.dailyMessagesGoogleSheet),
+    dailyMessagesGoogleSheetTabIndex: club.dailyMessagesGoogleSheetTabIndex,
     services: {
       whatsapp: whatsappService,
       cardcom: cardcomService,

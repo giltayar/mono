@@ -11,6 +11,9 @@ export const inspiredLivingDaily = {
   smooveFieldForCardComAcountId: 'i13',
   academyCourse: ['2a99a66fd59bb0b45b74c73fe4ec3169', '2770d99539749c9850a561359e481ca7'],
   whatsappGroupId: '120363389808236299@g.us' as WhatsAppGroupId,
+  dailyMessagesGoogleSheet:
+    'https://docs.google.com/spreadsheets/d/1eShTuk7F_Ckc6SFvGyolgVSyAZREE1KICJtKJGXXyBc/edit?gid=1341595384#gid=1341595384',
+  dailyMessagesGoogleSheetTabIndex: 0,
 }
 
 export type ClubInformation = typeof inspiredLivingDaily
@@ -26,4 +29,7 @@ export const inspiredBusinessDaily: ClubInformation = {
   smooveFieldForCardComAcountId: 'i17',
   academyCourse: ['9dc2c9bae45f07d65cf8980c13ec2521'],
   whatsappGroupId: '120363400920106353@g.us',
+  dailyMessagesGoogleSheet:
+    'https://docs.google.com/spreadsheets/d/1eShTuk7F_Ckc6SFvGyolgVSyAZREE1KICJtKJGXXyBc/edit?gid=1341595384#gid=1341595384',
+  dailyMessagesGoogleSheetTabIndex: 0,
 }

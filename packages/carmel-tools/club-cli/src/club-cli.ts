@@ -68,7 +68,8 @@ await yargs()
 
       await clubService.sendMessageToClub(args.message)
     },
-    .command(
+  )
+  .command(
     'send-daily-whatsapp-message',
     'Send daily WhatsApp message to the club group',
     () => {},
@@ -76,7 +77,7 @@ await yargs()
       const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.sendDailyWhatsAppMessage()
-    }
+    },
   )
   .strict()
   .help()
