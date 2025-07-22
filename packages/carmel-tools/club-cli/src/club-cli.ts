@@ -14,7 +14,7 @@ await yargs()
     'Expire subscriptions for a club',
     () => {},
     async (args) => {
-      const clubService = createClubServiceFromClub(clubs[args.club])
+      const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.paymentExpiration()
     },
@@ -24,7 +24,7 @@ await yargs()
     'Handle cancel requests for a club',
     () => {},
     async (args) => {
-      const clubService = createClubServiceFromClub(clubs[args.club])
+      const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.dealWithCancelRequests()
     },
@@ -34,7 +34,7 @@ await yargs()
     'Handle users with debt for a club',
     () => {},
     async (args) => {
-      const clubService = createClubServiceFromClub(clubs[args.club])
+      const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.dealWithUsersWithDebt()
     },
@@ -49,7 +49,7 @@ await yargs()
         describe: 'Email of the user to remove',
       }),
     async (args) => {
-      const clubService = createClubServiceFromClub(clubs[args.club])
+      const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.removeUser(args['user-email'])
     },
@@ -64,10 +64,19 @@ await yargs()
         describe: 'Message to send to the club WhatsApp group',
       }),
     async (args) => {
-      const clubService = createClubServiceFromClub(clubs[args.club])
+      const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.sendMessageToClub(args.message)
     },
+    .command(
+    'send-daily-whatsapp-message',
+    'Send daily WhatsApp message to the club group',
+    () => {},
+    async (args) => {
+      const clubService = await createClubServiceFromClub(clubs[args.club])
+
+      await clubService.sendDailyWhatsAppMessage()
+    }
   )
   .strict()
   .help()

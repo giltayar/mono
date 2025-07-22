@@ -63,6 +63,7 @@
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
     "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
     "@giltayar/carmel-tools-club-service": "^4.1.1",
+    "@giltayar/carmel-tools-google-sheets-integration": "^1.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.2.0",
     "@giltayar/functional-commons": "^1.4.2",

@@ -20,7 +20,8 @@
     "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
-    "test:typescript": "tsgo"
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
     "nodejs",
@@ -43,7 +44,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.31.0",
     "@types/node": "^24.0.15",
-    "@typescript/native-preview": "7.0.0-dev.20250720.1",
+    "@typescript/native-preview": "7.0.0-dev.20250721.1",
     "eslint": "^9.31.0",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-prettier": "^5.5.3",
@@ -55,11 +56,13 @@
   "dependencies": {
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
     "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
+    "@giltayar/carmel-tools-google-sheets-integration": "^1.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.2.0",
     "@giltayar/functional-commons": "^1.4.2",
     "@giltayar/service-commons": "^1.1.2",
-    "pino": "^9.7.0"
+    "pino": "^9.7.0",
+    "temporal-polyfill": "^0.3.0"
   },
   "packageManager": "pnpm@10.13.1"
 }

@@ -4,6 +4,7 @@ import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-int
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {Logger} from 'pino'
+import type {GoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
 
 export interface ClubServiceContext {
   subscribedSmooveListId: number // מנוי מועדון
@@ -14,11 +15,14 @@ export interface ClubServiceContext {
   cardcomProductIds: number[]
   academyCourse: readonly string[]
   whatsappGroupId: WhatsAppGroupId
+  dailyMessagesGoogleSheet: URL
+  dailyMessagesGoogleSheetTabIndex: number
   services: {
     whatsapp: WhatsAppIntegrationService
     cardcom: CardcomIntegrationService
     smoove: SmooveIntegrationService
     academy: AcademyIntegrationService
+    googleSheets: GoogleSheetsIntegrationService
     logger: Logger
   }
 }

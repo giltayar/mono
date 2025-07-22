@@ -2,7 +2,11 @@ import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-in
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {createClubService} from '@giltayar/carmel-tools-club-service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
-import {createWhatsAppIntegrationService as createWhatsAppIntegrationService_} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import {createGoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
+import {
+  createWhatsAppIntegrationService as createWhatsAppIntegrationService_,
+  type WhatsAppIntegrationService,
+} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {ClubInformation} from './clubs/clubs.ts'
 import * as z from 'zod'
 import {pino} from 'pino'
@@ -13,11 +17,12 @@ const environmentVariablesSchema = z.object({
   CARDCOM_API_KEY: z.string(),
   CARDCOM_API_KEY_PASSWORD: z.string(),
   SMOOVE_API_KEY: z.string(),
+  GOOGLE_SHEETS_API_KEY: z.string(),
 })
 
 const env = environmentVariablesSchema.parse(process.env)
 
-export function createWhatsAppIntegrationService() {
+export function createWhatsAppIntegrationService(): WhatsAppIntegrationService {
   return createWhatsAppIntegrationService_({
     greenApiKey: env.GREEN_API_KEY,
     greenApiInstanceId: env.GREEN_API_INSTANCE,
@@ -25,7 +30,7 @@ export function createWhatsAppIntegrationService() {
   })
 }
 
-export function createClubServiceFromClub(club: ClubInformation) {
+export async function createClubServiceFromClub(club: ClubInformation) {
   const whatsappService = createWhatsAppIntegrationService()
 
   const cardcomService = createCardcomIntegrationService({
@@ -43,6 +48,10 @@ export function createClubServiceFromClub(club: ClubInformation) {
 
   const academyService = createAcademyIntegrationService({baseUrl: 'https://www.mypages.co.il'})
 
+  const googleSheetsService = await createGoogleSheetsIntegrationService({
+    privateKeyJson: env.GOOGLE_SHEETS_API_KEY,
+  })
+
   const clubService = createClubService({
     subscribedSmooveListId: club.subscribedSmooveListId,
     cancellingSmooveListId: club.cancellingSmooveListId,
@@ -57,6 +66,7 @@ export function createClubServiceFromClub(club: ClubInformation) {
       cardcom: cardcomService,
       smoove: smooveService,
       academy: academyService,
+      googleSheets: googleSheetsService,
       logger: pino({
         level: process.env.LOG_LEVEL || 'info',
         transport: {
