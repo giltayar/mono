@@ -17,14 +17,18 @@ for (const club of Object.keys(clubs) as Clubs[]) {
   })
   logger.info('start-club-batch')
 
+  await doOperation('send-daily-whatsapp-message', 'sendDailyWhatsAppMessage', club, logger)
   await doOperation('cancel-requests', 'dealWithCancelRequests', club, logger)
+  await doOperation('users-with-debt', 'dealWithUsersWithDebt', club, logger)
   // await doOperation('payment-expiration', 'paymentExpiration', club, logger)
-  // await doOperation('users-with-debt', 'dealWithUsersWithDebt', club, logger)
 }
 
 async function doOperation(
   name: string,
-  functionName: Exclude<keyof ReturnType<typeof createClubServiceFromClub>, 'removeUser'>,
+  functionName: Exclude<
+    keyof Awaited<ReturnType<typeof createClubServiceFromClub>>,
+    'removeUser' | 'sendMessageToClub'
+  >,
   club: Clubs,
   logger: pino.Logger,
 ) {
@@ -36,7 +40,7 @@ async function doOperation(
 
   operationLogger.info(`start-${name}`)
 
-  const clubService = createClubServiceFromClub(clubs[club], operationLogger)
+  const clubService = await createClubServiceFromClub(clubs[club], operationLogger)
   const func = clubService[functionName]
 
   await func().then(

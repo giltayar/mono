@@ -6,6 +6,7 @@ import {createWhatsAppIntegrationService as createWhatsAppIntegrationService_} f
 import type {ClubInformation} from './clubs/clubs.ts'
 import * as z from 'zod'
 import {pino} from 'pino'
+import {createGoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
 
 export function createWhatsAppIntegrationService() {
   const env = loadEnvironmentVariables()
@@ -17,7 +18,7 @@ export function createWhatsAppIntegrationService() {
   })
 }
 
-export function createClubServiceFromClub(club: ClubInformation, logger: pino.Logger) {
+export async function createClubServiceFromClub(club: ClubInformation, logger: pino.Logger) {
   const env = loadEnvironmentVariables()
 
   const whatsappService = createWhatsAppIntegrationService()
@@ -35,6 +36,10 @@ export function createClubServiceFromClub(club: ClubInformation, logger: pino.Lo
     cardComAccountIdCustomFieldId: club.smooveFieldForCardComAcountId,
   })
 
+  const googleSheetsService = await createGoogleSheetsIntegrationService({
+    privateKeyJson: env.GOOGLE_SHEETS_API_KEY,
+  })
+
   const academyService = createAcademyIntegrationService({baseUrl: 'https://www.mypages.co.il'})
 
   const clubService = createClubService({
@@ -46,11 +51,14 @@ export function createClubServiceFromClub(club: ClubInformation, logger: pino.Lo
     cardcomProductIds: club.cardcomProductId,
     academyCourse: club.academyCourse,
     whatsappGroupId: club.whatsappGroupId,
+    dailyMessagesGoogleSheet: new URL(club.dailyMessagesGoogleSheet),
+    dailyMessagesGoogleSheetTabIndex: club.dailyMessagesGoogleSheetTabIndex,
     services: {
       whatsapp: whatsappService,
       cardcom: cardcomService,
       smoove: smooveService,
       academy: academyService,
+      googleSheets: googleSheetsService,
       logger,
     },
   })
@@ -64,6 +72,7 @@ function loadEnvironmentVariables() {
     GREEN_API_INSTANCE: z.string().transform((val) => parseInt(val, 10)),
     CARDCOM_API_KEY: z.string(),
     CARDCOM_API_KEY_PASSWORD: z.string(),
+    GOOGLE_SHEETS_API_KEY: z.string(),
     SMOOVE_API_KEY: z.string(),
   })
 
