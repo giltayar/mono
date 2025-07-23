@@ -29,16 +29,19 @@ export async function sendDailyWhatsAppMessage(s: ClubServiceData): Promise<void
 
   const rowInSheet = rowIndex + 2 // +2 because of header row and 1-based indexing
 
-  logger.info('sending-message', {whatsappGroupId, message: message.slice(0, 20)})
+  logger.info({whatsappGroupId, message: message.slice(0, 20)}, 'sending-message')
 
   // Send the WhatsApp message
   await services.whatsapp.sendMessageToGroup(whatsappGroupId, message)
 
-  logger.info(`writing-to-google-sheet`, {
-    sheetIndex: dailyMessagesGoogleSheetTabIndex,
-    row: rowInSheet,
-    sheetUrl: s.context.dailyMessagesGoogleSheet.href,
-  })
+  logger.info(
+    {
+      sheetIndex: dailyMessagesGoogleSheetTabIndex,
+      row: rowInSheet,
+      sheetUrl: s.context.dailyMessagesGoogleSheet.href,
+    },
+    `writing-to-google-sheet`,
+  )
   await services.googleSheets.writeGoogleSheet(s.context.dailyMessagesGoogleSheet, {
     sheetIndex: 0,
     dataToWrite: [{row: rowInSheet, column: 3, value: 'x'}],
