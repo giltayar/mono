@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-clubs-cron",
-  "version": "4.2.1",
+  "version": "4.3.0",
   "type": "module",
   "exports": {
     ".": {
@@ -43,12 +43,12 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.31.0",
-    "@railway/cli": "^4.5.5",
+    "@eslint/js": "^9.32.0",
+    "@railway/cli": "^4.5.6",
     "@types/node": "^24.1.0",
-    "@typescript/native-preview": "7.0.0-dev.20250722.1",
-    "eslint": "^9.31.0",
-    "eslint-plugin-n": "^17.21.0",
+    "@typescript/native-preview": "7.0.0-dev.20250730.1",
+    "eslint": "^9.32.0",
+    "eslint-plugin-n": "^17.21.3",
     "eslint-plugin-prettier": "^5.5.3",
     "globals": "^16.3.0",
     "npm-run-all": "^4.1.5",
@@ -58,16 +58,16 @@
   "dependencies": {
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
     "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
-    "@giltayar/carmel-tools-club-service": "^4.2.3",
+    "@giltayar/carmel-tools-club-service": "^4.2.5",
     "@giltayar/carmel-tools-google-sheets-integration": "^1.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.2.0",
     "@giltayar/functional-commons": "^1.4.2",
     "@types/yargs": "^17.0.33",
     "pino": "^9.7.0",
-    "pino-pretty": "^13.0.0",
+    "pino-pretty": "^13.1.1",
     "yargs": "^18.0.0",
-    "zod": "^4.0.5"
+    "zod": "^4.0.14"
   },
   "packageManager": "pnpm@10.13.1"
 }

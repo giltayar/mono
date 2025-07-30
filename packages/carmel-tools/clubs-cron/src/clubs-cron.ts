@@ -20,7 +20,7 @@ for (const club of Object.keys(clubs) as Clubs[]) {
   await doOperation('send-daily-whatsapp-message', 'sendDailyWhatsAppMessage', club, logger)
   await doOperation('cancel-requests', 'dealWithCancelRequests', club, logger)
   await doOperation('users-with-debt', 'dealWithUsersWithDebt', club, logger)
-  // await doOperation('payment-expiration', 'paymentExpiration', club, logger)
+  await doOperation('payment-expiration', 'paymentExpiration', club, logger)
 }
 
 async function doOperation(
