@@ -15,44 +15,49 @@ export async function paymentExpiration(s: ClubServiceData) {
   const emailsNotToRemove = ['carmelegger1@gmail.com', 'carmelzmoney@gmail.com', 'gil@tayar.org']
 
   for (const smooveContact of contactsInCancelledList) {
+    const subLogger = logger.child({email: smooveContact.email})
+
     if (currentMonth <= smooveContact.signupDate.getMonth() + 1) {
-      logger.info({email: smooveContact.email}, 'skipping-because-they-signed-up-this-month')
+      subLogger.info('skipping-because-they-signed-up-this-month')
       continue
     }
 
     if (emailsNotToRemove.includes(smooveContact.email)) {
-      logger.info(
-        {email: smooveContact.email},
-        'skipping because it is in the emailsNotToRemove list',
-      )
+      subLogger.info('skipping because it is in the emailsNotToRemove list')
       continue
     }
 
-    logger.info({email: smooveContact.email}, 'removing-from-all-courses')
+    subLogger.info(
+      {
+        signupDate: smooveContact.signupDate.toISOString(),
+        currentMonth,
+      },
+      'removing-customer-from-club',
+    )
+    subLogger.info('removing-from-all-courses')
 
     await services.academy
       .removeContactFromAllCourses(smooveContact.email, s.context.academyCourse)
-      .catch((error) => logger.error({err: error, email: smooveContact.email}))
+      .catch((error) => subLogger.error({err: error}, 'failed-to-remove-from-all-courses'))
 
-    logger.info(
-      {email: smooveContact.email, telephone: smooveContact.telephone},
-      'removing-from-whatsapp-group',
-    )
+    subLogger.info({telephone: smooveContact.telephone}, 'removing-from-whatsapp-group')
 
     await services.whatsapp
       .removeParticipantFromGroup(
         s.context.whatsappGroupId,
         humanIsraeliPhoneNumberToWhatsAppId(smooveContact.telephone),
       )
-      .catch((error) => logger.error({err: error, email: smooveContact.email}))
+      .catch((error) => subLogger.error({err: error}, 'failed-to-remove-from-whatsapp-group'))
 
-    logger.info({email: smooveContact.email}, 'moving-cancelled-to-unsubscribed')
+    subLogger.info('moving-cancelled-to-unsubscribed')
 
     await services.smoove
       .changeContactLinkedLists(smooveContact, {
         unsubscribeFrom: [s.context.cancelledSmooveListId],
         subscribeTo: [s.context.unubscribedSmooveListId],
       })
-      .catch((error) => logger.error({err: error, email: smooveContact.email}))
+      .catch((error) =>
+        subLogger.error({err: error}, 'failed-to-move-contact-to-unsubscribed-list'),
+      )
   }
 }
