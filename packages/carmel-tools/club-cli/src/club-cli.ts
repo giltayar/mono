@@ -1,7 +1,15 @@
-import {createClubServiceFromClub} from './create-club-service.ts'
+import {
+  createClubServiceFromClub,
+  createSmooveIntegrationService,
+  createWhatsAppIntegrationService,
+} from './create-club-service.ts'
 import * as clubs from './clubs/clubs.ts'
 import yargs from 'yargs'
 import type {Clubs} from './clubs/club-types.ts'
+import {
+  removeLeavingFromWhatsappGroup,
+  transferFromClubToLeaving,
+} from './one-offs/transfer-leaving.ts'
 
 await yargs()
   .option('club', {
@@ -77,6 +85,27 @@ await yargs()
       const clubService = await createClubServiceFromClub(clubs[args.club])
 
       await clubService.sendDailyWhatsAppMessage()
+    },
+  )
+  .command(
+    'one-off-transfer-leaving',
+    'Transfer users from club to leaving group',
+    () => {},
+    async (args) => {
+      const smoove = await createSmooveIntegrationService(clubs[args.club])
+
+      await transferFromClubToLeaving(smoove)
+    },
+  )
+  .command(
+    'one-off-remove-leaving-from-whatsapp-group',
+    'Remove users from the WhatsApp group of the leaving group',
+    () => {},
+    async (args) => {
+      const smoove = await createSmooveIntegrationService(clubs[args.club])
+      const whatsapp = await createWhatsAppIntegrationService()
+
+      await removeLeavingFromWhatsappGroup(smoove, whatsapp)
     },
   )
   .strict()

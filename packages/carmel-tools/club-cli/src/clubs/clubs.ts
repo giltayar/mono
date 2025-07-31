@@ -5,6 +5,7 @@ export const inspiredLivingDaily = {
   cancellingSmooveListId: 1032013,
   cancelledSmooveListId: 1032114,
   unubscribedSmooveListId: 1034610,
+  continuingSmooveListId: 0,
   recurringPaymentNotPayedListId: 1037875,
   cardcomProductId: [16370, 16547],
   smooveFieldForCardComRecurringPaymentId: 'i12',
@@ -23,6 +24,7 @@ export const inspiredBusinessDaily: ClubInformation = {
   cancellingSmooveListId: 1055114,
   cancelledSmooveListId: 1055113,
   unubscribedSmooveListId: 1055112,
+  continuingSmooveListId: 0,
   recurringPaymentNotPayedListId: 1055135, // TBD
   cardcomProductId: [16810],
   smooveFieldForCardComRecurringPaymentId: 'i16',
@@ -33,3 +35,11 @@ export const inspiredBusinessDaily: ClubInformation = {
     'https://docs.google.com/spreadsheets/d/1eShTuk7F_Ckc6SFvGyolgVSyAZREE1KICJtKJGXXyBc/edit?gid=1341595384#gid=1341595384',
   dailyMessagesGoogleSheetTabIndex: 1,
 }
+
+//@ts-expect-error this is a partial club. Not yet ready for production
+export const exponential: ClubInformation = {
+  subscribedSmooveListId: 931893,
+  unubscribedSmooveListId: 1006396,
+  continuingSmooveListId: 1060451,
+  whatsappGroupId: '120363298297503251@g.us' as WhatsAppGroupId,
+} as Partial<ClubInformation>
