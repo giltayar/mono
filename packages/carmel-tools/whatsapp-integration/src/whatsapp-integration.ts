@@ -26,6 +26,7 @@ export function createWhatsAppIntegrationService(context: WhatsAppIntegrationSer
       fetchLastWhatsappGroupsThatWereReceivedMessage,
     ),
     sendMessageToGroup: sBind(sendMessageToGroup),
+    listParticipantsInGroup: sBind(listParticipantsInGroup),
   }
 }
 
@@ -156,6 +157,29 @@ export async function fetchLastWhatsappGroupsThatWereReceivedMessage(
       .map((d) => ({chatId: d.chatId, textMessage: d.textMessage})),
     (d) => d.chatId,
   )
+}
+
+export async function listParticipantsInGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+): Promise<WhatsAppContactId[]> {
+  const url = createApiUrl(s, 'getGroupData')
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({groupId}),
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch last whatsapp groups: ${response.status} ${await response.text()}`,
+    )
+  }
+
+  const data = (await response.json()) as any
+
+  return data.participants.map((participant: any) => participant.id as WhatsAppContactId)
 }
 
 function createApiUrl(s: WhatsAppIntegrationServiceData, endpoint: string): URL {

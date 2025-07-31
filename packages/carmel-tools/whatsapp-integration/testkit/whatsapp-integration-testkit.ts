@@ -44,6 +44,7 @@ export function createFakeWhatsAppIntegrationService(context: {
     removeParticipantFromGroup: sBind(removeParticipantFromGroup),
     addParticipantToGroup: sBind(addParticipantToGroup),
     sendMessageToGroup: sBind(sendMessageToGroup),
+    listParticipantsInGroup: sBind(listParticipantsInGroup),
   }
 
   return {
@@ -130,4 +131,14 @@ async function sendMessageToGroup(
   if (!group) throw new Error(`Group ${groupId} not found`)
 
   group.recentSentMessages.push(message)
+}
+
+async function listParticipantsInGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+): Promise<WhatsAppContactId[]> {
+  const group = s.state.groups[groupId]
+  if (!group) throw new Error(`Group ${groupId} not found`)
+
+  return group.participants
 }
