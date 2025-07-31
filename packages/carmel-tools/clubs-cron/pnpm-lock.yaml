@@ -15,8 +15,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       '@giltayar/carmel-tools-club-service':
-        specifier: ^4.2.5
-        version: 4.2.5
+        specifier: ^4.2.6
+        version: 4.2.6
       '@giltayar/carmel-tools-google-sheets-integration':
         specifier: ^1.0.1
         version: 1.0.1
@@ -130,8 +130,8 @@ packages:
     resolution: {integrity: sha512-HX4GPUS3IWiqs8gFQkGvxzQp2byPn1M8wjIq3mw0A+OHeKocgYTbZRo8ZO7a4LGiSDhIMKxM98kZhjS/oTA7pA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/4.0.1/e6115049b44a4c7029c6fda5692fdbf1814bd025}
     engines: {node: '>=24.3.0'}
 
-  '@giltayar/carmel-tools-club-service@4.2.5':
-    resolution: {integrity: sha512-dilXZi0Jv2ake0d0MRFzN3pIAUJ9DEDGO+5R1wpWOcRGw5elFfsEvHi36RtG+BhH+7hUkYDsqO5u3BkzS4bbOQ==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-club-service/4.2.5/d83821af97538864a43c2ca8847602a0d7ebb9ed}
+  '@giltayar/carmel-tools-club-service@4.2.6':
+    resolution: {integrity: sha512-K32SGHnzplCnU1OmicMuTIL/C/OQaJ2tB4ja0kTomxBvmdxdyPE3w6snMPF85y2+YSwUKlTR/1kgrJHiTzuX6Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-club-service/4.2.6/7ec41bcc5163aaab8a24920c0816465c199ba9c3}
     engines: {node: '>=24.0.0'}
 
   '@giltayar/carmel-tools-google-sheets-integration@1.0.1':
@@ -1661,7 +1661,7 @@ snapshots:
       '@giltayar/service-commons': 1.1.2
       execa: 9.6.0
 
-  '@giltayar/carmel-tools-club-service@4.2.5':
+  '@giltayar/carmel-tools-club-service@4.2.6':
     dependencies:
       '@giltayar/carmel-tools-academy-integration': 2.2.0
       '@giltayar/carmel-tools-cardcom-integration': 4.0.1
