@@ -21,7 +21,7 @@ export async function sendDailyWhatsAppMessage(s: ClubServiceData): Promise<void
   const result = findNextMessageToSend(sheetData.rows)
 
   if (!result.found) {
-    logger.info('no-unsent-messages-found', {reason: result.reason})
+    logger.info({reason: result.reason}, 'no-unsent-messages-found')
     return
   }
 
@@ -43,7 +43,7 @@ export async function sendDailyWhatsAppMessage(s: ClubServiceData): Promise<void
     `writing-to-google-sheet`,
   )
   await services.googleSheets.writeGoogleSheet(s.context.dailyMessagesGoogleSheet, {
-    sheetIndex: 0,
+    sheetIndex: dailyMessagesGoogleSheetTabIndex,
     dataToWrite: [{row: rowInSheet, column: 3, value: 'x'}],
   })
 }

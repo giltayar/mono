@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-club-service",
-  "version": "4.2.6",
+  "version": "4.2.7",
   "type": "module",
   "exports": {
     ".": {
@@ -43,26 +43,26 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.32.0",
-    "@types/node": "^24.1.0",
-    "@typescript/native-preview": "7.0.0-dev.20250730.1",
+    "@types/node": "^24.2.0",
+    "@typescript/native-preview": "7.0.0-dev.20250808.1",
     "eslint": "^9.32.0",
     "eslint-plugin-n": "^17.21.3",
-    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.3.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.38.0"
+    "typescript-eslint": "^8.39.0"
   },
   "dependencies": {
     "@giltayar/carmel-tools-academy-integration": "^2.2.0",
     "@giltayar/carmel-tools-cardcom-integration": "^4.0.1",
     "@giltayar/carmel-tools-google-sheets-integration": "^1.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^3.0.0",
-    "@giltayar/carmel-tools-whatsapp-integration": "^2.2.0",
+    "@giltayar/carmel-tools-whatsapp-integration": "^2.3.0",
     "@giltayar/functional-commons": "^1.4.2",
     "@giltayar/service-commons": "^1.1.2",
-    "pino": "^9.7.0",
+    "pino": "^9.8.0",
     "temporal-polyfill": "^0.3.0"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.14.0"
 }
