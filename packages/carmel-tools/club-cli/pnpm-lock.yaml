@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@giltayar/carmel-tools-club-service': link:../club-service
+
 importers:
 
   .:
@@ -15,8 +18,8 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
       '@giltayar/carmel-tools-club-service':
-        specifier: ^4.2.6
-        version: 4.2.6
+        specifier: link:../club-service
+        version: link:../club-service
       '@giltayar/carmel-tools-google-sheets-integration':
         specifier: ^1.0.1
         version: 1.0.1
@@ -55,8 +58,8 @@ importers:
         specifier: ^24.2.0
         version: 24.2.0
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20250807.1
-        version: 7.0.0-dev.20250807.1
+        specifier: 7.0.0-dev.20250808.1
+        version: 7.0.0-dev.20250808.1
       eslint:
         specifier: ^9.32.0
         version: 9.32.0
@@ -126,10 +129,6 @@ packages:
   '@giltayar/carmel-tools-cardcom-integration@4.0.1':
     resolution: {integrity: sha512-HX4GPUS3IWiqs8gFQkGvxzQp2byPn1M8wjIq3mw0A+OHeKocgYTbZRo8ZO7a4LGiSDhIMKxM98kZhjS/oTA7pA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/4.0.1/e6115049b44a4c7029c6fda5692fdbf1814bd025}
     engines: {node: '>=24.3.0'}
-
-  '@giltayar/carmel-tools-club-service@4.2.6':
-    resolution: {integrity: sha512-K32SGHnzplCnU1OmicMuTIL/C/OQaJ2tB4ja0kTomxBvmdxdyPE3w6snMPF85y2+YSwUKlTR/1kgrJHiTzuX6Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-club-service/4.2.6/7ec41bcc5163aaab8a24920c0816465c199ba9c3}
-    engines: {node: '>=24.0.0'}
 
   '@giltayar/carmel-tools-google-sheets-integration@1.0.1':
     resolution: {integrity: sha512-C6oO0SkckkeZPC8tzb61H2eNswgnJV+ZYuKCjytu6A+2iMNbiFP4w/1d9bBiEFrBLXvtH+Cf+ZGQXGjTvR1N9Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-google-sheets-integration/1.0.1/a936a2a4281790c8a4d63f2a667abca2ad0267b4}
@@ -268,50 +267,50 @@ packages:
     resolution: {integrity: sha512-ldgiJ+VAhQCfIjeOgu8Kj5nSxds0ktPOSO9p4+0VDH2R2pLvQraaM5Oen2d7NxzMCm+Sn/vJT+mv2H5u6b/3fA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-XQAPlWU4tnYOSeBU1KWEJQMjca9837rsfPb/oh7CZPhC3qcmIztL3ZweB/b3HftD00kXlm1zHxA2rEZo/P5bxw==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-sLYVMJcUL/nWbuttSKeEjov1yCPjVKSUzJQLSBQexLCefAbUjDSog91LB/+6So82FhV9hWlgiqEJ7KzYCW6+yA==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-+Guk+uDcdwbi95AbNON5qZLzQmi8vbPEHUVgso6KLU2/qvOZyQcutEBk6uvR/4cxniKL4om4+vOwH0DtaoCj4g==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-zFsSYSm5Ko7bEaUgXCTHe/zb0nwB3fhTEMJXolAT87IGJ05PAkIHaDaODacb9BEJRrJzdHCQipbkhE3ZZsWgvQ==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-CpbWVKFrHj3lWdT2Na6YSorAh6+OEMGl9pSD/8O4PbkhHE+U6fbnsJwi10U0NYc597vSUm1n22qO3TBrriScNQ==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-4nZP2JaIrYqx15V6WWiwKgfUSfatB5Tz0Tw7tjE6H2LA8dhdQs8hFzQGHzaslOVPcx3352anCVMehjgEh+iKJg==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-PLAvL/EmMerEfBAh4sh6mEEQ5pXS8aeDeT73Svp7GqTz0zmwTwfiLoklonNucLLCz+8DZAycZ4gkCaoczGj2bQ==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-EL4183JV7254W2YnzBUurdnOa0VZmZp/vAAVApYTKTX57kUMM1rUZelvFzVt9Eg+QSgwnCwRkR0InRQVSDiqtA==}
     engines: {node: '>=20.6.0'}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-V/q+sjwL8kRq4VQrxJwcMcNTfBYsH+D28VEy+e6NUgU06N0KDPKQPWl4ww6//sEKZ0bvRBhpxunbQpOdq3y6JA==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-PXn6sjAStVFV9KjgmKCj6MrOi+ouVTtkJiU72zoLoejll+wT0xu3Hly4eRz5C+VKkWHXlaQvRV5E4Qcp57QWRA==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-xiLE2FpQmOijBy6sykqePPU+ekTTm1txEv67MWq7GCaLz6gaaQ2nysX98bm2LLA469prr9sX6JX3bNpW3Ipvhw==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-bblUodDySZOZqCXZm9pNpyu+UfJLb5OmxYeNYKi+k+T+1MgbtmGFYk+FbJwZug/7z/Q6h1h+y2ryJyAovgV/Rg==}
     engines: {node: '>=20.6.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-9HJ7t/nvgXHr3ZdIwiwd1RhVkQhiYyiPlASJRYbgN63bH/tiqpdlc/S2kYQCjBre9jeUpZTWqjWQEUL1eRoZmQ==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-ocMKolDiUa/g68NcTySq8+b/hM1g+pxxpwm+pST/TSsRJ95j7lbcGeXhAXFZZHT8IUwsQFrf8rK/kByGMrapxQ==}
     engines: {node: '>=20.6.0'}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20250807.1':
-    resolution: {integrity: sha512-mEnDgo8jJckbXlwL+rEnCw73A8PCeCNKZF7ChG+tfEGSwp2JfcS//2FPjxDUsfg0anwvnaCQs4xL6B4UBigl3Q==}
+  '@typescript/native-preview@7.0.0-dev.20250808.1':
+    resolution: {integrity: sha512-gOjZikd2y3obz7yDQjOEoVGpJW8xj8U24xeFa5zNYjCJ3wLP6dCEHP8ndIwhP3pCzDwgwTblaQGAtY/zCqE2TA==}
     engines: {node: '>=20.6.0'}
     hasBin: true
 
@@ -1422,12 +1421,6 @@ packages:
     resolution: {integrity: sha512-Re10+NauLTMCudc7T5WLFLAwDhQ0JWdrMK+9B2M8zR5hRExKmsRDCBA7/aV/pNJFltmBFO5BAMlQFi/vq3nKOg==}
     engines: {node: '>=6'}
 
-  temporal-polyfill@0.3.0:
-    resolution: {integrity: sha512-qNsTkX9K8hi+FHDfHmf22e/OGuXmfBm9RqNismxBrnSmZVJKegQ+HYYXT+R7Ha8F/YSm2Y34vmzD4cxMu2u95g==}
-
-  temporal-spec@0.3.0:
-    resolution: {integrity: sha512-n+noVpIqz4hYgFSMOSiINNOUOMFtV5cZQNCmmszA6GiVFVRt3G7AqVyhXjhCSmowvQn+NsGn+jMDMKJYHd3bSQ==}
-
   thread-stream@3.1.0:
     resolution: {integrity: sha512-OqyPZ9u96VohAyMfJykzmivOrY2wfMSf3C5TtFJVgN+Hm6aj+voFhlK+kZEIv2FBh1X6Xp3DlnCOfEQ3B2J86A==}
 
@@ -1618,20 +1611,6 @@ snapshots:
       '@giltayar/service-commons': 1.1.2
       execa: 9.6.0
 
-  '@giltayar/carmel-tools-club-service@4.2.6':
-    dependencies:
-      '@giltayar/carmel-tools-academy-integration': 2.2.0
-      '@giltayar/carmel-tools-cardcom-integration': 4.0.1
-      '@giltayar/carmel-tools-google-sheets-integration': 1.0.1
-      '@giltayar/carmel-tools-smoove-integration': 3.0.0
-      '@giltayar/carmel-tools-whatsapp-integration': 2.3.0
-      '@giltayar/functional-commons': 1.4.2
-      '@giltayar/service-commons': 1.1.2
-      pino: 9.8.0
-      temporal-polyfill: 0.3.0
-    transitivePeerDependencies:
-      - supports-color
-
   '@giltayar/carmel-tools-google-sheets-integration@1.0.1':
     dependencies:
       '@giltayar/functional-commons': 1.4.2
@@ -1792,36 +1771,36 @@ snapshots:
       '@typescript-eslint/types': 8.39.0
       eslint-visitor-keys: 4.2.1
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20250807.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250808.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20250807.1':
+  '@typescript/native-preview@7.0.0-dev.20250808.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250807.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250807.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250807.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250807.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250807.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250807.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250807.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250808.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250808.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250808.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250808.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250808.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250808.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250808.1
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
@@ -3075,12 +3054,6 @@ snapshots:
       '@pkgr/core': 0.2.9
 
   tapable@2.2.2: {}
-
-  temporal-polyfill@0.3.0:
-    dependencies:
-      temporal-spec: 0.3.0
-
-  temporal-spec@0.3.0: {}
 
   thread-stream@3.1.0:
     dependencies:

@@ -1,0 +1,2 @@
+overrides:
+  '@giltayar/carmel-tools-club-service': link:../club-service
