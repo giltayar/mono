@@ -5,7 +5,7 @@ import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-inte
 import {createWhatsAppIntegrationService as createWhatsAppIntegrationService_} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {ClubInformation} from './clubs/clubs.ts'
 import * as z from 'zod'
-import {pino} from 'pino'
+import {type Logger} from 'pino'
 import {createGoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
 
 export function createWhatsAppIntegrationService() {
@@ -18,7 +18,7 @@ export function createWhatsAppIntegrationService() {
   })
 }
 
-export async function createClubServiceFromClub(club: ClubInformation, logger: pino.Logger) {
+export async function createClubServiceFromClub(club: ClubInformation, logger: Logger) {
   const env = loadEnvironmentVariables()
 
   const whatsappService = createWhatsAppIntegrationService()

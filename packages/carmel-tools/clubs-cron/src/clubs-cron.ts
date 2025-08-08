@@ -1,7 +1,7 @@
 import {createClubServiceFromClub} from './create-club-service.ts'
 import * as clubs from './clubs/clubs.ts'
 import type {Clubs} from './clubs/club-types.ts'
-import {pino} from 'pino'
+import pino from 'pino'
 
 const cronBatch = crypto.randomUUID()
 
@@ -45,6 +45,6 @@ async function doOperation(
 
   await func().then(
     () => logger.info(`end-${name}`),
-    (err) => logger.error(`end-${name}`, {err}),
+    (err) => logger.error({err}, `end-${name}`),
   )
 }
