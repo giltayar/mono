@@ -9,7 +9,7 @@ import {
 } from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {ClubInformation} from './clubs/clubs.ts'
 import * as z from 'zod'
-import {pino} from 'pino'
+import pino from 'pino'
 
 const environmentVariablesSchema = z.object({
   GREEN_API_KEY: z.string(),

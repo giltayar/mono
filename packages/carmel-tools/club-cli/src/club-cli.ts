@@ -8,6 +8,7 @@ import yargs from 'yargs'
 import type {Clubs} from './clubs/club-types.ts'
 import {
   removeLeavingFromWhatsappGroup,
+  syncWhatsappGroupWithClub,
   transferFromClubToLeaving,
 } from './one-offs/transfer-leaving.ts'
 
@@ -106,6 +107,17 @@ await yargs()
       const whatsapp = await createWhatsAppIntegrationService()
 
       await removeLeavingFromWhatsappGroup(smoove, whatsapp)
+    },
+  )
+  .command(
+    'one-off-sync-whatsapp-group-with-club',
+    'Sync the WhatsApp group with the club members',
+    () => {},
+    async (args) => {
+      const smoove = await createSmooveIntegrationService(clubs[args.club])
+      const whatsapp = await createWhatsAppIntegrationService()
+
+      await syncWhatsappGroupWithClub(smoove, whatsapp, clubs[args.club])
     },
   )
   .strict()

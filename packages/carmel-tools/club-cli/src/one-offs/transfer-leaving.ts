@@ -1,7 +1,7 @@
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
-import {exponential} from '../clubs/clubs.ts'
+import {exponential, type ClubInformation} from '../clubs/clubs.ts'
 
 const smooveClubId = 931893
 const smooveContinuingId = 1060451
@@ -41,5 +41,26 @@ export async function removeLeavingFromWhatsappGroup(
       exponential.whatsappGroupId!,
       humanIsraeliPhoneNumberToWhatsAppId(member.telephone),
     )
+  }
+}
+
+export async function syncWhatsappGroupWithClub(
+  smoove: SmooveIntegrationService,
+  whatsapp: WhatsAppIntegrationService,
+  club: ClubInformation,
+) {
+  const membersInClub = await smoove.fetchContactsOfList(club.subscribedSmooveListId)
+  const membersPhoneNumbers = new Set(
+    membersInClub.map((member) => humanIsraeliPhoneNumberToWhatsAppId(member.telephone)),
+  )
+
+  const rawList = await whatsapp.listParticipantsInGroup(club.whatsappGroupId!)
+
+  const listOfPhoneNumbers = new Set(rawList)
+
+  for (const member of listOfPhoneNumbers) {
+    if (membersPhoneNumbers.has(member)) {
+      console.log(`Huh?`, member, `is in the WhatsApp group but not in the club`)
+    }
   }
 }
