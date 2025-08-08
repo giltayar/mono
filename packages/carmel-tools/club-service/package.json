@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-club-service",
-  "version": "4.2.7",
+  "version": "4.2.8",
   "type": "module",
   "exports": {
     ".": {
@@ -50,6 +50,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.3.0",
     "npm-run-all": "^4.1.5",
+    "pino": "^9.8.0",
     "prettier": "^3.6.2",
     "typescript-eslint": "^8.39.0"
   },
@@ -61,7 +62,6 @@
     "@giltayar/carmel-tools-whatsapp-integration": "^2.3.0",
     "@giltayar/functional-commons": "^1.4.2",
     "@giltayar/service-commons": "^1.1.2",
-    "pino": "^9.8.0",
     "temporal-polyfill": "^0.3.0"
   },
   "packageManager": "pnpm@10.14.0"
