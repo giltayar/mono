@@ -1,15 +1,19 @@
 import fs from 'fs'
 import path from 'path'
-import {getDependencies} from './get-dependencies.js'
+import {fileURLToPath} from 'node:url'
+import {getDependencies} from './get-dependencies.ts'
 
-/**
- * @param {string} fileOrDir
- * @returns {Record<string, import('./global.js').DependencyInformation>}
- */
-export function getDependencyInformation(fileOrDir) {
-  const dir = path.resolve(
-    fs.statSync(fileOrDir).isDirectory() ? fileOrDir : path.dirname(fileOrDir),
-  )
+export type DependencyInformation = {
+  version: string
+  cleanName: string
+  envName: string
+}
+
+export function getDependencyInformation(
+  fileOrDir: URL | string,
+): Record<string, DependencyInformation> {
+  const fsPath = typeof fileOrDir === 'string' ? fileOrDir : fileURLToPath(fileOrDir)
+  const dir = path.resolve(fs.statSync(fsPath).isDirectory() ? fsPath : path.dirname(fsPath))
   try {
     const packageJsonLocation = path.join(dir, 'package.json')
     const packageJsonAsString = fs.readFileSync(packageJsonLocation, 'utf-8')
@@ -21,14 +25,14 @@ export function getDependencyInformation(fileOrDir) {
         ...packageJson.devDependencies,
         ...packageJson.peerDependencies,
       })
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof SyntaxError) {
         throw new Error(`package.json at ${packageJsonLocation} is not JSON-parseable`)
       } else {
         throw error
       }
     }
-  } catch (/**@type {any}*/ error) {
+  } catch (error: any) {
     if (error.code === 'ENOENT') {
       return getDependencyInformation(path.dirname(dir))
     } else {

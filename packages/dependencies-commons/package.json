@@ -1,32 +1,38 @@
 {
   "name": "@giltayar/dependencies-commons",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "",
   "type": "module",
-  "exports": "./src/dependencies-commons.js",
-  "main": "./src/dependencies-commons.js",
-  "types": "./types/src/dependencies-commons.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/dependencies-commons.d.ts",
+      "import": "./dist/src/dependencies-commons.js"
+    },
+    "./version-of": {
+      "import": "./dist/src/version-of.js",
+      "types": "./dist/src/version-of.d.ts"
+    }
+  },
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=24.0.0"
   },
   "files": [
     "src",
-    "types"
+    "dist"
   ],
   "publishConfig": {
     "access": "public"
   },
   "bin": {
-    "version-of": "./src/version-of.js"
+    "version-of": "./src/version-of.ts"
   },
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
-    "test:mocha-parallel": "npm run mocha -- --parallel",
-    "test:eslint": "eslint --color --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
-    "mocha": "mocha --no-timeouts --exit --color 'test/unit/*.test.js' 'test/integ/*.test.js' 'test/e2e/*.test.js'"
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
     "javascript",
@@ -40,23 +46,22 @@
     "type": "git"
   },
   "dependencies": {
-    "@giltayar/functional-commons": "^1.1.13"
+    "@giltayar/functional-commons": "^1.4.0"
   },
   "devDependencies": {
-    "@giltayar/scripting-commons": "^1.3.6",
-    "@types/chai": "^4.3.5",
-    "@types/chai-subset": "^1.3.3",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "^18.16.16",
-    "chai": "^4.3.7",
-    "chai-subset": "^1.6.0",
-    "eslint": "^8.41.0",
-    "eslint-plugin-mocha-no-only": "^1.1.1",
-    "eslint-plugin-n": "^15.7.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "mocha": "^10.2.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^24.4.0",
+    "@typescript/native-preview": "7.0.0-dev.20250915.1",
+    "eslint": "^9.35.0",
+    "eslint-plugin-n": "^17.22.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "execa": "^9.6.0",
+    "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.8.8",
-    "typescript": "^4.9.5"
-  }
+    "prettier": "^3.6.2",
+    "type-fest": "^5.0.0",
+    "typescript-eslint": "^8.43.0"
+  },
+  "packageManager": "pnpm@10.16.1"
 }

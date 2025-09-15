@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {getDependencyInformation} from './dependencies-commons.js'
+import {getDependencyInformation} from './dependencies-commons.ts'
 
 const [pkg, cwd = process.cwd()] = process.argv.slice(2, 4)
 

@@ -1,14 +1,14 @@
 import {mapObject, throw_} from '@giltayar/functional-commons'
 import fs from 'fs'
 import path from 'path'
-import {cleanName, envName} from './names.js'
+import {cleanName, envName} from './names.ts'
 
-/**
- * @param {string} packageDir
- * @param {Record<string, string>} versionInfo
- * @returns {Record<string, import('./global.js').DependencyInformation>}
- */
-export function getDependencies(packageDir, versionInfo) {
+import type {DependencyInformation} from './dependencies-commons.ts'
+
+export function getDependencies(
+  packageDir: string,
+  versionInfo: Record<string, string>,
+): Record<string, DependencyInformation> {
   return mapObject(versionInfo, (k, _v) => [
     k,
     {
@@ -19,11 +19,7 @@ export function getDependencies(packageDir, versionInfo) {
   ])
 }
 
-/**
- * @param {string} basePackageDir
- * @param {string} packageName
- */
-function getVersion(basePackageDir, packageName) {
+function getVersion(basePackageDir: string, packageName: string) {
   const packageDir = path.join(basePackageDir, 'node_modules', packageName)
   const versionFileLocation = path.join(packageDir, '.version-info.json')
   const packageJsonLocation = path.join(packageDir, 'package.json')
@@ -35,13 +31,12 @@ function getVersion(basePackageDir, packageName) {
       JSON.parse(versionFile).version ??
       throw_(new Error(`version file at ${versionFileLocation} has no "version" field`))
     )
-  } catch (/**@type {any}*/ error) {
+  } catch (error: any) {
     if (error instanceof SyntaxError) {
       throw new Error(`version file at ${versionFileLocation} is not JSON-parseable`)
     } else if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') {
       throw error
     } else {
-      // continue to package.json
     }
   }
 
@@ -52,7 +47,7 @@ function getVersion(basePackageDir, packageName) {
       JSON.parse(packageJsonAsString).version ??
       `unknown version because package.json at ${packageJsonLocation} has no "version" field`
     )
-  } catch (/**@type {any}*/ error) {
+  } catch (error: any) {
     if (error instanceof SyntaxError) {
       throw new Error(`package.json at ${packageJsonLocation} is not JSON-parseable`)
     } else if (error.code === 'ENOENT' || error.code === 'ENOTDIR') {
