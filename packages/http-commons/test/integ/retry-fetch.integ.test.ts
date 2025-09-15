@@ -1,92 +1,86 @@
 import {makeError, throw_} from '@giltayar/functional-commons'
+import {describe, it, before, after} from 'node:test'
+import assert from 'node:assert'
 import {presult} from '@giltayar/promise-commons'
-import chai from 'chai'
 import http from 'http'
-import {describe, it, before, after} from '@giltayar/mocha-commons'
-import {fetchAsText, retryFetch} from '../../src/http-commons.js'
-const {expect} = chai
+import {fetchAsText, retryFetch} from '@giltayar/http-commons'
 
 describe('retryFetch', function () {
   describe('real live server', () => {
-    /** @type {{server: () => http.Server}} */
-    const {server} = before(async () => {
-      return {
-        server: await new Promise((resolve) => {
-          const server = http
-            .createServer((req, res) => {
-              if (req.url === '/404') {
-                res.statusCode = 404
-                res.end('')
-              } else if (req.url === '/500') {
-                res.statusCode = 500
-                res.end('bodybody')
-              } else if (req.url === '/socketkill') {
-                const socket = /**@type {import('net').Socket}*/ (res.socket)
-                socket.destroy()
-              } else {
-                res.end('')
-              }
-            })
-            .listen(0, () => resolve(server))
-        }),
-      }
+    let server: http.Server
+
+    before(async () => {
+      server = await new Promise((resolve) => {
+        const server = http
+          .createServer((req, res) => {
+            if (req.url === '/404') {
+              res.statusCode = 404
+              res.end('')
+            } else if (req.url === '/500') {
+              res.statusCode = 500
+              res.end('bodybody')
+            } else if (req.url === '/socketkill') {
+              const socket = res.socket
+              socket!.destroy()
+            } else {
+              res.end('')
+            }
+          })
+          .listen(0, () => resolve(server))
+      })
     })
     after(() =>
-      server() ? new Promise((resolve) => server()?.close(resolve)) : Promise.resolve(undefined),
+      server ? new Promise((resolve) => server.close(resolve)) : Promise.resolve(undefined),
     )
 
     it('should not retry on 404', async () => {
-      // @ts-expect-error
-      const url = `http://localhost:${server().address().port}`
+      //@ts-expect-error this is OK
+      const url = `http://localhost:${server!.address().port}`
       let count = 0
-      /** @param {Parameters<fetchAsText>} args */
-      const f = (...args) => (++count, fetchAsText(...args))
+      const f = (...args: Parameters<typeof fetchAsText>) => (++count, fetchAsText(...args))
 
       const [err] = await presult(retryFetch(() => f(`${url}/404`), {retries: 4, sleepTime: 0}))
 
-      expect(err.status).to.equal(404)
-      expect(count).to.equal(1)
+      assert.strictEqual((err as any).status, 404)
+      assert.strictEqual(count, 1)
     })
 
     it('should retry on 500', async () => {
-      // @ts-expect-error
-      const url = `http://localhost:${server().address().port}`
+      //@ts-expect-error this is OK
+      const url = `http://localhost:${server.address().port}`
       let count = 0
-      /** @param {Parameters<fetchAsText>} args */
-      const f = (...args) => (++count, fetchAsText(...args))
+      const f = (...args: Parameters<typeof fetchAsText>) => (++count, fetchAsText(...args))
 
       const [err] = await presult(retryFetch(() => f(`${url}/500`), {retries: 1, sleepTime: 0}))
 
-      expect(err.status).to.equal(500)
-      expect(err.statusText).to.equal('Internal Server Error')
-      expect(err.headers).to.have.deep.property('connection', 'keep-alive')
-      expect(count).to.equal(2)
-      expect(err.body).to.equal('bodybody')
+      assert.strictEqual((err as any).status, 500)
+      assert.strictEqual((err as any).statusText, 'Internal Server Error')
+      assert.strictEqual((err as any).headers.connection, 'keep-alive')
+      assert.strictEqual(count, 2)
+      assert.strictEqual((err as any).body, 'bodybody')
     })
 
     it('should retry on ECONNREFUSED', async () => {
-      // @ts-expect-error
-      const url = `http://localhost:${server().address().port + ((Math.random() * 100) | 0) + 1}`
+      //@ts-expect-error this is OK () => {
+      const url = `http://localhost:${server.address().port + ((Math.random() * 100) | 0) + 1}`
       let count = 0
-      /** @param {Parameters<fetchAsText>} args */
-      const f = (...args) => (++count, fetchAsText(...args))
+      const f = (...args: Parameters<typeof fetchAsText>) => (++count, fetchAsText(...args))
 
       const [err] = await presult(retryFetch(() => f(`${url}/500`), {retries: 1, sleepTime: 0}))
 
-      expect(err.code).to.equal('ECONNREFUSED')
-      expect(count).to.equal(2)
+      assert.strictEqual((err as any).code, 'ECONNREFUSED')
+      assert.strictEqual(count, 2)
     })
 
     it('should retry on ENOTFOUND', async () => {
       const url = `http://this-does-not-exist.really}`
       let count = 0
-      /** @param {Parameters<fetchAsText>} args */
-      const f = (...args) => (++count, fetchAsText(...args))
+      const f = (...args: Parameters<typeof fetchAsText>) => (++count, fetchAsText(...args))
 
       const [err] = await presult(retryFetch(() => f(url), {retries: 1, sleepTime: 0}))
 
-      expect(err.code).to.equal('ENOTFOUND')
-      expect(count).to.equal(2)
+      assert.strictEqual((err as any).code, 'ENOTFOUND')
+      assert.strictEqual(count, 2)
     })
   })
 
@@ -97,8 +91,8 @@ describe('retryFetch', function () {
 
       const result = await retryFetch(f, {retries: 0, sleepTime: 0})
 
-      expect(result).to.equal(1)
-      expect(count).to.equal(1)
+      assert.strictEqual(result, 1)
+      assert.strictEqual(count, 1)
     })
 
     it('should not retry if retries === 0 and exception', async () => {
@@ -108,8 +102,8 @@ describe('retryFetch', function () {
 
       const [err] = await presult(retryFetch(f, {retries: 0, sleepTime: 0}))
 
-      expect(err).to.equal(expectedError)
-      expect(count).to.equal(1)
+      assert.deepStrictEqual(err, expectedError)
+      assert.strictEqual(count, 1)
     })
 
     it('should retry n times if function always throws', async () => {
@@ -119,8 +113,8 @@ describe('retryFetch', function () {
 
       const [err] = await presult(retryFetch(f, {retries: 4, sleepTime: 0}))
 
-      expect(err).to.equal(expectedError)
-      expect(count).to.equal(5)
+      assert.deepStrictEqual(err, expectedError)
+      assert.strictEqual(count, 5)
     })
 
     it('should retry n times if function throws n times', async () => {
@@ -130,8 +124,8 @@ describe('retryFetch', function () {
 
       const res = await retryFetch(f, {retries: 3, sleepTime: 0})
 
-      expect(res).to.equal(4)
-      expect(count).to.equal(4)
+      assert.strictEqual(res, 4)
+      assert.strictEqual(count, 4)
     })
   })
 
@@ -143,9 +137,10 @@ describe('retryFetch', function () {
 
       const start = Date.now()
       await presult(retryFetch(f, {retries: 1, sleepTime: 500}))
+      const duration = Date.now() - start
 
-      expect(count).to.equal(2)
-      expect(Date.now() - start).to.be.within(450, 550)
+      assert.strictEqual(count, 2)
+      assert(duration < 550 && duration > 450, `${duration} should be between 450 and 550`)
     })
 
     it('should backoff sleep time between retries', async () => {
@@ -155,9 +150,10 @@ describe('retryFetch', function () {
 
       const start = Date.now()
       await presult(retryFetch(f, {retries: 3, sleepTime: 100, backoff: 2}))
+      const duration = Date.now() - start
 
-      expect(count).to.equal(4)
-      expect(Date.now() - start).to.be.within(650, 800)
+      assert.strictEqual(count, 4)
+      assert(duration < 800 && duration > 650, `${duration} should be between 650 and 800`)
     })
   })
 
@@ -170,8 +166,8 @@ describe('retryFetch', function () {
 
       const [err] = await presult(retryFetch(f, {retries: 1, idempotent: true, sleepTime: 0}))
 
-      expect(err).to.equal(expectedError)
-      expect(count).to.equal(2)
+      assert.deepStrictEqual(err, expectedError)
+      assert.strictEqual(count, 2)
     })
 
     it('should not retry on unknown error if !idempotent', async () => {
@@ -182,8 +178,8 @@ describe('retryFetch', function () {
 
       const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-      expect(err).to.equal(expectedError)
-      expect(count).to.equal(1)
+      assert.deepStrictEqual(err, expectedError)
+      assert.strictEqual(count, 1)
     })
 
     for (const errCode of ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'request-timeout']) {
@@ -199,8 +195,8 @@ describe('retryFetch', function () {
 
         const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-        expect(err).to.equal(expectedError)
-        expect(count).to.equal(2)
+        assert.deepStrictEqual(err, expectedError)
+        assert.strictEqual(count, 2)
       })
 
       it(`should retry on ${errCode} if idempotent`, async () => {
@@ -211,8 +207,8 @@ describe('retryFetch', function () {
 
         const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-        expect(err).to.equal(expectedError)
-        expect(count).to.equal(2)
+        assert.deepStrictEqual(err, expectedError)
+        assert.strictEqual(count, 2)
       })
 
       for (const status of [300, 301, 400, 401]) {
@@ -228,8 +224,8 @@ describe('retryFetch', function () {
 
           const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-          expect(err).to.equal(expectedError)
-          expect(count).to.equal(1)
+          assert.deepStrictEqual(err, expectedError)
+          assert.strictEqual(count, 1)
         })
 
         it(`should not retry on HTTP status ${status} if idempotent`, async () => {
@@ -244,8 +240,8 @@ describe('retryFetch', function () {
 
           const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-          expect(err).to.equal(expectedError)
-          expect(count).to.equal(1)
+          assert.deepStrictEqual(err, expectedError)
+          assert.strictEqual(count, 1)
         })
       }
 
@@ -262,8 +258,8 @@ describe('retryFetch', function () {
 
           const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-          expect(err).to.equal(expectedError)
-          expect(count).to.equal(2)
+          assert.deepStrictEqual(err, expectedError)
+          assert.strictEqual(count, 2)
         })
 
         it(`should retry on HTTP status ${status} if idempotent`, async () => {
@@ -278,8 +274,8 @@ describe('retryFetch', function () {
 
           const [err] = await presult(retryFetch(f, {retries: 1, idempotent: false, sleepTime: 0}))
 
-          expect(err).to.equal(expectedError)
-          expect(count).to.equal(2)
+          assert.deepStrictEqual(err, expectedError)
+          assert.strictEqual(count, 2)
         })
       }
     }
