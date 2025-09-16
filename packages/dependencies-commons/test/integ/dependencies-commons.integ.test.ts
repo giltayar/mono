@@ -32,8 +32,8 @@ describe('dependencies-commons (integ)', function () {
     },
   }
 
-  it('should find the depdencies for a and get the information', () => {
-    const got = getDependencyInformation(
+  it('should find the depdencies for a and get the information', async () => {
+    const got = await getDependencyInformation(
       new URL('fixtures/package/abc/def/foo.txt', import.meta.url),
     )
     for (const k of Object.keys(dependenciesInFixtures)) {
@@ -50,16 +50,16 @@ describe('dependencies-commons (integ)', function () {
     }
   })
 
-  it('should find the depdencies for a dir and get the information', () => {
-    const got = getDependencyInformation(new URL('fixtures/package/abc/', import.meta.url))
+  it('should find the depdencies for a dir and get the information', async () => {
+    const got = await getDependencyInformation(new URL('fixtures/package/abc/', import.meta.url))
     for (const k of Object.keys(dependenciesInFixtures)) {
       const actual = (got as any)[k]
       assert.ok(actual)
     }
   })
 
-  it('should find the depdencies for a and get the information', () => {
-    const got = getDependencyInformation(
+  it('should find the depdencies for a and get the information', async () => {
+    const got = await getDependencyInformation(
       new URL('fixtures/package/abc/def/foo.txt', import.meta.url),
     )
     for (const k of Object.keys(dependenciesInFixtures)) {
@@ -67,24 +67,24 @@ describe('dependencies-commons (integ)', function () {
     }
   })
 
-  it('should find the depdencies for the same dir and get the information', () => {
-    const got = getDependencyInformation(new URL('fixtures/package', import.meta.url))
+  it('should find the depdencies for the same dir and get the information', async () => {
+    const got = await getDependencyInformation(new URL('fixtures/package', import.meta.url))
     for (const k of Object.keys(dependenciesInFixtures)) {
       assert.ok((got as any)[k])
     }
   })
 
-  it('should find the depdencies for a file in the same dir and get the information', () => {
-    const got = getDependencyInformation(new URL('fixtures/package/foo.txt', import.meta.url))
+  it('should find the depdencies for a file in the same dir and get the information', async () => {
+    const got = await getDependencyInformation(new URL('fixtures/package/foo.txt', import.meta.url))
     for (const k of Object.keys(dependenciesInFixtures)) {
       assert.ok((got as any)[k])
     }
   })
 
-  it('should fail if package.json is bad', () => {
+  it('should fail if package.json is bad', async () => {
     let threw = false
     try {
-      getDependencyInformation(new URL('fixtures/bad-package', import.meta.url))
+      await getDependencyInformation(new URL('fixtures/bad-package', import.meta.url))
     } catch (err: any) {
       threw = true
       assert.match(err.message, /not JSON-parseable/)

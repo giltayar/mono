@@ -7,7 +7,7 @@ if (!pkg) {
   throw new Error('pkg2 must be specified')
 }
 
-const dependencyInformation = getDependencyInformation(process.cwd())
+const dependencyInformation = await getDependencyInformation(process.cwd())
 
 const pkgInfo = dependencyInformation[pkg]
 

@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 import {fileURLToPath} from 'node:url'
 import {getDependencies} from './get-dependencies.ts'
@@ -9,14 +9,14 @@ export type DependencyInformation = {
   envName: string
 }
 
-export function getDependencyInformation(
+export async function getDependencyInformation(
   fileOrDir: URL | string,
-): Record<string, DependencyInformation> {
+): Promise<Record<string, DependencyInformation>> {
   const fsPath = typeof fileOrDir === 'string' ? fileOrDir : fileURLToPath(fileOrDir)
-  const dir = path.resolve(fs.statSync(fsPath).isDirectory() ? fsPath : path.dirname(fsPath))
+  const dir = path.resolve((await fs.stat(fsPath)).isDirectory() ? fsPath : path.dirname(fsPath))
   try {
     const packageJsonLocation = path.join(dir, 'package.json')
-    const packageJsonAsString = fs.readFileSync(packageJsonLocation, 'utf-8')
+    const packageJsonAsString = await fs.readFile(packageJsonLocation, 'utf-8')
 
     try {
       const packageJson = JSON.parse(packageJsonAsString)
