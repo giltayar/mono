@@ -6,33 +6,31 @@ import {getDependencyInformation} from '@giltayar/dependencies-commons'
 import retry from 'p-retry'
 import {$} from 'execa'
 import {fetch} from '@giltayar/http-commons'
-/**
- *
- * @param {string} dockerComposeFile
- * @param {{
- *  containerCleanup?: boolean,
- *  forceRecreate?: boolean,
- *  env?: Record<string, string | undefined>,
- *  variation?: string
- * }} options
- * @returns {Promise<{
- *  teardown: () => Promise<void>,
- *  findAddress: (
- *    serviceName: string,
- *    port?: number = 80,
- *    options?: {
- *      serviceIndex?: number,
- *      healthCheck?: (address: string) => Promise<void>}) => Promise<string>
- *  }>}
- */
+
+export type RunDockerComposeOptions = {
+  containerCleanup?: boolean
+  forceRecreate?: boolean
+  env?: Record<string, string | undefined>
+  variation?: string
+}
+
+export type FindAddressOptions = {
+  serviceIndex?: number
+  healthCheck?: (address: string) => Promise<void>
+  healthCheckTimeoutSec?: number
+}
+
 export async function runDockerCompose(
-  dockerComposeFile,
-  {containerCleanup, forceRecreate, env, variation} = {},
+  dockerComposeFile: string,
+  {containerCleanup, forceRecreate, env, variation}: RunDockerComposeOptions = {},
 ) {
   const projectName = determineProjectName()
-  const addresses = /**@type{Map<string, string>}*/ new Map()
+  const addresses = new Map<string, string>()
   const envForDependencies = Object.fromEntries(
-    Object.values(getDependencyInformation(dockerComposeFile)).map((x) => [x.envName, x.version]),
+    Object.values(await getDependencyInformation(dockerComposeFile)).map((x) => [
+      x.envName,
+      x.version,
+    ]),
   )
   const finalEnv = env
     ? {...envForDependencies, ...env, PATH: process.env.PATH}
@@ -63,23 +61,18 @@ export async function runDockerCompose(
     })`docker compose --file ${dockerComposeFile} --project-name ${projectName} down --volumes --remove-orphans`
   }
 
-  /**
-   * @param {string} serviceName
-   * @param {number} [port=80]
-   * @param {{
-   *  serviceIndex?: number,
-   *  healthCheck?: (address: string) => Promise<void>,
-   *  healthCheckTimeoutSec?: number
-   * }} options
-   */
   async function findAddress(
-    serviceName,
+    serviceName: string,
     port = 80,
-    {serviceIndex = 1, healthCheck = httpHealthCheck, healthCheckTimeoutSec = 60} = {},
+    {
+      serviceIndex = 1,
+      healthCheck = httpHealthCheck,
+      healthCheckTimeoutSec = 60,
+    }: FindAddressOptions = {},
   ) {
     const serviceKey = `${serviceName}:${port}:${serviceIndex}`
     if (addresses.has(serviceKey)) {
-      return addresses.get(serviceKey)
+      return addresses.get(serviceKey)!
     }
     const {stdout: addressOutput} = await $({
       cwd: path.dirname(dockerComposeFile),
@@ -106,12 +99,11 @@ export async function runDockerCompose(
   }
 }
 
-/**
- * @param {string} address
- * @param {(address: string) => Promise<void>} healthCheck
- * @param {number} healthCheckTimeoutSec
- */
-async function waitUntilHealthy(address, healthCheck, healthCheckTimeoutSec) {
+async function waitUntilHealthy(
+  address: string,
+  healthCheck: (address: string) => Promise<void>,
+  healthCheckTimeoutSec: number,
+) {
   await retry(async () => await healthCheck(address), {
     maxRetryTime: healthCheckTimeoutSec * 1000,
     maxTimeout: 250,
@@ -120,19 +112,13 @@ async function waitUntilHealthy(address, healthCheck, healthCheckTimeoutSec) {
   })
 }
 
-/**
- * @param {string} address
- */
-export async function httpHealthCheck(address) {
+export async function httpHealthCheck(address: string) {
   const response = await fetch(`http://${address}/`)
 
   await response.arrayBuffer()
 }
 
-/**
- * @param {string} address
- */
-export async function tcpHealthCheck(address) {
+export async function tcpHealthCheck(address: string) {
   const [host, port] = address.split(':')
 
   const socket = net.createConnection(parseInt(port, 10), host)

@@ -1,14 +1,10 @@
 import path from 'path'
-import mocha from 'mocha'
-const {describe, it} = mocha
-import chai from 'chai'
-const {expect, use} = chai
+import {describe, it} from 'node:test'
+import assert from 'node:assert'
 import {fetchAsText} from '@giltayar/http-commons'
 import {presult} from '@giltayar/promise-commons'
-import chaiSubset from 'chai-subset'
-use(chaiSubset)
 
-import {runDockerCompose, tcpHealthCheck} from '../../src/docker-compose-testkit.js'
+import {runDockerCompose, tcpHealthCheck} from '../../src/docker-compose-testkit.ts'
 
 const __filename = new URL(import.meta.url).pathname
 const __dirname = path.dirname(__filename)
@@ -30,8 +26,9 @@ describe('docker-compose-testkit (integ)', function () {
     const nginx2Address = await findAddress('nginx2')
     await findAddress('postgres', 5432, {healthCheck: tcpHealthCheck})
 
-    expect(await fetchAsText(`http://${nginxAddress}`)).to.include('Welcome to nginx')
-    expect(await fetchAsText(`http://${nginx2Address}`)).to.equal(
+    assert.match(await fetchAsText(`http://${nginxAddress}`), /Welcome to nginx/)
+    assert.strictEqual(
+      await fetchAsText(`http://${nginx2Address}`),
       'This content will be available if the CONTENT_FOLDER was set',
     )
 
@@ -44,9 +41,9 @@ describe('docker-compose-testkit (integ)', function () {
 
     const nginxAddress2 = await findAddress2('nginx')
 
-    expect(nginxAddress2).to.equal(nginxAddress)
+    assert.strictEqual(nginxAddress2, nginxAddress)
 
-    expect(await fetchAsText(`http://${nginxAddress2}`)).to.include('Welcome to nginx')
+    assert.match(await fetchAsText(`http://${nginxAddress2}`), /Welcome to nginx/)
 
     await teardown2()
 
@@ -57,19 +54,21 @@ describe('docker-compose-testkit (integ)', function () {
 
     const nginxAddress3 = await findAddress3('nginx')
 
-    expect(nginxAddress3).to.not.equal(nginxAddress2)
+    assert.notStrictEqual(nginxAddress3, nginxAddress2)
 
-    expect(await fetchAsText(`http://${nginxAddress3}`)).to.include('Welcome to nginx')
+    assert.match(await fetchAsText(`http://${nginxAddress3}`), /Welcome to nginx/)
 
-    expect(await presult(fetchAsText(`http://${nginxAddress2}`))).to.containSubset([
-      {code: 'ECONNREFUSED'},
-    ])
+    assert.strictEqual(
+      (await presult<string, {code: string}>(fetchAsText(`http://${nginxAddress2}`)))[0]?.code,
+      'ECONNREFUSED',
+    )
 
     await teardown3()
 
-    expect(await presult(fetchAsText(`http://${nginxAddress3}`))).to.containSubset([
-      {code: 'ECONNREFUSED'},
-    ])
+    assert.strictEqual(
+      (await presult<string, {code: string}>(fetchAsText(`http://${nginxAddress3}`)))[0]?.code,
+      'ECONNREFUSED',
+    )
   })
 
   it('should work with multiple docker composes in parallel', async () => {
