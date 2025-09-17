@@ -1,17 +1,17 @@
 {
   "name": "@giltayar/functional-commons",
-  "version": "1.4.2",
+  "version": "2.0.0",
   "description": "",
   "type": "module",
   "main": "./src/functional-commons.js",
   "exports": {
     ".": {
       "types": "./dist/src/functional-commons.d.ts",
-      "import": "./src/functional-commons.js"
+      "import": "./dist/src/functional-commons.js"
     }
   },
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=24.0.0"
   },
   "files": [
     "src",
@@ -19,12 +19,11 @@
   ],
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf dist && tsc && cp src/*.d.ts dist/src",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
-    "mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
     "test:eslint": "eslint --max-warnings=0 .",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
-    "test:mocha": "npm run mocha"
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
     "nodejs",
@@ -43,19 +42,16 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.30.1",
-    "@types/chai": "^5.2.2",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^24.0.12",
-    "chai": "^5.2.1",
-    "eslint": "^9.30.1",
-    "eslint-plugin-mocha-no-only": "^1.2.0",
-    "eslint-plugin-n": "^17.21.0",
-    "eslint-plugin-prettier": "^5.5.1",
-    "globals": "^16.3.0",
-    "mocha": "^11.7.1",
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^24.3.3",
+    "@typescript/native-preview": "7.0.0-dev.20250913.1",
+    "eslint": "^9.35.0",
+    "eslint-plugin-n": "^17.21.3",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript": "^5.8.3"
+    "type-fest": "^5.0.0",
+    "typescript-eslint": "^8.43.0"
   }
 }

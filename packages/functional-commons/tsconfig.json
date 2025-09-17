@@ -1,23 +1,24 @@
 {
   "compilerOptions": {
-    "lib": ["es2020"],
-    "target": "ES2020",
-    "moduleResolution": "node",
-    "module": "commonjs",
+    "lib": ["ESNext"],
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "strict": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "declaration": true,
-    "sourceMap": false,
+    "sourceMap": true,
+    "declarationMap": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "allowJs": true,
-    "checkJs": true,
-    "emitDeclarationOnly": true,
+    "rootDir": ".",
     "declarationDir": "dist",
-    "maxNodeModuleJsDepth": 0,
-    "declarationMap": true
+    "outDir": "dist",
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*.js", "test/**/*.js"],
-  "exclude": ["node_modules"],
-  "typeAcquisition": {"enable": true}
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules"]
 }
