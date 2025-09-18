@@ -1,25 +1,31 @@
 {
   "name": "@giltayar/promise-commons",
-  "version": "1.1.8",
+  "version": "2.0.0",
   "description": "",
   "type": "module",
-  "main": "./src/promise-commons.js",
-  "types": "./types/src/promise-commons.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/promise-commons.d.ts",
+      "import": "./dist/src/promise-commons.js"
+    }
+  },
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=24.0.0"
   },
   "files": [
     "src",
-    "types"
+    "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
-    "mocha": "mocha --no-timeouts --exit 'test/**/*.test.js'",
-    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
-    "test:mocha": "npm run mocha -- --parallel"
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
     "nodejs",
@@ -29,21 +35,23 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/functional-commons",
+    "directory": "packages/promise-commons",
     "type": "git"
   },
+  "dependencies": {},
   "devDependencies": {
-    "@types/chai": "^4.3.20",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^18.19.122",
-    "chai": "^4.5.0",
-    "eslint": "^8.57.1",
-    "eslint-plugin-mocha-no-only": "^1.2.0",
-    "eslint-plugin-n": "^15.7.0",
-    "eslint-plugin-prettier": "^4.2.5",
-    "mocha": "^10.8.2",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^24.3.3",
+    "@typescript/native-preview": "7.0.0-dev.20250913.1",
+    "eslint": "^9.35.0",
+    "eslint-plugin-n": "^17.21.3",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.8.8",
-    "typescript": "^4.9.5"
-  }
+    "prettier": "^3.6.2",
+    "type-fest": "^5.0.0",
+    "typescript-eslint": "^8.43.0"
+  },
+  "packageManager": "pnpm@8.6.6"
 }
