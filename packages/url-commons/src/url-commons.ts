@@ -1,28 +1,18 @@
 import assert from 'assert'
 
-/**
- *
- * @param {URL} url
- * @param {string} queryParam
- * @param {string} value
- *
- * @returns {URL}
- */
-export function addQueryParamToUrl(url, queryParam, value) {
-  url.searchParams.set(queryParam, value)
+export function addQueryParamToUrl(url: URL, queryParam: string, value: string): URL {
+  const ret = new URL(url)
 
-  return url
+  ret.searchParams.set(queryParam, value)
+
+  return ret
 }
 
-/**
- *
- * @param {string} pathSegment
- * @param {string} pathParam
- * @param {string|undefined} value
- *
- * @returns {string}
- */
-export function addPathParamToPathSegment(pathSegment, pathParam, value) {
+export function addPathParamToPathSegment(
+  pathSegment: string,
+  pathParam: string,
+  value: string | undefined,
+): string {
   const pathParams = parsePathSegment(pathSegment)
 
   pathParams[pathParam] = value
@@ -30,14 +20,8 @@ export function addPathParamToPathSegment(pathSegment, pathParam, value) {
   return buildPathSegmentFromPathParams(pathParams)
 }
 
-/**
- *
- * @param {string} pathSegment
- * @returns {Record<string, string|undefined>}
- */
-export function parsePathSegment(pathSegment) {
-  /**@type {Record<string, string>} */
-  const ret = Object.create(null)
+export function parsePathSegment(pathSegment: string): Record<string, string | undefined> {
+  const ret: Record<string, string> = Object.create(null)
 
   if (pathSegment === '') {
     return ret
@@ -57,13 +41,7 @@ export function parsePathSegment(pathSegment) {
   return ret
 }
 
-/**
- *
- * @param {Record<string, string|undefined>} params
- *
- * @returns {string}
- */
-export function buildPathSegmentFromPathParams(params) {
+export function buildPathSegmentFromPathParams(params: Record<string, string | undefined>): string {
   return Object.entries(params)
     .map(([name, value]) => {
       assert(
