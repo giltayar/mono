@@ -40,25 +40,24 @@
   },
   "dependencies": {
     "@giltayar/dependencies-commons": "^3.0.0",
-    "@giltayar/http-commons": "^3.0.0",
-    "@giltayar/scripting-commons": "^2.0.1",
+    "@giltayar/http-commons": "^3.1.1",
+    "@giltayar/scripting-commons": "^2.0.0",
     "execa": "^9.6.0",
     "p-retry": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
-    "@giltayar/promise-commons": "^1.1.8",
-    "@types/node": "^24.5.0",
-    "@typescript/native-preview": "7.0.0-dev.20250915.1",
+    "@giltayar/promise-commons": "^2.0.0",
+    "@types/node": "^24.5.2",
+    "@typescript/native-preview": "7.0.0-dev.20250919.1",
     "eslint": "^9.35.0",
-    "eslint-plugin-n": "^17.23.0",
+    "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "type-fest": "^5.0.0",
-    "typescript-eslint": "^8.44.0"
+    "typescript-eslint": "^8.43.0"
   },
-  "packageManager": "pnpm@10.16.1"
+  "packageManager": "pnpm@10.17.0"
 }
