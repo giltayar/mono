@@ -31,10 +31,10 @@
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
-  "homepage": "https://github.com/giltayar/mono/tree/master/packages/functional-commons",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/commons/functional-commons",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/functional-commons"
+    "directory": "packages/commons/functional-commons"
   },
   "publishConfig": {
     "access": "public",

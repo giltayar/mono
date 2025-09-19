@@ -35,7 +35,7 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/docker-compose-testkit",
+    "directory": "packages/commons/docker-compose-testkit",
     "type": "git"
   },
   "dependencies": {

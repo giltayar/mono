@@ -30,10 +30,10 @@
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
-  "homepage": "https://github.com/giltayar/mono/tree/master/packages/service-commons",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/commons/service-commons",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/service-commons",
+    "directory": "packages/commons/service-commons",
     "type": "git"
   },
   "publishConfig": {

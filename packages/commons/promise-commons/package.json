@@ -35,7 +35,7 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/promise-commons",
+    "directory": "packages/commons/promise-commons",
     "type": "git"
   },
   "devDependencies": {

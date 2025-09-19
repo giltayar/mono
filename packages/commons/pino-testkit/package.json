@@ -31,10 +31,10 @@
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
-  "homepage": "https://github.com/giltayar/mono/tree/master/packages/pino-testkit",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/commons/pino-testkit",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/pino-testkit",
+    "directory": "packages/commons/pino-testkit",
     "type": "git"
   },
   "publishConfig": {

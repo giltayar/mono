@@ -30,10 +30,10 @@
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
-  "homepage": "https://github.com/giltayar/mono/tree/master/packages/console-tesktit",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/commons/console-tesktit",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/console-tesktit",
+    "directory": "packages/commons/console-tesktit",
     "type": "git"
   },
   "publishConfig": {

@@ -35,7 +35,7 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/node-test-commons",
+    "directory": "packages/commons/node-test-commons",
     "type": "git"
   },
   "devDependencies": {

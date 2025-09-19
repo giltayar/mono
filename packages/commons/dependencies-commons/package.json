@@ -42,7 +42,7 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/dependencies-commons",
+    "directory": "packages/commons/dependencies-commons",
     "type": "git"
   },
   "dependencies": {
