@@ -1,30 +1,35 @@
 {
   "name": "@giltayar/scripting-commons",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "description": "",
   "type": "module",
-  "exports": "./src/scripting-commons.js",
-  "types": "./types/src/scripting-commons.js",
-  "main": "./src/scripting-commons.js",
+  "exports": {
+    ".": {
+      "types": "./dist/src/scripting-commons.d.ts",
+      "import": "./dist/src/scripting-commons.js"
+    }
+  },
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=24.0.0"
   },
   "files": [
     "src",
-    "types"
+    "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf types && tsc && cp src/*.d.ts types/src",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
     "test": "run-p --aggregate-output 'test:*'",
-    "mocha": "mocha --no-timeouts --colors --exit 'test/**/*.test.js'",
-    "test:eslint": "eslint --max-warnings=0 '**/*.js'",
-    "test:typescript": "tsc --noEmit --emitDeclarationOnly false",
-    "test:mocha": "npm run mocha"
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
   },
   "keywords": [
-    "javascript",
-    "nodejs"
+    "nodejs",
+    "javascript"
   ],
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
@@ -33,25 +38,22 @@
     "directory": "packages/scripting-commons",
     "type": "git"
   },
-  "dependencies": {
-    "@giltayar/functional-commons": "^1.1.13",
-    "execa": "^7.1.1"
-  },
   "devDependencies": {
-    "@giltayar/promise-commons": "^1.1.7",
-    "@types/chai": "^4.3.5",
-    "@types/chai-subset": "^1.3.3",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "^20.3.1",
-    "chai": "^4.3.7",
-    "chai-subset": "^1.6.0",
-    "eslint": "^8.42.0",
-    "eslint-plugin-mocha-no-only": "^1.1.1",
-    "eslint-plugin-n": "^16.0.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "mocha": "^10.2.0",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.35.0",
+    "@giltayar/promise-commons": "^2.0.0",
+    "@types/node": "^24.5.2",
+    "@typescript/native-preview": "7.0.0-dev.20250919.1",
+    "eslint": "^9.35.0",
+    "eslint-plugin-n": "^17.23.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.8.8",
-    "typescript": "^5.1.3"
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.43.0"
+  },
+  "packageManager": "pnpm@10.17.0",
+  "dependencies": {
+    "@giltayar/functional-commons": "^2.0.1"
   }
 }

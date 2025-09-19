@@ -1,12 +1,15 @@
-'use strict'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import stream from 'stream/promises'
+import {pipeline} from 'stream/promises'
 import {makeError} from '@giltayar/functional-commons'
 
-/** @param {string} pathOrFile */
-export function pathComponents(pathOrFile) {
+export function pathComponents(pathOrFile: string): {
+  dirname: string
+  basename: string
+  extname: string
+  filename: string
+} {
   const dirname = path.dirname(pathOrFile)
   const basename = path.basename(pathOrFile)
   const extname = path.extname(basename)
@@ -14,55 +17,49 @@ export function pathComponents(pathOrFile) {
   return {dirname, basename, extname, filename}
 }
 
-/**
- * @param {string | string[]} file
- * @param {Buffer|string|object} content
- * @param {{cwd: string}} options
- * @returns {Promise<void>}
- */
-export async function writeFile(file, content, {cwd}) {
+export async function writeFile(
+  file: string | string[],
+  content: Buffer | string | object,
+  {cwd}: {cwd: string},
+): Promise<void> {
   if (Array.isArray(file)) {
     file = file.reduce((fileUpTillNow, segment) => path.join(fileUpTillNow, segment))
   }
-  file = path.join(cwd, file)
+  file = path.join(cwd, file as string)
 
   await fs.promises.mkdir(path.dirname(file), {recursive: true})
-  await fs.promises.writeFile(file, typeof content === 'object' ? JSON.stringify(content) : content)
+  await fs.promises.writeFile(
+    file,
+    typeof content === 'object' ? JSON.stringify(content) : (content as any),
+  )
 }
 
-/**
- * @param {string | string[]} file
- * @param {{cwd: string}} options
- * @returns {Promise<string>}
- */
-export async function readFileAsString(file, {cwd}) {
+export async function readFileAsString(
+  file: string | string[],
+  {cwd}: {cwd: string},
+): Promise<string> {
   if (Array.isArray(file)) {
     file = file.reduce((fileUpTillNow, segment) => path.join(fileUpTillNow, segment))
   }
-  file = path.join(cwd, file)
+  file = path.join(cwd, file as string)
 
-  return await fs.promises.readFile(file, 'utf-8')
+  return await fs.promises.readFile(file as string, 'utf-8')
 }
 
-/**
- * @template [T=any]
- * @param {string | string[]} file
- * @param {{cwd: string}} options
- * @returns {Promise<T>}
- */
-export async function readFileAsJson(file, {cwd}) {
+export async function readFileAsJson<T = any>(
+  file: string | string[],
+  {cwd}: {cwd: string},
+): Promise<T> {
   if (Array.isArray(file)) {
     file = file.reduce((fileUpTillNow, segment) => path.join(fileUpTillNow, segment))
   }
-  return JSON.parse(await fs.promises.readFile(path.join(cwd, file), 'utf-8'))
+  return JSON.parse(await fs.promises.readFile(path.join(cwd, file as string), 'utf-8')) as T
 }
 
-/**
- * @param {string | undefined} [dirToCopy]
- * @param {Record<string, string>} [stringSubstitutions]
- * @returns {Promise<string>}
- */
-export async function makeTemporaryDirectory(dirToCopy, stringSubstitutions) {
+export async function makeTemporaryDirectory(
+  dirToCopy?: string,
+  stringSubstitutions?: Record<string, string>,
+): Promise<string> {
   const ret = await fs.promises.mkdtemp(os.tmpdir() + '/')
 
   if (dirToCopy != null) {
@@ -72,13 +69,12 @@ export async function makeTemporaryDirectory(dirToCopy, stringSubstitutions) {
   return ret
 }
 
-/**
- * @param {string | string[]} file
- * @param {string} sourceString
- * @param {string} targetString
- * @param {{cwd: string}} options
- */
-export async function replaceInFile(file, sourceString, targetString, {cwd}) {
+export async function replaceInFile(
+  file: string | string[],
+  sourceString: string,
+  targetString: string,
+  {cwd}: {cwd: string},
+): Promise<string> {
   const content = await readFileAsString(file, {cwd})
 
   const transformedContent = content.replaceAll(sourceString, targetString)
@@ -88,12 +84,7 @@ export async function replaceInFile(file, sourceString, targetString, {cwd}) {
   return transformedContent
 }
 
-/**
- *
- * @param {string} dir
- * @param {RegExp} regex
- */
-export async function findFileThatMatches(dir, regex) {
+export async function findFileThatMatches(dir: string, regex: RegExp): Promise<string | undefined> {
   const result = (await fs.promises.readdir(dir)).filter((s) => regex.test(s))
 
   if (result.length === 0) {
@@ -107,12 +98,11 @@ export async function findFileThatMatches(dir, regex) {
   }
 }
 
-/**
- * @param {string} sourceDirectory
- * @param {string} targetDirectory
- * @param {Record<string, string> | undefined} [stringSubstitutions]
- */
-export async function copyDirectory(sourceDirectory, targetDirectory, stringSubstitutions) {
+export async function copyDirectory(
+  sourceDirectory: string,
+  targetDirectory: string,
+  stringSubstitutions?: Record<string, string> | undefined,
+): Promise<void> {
   await fs.promises.mkdir(targetDirectory, {recursive: true})
 
   const filesAndDirs = await fs.promises.readdir(sourceDirectory, {withFileTypes: true})
@@ -130,14 +120,13 @@ export async function copyDirectory(sourceDirectory, targetDirectory, stringSubs
   )
 }
 
-/**
- * @param {string} sourceFile
- * @param {string} targetFile
- * @param {Record<string, string> | undefined} stringSubstitutions
- */
-async function copyFile(sourceFile, targetFile, stringSubstitutions) {
+async function copyFile(
+  sourceFile: string,
+  targetFile: string,
+  stringSubstitutions: Record<string, string> | undefined,
+): Promise<void> {
   if (!stringSubstitutions || Object.keys(stringSubstitutions).length === 0) {
-    await stream.pipeline(fs.createReadStream(sourceFile), fs.createWriteStream(targetFile))
+    await pipeline(fs.createReadStream(sourceFile), fs.createWriteStream(targetFile))
   } else {
     const source = await fs.promises.readFile(sourceFile, 'utf8')
 
