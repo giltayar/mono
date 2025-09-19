@@ -1,10 +1,6 @@
 {
 	"folders": [
 		{
-			"name": ".bilt",
-			"path": ".bilt"
-		},
-		{
 			"name": "console-tesktit",
 			"path": "packages/console-tesktit"
 		},
