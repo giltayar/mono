@@ -50,7 +50,7 @@ export default tseslint.config([
       ],
       'n/no-unsupported-features/node-builtins': [
         'error',
-        // {ignores: ['assert.partialDeepStrictEqual']},
+        {ignores: ['assert.partialDeepStrictEqual']},
       ],
     },
   },

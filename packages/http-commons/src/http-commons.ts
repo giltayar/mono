@@ -53,13 +53,6 @@ export async function fetchAsText(url: string | URL, init?: RequestInitWithReque
 
   return await response.text()
 }
-
-/**
- * @param {string | URL} url
- * @param {import('type-fest').JsonValue} json
- * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<string>}
- */
 export async function fetchAsTextWithJsonBody(
   url: string | URL,
   json: JsonValue,
@@ -78,12 +71,6 @@ export async function fetchAsTextWithJsonBody(
   return await response.text()
 }
 
-/**
- * @param {string | URL} url
- * @param {import('type-fest').JsonValue} json
- * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<ArrayBuffer>}
- */
 export async function fetchAsBufferWithJsonBody(
   url: string | URL,
   json: JsonValue,
@@ -101,13 +88,6 @@ export async function fetchAsBufferWithJsonBody(
 
   return await response.arrayBuffer()
 }
-
-/**
- * @param {string | URL} url
- * @param {import('type-fest').JsonValue} json
- * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<import('type-fest').JsonValue>}
- */
 export async function fetchAsJsonWithJsonBody(
   url: string | URL,
   json: JsonValue,
@@ -130,12 +110,6 @@ export async function fetchAsJsonWithJsonBody(
   return await response.json()
 }
 
-/**
- *
- * @param {string | URL} url
- * @param {RequestInitWithRequestId} [init]
- * @returns {Promise<Response>}
- */
 export async function fetch(url: string | URL, init?: RequestInitWithRequestId) {
   return await globalThis
     .fetch(url, {
@@ -156,10 +130,6 @@ export async function fetch(url: string | URL, init?: RequestInitWithRequestId) 
     )
 }
 
-/**
- * @param {Function} f
- * @param {{retries?: number, sleepTime?: number, backoff?: number, idempotent?: boolean}} options
- */
 export async function retryFetch<T>(
   f: (retry: number) => Promise<T> | T,
   {
