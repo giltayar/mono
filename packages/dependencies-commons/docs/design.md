@@ -1,1 +1,0 @@
-# Design of dependencies-commons

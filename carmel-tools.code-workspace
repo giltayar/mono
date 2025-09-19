@@ -29,10 +29,6 @@
 			"path": "packages/http-commons"
 		},
 		{
-			"name": "mocha-commons",
-			"path": "packages/mocha-commons"
-		},
-		{
 			"name": "node-test-commons",
 			"path": "packages/node-test-commons"
 		},
