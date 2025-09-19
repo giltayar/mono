@@ -1,0 +1,56 @@
+{
+  "name": "@giltayar/node-test-commons",
+  "version": "2.0.0",
+  "description": "",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/node-test-commons.d.ts",
+      "import": "./dist/src/node-test-commons.js"
+    }
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript"
+  ],
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/node-test-commons",
+    "type": "git"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.35.0",
+    "@types/node": "^24.5.2",
+    "@typescript/native-preview": "7.0.0-dev.20250919.1",
+    "eslint": "^9.35.0",
+    "eslint-plugin-n": "^17.23.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
+    "type-fest": "^5.0.1",
+    "typescript-eslint": "^8.44.0"
+  },
+  "packageManager": "pnpm@10.17.0"
+}
