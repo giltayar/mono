@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/http-commons",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "",
   "type": "module",
   "exports": {
@@ -44,21 +44,21 @@
     "agentkeepalive": "^4.6.0",
     "fastify": "^5.6.0",
     "lodash.merge": "^4.6.2",
-    "type-fest": "^5.0.0"
+    "type-fest": "4.41.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.35.0",
     "@types/lodash.merge": "^4.6.9",
-    "@types/node": "^24.5.1",
+    "@types/node": "^24.5.2",
     "@typescript/native-preview": "7.0.0-dev.20250919.1",
     "eslint": "^9.35.0",
-    "eslint-plugin-n": "^17.23.0",
+    "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.44.0"
+    "typescript-eslint": "^8.43.0"
   },
   "packageManager": "pnpm@10.17.0"
 }

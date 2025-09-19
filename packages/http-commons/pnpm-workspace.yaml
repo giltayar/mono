@@ -1,4 +1,8 @@
-minimumReleaseAge: 2880
+minimumReleaseAge: 10080 # 1 week
 minimumReleaseAgeExclude:
-  - "@typescript/*"
   - "@giltayar/*"
+  - "@typescript/*"
+  - "@types/*"
+  - "eslint*"
+  - "@eslint/*"
+

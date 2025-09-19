@@ -2,6 +2,7 @@ import Agent, {HttpsAgent} from 'agentkeepalive'
 import merge from 'lodash.merge'
 import {memo, makeError} from '@giltayar/functional-commons'
 import {delay} from '@giltayar/promise-commons'
+// eslint-disable-next-line n/no-missing-import
 import type {JsonValue} from 'type-fest'
 
 export type FetchFunction = (
