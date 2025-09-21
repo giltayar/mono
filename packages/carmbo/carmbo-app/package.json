@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "3.1.1",
+  "version": "1.0.0",
   "description": "",
   "type": "module",
   "exports": {},
@@ -16,11 +16,17 @@
   },
   "scripts": {
     "start": "run-p 'start:*'",
-    "start:docker-compose": "docker compose up  -d",
+    "stop": "run-p 'stop:*'",
+    "start:docker-compose": "mkdir -p .db-data/pgdata && docker compose up  -d",
+    "start:app": "node --inspect --watch ./src/app/index.ts | pino-pretty",
+    "stop:docker-compose": "docker compose down",
+    "postgres:clean": "docker compose down && sudo rm -rf .db-data",
     "build": "run-p 'build:*'",
-    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
+    "build:css": "mkdir -p dist && cat src/**/*.css > dist/styles.css",
+    "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/",
+    "build:scripts": "cat src/**/scripts.js > dist/scripts.js",
     "test": "run-p --aggregate-output 'test:*'",
-    "test:eslint": "eslint --max-warnings=0 .",
+    "test:eslint": "sudo chown ${USER} -R .db-data/pgdata && eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
     "test:node": "node --test"
   },
@@ -36,11 +42,31 @@
     "type": "git"
   },
   "dependencies": {
+    "@fastify/formbody": "^8.0.2",
+    "@fastify/static": "^8.2.0",
     "fastify": "^5.6.0",
+    "fastify-type-provider-zod": "^5.1.0",
     "htm": "^3.1.1",
-    "npm-run-all": "^4.1.5",
+    "htmx.org": "^2.0.7",
     "postgres": "^3.4.7",
-    "vhtml": "^2.2.0"
+    "qs": "^6.14.0",
+    "vhtml": "^2.2.0",
+    "zod": "^4.1.11"
   },
-  "packageManager": "pnpm@10.17.0"
+  "packageManager": "pnpm@10.17.0",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.36.0",
+    "@types/node": "^24.5.2",
+    "@types/qs": "^6.14.0",
+    "@types/vhtml": "^2.2.9",
+    "@typescript/native-preview": "7.0.0-dev.20250919.1",
+    "eslint": "^9.36.0",
+    "eslint-plugin-n": "^17.23.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.44.0"
+  }
 }

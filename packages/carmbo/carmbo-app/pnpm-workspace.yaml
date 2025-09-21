@@ -1,8 +1,11 @@
-minimumReleaseAge: 10080 # 1 week
-minimumReleaseAgeExclude:
-  - "@giltayar/*"
-  - "@typescript/*"
-  - "@types/*"
-  - "eslint*"
-  - "@eslint/*"
+minimumReleaseAge: 10080
 
+minimumReleaseAgeExclude:
+  - '@giltayar/*'
+  - '@typescript/*'
+  - '@types/*'
+  - eslint*
+  - '@eslint/*'
+
+patchedDependencies:
+  fastify-type-provider-zod@5.1.0: patches/fastify-type-provider-zod@5.1.0.patch
