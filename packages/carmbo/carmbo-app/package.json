@@ -1,0 +1,46 @@
+{
+  "name": "@giltayar/carmbo-app",
+  "version": "3.1.1",
+  "description": "",
+  "type": "module",
+  "exports": {},
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "run-p 'start:*'",
+    "start:docker-compose": "docker compose up  -d",
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsgo --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test"
+  },
+  "keywords": [
+    "javascript",
+    "nodejs"
+  ],
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/commons/carmbo-app",
+    "type": "git"
+  },
+  "dependencies": {
+    "fastify": "^5.6.0",
+    "htm": "^3.1.1",
+    "npm-run-all": "^4.1.5",
+    "postgres": "^3.4.7",
+    "vhtml": "^2.2.0"
+  },
+  "packageManager": "pnpm@10.17.0"
+}

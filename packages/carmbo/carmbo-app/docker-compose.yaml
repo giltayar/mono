@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: carmbo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: carmbo
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.db-data:/var/lib/postgresql/data
+      # Mount SQL scripts to be executed on container startup (ordered by filename)
+      - ./src/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carmbo_user -d carmbo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    driver: local

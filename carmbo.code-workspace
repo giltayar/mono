@@ -78,6 +78,9 @@
 		},
 		{
 			"path": "packages/carmbo/carmbo-design"
+		},
+		{
+			"path": "packages/carmbo/carmbo-app"
 		}
 	],
 	"settings": {}
