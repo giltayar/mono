@@ -1,0 +1,84 @@
+{
+	"folders": [
+		{
+			"name": "console-tesktit",
+			"path": "packages/commons/console-tesktit"
+		},
+		{
+			"name": "dependencies-commons",
+			"path": "packages/commons/dependencies-commons"
+		},
+		{
+			"name": "docker-compose-testkit",
+			"path": "packages/commons/docker-compose-testkit"
+		},
+		{
+			"name": "functional-commons",
+			"path": "packages/commons/functional-commons"
+		},
+		{
+			"name": "service-commons",
+			"path": "packages/commons/service-commons"
+		},
+		{
+			"name": "http-commons",
+			"path": "packages/commons/http-commons"
+		},
+		{
+			"name": "node-test-commons",
+			"path": "packages/commons/node-test-commons"
+		},
+		{
+			"name": "pino-testkit",
+			"path": "packages/commons/pino-testkit"
+		},
+		{
+			"name": "promise-commons",
+			"path": "packages/commons/promise-commons"
+		},
+		{
+			"name": "scripting-commons",
+			"path": "packages/commons/scripting-commons"
+		},
+		{
+			"name": "url-commons",
+			"path": "packages/commons/url-commons"
+		},
+		{
+			"name": "whatsapp-integration",
+			"path": "packages/carmel-tools/whatsapp-integration"
+		},
+		{
+			"name": "cardcom-integration",
+			"path": "packages/carmel-tools/cardcom-integration"
+		},
+		{
+			"name": "smoove-integration",
+			"path": "packages/carmel-tools/smoove-integration"
+		},
+		{
+			"name": "google-sheets-integration",
+			"path": "packages/carmel-tools/google-sheets-integration"
+		},
+		{
+			"name": "academy-integration",
+			"path": "packages/carmel-tools/academy-integration"
+		},
+		{
+			"name": "club-service",
+			"path": "packages/carmel-tools/club-service"
+		},
+		{
+			"name": "club-cli",
+			"path": "packages/carmel-tools/club-cli"
+		},
+		{
+			"name": "clubs-cron",
+			"path": "packages/carmel-tools/clubs-cron"
+		},
+		{
+			"path": "packages/carmbo/carmbo-design"
+		}
+	],
+	"settings": {}
+}
