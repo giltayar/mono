@@ -28,6 +28,7 @@
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "sudo chown ${USER} -R .db-data/pgdata && eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
+    "test:playwright": "playwright test --config=test/e2e",
     "test:node": "node --test"
   },
   "keywords": [
@@ -51,12 +52,14 @@
     "postgres": "^3.4.7",
     "qs": "^6.14.0",
     "vhtml": "^2.2.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.8"
   },
-  "packageManager": "pnpm@10.17.0",
+  "packageManager": "pnpm@10.17.1",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.36.0",
+    "@giltayar/docker-compose-testkit": "^2.1.0",
+    "@playwright/test": "^1.55.0",
     "@types/node": "^24.5.2",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
