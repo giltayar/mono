@@ -88,6 +88,7 @@ function AddRemoveButtons({
       hx-trigger="click delay:1ms"
       hx-select="form"
       hx-headers=${JSON.stringify({'X-Add-Item': itemName})}
+      aria-label="Add"
     >
       +
     </button>`}

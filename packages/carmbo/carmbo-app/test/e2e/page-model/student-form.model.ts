@@ -9,7 +9,7 @@ export function createStudentFormPageModel(page: Page) {
     discardButton: (btnLocator = locator.getByRole('button', {name: 'Discard'})) => ({
       locator: btnLocator,
     }),
-    names: (namesLocator = locator.getByRole('group', {name: 'Names'})) => ({
+    names: (namesLocator = locator.getByRole('group', {name: 'Names', exact: true})) => ({
       locator: namesLocator,
       firstNameInput: (i: number) => ({
         locator: namesLocator.getByLabel(`First Name`).nth(i),
@@ -53,7 +53,14 @@ export type StudentFormPageModel = ReturnType<typeof createStudentFormPageModel>
 
 function addAndTrashButtons(itemLocator: Locator) {
   return {
-    addButton: (i: number) => ({locator: itemLocator.nth(i).locator('.students-view_add')}),
-    trashButton: (i: number) => ({locator: itemLocator.nth(i).locator('.students-view_trash')}),
+    addButton: (locator = itemLocator.getByRole('button', {name: 'Add'})) => ({
+      locator,
+    }),
+    trashButton: (
+      i: number,
+      locator = itemLocator.getByRole('button', {name: 'Trash'}).nth(i),
+    ) => ({
+      locator,
+    }),
   }
 }
