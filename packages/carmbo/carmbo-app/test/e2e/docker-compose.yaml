@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
     ports:
-      - '5432:5432'
+      - 5432
     volumes:
       # Mount SQL scripts to be executed on container startup (ordered by filename)
       - ./../../src/sql:/docker-entrypoint-initdb.d:ro

@@ -37,7 +37,7 @@ export function StudentsView({students}: {students: StudentForGrid[]}) {
 export function StudentCreateView({student}: {student: Student}) {
   return html`
     <h1>New Student</h1>
-    <form hx-post="/students/" hx-target="html">
+    <form hx-post="/students/" hx-target="html" hx-push-url="true">
       <section>
         <button type="Submit" value="save">Save</button>
         <button type="Submit" value="discard">Discard</button>
