@@ -61,15 +61,23 @@ export function StudentUpdateView({student}: {student: Student}) {
   `
 }
 
-function AddRemoveButtons({
-  itemsName: itemName,
-  itemsLength,
-  index,
-}: {
-  itemsName: string
-  itemsLength: number
-  index: number
-}) {
+function AddButton({itemsName: itemName}: {itemsName: string}) {
+  return html`
+    <button
+      class="students-view_add"
+      hx-post=""
+      hx-target="closest form"
+      hx-trigger="click delay:1ms"
+      hx-select="form"
+      hx-headers=${JSON.stringify({'X-Add-Item': itemName})}
+      aria-label="Add"
+    >
+      +
+    </button>
+  `
+}
+
+function RemoveButton() {
   return html`
     <button
       class="students-view_trash"
@@ -80,18 +88,6 @@ function AddRemoveButtons({
     >
       Trash
     </button>
-    ${index === itemsLength - 1 &&
-    html`<button
-      class="students-view_add"
-      hx-post=""
-      hx-target="closest form"
-      hx-trigger="click delay:1ms"
-      hx-select="form"
-      hx-headers=${JSON.stringify({'X-Add-Item': itemName})}
-      aria-label="Add"
-    >
-      +
-    </button>`}
   `
 }
 
@@ -107,85 +103,89 @@ export function StudentCreateOrUpdateFormFields({
   return html`
     <fieldset>
       <legend>Names</legend>
-      <div class="students-view_names-list">
-        ${student.names.map(
-          (name, i, items) => html`
-            <div class="students-view_item">
-              <label>
-                First Name
-                <input
-                  name="names[${i}][firstName]"
-                  type="text"
-                  value=${name.firstName}
-                  ${maybeRo}
-                />
-              </label>
-              <label>
-                Last Name
-                <input name="names[${i}][lastName]" type="text" value=${name.lastName} ${maybeRo} />
-              </label>
-              ${operation === 'write' &&
-              html`<${AddRemoveButtons}
-                itemsName="names"
-                itemsLength=${items.length}
-                index=${i}
-              />`}
-            </div>
-          `,
-        )}
-      </div>
+      ${student.names?.map(
+        (name, i) => html`
+          <div class="students-view_item">
+            <label>
+              First Name
+              <input
+                name="names[${i}][firstName]"
+                type="text"
+                value=${name.firstName}
+                required
+                ${maybeRo}
+              />
+            </label>
+            <label>
+              Last Name
+              <input
+                name="names[${i}][lastName]"
+                type="text"
+                value=${name.lastName}
+                required
+                ${maybeRo}
+              />
+            </label>
+            ${operation === 'write' && html`<${RemoveButton} />`}
+          </div>
+        `,
+      )}
+      ${operation === 'write' && html`<${AddButton} itemsName="names" />`}
     </fieldset>
 
     <fieldset>
       <legend>Emails</legend>
-      ${student.emails.map(
-        (email, i, items) => html`
+      ${student.emails?.map(
+        (email, i) => html`
           <div class="students-view_item">
             <label>
               Email
-              <input name="emails[${i}]" type="email" value=${email} ${maybeRo} />
+              <input name="emails[${i}]" type="email" value=${email} ${maybeRo} required />
             </label>
-            ${operation === 'write' &&
-            html`<${AddRemoveButtons} itemsName="emails" itemsLength=${items.length} index=${i} />`}
+            ${operation === 'write' && html`<${RemoveButton} />`}
           </div>
         `,
       )}
+      ${operation === 'write' && html`<${AddButton} itemsName="emails" />`}
     </fieldset>
 
     <fieldset>
       <legend>Phones</legend>
-      ${student.phones.map(
-        (phone, i, items) => html`
+      ${student.phones?.map(
+        (phone, i) => html`
           <div class="students-view_item">
             <label>
               Phone
-              <input name="phones[${i}]" type="tel" value=${phone} ${maybeRo} />
+              <input
+                name="phones[${i}]"
+                type="tel"
+                value=${phone}
+                ${maybeRo}
+                pattern="^\\+?[\\d\\-\\.]+$"
+                required
+              />
             </label>
-            ${operation === 'write' &&
-            html`<${AddRemoveButtons} itemsName="phones" itemsLength=${items.length} index=${i} />`}
+            ${operation === 'write' && html`<${RemoveButton} />`}
           </div>
         `,
       )}
+      ${operation === 'write' && html`<${AddButton} itemsName="phones" />`}
     </fieldset>
 
     <fieldset>
       <legend>Facebook names</legend>
-      ${student.facebookNames.map(
-        (fb, i, items) => html`
+      ${student.facebookNames?.map(
+        (fb, i) => html`
           <div class="students-view_item">
             <label>
               Facebook name
-              <input name="facebookNames[${i}]" type="text" value=${fb} ${maybeRo} />
+              <input name="facebookNames[${i}]" type="text" value=${fb} ${maybeRo} required />
             </label>
-            ${operation === 'write' &&
-            html`<${AddRemoveButtons}
-              itemsName="facebookNames"
-              itemsLength=${items.length}
-              index=${i}
-            />`}
+            ${operation === 'write' && html`<${RemoveButton} />`}
           </div>
         `,
       )}
+      ${operation === 'write' && html`<${AddButton} itemsName="facebookNames" />`}
     </fieldset>
 
     <div>

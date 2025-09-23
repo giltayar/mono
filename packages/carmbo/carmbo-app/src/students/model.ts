@@ -5,20 +5,20 @@ import {z} from 'zod'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
-  names: z.array(z.object({firstName: z.string().min(1), lastName: z.string().min(1)})),
   birthday: z.iso.date().transform((s) => new Date(s)),
-  emails: z.array(z.email()),
-  phones: z.array(z.string().min(1)),
-  facebookNames: z.array(z.string()).optional().default([]),
+  names: z.array(z.object({firstName: z.string().min(1), lastName: z.string().min(1)})).optional(),
+  emails: z.array(z.email()).optional(),
+  phones: z.array(z.string().min(1)).optional(),
+  facebookNames: z.array(z.string()).optional(),
   cardcomCustomerId: z.union([z.string(), z.undefined()]),
 })
 
 export const NewStudentSchema = z.object({
-  names: z.array(z.object({firstName: z.string(), lastName: z.string()})),
   birthday: z.iso.date().transform((s) => new Date(s)),
-  emails: z.array(z.union([z.email(), z.string()])),
-  phones: z.array(z.string()),
-  facebookNames: z.array(z.string()),
+  names: z.array(z.object({firstName: z.string(), lastName: z.string()})).optional(),
+  emails: z.array(z.union([z.email(), z.string()])).optional(),
+  phones: z.array(z.string()).optional(),
+  facebookNames: z.array(z.string()).optional(),
   cardcomCustomerId: z.union([z.string(), z.undefined()]),
 })
 
@@ -208,52 +208,41 @@ export async function updateStudent(
   })
 }
 
-async function addStudentStuff(
-  student: {
-    birthday: Date
-    names: {firstName: string; lastName: string}[]
-    emails: string[]
-    phones: string[]
-    facebookNames: string[]
-    cardcomCustomerId: string | undefined
-  },
-  operationId: string,
-  sql: Sql,
-) {
+async function addStudentStuff(student: Student | NewStudent, operationId: string, sql: Sql) {
   let ops = [] as Promise<unknown>[]
 
   ops = ops.concat(
-    student.names.map(
+    student.names?.map(
       (name, index) => sql`
     INSERT INTO student_name VALUES
       (${operationId}, ${index}, ${name.firstName}, ${name.lastName})
     `,
-    ),
+    ) ?? [],
   )
   ops = ops.concat(
-    student.emails.map(
+    student.emails?.map(
       (email, index) => sql`
     INSERT INTO student_email VALUES
       (${operationId}, ${index}, ${email})
     `,
-    ),
+    ) ?? [],
   )
 
   ops = ops.concat(
-    student.phones.map(
+    student.phones?.map(
       (phone, index) => sql`
     INSERT INTO student_phone VALUES
       (${operationId}, ${index}, ${phone})
     `,
-    ),
+    ) ?? [],
   )
   ops = ops.concat(
-    student.facebookNames.map(
+    student.facebookNames?.map(
       (facebookName, index) => sql`
     INSERT INTO student_facebook_name VALUES
       (${operationId}, ${index}, ${facebookName})
     `,
-    ),
+    ) ?? [],
   )
 
   if (student.cardcomCustomerId) {

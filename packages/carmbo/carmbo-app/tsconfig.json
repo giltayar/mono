@@ -15,10 +15,11 @@
     "esModuleInterop": true,
     "rootDir": ".",
     "checkJs": true,
+    "skipLibCheck": true,
     "declarationDir": "dist",
     "outDir": "dist",
-  "noEmit": true,
-  "types": ["node"]
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules"]

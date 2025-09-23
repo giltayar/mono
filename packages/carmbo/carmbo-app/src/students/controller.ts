@@ -85,10 +85,10 @@ function manipulateStudent<T extends NewStudent | Student>(
 
   if (addItem) {
     if (addItem === 'names') {
-      transformed[addItem].push({firstName: '', lastName: ''})
+      ;(transformed[addItem] ??= []).push({firstName: '', lastName: ''})
     } else {
       // @ts-expect-error dynamic stuff!
-      transformed[addItem].push('')
+      ;(transformed[addItem] ??= []).push('')
     }
   }
 
