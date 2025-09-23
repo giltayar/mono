@@ -50,7 +50,7 @@ export function StudentCreateView({student}: {student: Student}) {
 export function StudentUpdateView({student}: {student: Student}) {
   return html`
     <h1>Update Student ${student.studentNumber}</h1>
-    <form hx-put="/students/${student.studentNumber}" hx-target="html">
+    <form hx-put="/students/${student.studentNumber}" hx-target="html" hx-replace-url="true">
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
       <section>
         <button type="Submit" value="save">Save</button>

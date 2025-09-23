@@ -45,7 +45,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
         return reply.status(404).send('Student not found')
       }
 
-      return reply.redirect(`./${studentNumber}`)
+      reply.header('HX-Redirect', `/students/${studentNumber}`)
     })
 
   // Edit existing student
@@ -105,7 +105,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
         await updateStudent(request.body, undefined, sql)
 
-        reply.redirect(`./${request.body.studentNumber}`)
+        reply.header('HX-Redirect', `/students/${studentNumber}`)
       },
     )
 }
