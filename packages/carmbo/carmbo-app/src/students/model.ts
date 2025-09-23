@@ -1,5 +1,5 @@
 import type {Sql} from 'postgres'
-import type {HistoryOperation} from '../commons/operation-type.ts'
+import {type HistoryOperation} from '../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
 
@@ -37,7 +37,7 @@ export interface StudentForGrid {
 }
 
 export interface StudentHistory {
-  studentNumber: number
+  operationId: string
   operation: HistoryOperation
   timestamp: Date
 }
@@ -85,69 +85,6 @@ WHERE
   return result
 }
 
-export async function fetchStudentByNumber(
-  studentNumber: number,
-  sql: Sql,
-): Promise<Student | undefined> {
-  const result = await sql<Student[]>`
-SELECT
-  id,
-  student.student_number,
-  birthday,
-  student_integration_cardcom.customer_id AS cardcom_customer_id,
-  COALESCE(names, json_build_array()) AS names,
-  COALESCE(facebook_names, json_build_array()) AS facebook_names,
-  COALESCE(emails, json_build_array()) AS emails,
-  COALESCE(phones, json_build_array()) AS phones
-FROM
-  student_operation
-  INNER JOIN student ON last_operation_id = id
-  LEFT JOIN student_integration_cardcom ON operation_id = last_operation_id
-  LEFT JOIN LATERAL (
-    SELECT
-      json_agg(json_build_object('firstName', first_name, 'lastName', last_name) ORDER BY item_order) AS names
-    FROM
-      student_name
-    WHERE
-      operation_id = last_operation_id
-  ) names ON true
-  LEFT JOIN LATERAL (
-    SELECT
-      json_agg(facebook_name ORDER BY item_order) AS facebook_names
-    FROM
-      student_facebook_name
-    WHERE
-      operation_id = last_operation_id
-  ) facebook_names ON true
-  LEFT JOIN LATERAL (
-    SELECT
-      json_agg(email ORDER BY item_order) AS emails
-    FROM
-      student_email
-    WHERE
-      operation_id = last_operation_id
-  ) emails ON true
-  LEFT JOIN LATERAL (
-    SELECT
-      json_agg(phone ORDER BY item_order) AS phones
-    FROM
-      student_phone
-    WHERE
-      operation_id = last_operation_id
-  ) phones ON true
-WHERE
-  student.student_number = ${studentNumber}
-  `
-
-  if (result.length === 0) {
-    return undefined
-  }
-
-  assert(result.length === 1, `More than one student with ID ${studentNumber}`)
-
-  return result[0]
-}
-
 export async function createStudent(student: NewStudent, reason: string | undefined, sql: Sql) {
   return await sql.begin(async (sql) => {
     const now = new Date()
@@ -171,6 +108,140 @@ export async function createStudent(student: NewStudent, reason: string | undefi
   })
 }
 
+export async function queryStudentByNumber(
+  studentNumber: number,
+  sql: Sql,
+): Promise<{student: Student; history: StudentHistory[]} | undefined> {
+  const pstudent = sql<Student[]>`
+WITH
+  current_operation_id (current_operation_id) AS (
+    SELECT
+      last_operation_id
+    FROM
+      student
+    WHERE
+      student_number = ${studentNumber}
+  )
+  ${studentSelect(studentNumber, sql)}
+  `
+
+  const phistory = sql<StudentHistory[]>`
+SELECT
+  id as operation_id,
+  operation,
+  timestamp
+FROM
+  student_operation
+WHERE
+  student_operation.student_number = ${studentNumber}
+ORDER BY
+  timestamp DESC
+  `
+  const [student, history] = await Promise.all([pstudent, phistory])
+
+  if (student.length === 0) {
+    return undefined
+  }
+
+  assert(student.length === 1, `More than one student with ID ${studentNumber}`)
+
+  return {student: student[0], history}
+}
+
+export async function queryStudentByOperationId(
+  studentNumber: number,
+  operationId: string,
+  sql: Sql,
+): Promise<Student | undefined> {
+  const student = await sql<Student[]>`
+WITH
+  current_operation_id (current_operation_id) AS (
+    SELECT
+      ${operationId}::uuid
+  )
+  ${studentSelect(studentNumber, sql)}
+  `
+
+  console.log('***** student by operationId', studentNumber, operationId, student.statement.string)
+
+  if (student.length === 0) {
+    return undefined
+  }
+
+  assert(student.length === 1, `More than one student with ID ${studentNumber}`)
+
+  return student[0]
+}
+
+function studentSelect(studentNumber: number, sql: Sql) {
+  return sql<Student[]>`
+SELECT
+  id,
+  student_number,
+  birthday,
+  student_integration_cardcom.customer_id AS cardcom_customer_id,
+  COALESCE(names, json_build_array()) AS names,
+  COALESCE(facebook_names, json_build_array()) AS facebook_names,
+  COALESCE(emails, json_build_array()) AS emails,
+  COALESCE(phones, json_build_array()) AS phones
+FROM
+  student_operation,
+  current_operation_id
+  LEFT JOIN student_integration_cardcom ON operation_id = current_operation_id
+  LEFT JOIN LATERAL (
+    SELECT
+      json_agg(
+        json_build_object('firstName', first_name, 'lastName', last_name)
+        ORDER BY
+          item_order
+      ) AS names
+    FROM
+      student_name
+    WHERE
+      operation_id = current_operation_id
+  ) names ON true
+  LEFT JOIN LATERAL (
+    SELECT
+      json_agg(
+        facebook_name
+        ORDER BY
+          item_order
+      ) AS facebook_names
+    FROM
+      student_facebook_name
+    WHERE
+      operation_id = current_operation_id
+  ) facebook_names ON true
+  LEFT JOIN LATERAL (
+    SELECT
+      json_agg(
+        email
+        ORDER BY
+          item_order
+      ) AS emails
+    FROM
+      student_email
+    WHERE
+      operation_id = current_operation_id
+  ) emails ON true
+  LEFT JOIN LATERAL (
+    SELECT
+      json_agg(
+        phone
+        ORDER BY
+          item_order
+      ) AS phones
+    FROM
+      student_phone
+    WHERE
+      operation_id = current_operation_id
+  ) phones ON true
+  WHERE
+    student_operation.student_number = ${studentNumber}
+    AND student_operation.id = current_operation_id;
+       `
+}
+
 export async function updateStudent(
   student: Student,
   reason: string | undefined,
@@ -182,7 +253,7 @@ export async function updateStudent(
 
     await sql`
   INSERT INTO student_operation VALUES
-    (${operationId}, DEFAULT, ${now}, 'update', ${reason ?? null}, ${student.birthday})
+    (${operationId}, ${student.studentNumber}, ${now}, 'update', ${reason ?? null}, ${student.birthday})
 
   `
     const studentNumberResult = await sql`

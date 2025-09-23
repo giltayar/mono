@@ -1,10 +1,16 @@
-import {showStudentCreate, showStudents, showStudentUpdate} from './controller.ts'
+import {
+  showStudentCreate,
+  showStudentInHistory,
+  showStudents,
+  showStudentUpdate,
+} from './controller.ts'
 import {
   createStudent,
-  fetchStudentByNumber,
+  queryStudentByNumber,
   NewStudentSchema,
   StudentSchema,
   updateStudent,
+  queryStudentByOperationId,
 } from './model.ts'
 import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
@@ -55,19 +61,41 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       '/:number',
       {schema: {params: z.object({number: z.coerce.number().int()})}},
       async (request, reply) => {
-        const student = await fetchStudentByNumber(request.params.number, sql)
+        const studentWithHistory = await queryStudentByNumber(request.params.number, sql)
 
-        if (!student) {
+        if (!studentWithHistory) {
           return reply.status(404).send('Student not found')
         }
 
-        return showStudentUpdate(student, {
+        return showStudentUpdate(studentWithHistory, {
           removeItem: request.headers['x-remove-item'],
           removeIndex: request.headers['x-remove-index'],
           addItem: request.headers['x-add-item'],
         })
       },
     )
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/:number/by-history/:operationId',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int(), operationId: z.uuid()}),
+      },
+    },
+    async (request, reply) => {
+      const student = await queryStudentByOperationId(
+        request.params.number,
+        request.params.operationId,
+        sql,
+      )
+      console.log('***** student in controller', student, request.params)
+
+      if (!student) {
+        return reply.status(404).send('Student not found')
+      }
+
+      return showStudentInHistory(student)
+    },
+  )
 
   app
     .withTypeProvider<ZodTypeProvider>()
@@ -82,11 +110,14 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           'student number in URL must match ID in body',
         )
 
-        return showStudentUpdate(request.body, {
-          removeItem: request.headers['x-remove-item'],
-          removeIndex: request.headers['x-remove-index'],
-          addItem: request.headers['x-add-item'],
-        })
+        return showStudentUpdate(
+          {student: request.body, history: []},
+          {
+            removeItem: request.headers['x-remove-item'],
+            removeIndex: request.headers['x-remove-index'],
+            addItem: request.headers['x-add-item'],
+          },
+        )
       },
     )
 

@@ -1,9 +1,9 @@
 import type {Sql} from 'postgres'
 import {html} from '../commons/html-templates.ts'
 import {MainLayout} from '../layouts/main-view.ts'
-import type {NewStudent, Student} from './model.ts'
+import type {NewStudent, Student, StudentHistory} from './model.ts'
 import {listStudents} from './model.ts'
-import {StudentCreateView, StudentsView, StudentUpdateView} from './view.ts'
+import {StudentCreateView, StudentHistoryView, StudentsView, StudentUpdateView} from './view.ts'
 import {assert} from 'console'
 
 export async function showStudents({flash}: {flash?: string}, sql: Sql) {
@@ -46,13 +46,25 @@ export function showStudentCreate(
   `
 }
 
-export function showStudentUpdate(student: Student, manipulations: StudentManipulations) {
+export function showStudentUpdate(
+  {student, history}: {student: Student; history: StudentHistory[]},
+  manipulations: StudentManipulations,
+) {
   return html`
     <${MainLayout} title="Students">
-      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} />
+      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history}/>
     </${MainLayout}>
   `
 }
+
+export function showStudentInHistory(student: Student) {
+  return html`
+    <${MainLayout} title="Students">
+      <${StudentHistoryView} student=${student} />
+    </${MainLayout}>
+  `
+}
+
 const ARRAY_FIELDS_IN_STUDENT = ['names', 'emails', 'phones', 'facebookNames']
 
 function manipulateStudent<T extends NewStudent | Student>(

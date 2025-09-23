@@ -1,5 +1,5 @@
 import {html} from '../commons/html-templates.ts'
-import type {Student, StudentForGrid} from './model.ts'
+import type {Student, StudentForGrid, StudentHistory} from './model.ts'
 
 export function StudentsView({students}: {students: StudentForGrid[]}) {
   return html`
@@ -47,16 +47,49 @@ export function StudentCreateView({student}: {student: Student}) {
   `
 }
 
-export function StudentUpdateView({student}: {student: Student}) {
+export function StudentUpdateView({
+  student,
+  history,
+}: {
+  student: Student
+  history: StudentHistory[]
+}) {
+  console.log('***** history in view', history)
   return html`
     <h1>Update Student ${student.studentNumber}</h1>
-    <form hx-put="/students/${student.studentNumber}" hx-target="html" hx-replace-url="true">
+    <form
+      hx-put="/students/${student.studentNumber}"
+      hx-target="form"
+      hx-select="form"
+      hx-replace-url="true"
+    >
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
       <section>
         <button type="Submit" value="save">Save</button>
         <button type="Submit" value="discard">Discard</button>
       </section>
       <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
+    </form>
+    <ul>
+      ${history?.map(
+        (entry) =>
+          html`<li>
+            <a href=${`./${student.studentNumber}/by-history/${entry.operationId}`}
+              >${entry.operation}</a
+            ><> </>
+            at ${new Date(entry.timestamp).toLocaleString()}
+          </li>`,
+      )}
+    </ul>
+  `
+}
+
+export function StudentHistoryView({student}: {student: Student}) {
+  return html`
+    <h1>View Student ${student.studentNumber}</h1>
+    <form>
+      <input name="studentNumber" type="hidden" value=${student.studentNumber} readonly />
+      <${StudentCreateOrUpdateFormFields} student=${student} operation="read" />
     </form>
   `
 }
