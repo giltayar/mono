@@ -1,6 +1,7 @@
 import path from 'path'
 import crypto from 'crypto'
 import net from 'net'
+import {fileURLToPath} from 'node:url'
 import {once} from 'events'
 import {getDependencyInformation} from '@giltayar/dependencies-commons'
 import retry from 'p-retry'
@@ -21,13 +22,15 @@ export type FindAddressOptions = {
 }
 
 export async function runDockerCompose(
-  dockerComposeFile: string,
+  dockerComposeFile: string | URL,
   {containerCleanup, forceRecreate, env, variation}: RunDockerComposeOptions = {},
 ) {
+  const dockerComposeFilePath =
+    typeof dockerComposeFile === 'string' ? dockerComposeFile : fileURLToPath(dockerComposeFile)
   const projectName = determineProjectName()
   const addresses = new Map<string, string>()
   const envForDependencies = Object.fromEntries(
-    Object.values(await getDependencyInformation(dockerComposeFile)).map((x) => [
+    Object.values(await getDependencyInformation(dockerComposeFilePath)).map((x) => [
       x.envName,
       x.version,
     ]),
@@ -45,9 +48,9 @@ export async function runDockerCompose(
 
   async function setup() {
     await $({
-      cwd: path.dirname(dockerComposeFile),
+      cwd: path.dirname(dockerComposeFilePath),
       env: finalEnv,
-    })`docker compose --file ${dockerComposeFile} --project-name ${projectName} up --detach ${
+    })`docker compose --file ${dockerComposeFilePath} --project-name ${projectName} up --detach ${
       forceRecreate ? '--force-recreate' : '--force-recreate=0'
     }`
   }
@@ -56,9 +59,9 @@ export async function runDockerCompose(
     if (!containerCleanup) return
 
     await $({
-      cwd: path.dirname(dockerComposeFile),
+      cwd: path.dirname(dockerComposeFilePath),
       env: finalEnv,
-    })`docker compose --file ${dockerComposeFile} --project-name ${projectName} down --volumes --remove-orphans`
+    })`docker compose --file ${dockerComposeFilePath} --project-name ${projectName} down --volumes --remove-orphans`
   }
 
   async function findAddress(
@@ -75,9 +78,9 @@ export async function runDockerCompose(
       return addresses.get(serviceKey)!
     }
     const {stdout: addressOutput} = await $({
-      cwd: path.dirname(dockerComposeFile),
+      cwd: path.dirname(dockerComposeFilePath),
       env: finalEnv,
-    })`docker compose --file ${dockerComposeFile} --project-name ${projectName} port  --index=${serviceIndex} ${serviceName} ${port}`
+    })`docker compose --file ${dockerComposeFilePath} --project-name ${projectName} port  --index=${serviceIndex} ${serviceName} ${port}`
 
     const address = addressOutput.trim()
 

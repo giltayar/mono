@@ -73,7 +73,7 @@ describe('docker-compose-testkit (integ)', function () {
 
   it('should work with multiple docker composes in parallel', async () => {
     const {teardown: teardown1, findAddress: findAddress1} = await runDockerCompose(
-      path.join(__dirname, 'fixtures/docker-compose.yml'),
+      new URL('fixtures/docker-compose.yml', import.meta.url),
       {
         forceRecreate: true,
         env: {
