@@ -160,6 +160,7 @@ export async function updateStudent(
 export async function deleteStudent(
   studentNumber: number,
   reason: string | undefined,
+  deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
   sql: Sql,
 ): Promise<string | undefined> {
   return await sql.begin(async (sql) => {
@@ -167,7 +168,7 @@ export async function deleteStudent(
     const historyId = crypto.randomUUID()
     const dataIdResult = await sql<{dataId: string}[]>`
       INSERT INTO student_history (id, data_id, student_number, timestamp, operation, operation_reason)
-      SELECT ${historyId}, student.last_data_id as last_data_id, student.student_number, ${now}, 'delete', ${reason ?? null}
+      SELECT ${historyId}, student.last_data_id as last_data_id, student.student_number, ${now}, ${deleteOperation}, ${reason ?? null}
       FROM student_history
       INNER JOIN student ON student.student_number = ${studentNumber}
       WHERE id = student.last_history_id

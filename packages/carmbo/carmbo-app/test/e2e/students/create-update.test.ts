@@ -71,4 +71,3 @@ test('create student then update her', async ({page}) => {
   await expect(firstRow.emailCell().locator).toHaveText('jane.smith@example.com')
   await expect(firstRow.phoneCell().locator).toHaveText('0987654321')
 })
-

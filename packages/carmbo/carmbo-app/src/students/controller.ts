@@ -83,8 +83,12 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
   return {htmxRedirect: `/students/${studentNumber}`}
 }
 
-export async function deleteStudent(studentNumber: number, sql: Sql): Promise<ControllerResult> {
-  const operationId = await model_deleteStudent(studentNumber, undefined, sql)
+export async function deleteStudent(
+  studentNumber: number,
+  deleteOperation: 'delete' | 'restore',
+  sql: Sql,
+): Promise<ControllerResult> {
+  const operationId = await model_deleteStudent(studentNumber, undefined, deleteOperation, sql)
 
   if (!operationId) {
     return {status: 404, body: 'Student not found'}

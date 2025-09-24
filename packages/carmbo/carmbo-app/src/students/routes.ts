@@ -118,12 +118,18 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   // Delete (Archive) student
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .delete(
-      '/:number',
-      {schema: {params: z.object({number: z.coerce.number().int()})}},
-      async (request, reply) =>
-        dealWithControllerResult(reply, await deleteStudent(request.params.number, sql)),
-    )
+  app.withTypeProvider<ZodTypeProvider>().delete(
+    '/:number',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int()}),
+        querystring: z.object({'delete-operation': z.enum(['delete', 'restore'])}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await deleteStudent(request.params.number, request.query['delete-operation'], sql),
+      ),
+  )
 }

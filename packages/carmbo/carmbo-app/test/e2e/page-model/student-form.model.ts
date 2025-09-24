@@ -10,6 +10,7 @@ export function createStudentFormPageModel(page: Page) {
       locator: btnLocator,
     }),
     deleteButton: (locator = page.getByRole('button', {name: 'Delete'})) => ({locator}),
+    restoreButton: (locator = page.getByRole('button', {name: 'Restore'})) => ({locator}),
     names: (namesLocator = locator.getByRole('group', {name: 'Names', exact: true})) => ({
       locator: namesLocator,
       firstNameInput: (i: number) => ({

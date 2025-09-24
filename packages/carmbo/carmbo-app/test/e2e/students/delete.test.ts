@@ -83,3 +83,50 @@ test('deleting a student', async ({page}) => {
   await expect(firstRow.nameCell().locator).toHaveText('Alice Johnson')
   await expect(studentListModel.search().showArchivedCheckbox().locator).not.toBeChecked()
 })
+
+test('restoring a student', async ({page}) => {
+  await page.goto(url().href)
+
+  const studentListModel = createStudentListPageModel(page)
+  const newStudentModel = createNewStudentPageModel(page)
+  const updateStudentModel = createUpdateStudentPageModel(page)
+
+  // Create first student
+  await studentListModel.createNewStudentButton().locator.click()
+  await page.waitForURL(newStudentModel.urlRegex)
+
+  const newForm1 = newStudentModel.form()
+  await newForm1.names().firstNameInput(0).locator.fill('Alice')
+  await newForm1.names().lastNameInput(0).locator.fill('Johnson')
+
+  await newForm1.emails().trashButton(0).locator.click()
+  await newForm1.phones().trashButton(0).locator.click()
+  await newForm1.facebookNames().trashButton(0).locator.click()
+
+  await newForm1.saveButton().locator.click()
+  await page.waitForURL(updateStudentModel.urlRegex)
+
+  // Delete the student
+  await updateStudentModel.form().deleteButton().locator.click()
+
+  await expect(updateStudentModel.pageTitle().locator).toContainText('(deleted)')
+
+  await expect(updateStudentModel.form().deleteButton().locator).not.toBeVisible()
+
+  await updateStudentModel.form().restoreButton().locator.click()
+
+  await expect(updateStudentModel.history().items().locator).toHaveCount(3)
+  await expect(updateStudentModel.history().items().item(0).locator).toContainText('restore')
+  await expect(updateStudentModel.history().items().item(1).locator).toContainText('delete')
+  await expect(updateStudentModel.history().items().item(2).locator).toContainText('create')
+
+  await expect(updateStudentModel.pageTitle().locator).not.toContainText('(deleted)')
+
+  await page.goto(url().href)
+
+  // Verify Bob is visible again
+  const rows = studentListModel.list().rows()
+  await expect(rows.locator).toHaveCount(1)
+  const firstRow = studentListModel.list().rows().row(0)
+  await expect(firstRow.nameCell().locator).toHaveText('Alice Johnson')
+})

@@ -156,10 +156,13 @@ function StudentUpdateView({
     </h1>
     <form hx-put="/students/${student.studentNumber}" hx-target="form" hx-replace-url="true">
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
+      <input name="delete-operation" type="hidden" value=${student.historyOperation === 'delete' ? 'restore' : 'delete'} />
       <section>
         <button type="Submit" value="save">Save</button>
         <button type="Submit" value="discard">Discard</button>
-        <button type="Submit" value="delete" hx-delete="" hx-params="none">Delete</button>
+        <button type="Submit" value="delete" hx-delete="" hx-params="delete-operation">
+          ${student.historyOperation === 'delete' ? 'Restore' : 'Delete'}
+        </button>
       </section>
       <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
     </form>
