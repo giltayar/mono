@@ -35,11 +35,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   app
     .withTypeProvider<ZodTypeProvider>()
     .post('/new', {schema: {body: NewStudentSchema}}, async (request) =>
-      showStudentCreate(request.body, {
-        removeItem: request.headers['x-remove-item'],
-        removeIndex: request.headers['x-remove-index'],
-        addItem: request.headers['x-add-item'],
-      }),
+      showStudentCreate(request.body, {addItem: request.headers['x-add-item']}),
     )
 
   app
@@ -67,11 +63,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           return reply.status(404).send('Student not found')
         }
 
-        return showStudentUpdate(studentWithHistory, {
-          removeItem: request.headers['x-remove-item'],
-          removeIndex: request.headers['x-remove-index'],
-          addItem: request.headers['x-add-item'],
-        })
+        return showStudentUpdate(studentWithHistory, {addItem: request.headers['x-add-item']})
       },
     )
   app.withTypeProvider<ZodTypeProvider>().get(
@@ -112,11 +104,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
         return showStudentUpdate(
           {student: request.body, history: []},
-          {
-            removeItem: request.headers['x-remove-item'],
-            removeIndex: request.headers['x-remove-index'],
-            addItem: request.headers['x-add-item'],
-          },
+          {addItem: request.headers['x-add-item']},
         )
       },
     )

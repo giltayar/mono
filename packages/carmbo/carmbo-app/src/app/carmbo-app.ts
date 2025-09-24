@@ -11,7 +11,7 @@ export function makeApp({
 }: {
   db: {host: string; port: number; username: string; password: string}
 }) {
-  const app = fastify({logger: true})
+  const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
     host,
     port,

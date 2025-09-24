@@ -24,7 +24,7 @@ importers:
         version: 5.6.0
       fastify-type-provider-zod:
         specifier: ^5.1.0
-        version: 5.1.0(patch_hash=dd66c95172b7c7d14047db6419ca2c27384200396156d5182df4786b5aa96ab3)(@fastify/swagger@9.5.1)(fastify@5.6.0)(openapi-types@12.1.3)(zod@4.1.8)
+        version: 5.1.0(patch_hash=dd66c95172b7c7d14047db6419ca2c27384200396156d5182df4786b5aa96ab3)(@fastify/swagger@9.5.1)(fastify@5.6.0)(openapi-types@12.1.3)(zod@4.1.9)
       htm:
         specifier: ^3.1.1
         version: 3.1.1
@@ -41,8 +41,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       zod:
-        specifier: ^4.1.8
-        version: 4.1.8
+        specifier: ^4.1.9
+        version: 4.1.9
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.1
@@ -985,8 +985,8 @@ packages:
     resolution: {integrity: sha512-5KoIu2Ngpyek75jXodFvnafB6DJgr3u8uuK0LEZJjrU19DrMD3EVERaR8sjz8CCGgpZvxPl9SuE1GMVPFHx1mw==}
     engines: {node: '>= 0.4'}
 
-  is-network-error@1.1.0:
-    resolution: {integrity: sha512-tUdRRAnhT+OtCZR/LxZelH/C7QtjtFrTu5tXCA8pl55eTUElUHT+GPYV8MBMBvea/j+NxQqVt3LbWMRir7Gx9g==}
+  is-network-error@1.2.0:
+    resolution: {integrity: sha512-32jdpRpJo8SeL7zOuBJbMLz/VTw9mDpTvcKzzR8DkXWsJbbE60gdiX8YOd0UAV6b8Skt+CMytzfgVVIRFidn0Q==}
     engines: {node: '>=16'}
 
   is-number-object@1.1.1:
@@ -1687,8 +1687,8 @@ packages:
     resolution: {integrity: sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug==}
     engines: {node: '>=18'}
 
-  zod@4.1.8:
-    resolution: {integrity: sha512-5R1P+WwQqmmMIEACyzSvo4JXHY5WiAFHRMg+zBZKgKS+Q1viRa0C1hmUKtHltoIFKtIdki3pRxkmpP74jnNYHQ==}
+  zod@4.1.9:
+    resolution: {integrity: sha512-HI32jTq0AUAC125z30E8bQNz0RQ+9Uc+4J7V97gLYjZVKRjeydPgGt6dvQzFrav7MYOUGFqqOGiHpA/fdbd0cQ==}
 
 snapshots:
 
@@ -2461,13 +2461,13 @@ snapshots:
 
   fastify-plugin@5.0.1: {}
 
-  fastify-type-provider-zod@5.1.0(patch_hash=dd66c95172b7c7d14047db6419ca2c27384200396156d5182df4786b5aa96ab3)(@fastify/swagger@9.5.1)(fastify@5.6.0)(openapi-types@12.1.3)(zod@4.1.8):
+  fastify-type-provider-zod@5.1.0(patch_hash=dd66c95172b7c7d14047db6419ca2c27384200396156d5182df4786b5aa96ab3)(@fastify/swagger@9.5.1)(fastify@5.6.0)(openapi-types@12.1.3)(zod@4.1.9):
     dependencies:
       '@fastify/error': 4.2.0
       '@fastify/swagger': 9.5.1
       fastify: 5.6.0
       openapi-types: 12.1.3
-      zod: 4.1.8
+      zod: 4.1.9
 
   fastify@5.6.0:
     dependencies:
@@ -2745,7 +2745,7 @@ snapshots:
 
   is-negative-zero@2.0.3: {}
 
-  is-network-error@1.1.0: {}
+  is-network-error@1.2.0: {}
 
   is-number-object@1.1.1:
     dependencies:
@@ -2962,7 +2962,7 @@ snapshots:
 
   p-retry@7.0.0:
     dependencies:
-      is-network-error: 1.1.0
+      is-network-error: 1.2.0
 
   package-json-from-dist@1.0.1: {}
 
@@ -3478,4 +3478,4 @@ snapshots:
 
   yoctocolors@2.1.2: {}
 
-  zod@4.1.8: {}
+  zod@4.1.9: {}

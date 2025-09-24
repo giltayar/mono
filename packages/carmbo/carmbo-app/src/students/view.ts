@@ -54,7 +54,6 @@ export function StudentUpdateView({
   student: Student
   history: StudentHistory[]
 }) {
-  console.log('***** history in view', history)
   return html`
     <h1>Update Student ${student.studentNumber}</h1>
     <form

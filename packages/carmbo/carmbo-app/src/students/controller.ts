@@ -17,8 +17,6 @@ export async function showStudents({flash}: {flash?: string}, sql: Sql) {
 }
 
 type StudentManipulations = {
-  removeItem: string | string[] | undefined
-  removeIndex: string | string[] | undefined
   addItem: string | string[] | undefined
 }
 
@@ -72,28 +70,11 @@ function manipulateStudent<T extends NewStudent | Student>(
   manipulations: StudentManipulations,
 ): T {
   const transformed = {...student}
-  const removeItem = Array.isArray(manipulations.removeItem) ? undefined : manipulations.removeItem
-  const removeIndex = Array.isArray(manipulations.removeIndex)
-    ? undefined
-    : manipulations.removeIndex
   const addItem = Array.isArray(manipulations.addItem) ? undefined : manipulations.addItem
-
-  assert(
-    removeItem === undefined || ARRAY_FIELDS_IN_STUDENT.includes(removeItem),
-    `Invalid removeItem: ${removeItem}`,
-  )
   assert(
     addItem === undefined || ARRAY_FIELDS_IN_STUDENT.includes(addItem),
     `Invalid addItem: ${addItem}`,
   )
-
-  if (removeItem && removeIndex) {
-    const index = parseInt(removeIndex, 10)
-    if (!isNaN(index)) {
-      // @ts-expect-error dynamic stuff!
-      transformed[removeItem].splice(index, 1)
-    }
-  }
 
   if (addItem) {
     if (addItem === 'names') {

@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "type": "module",
   "exports": {},
@@ -21,11 +21,11 @@
     "start:app": "node --watch ./src/app/index.ts | pino-pretty",
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf .db-data",
-    "build": "run-p 'build:*'",
+    "build": "FORCE_COLOR=1 asldkh asdklf kasjdh run-p 'build:*'",
     "build:css": "mkdir -p dist && cat src/**/*.css > dist/styles.css",
     "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/",
     "build:scripts": "cat src/**/scripts.js > dist/scripts.js",
-    "test": "run-p --aggregate-output 'test:*'",
+    "test": "FORCE_COLOR=1 NODE_ENV=test run-p --aggregate-output 'test:*'",
     "test:eslint": "sudo chown ${USER} -R .db-data/pgdata && eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
     "test:playwright": "playwright test --config=test/e2e"
@@ -51,7 +51,7 @@
     "postgres": "^3.4.7",
     "qs": "^6.14.0",
     "vhtml": "^2.2.0",
-    "zod": "^4.1.8"
+    "zod": "^4.1.9"
   },
   "packageManager": "pnpm@10.17.1",
   "devDependencies": {
