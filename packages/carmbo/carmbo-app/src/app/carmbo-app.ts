@@ -22,7 +22,17 @@ export function makeApp({
   })
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
-  app.register(fastifystatic, {root: new URL('../../dist', import.meta.url), prefix: '/public/'})
+  app.register(fastifystatic, {
+    root: new URL('../../dist', import.meta.url),
+    prefix: '/third-party/',
+    decorateReply: false,
+  })
+  app.register(fastifystatic, {
+    root: new URL('../../src', import.meta.url),
+    prefix: '/public/',
+    decorateReply: false,
+    allowedPath: (pathName) => pathName.endsWith('scripts.js') || pathName.endsWith('.css'),
+  })
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "target": "esnext",
     "module": "nodenext",
     "moduleResolution": "nodenext",
@@ -15,12 +15,13 @@
     "esModuleInterop": true,
     "rootDir": ".",
     "checkJs": true,
+    "allowJs": true,
     "skipLibCheck": true,
     "declarationDir": "dist",
     "outDir": "dist",
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.[t|j]s", "test/**/*.ts"],
   "exclude": ["node_modules"]
 }
