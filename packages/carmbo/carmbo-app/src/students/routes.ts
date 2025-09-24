@@ -1,12 +1,11 @@
 import {
-  showOngoingStudentCreate,
-  showOngoingStudentUpdate,
   showStudentCreate,
   showStudentInHistory,
   showStudents,
   showStudentUpdate,
   createStudent,
   updateStudent,
+  showOngoingStudent,
 } from './controller.ts'
 import {NewStudentSchema, StudentSchema} from './model.ts'
 import assert from 'node:assert'
@@ -30,7 +29,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     .post('/new', {schema: {body: NewStudentSchema}}, async (request, reply) =>
       dealWithControllerResult(
         reply,
-        showOngoingStudentCreate(request.body, {addItem: request.headers['x-add-item']}),
+        showOngoingStudent(request.body, {addItem: request.headers['x-add-item']}),
       ),
     )
 
@@ -73,7 +72,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
         return dealWithControllerResult(
           reply,
-          showOngoingStudentUpdate(request.body, {addItem: request.headers['x-add-item']}),
+          showOngoingStudent(request.body, {addItem: request.headers['x-add-item']}),
         )
       },
     )

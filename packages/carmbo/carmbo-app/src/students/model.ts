@@ -13,6 +13,10 @@ export const StudentSchema = z.object({
   cardcomCustomerId: z.union([z.string(), z.undefined()]),
 })
 
+export const StudentWithOperationIdSchema = StudentSchema.extend({
+  id: z.uuid(),
+})
+
 export const NewStudentSchema = z.object({
   birthday: z.iso.date().transform((s) => new Date(s)),
   names: z.array(z.object({firstName: z.string(), lastName: z.string()})).optional(),
@@ -23,6 +27,7 @@ export const NewStudentSchema = z.object({
 })
 
 export type Student = z.infer<typeof StudentSchema>
+export type StudentWithOperationId = z.infer<typeof StudentWithOperationIdSchema>
 export type NewStudent = z.infer<typeof NewStudentSchema>
 
 export interface StudentForGrid {
@@ -108,11 +113,48 @@ export async function createStudent(student: NewStudent, reason: string | undefi
   })
 }
 
+export async function updateStudent(
+  student: Student,
+  reason: string | undefined,
+  sql: Sql,
+): Promise<number | undefined> {
+  return await sql.begin(async (sql) => {
+    const now = new Date()
+    const operationId = crypto.randomUUID()
+
+    await sql`
+  INSERT INTO student_operation VALUES
+    (${operationId}, ${student.studentNumber}, ${now}, 'update', ${reason ?? null}, ${student.birthday})
+
+  `
+    const studentNumberResult = await sql`
+        UPDATE student SET
+          student_number = ${student.studentNumber},
+          last_operation_id = ${operationId}
+        WHERE student_number = ${student.studentNumber}
+        RETURNING student_number
+      `
+
+    if (studentNumberResult.length === 0) {
+      return undefined
+    }
+
+    assert(
+      studentNumberResult.length === 1,
+      `More than one student with ID ${student.studentNumber}`,
+    )
+
+    await addStudentStuff(student, operationId, sql)
+
+    return student.studentNumber
+  })
+}
+
 export async function queryStudentByNumber(
   studentNumber: number,
   sql: Sql,
-): Promise<{student: Student; history: StudentHistory[]} | undefined> {
-  const pstudent = sql<Student[]>`
+): Promise<{student: StudentWithOperationId; history: StudentHistory[]} | undefined> {
+  const pstudent = sql<StudentWithOperationId[]>`
 WITH
   current_operation_id (current_operation_id) AS (
     SELECT
@@ -125,18 +167,7 @@ WITH
   ${studentSelect(studentNumber, sql)}
   `
 
-  const phistory = sql<StudentHistory[]>`
-SELECT
-  id as operation_id,
-  operation,
-  timestamp
-FROM
-  student_operation
-WHERE
-  student_operation.student_number = ${studentNumber}
-ORDER BY
-  timestamp DESC
-  `
+  const phistory = studentHistorySelect(studentNumber, sql)
   const [student, history] = await Promise.all([pstudent, phistory])
 
   if (student.length === 0) {
@@ -152,8 +183,9 @@ export async function queryStudentByOperationId(
   studentNumber: number,
   operationId: string,
   sql: Sql,
-): Promise<Student | undefined> {
-  const student = await sql<Student[]>`
+): Promise<{student: StudentWithOperationId; history: StudentHistory[]} | undefined> {
+  const phistory = studentHistorySelect(studentNumber, sql)
+  const pstudent = sql<StudentWithOperationId[]>`
 WITH
   current_operation_id (current_operation_id) AS (
     SELECT
@@ -161,8 +193,7 @@ WITH
   )
   ${studentSelect(studentNumber, sql)}
   `
-
-  console.log('***** student by operationId', studentNumber, operationId, student.statement.string)
+  const [student, history] = await Promise.all([pstudent, phistory])
 
   if (student.length === 0) {
     return undefined
@@ -170,11 +201,11 @@ WITH
 
   assert(student.length === 1, `More than one student with ID ${studentNumber}`)
 
-  return student[0]
+  return {student: student[0], history}
 }
 
 function studentSelect(studentNumber: number, sql: Sql) {
-  return sql<Student[]>`
+  return sql<StudentWithOperationId[]>`
 SELECT
   id,
   student_number,
@@ -242,41 +273,19 @@ FROM
        `
 }
 
-export async function updateStudent(
-  student: Student,
-  reason: string | undefined,
-  sql: Sql,
-): Promise<number | undefined> {
-  return await sql.begin(async (sql) => {
-    const now = new Date()
-    const operationId = crypto.randomUUID()
-
-    await sql`
-  INSERT INTO student_operation VALUES
-    (${operationId}, ${student.studentNumber}, ${now}, 'update', ${reason ?? null}, ${student.birthday})
-
+function studentHistorySelect(studentNumber: number, sql: Sql) {
+  return sql<StudentHistory[]>`
+SELECT
+  id as operation_id,
+  operation,
+  timestamp
+FROM
+  student_operation
+WHERE
+  student_operation.student_number = ${studentNumber}
+ORDER BY
+  timestamp DESC
   `
-    const studentNumberResult = await sql`
-        UPDATE student SET
-          student_number = ${student.studentNumber},
-          last_operation_id = ${operationId}
-        WHERE student_number = ${student.studentNumber}
-        RETURNING student_number
-      `
-
-    if (studentNumberResult.length === 0) {
-      return undefined
-    }
-
-    assert(
-      studentNumberResult.length === 1,
-      `More than one student with ID ${student.studentNumber}`,
-    )
-
-    await addStudentStuff(student, operationId, sql)
-
-    return student.studentNumber
-  })
 }
 
 async function addStudentStuff(student: Student | NewStudent, operationId: string, sql: Sql) {

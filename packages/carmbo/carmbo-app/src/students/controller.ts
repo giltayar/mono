@@ -10,6 +10,7 @@ import {
 import {
   renderStudentsCreatePage,
   renderStudentsPage,
+  renderStudentFormFields,
   renderStudentUpdatePage,
   renderStudentViewInHistoryPage,
   type StudentManipulations,
@@ -24,13 +25,6 @@ export async function showStudents({flash}: {flash?: string}, sql: Sql): Promise
 
 export function showStudentCreate(): ControllerResult {
   return finalHtml(renderStudentsCreatePage(undefined, undefined))
-}
-
-export function showOngoingStudentCreate(
-  student: NewStudent,
-  manipulations: StudentManipulations,
-): ControllerResult {
-  return finalHtml(renderStudentsCreatePage(student, manipulations))
 }
 
 export async function showStudentUpdate(
@@ -48,11 +42,11 @@ export async function showStudentUpdate(
   )
 }
 
-export function showOngoingStudentUpdate(
-  student: Student,
+export function showOngoingStudent(
+  student: Student | NewStudent,
   manipulations: StudentManipulations,
 ): ControllerResult {
-  return finalHtml(renderStudentUpdatePage(student, [], manipulations))
+  return finalHtml(renderStudentFormFields(student, manipulations, 'write'))
 }
 
 export async function showStudentInHistory(
@@ -66,7 +60,7 @@ export async function showStudentInHistory(
     return {status: 404, body: 'Student not found'}
   }
 
-  return finalHtml(renderStudentViewInHistoryPage(student))
+  return finalHtml(renderStudentViewInHistoryPage(student.student, student.history))
 }
 
 export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {

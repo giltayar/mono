@@ -1,7 +1,13 @@
-import {assert} from 'console'
+import assert from 'node:assert'
 import {html} from '../commons/html-templates.ts'
 import {MainLayout} from '../layouts/main-view.ts'
-import type {NewStudent, Student, StudentForGrid, StudentHistory} from './model.ts'
+import type {
+  NewStudent,
+  Student,
+  StudentForGrid,
+  StudentHistory,
+  StudentWithOperationId,
+} from './model.ts'
 
 export type StudentManipulations = {
   addItem: string | string[] | undefined
@@ -40,21 +46,37 @@ export function renderStudentsCreatePage(
 }
 
 export function renderStudentUpdatePage(
-  student: Student,
+  student: StudentWithOperationId,
   history: StudentHistory[],
   manipulations: StudentManipulations,
 ) {
   return html`
     <${MainLayout} title="Students">
-      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history}/>
+      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history} />
     </${MainLayout}>
   `
 }
 
-export function renderStudentViewInHistoryPage(student: Student) {
+export function renderStudentFormFields(
+  student: Student | NewStudent,
+  manipulations: StudentManipulations,
+  operation: 'read' | 'write',
+) {
   return html`
+    <${StudentCreateOrUpdateFormFields}
+      student=${manipulateStudent(student, manipulations)}
+      operation=${operation}
+    />
+  `
+}
+
+export function renderStudentViewInHistoryPage(
+  student: StudentWithOperationId,
+  history: StudentHistory[],
+) {
+  return html`,
     <${MainLayout} title="Students">
-      <${StudentHistoryView} student=${student} />
+      <${StudentHistoryView} student=${student} history=${history} operationId=${student.id} />
     </${MainLayout}>
   `
 }
@@ -105,15 +127,16 @@ function StudentCreateView({student}: {student: Student}) {
   `
 }
 
-function StudentUpdateView({student, history}: {student: Student; history: StudentHistory[]}) {
+function StudentUpdateView({
+  student,
+  history,
+}: {
+  student: StudentWithOperationId
+  history: StudentHistory[]
+}) {
   return html`
     <h1>Update Student ${student.studentNumber}</h1>
-    <form
-      hx-put="/students/${student.studentNumber}"
-      hx-target="form"
-      hx-select="form"
-      hx-replace-url="true"
-    >
+    <form hx-put="/students/${student.studentNumber}" hx-target="form" hx-replace-url="true">
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
       <section>
         <button type="Submit" value="save">Save</button>
@@ -121,27 +144,57 @@ function StudentUpdateView({student, history}: {student: Student; history: Stude
       </section>
       <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
     </form>
-    <ul>
-      ${history?.map(
-        (entry) =>
-          html`<li>
-            <a href=${`./${student.studentNumber}/by-history/${entry.operationId}`}
-              >${entry.operation}</a
-            ><> </>
-            at ${new Date(entry.timestamp).toLocaleString()}
-          </li>`,
-      )}
-    </ul>
+    <${StudentHistoryList} student=${student} history=${history} />
   `
 }
 
-function StudentHistoryView({student}: {student: Student}) {
+function StudentHistoryView({
+  student,
+  history,
+}: {
+  student: StudentWithOperationId
+  history: StudentHistory[]
+}) {
+  const currentHistory = history.find((h) => h.operationId === student.id)
+
   return html`
-    <h1>View Student ${student.studentNumber}</h1>
+    <h1>
+      View Student ${student.studentNumber} (${currentHistory?.operation ?? 'unknown'} at
+      ${currentHistory ? new Date(currentHistory.timestamp).toLocaleString() : '???'})
+    </h1>
     <form>
       <input name="studentNumber" type="hidden" value=${student.studentNumber} readonly />
       <${StudentCreateOrUpdateFormFields} student=${student} operation="read" />
     </form>
+    <${StudentHistoryList} student=${student} history=${history} />
+  `
+}
+
+function StudentHistoryList({
+  student,
+  history,
+}: {
+  student: StudentWithOperationId
+  history: StudentHistory[]
+}) {
+  return html`
+    <ul>
+      ${history?.map(
+        (entry) =>
+          html`<li>
+            ${
+              entry.operationId === student.id
+                ? html`<strong>${entry.operation}</strong>`
+                : html` <a
+                    href=${`/students/${student.studentNumber}/by-history/${entry.operationId}`}
+                  >
+                    ${entry.operation}</a
+                  >`
+            }<> </>
+            at ${new Date(entry.timestamp).toLocaleString()}
+          </li>`,
+      )}
+    </ul>
   `
 }
 
@@ -150,9 +203,9 @@ function AddButton({itemsName: itemName}: {itemsName: string}) {
     <button
       class="students-view_add"
       hx-post=""
-      hx-target="closest form"
+      hx-target="closest .students-view_form-fields"
+      hx-swap="outerHTML"
       hx-trigger="click delay:1ms"
-      hx-select="form"
       hx-headers=${JSON.stringify({'X-Add-Item': itemName})}
       aria-label="Add"
     >
@@ -166,9 +219,9 @@ function RemoveButton() {
     <button
       class="students-view_trash"
       hx-post=""
-      hx-target="closest form"
+      hx-target="closest .students-view_form-fields"
+      hx-swap="outerHTML"
       hx-trigger="click delay:1ms"
-      hx-select="form"
     >
       Trash
     </button>
@@ -179,121 +232,123 @@ function StudentCreateOrUpdateFormFields({
   student,
   operation,
 }: {
-  student: Student
+  student: Student | NewStudent
   operation: 'read' | 'write'
 }) {
   const maybeRo = operation === 'read' ? 'readonly' : ''
 
   return html`
-    <fieldset>
-      <legend>Names</legend>
-      ${student.names?.map(
-        (name, i) => html`
-          <div class="students-view_item">
-            <label>
-              First Name
-              <input
-                name="names[${i}][firstName]"
-                type="text"
-                value=${name.firstName}
-                required
-                ${maybeRo}
-              />
-            </label>
-            <label>
-              Last Name
-              <input
-                name="names[${i}][lastName]"
-                type="text"
-                value=${name.lastName}
-                required
-                ${maybeRo}
-              />
-            </label>
-            ${operation === 'write' && html`<${RemoveButton} />`}
-          </div>
-        `,
-      )}
-      ${operation === 'write' && html`<${AddButton} itemsName="names" />`}
-    </fieldset>
+    <div class="students-view_form-fields">
+      <fieldset>
+        <legend>Names</legend>
+        ${student.names?.map(
+          (name, i) => html`
+            <div class="students-view_item">
+              <label>
+                First Name
+                <input
+                  name="names[${i}][firstName]"
+                  type="text"
+                  value=${name.firstName}
+                  required
+                  ${maybeRo}
+                />
+              </label>
+              <label>
+                Last Name
+                <input
+                  name="names[${i}][lastName]"
+                  type="text"
+                  value=${name.lastName}
+                  required
+                  ${maybeRo}
+                />
+              </label>
+              ${operation === 'write' && html`<${RemoveButton} />`}
+            </div>
+          `,
+        )}
+        ${operation === 'write' && html`<${AddButton} itemsName="names" />`}
+      </fieldset>
 
-    <fieldset>
-      <legend>Emails</legend>
-      ${student.emails?.map(
-        (email, i) => html`
-          <div class="students-view_item">
-            <label>
-              Email
-              <input name="emails[${i}]" type="email" value=${email} ${maybeRo} required />
-            </label>
-            ${operation === 'write' && html`<${RemoveButton} />`}
-          </div>
-        `,
-      )}
-      ${operation === 'write' && html`<${AddButton} itemsName="emails" />`}
-    </fieldset>
+      <fieldset>
+        <legend>Emails</legend>
+        ${student.emails?.map(
+          (email, i) => html`
+            <div class="students-view_item">
+              <label>
+                Email
+                <input name="emails[${i}]" type="email" value=${email} ${maybeRo} required />
+              </label>
+              ${operation === 'write' && html`<${RemoveButton} />`}
+            </div>
+          `,
+        )}
+        ${operation === 'write' && html`<${AddButton} itemsName="emails" />`}
+      </fieldset>
 
-    <fieldset>
-      <legend>Phones</legend>
-      ${student.phones?.map(
-        (phone, i) => html`
-          <div class="students-view_item">
-            <label>
-              Phone
-              <input
-                name="phones[${i}]"
-                type="tel"
-                value=${phone}
-                ${maybeRo}
-                pattern="^\\+?[\\d\\-\\.]+$"
-                required
-              />
-            </label>
-            ${operation === 'write' && html`<${RemoveButton} />`}
-          </div>
-        `,
-      )}
-      ${operation === 'write' && html`<${AddButton} itemsName="phones" />`}
-    </fieldset>
+      <fieldset>
+        <legend>Phones</legend>
+        ${student.phones?.map(
+          (phone, i) => html`
+            <div class="students-view_item">
+              <label>
+                Phone
+                <input
+                  name="phones[${i}]"
+                  type="tel"
+                  value=${phone}
+                  ${maybeRo}
+                  pattern="^\\+?[\\d\\-\\.]+$"
+                  required
+                />
+              </label>
+              ${operation === 'write' && html`<${RemoveButton} />`}
+            </div>
+          `,
+        )}
+        ${operation === 'write' && html`<${AddButton} itemsName="phones" />`}
+      </fieldset>
 
-    <fieldset>
-      <legend>Facebook names</legend>
-      ${student.facebookNames?.map(
-        (fb, i) => html`
-          <div class="students-view_item">
-            <label>
-              Facebook name
-              <input name="facebookNames[${i}]" type="text" value=${fb} ${maybeRo} required />
-            </label>
-            ${operation === 'write' && html`<${RemoveButton} />`}
-          </div>
-        `,
-      )}
-      ${operation === 'write' && html`<${AddButton} itemsName="facebookNames" />`}
-    </fieldset>
+      <fieldset>
+        <legend>Facebook names</legend>
+        ${student.facebookNames?.map(
+          (fb, i) => html`
+            <div class="students-view_item">
+              <label>
+                Facebook name
+                <input name="facebookNames[${i}]" type="text" value=${fb} ${maybeRo} required />
+              </label>
+              ${operation === 'write' && html`<${RemoveButton} />`}
+            </div>
+          `,
+        )}
+        ${operation === 'write' && html`<${AddButton} itemsName="facebookNames" />`}
+      </fieldset>
 
-    <div>
-      <label>
-        Birthday
-        <input
-          name="birthday"
-          type="date"
-          value="${student.birthday.toISOString().split('T')[0]}"
-          ${maybeRo}
-        />
-      </label>
-    </div>
+      <div>
+        <label>
+          Birthday
+          <input
+            name="birthday"
+            type="date"
+            value="${student.birthday.toISOString().split('T')[0]}"
+            ${maybeRo}
+          />
+        </label>
+      </div>
 
-    <div>
-      <label>
-        Cardcom Customer ID
-        <input
-          name="cardcomCustomerId"
-          type="text"
-          value="${student.cardcomCustomerId}"
-          ${maybeRo}
-        />
-      </label>
+      <div>
+        <label>
+          Cardcom Customer ID
+          <input
+            name="cardcomCustomerId"
+            type="text"
+            value="${student.cardcomCustomerId}"
+            ${maybeRo}
+          />
+        </label>
+      </div>
     </div>
   `
 }

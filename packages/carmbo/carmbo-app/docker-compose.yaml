@@ -11,7 +11,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - ./.db-data:/var/lib/postgresql/data
+      - /tmp/carmbo-app/.db-data:/var/lib/postgresql/data
       # Mount SQL scripts to be executed on container startup (ordered by filename)
       - ./src/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
