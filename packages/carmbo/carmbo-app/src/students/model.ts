@@ -1,5 +1,5 @@
 import type {Sql} from 'postgres'
-import {type HistoryOperation} from '../commons/operation-type.ts'
+import {HistoryOperationEnumSchema, type HistoryOperation} from '../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
 
@@ -16,8 +16,9 @@ export const StudentSchema = z.object({
   cardcomCustomerId: z.union([z.string(), z.undefined()]),
 })
 
-export const StudentWithHistoryIdSchema = StudentSchema.extend({
+export const StudentWithHistoryInfoSchema = StudentSchema.extend({
   id: z.uuid(),
+  historyOperation: HistoryOperationEnumSchema,
 })
 
 export const NewStudentSchema = z.object({
@@ -30,7 +31,7 @@ export const NewStudentSchema = z.object({
 })
 
 export type Student = z.infer<typeof StudentSchema>
-export type StudentWithHistoryId = z.infer<typeof StudentWithHistoryIdSchema>
+export type StudentWithHistoryInfo = z.infer<typeof StudentWithHistoryInfoSchema>
 export type NewStudent = z.infer<typeof NewStudentSchema>
 
 export interface StudentForGrid {
@@ -49,7 +50,10 @@ export interface StudentHistory {
   timestamp: Date
 }
 
-export async function listStudents(sql: Sql): Promise<StudentForGrid[]> {
+export async function listStudents(
+  sql: Sql,
+  {withArchived}: {withArchived: boolean},
+): Promise<StudentForGrid[]> {
   const result = await sql<StudentForGrid[]>`
     SELECT
       student.student_number,
@@ -84,9 +88,12 @@ export async function listStudents(sql: Sql): Promise<StudentForGrid[]> {
         WHERE
           student_phone.data_id = student_history.data_id
       ) phones ON true
-    WHERE
-      operation <> 'delete'
+    ${
+      withArchived
+        ? sql``
+        : sql`WHERE operation <> 'delete'
   `
+    }`
 
   return result
 }
@@ -158,14 +165,14 @@ export async function deleteStudent(
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
-    const dataIdResult = await sql<{last_data_id: string}[]>`
-        INSERT INTO student_history (id, data_id, student_number, timestamp, operation, operation_reason)
-        SELECT ${historyId}, student.last_data_id as last_data_id, student_number, ${now}, 'delete', ${reason ?? null}
-        FROM student_history
-        INNER JOIN student ON student.student_number = ${studentNumber}
-        WHERE id = student.last_history_id
-        RETURNING student.last_data_id
-        `
+    const dataIdResult = await sql<{dataId: string}[]>`
+      INSERT INTO student_history (id, data_id, student_number, timestamp, operation, operation_reason)
+      SELECT ${historyId}, student.last_data_id as last_data_id, student.student_number, ${now}, 'delete', ${reason ?? null}
+      FROM student_history
+      INNER JOIN student ON student.student_number = ${studentNumber}
+      WHERE id = student.last_history_id
+      RETURNING student_history.data_id as data_id
+    `
 
     if (dataIdResult.length === 0) {
       return undefined
@@ -178,8 +185,8 @@ export async function deleteStudent(
     await sql`
         UPDATE student SET
           student_number = ${studentNumber},
-          last_history_id = ${historyId}
-          last_data_id = ${dataIdResult[0].last_data_id}
+          last_history_id = ${historyId},
+          last_data_id = ${dataIdResult[0].dataId}
         WHERE student_number = ${studentNumber}
      `
 
@@ -190,8 +197,8 @@ export async function deleteStudent(
 export async function queryStudentByNumber(
   studentNumber: number,
   sql: Sql,
-): Promise<{student: StudentWithHistoryId; history: StudentHistory[]} | undefined> {
-  const pstudent = sql<StudentWithHistoryId[]>`
+): Promise<{student: StudentWithHistoryInfo; history: StudentHistory[]} | undefined> {
+  const pstudent = sql<StudentWithHistoryInfo[]>`
     WITH parameters (current_data_id, current_history_id) AS (
       SELECT
         last_data_id, last_history_id
@@ -219,8 +226,8 @@ export async function queryStudentByHistoryId(
   studentNumber: number,
   historyId: string,
   sql: Sql,
-): Promise<{student: StudentWithHistoryId; history: StudentHistory[]} | undefined> {
-  const pstudent = sql<StudentWithHistoryId[]>`
+): Promise<{student: StudentWithHistoryInfo; history: StudentHistory[]} | undefined> {
+  const pstudent = sql<StudentWithHistoryInfo[]>`
     WITH parameters (current_data_id, current_history_id) AS (
       SELECT
         data_id, id
@@ -246,9 +253,10 @@ export async function queryStudentByHistoryId(
 }
 
 function studentSelect(studentNumber: number, sql: Sql) {
-  return sql<StudentWithHistoryId[]>`
+  return sql<StudentWithHistoryInfo[]>`
 SELECT
   current_history_id as id,
+  student_history.operation as history_operation,
   ${studentNumber} as student_number,
   birthday,
   student_integration_cardcom.customer_id AS cardcom_customer_id,
@@ -258,6 +266,7 @@ SELECT
   COALESCE(phones, json_build_array()) AS phones
 FROM
   parameters
+  LEFT JOIN student_history ON student_history.id = current_history_id
   LEFT JOIN student_integration_cardcom ON student_integration_cardcom.data_id = current_data_id
   LEFT JOIN student_data ON student_data.data_id = current_data_id
   LEFT JOIN LATERAL (

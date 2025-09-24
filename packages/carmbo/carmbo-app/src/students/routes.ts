@@ -18,8 +18,14 @@ import {dealWithControllerResult} from '../commons/routes-commons.ts'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   // List students
-  app.get<{Querystring: {flash: string}}>('/', async (request, reply) =>
-    dealWithControllerResult(reply, await showStudents({flash: request.query.flash}, sql)),
+  app.get<{Querystring: {flash: string; 'with-archived': string}}>('/', async (request, reply) =>
+    dealWithControllerResult(
+      reply,
+      await showStudents(
+        {flash: request.query.flash, withArchived: 'with-archived' in request.query},
+        sql,
+      ),
+    ),
   )
 
   // Create new student

@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "",
   "type": "module",
   "exports": {},
@@ -18,7 +18,7 @@
     "start": "run-p 'start:*'",
     "stop": "run-p 'stop:*'",
     "start:docker-compose": "docker compose up -d",
-    "start:app": "node --watch ./src/app/index.ts | pino-pretty",
+    "start:app": "node --inspect --watch ./src/app/index.ts | pino-pretty",
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf /tmp/carmbo-app/.db-data",
     "build": "FORCE_COLOR=1 run-p 'build:*'",

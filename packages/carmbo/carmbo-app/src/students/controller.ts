@@ -18,10 +18,13 @@ import {
 } from './view.ts'
 import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
 
-export async function showStudents({flash}: {flash?: string}, sql: Sql): Promise<ControllerResult> {
-  const students = await listStudents(sql)
+export async function showStudents(
+  {flash, withArchived}: {flash?: string; withArchived: boolean},
+  sql: Sql,
+): Promise<ControllerResult> {
+  const students = await listStudents(sql, {withArchived})
 
-  return finalHtml(renderStudentsPage(flash, students))
+  return finalHtml(renderStudentsPage(flash, students, {withArchived}))
 }
 
 export function showStudentCreate(): ControllerResult {

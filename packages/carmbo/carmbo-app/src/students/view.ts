@@ -6,17 +6,21 @@ import type {
   Student,
   StudentForGrid,
   StudentHistory,
-  StudentWithHistoryId,
+  StudentWithHistoryInfo,
 } from './model.ts'
 
 export type StudentManipulations = {
   addItem: string | string[] | undefined
 }
 
-export function renderStudentsPage(flash: string | undefined, students: StudentForGrid[]) {
+export function renderStudentsPage(
+  flash: string | undefined,
+  students: StudentForGrid[],
+  {withArchived}: {withArchived: boolean},
+) {
   return html`
     <${MainLayout} title="Students" flash=${flash}>
-      <${StudentsView} students=${students} />
+      <${StudentsView} students=${students} withArchived=${withArchived} />
     </${MainLayout}>
   `
 }
@@ -46,7 +50,7 @@ export function renderStudentsCreatePage(
 }
 
 export function renderStudentUpdatePage(
-  student: StudentWithHistoryId,
+  student: StudentWithHistoryInfo,
   history: StudentHistory[],
   manipulations: StudentManipulations,
 ) {
@@ -71,7 +75,7 @@ export function renderStudentFormFields(
 }
 
 export function renderStudentViewInHistoryPage(
-  student: StudentWithHistoryId,
+  student: StudentWithHistoryInfo,
   history: StudentHistory[],
 ) {
   return html`,
@@ -81,9 +85,20 @@ export function renderStudentViewInHistoryPage(
   `
 }
 
-function StudentsView({students}: {students: StudentForGrid[]}) {
+function StudentsView({
+  students,
+  withArchived,
+}: {
+  students: StudentForGrid[]
+  withArchived: boolean
+}) {
   return html`
     <h1>Students</h1>
+    <form action="/students" hx-boosted>
+      <input type="checkbox" name="with-archived" id="with-archived" checked=${withArchived} />
+      <label for="with-archived">Show archived</label>
+      <button type="submit">Refresh</button>
+    </form>
     <table>
       <thead>
         <tr>
@@ -131,11 +146,14 @@ function StudentUpdateView({
   student,
   history,
 }: {
-  student: StudentWithHistoryId
+  student: StudentWithHistoryInfo
   history: StudentHistory[]
 }) {
   return html`
-    <h1>Update Student ${student.studentNumber}</h1>
+    <h1>
+      Update Student ${student.studentNumber}<> </>
+      ${student.historyOperation === 'delete' ? '(deleted)' : ''}
+    </h1>
     <form hx-put="/students/${student.studentNumber}" hx-target="form" hx-replace-url="true">
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
       <section>
@@ -153,7 +171,7 @@ function StudentHistoryView({
   student,
   history,
 }: {
-  student: StudentWithHistoryId
+  student: StudentWithHistoryInfo
   history: StudentHistory[]
 }) {
   const currentHistory = history.find((h) => h.historyId === student.id)
@@ -175,7 +193,7 @@ function StudentHistoryList({
   student,
   history,
 }: {
-  student: StudentWithHistoryId
+  student: StudentWithHistoryInfo
   history: StudentHistory[]
 }) {
   return html`

@@ -17,6 +17,11 @@ export function createStudentListPageModel(page: Page) {
       }),
     }),
     createNewStudentButton: (locator = page.getByText('Create new student')) => ({locator}),
+    search: (locator = page.getByLabel('Search')) => ({
+      locator,
+      showArchivedCheckbox: (locator = page.getByLabel('Show archived')) => ({locator}),
+      refreshButton: (locator = page.getByRole('button', {name: 'Refresh'})) => ({locator}),
+    }),
   }
 }
 
