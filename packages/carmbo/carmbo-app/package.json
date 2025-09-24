@@ -21,7 +21,7 @@
     "start:app": "node --watch ./src/app/index.ts | pino-pretty",
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf .db-data",
-    "build": "FORCE_COLOR=1 asldkh asdklf kasjdh run-p 'build:*'",
+    "build": "FORCE_COLOR=1 run-p 'build:*'",
     "build:css": "mkdir -p dist && cat src/**/*.css > dist/styles.css",
     "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/",
     "build:scripts": "cat src/**/scripts.js > dist/scripts.js",
