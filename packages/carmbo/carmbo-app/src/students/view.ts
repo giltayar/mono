@@ -178,7 +178,7 @@ function StudentHistoryList({
   history: StudentHistory[]
 }) {
   return html`
-    <ul>
+    <ul aria-label="Student History">
       ${history?.map(
         (entry) =>
           html`<li>
