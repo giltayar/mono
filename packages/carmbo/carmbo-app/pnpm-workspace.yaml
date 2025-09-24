@@ -6,6 +6,3 @@ minimumReleaseAgeExclude:
   - '@types/*'
   - eslint*
   - '@eslint/*'
-
-patchedDependencies:
-  fastify-type-provider-zod@5.1.0: patches/fastify-type-provider-zod@5.1.0.patch

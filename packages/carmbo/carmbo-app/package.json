@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "type": "module",
   "exports": {},
@@ -17,7 +17,7 @@
   "scripts": {
     "start": "run-p 'start:*'",
     "stop": "run-p 'stop:*'",
-    "start:docker-compose": "mkdir -p .db-data/pgdata && docker compose up  -d",
+    "start:docker-compose": "docker compose up  -d",
     "start:app": "node --watch ./src/app/index.ts | pino-pretty",
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf .db-data",
@@ -25,10 +25,10 @@
     "build:css": "mkdir -p dist && cat src/**/*.css > dist/styles.css",
     "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/",
     "build:scripts": "cat src/**/scripts.js > dist/scripts.js",
-    "test": "FORCE_COLOR=1 NODE_ENV=test run-p --aggregate-output 'test:*'",
+    "test": "FORCE_COLOR=1 run-p --aggregate-output 'test:*'",
     "test:eslint": "sudo chown ${USER} -R .db-data/pgdata && eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
-    "test:playwright": "playwright test --config=test/e2e"
+    "test:playwright": "NODE_ENV=test playwright test --config=test/e2e"
   },
   "keywords": [
     "javascript",
@@ -45,7 +45,7 @@
     "@fastify/formbody": "^8.0.2",
     "@fastify/static": "^8.2.0",
     "fastify": "^5.6.0",
-    "fastify-type-provider-zod": "^5.1.0",
+    "fastify-type-provider-zod": "^6.0.0",
     "htm": "^3.1.1",
     "htmx.org": "^2.0.7",
     "postgres": "^3.4.7",
@@ -62,7 +62,7 @@
     "@types/node": "^24.5.2",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20250919.1",
+    "@typescript/native-preview": "7.0.0-dev.20250923.1",
     "eslint": "^9.36.0",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",

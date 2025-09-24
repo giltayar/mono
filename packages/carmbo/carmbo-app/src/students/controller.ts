@@ -1,89 +1,82 @@
 import type {Sql} from 'postgres'
-import {html} from '../commons/html-templates.ts'
-import {MainLayout} from '../layouts/main-view.ts'
-import type {NewStudent, Student, StudentHistory} from './model.ts'
-import {listStudents} from './model.ts'
-import {StudentCreateView, StudentHistoryView, StudentsView, StudentUpdateView} from './view.ts'
-import {assert} from 'console'
+import type {NewStudent, Student} from './model.ts'
+import {
+  listStudents,
+  queryStudentByNumber,
+  queryStudentByOperationId,
+  createStudent as model_createStudent,
+  updateStudent as model_updateStudent,
+} from './model.ts'
+import {
+  renderStudentsCreatePage,
+  renderStudentsPage,
+  renderStudentUpdatePage,
+  renderStudentViewInHistoryPage,
+  type StudentManipulations,
+} from './view.ts'
+import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
 
-export async function showStudents({flash}: {flash?: string}, sql: Sql) {
+export async function showStudents({flash}: {flash?: string}, sql: Sql): Promise<ControllerResult> {
   const students = await listStudents(sql)
 
-  return html`
-    <${MainLayout} title="Students" flash=${flash}>
-      <${StudentsView} students=${students} />
-    </${MainLayout}>
-  `
+  return finalHtml(renderStudentsPage(flash, students))
 }
 
-type StudentManipulations = {
-  addItem: string | string[] | undefined
+export function showStudentCreate(): ControllerResult {
+  return finalHtml(renderStudentsCreatePage(undefined, undefined))
 }
 
-export function showStudentCreate(
-  student: NewStudent | undefined,
-  manipulations: StudentManipulations | undefined,
-) {
-  const finalStudent: NewStudent = student
-    ? manipulations
-      ? manipulateStudent(student, manipulations)
-      : student
-    : {
-        names: [{firstName: '', lastName: ''}],
-        emails: [''],
-        phones: [''],
-        facebookNames: [''],
-        birthday: new Date(),
-        cardcomCustomerId: '',
-      }
-
-  return html`
-    <${MainLayout} title="Students">
-      <${StudentCreateView} student=${finalStudent} />
-    </${MainLayout}>
-  `
-}
-
-export function showStudentUpdate(
-  {student, history}: {student: Student; history: StudentHistory[]},
+export function showOngoingStudentCreate(
+  student: NewStudent,
   manipulations: StudentManipulations,
-) {
-  return html`
-    <${MainLayout} title="Students">
-      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history}/>
-    </${MainLayout}>
-  `
+): ControllerResult {
+  return finalHtml(renderStudentsCreatePage(student, manipulations))
 }
 
-export function showStudentInHistory(student: Student) {
-  return html`
-    <${MainLayout} title="Students">
-      <${StudentHistoryView} student=${student} />
-    </${MainLayout}>
-  `
-}
-
-const ARRAY_FIELDS_IN_STUDENT = ['names', 'emails', 'phones', 'facebookNames']
-
-function manipulateStudent<T extends NewStudent | Student>(
-  student: T,
+export async function showStudentUpdate(
+  studentNumber: number,
   manipulations: StudentManipulations,
-): T {
-  const transformed = {...student}
-  const addItem = Array.isArray(manipulations.addItem) ? undefined : manipulations.addItem
-  assert(
-    addItem === undefined || ARRAY_FIELDS_IN_STUDENT.includes(addItem),
-    `Invalid addItem: ${addItem}`,
+  sql: Sql,
+): Promise<ControllerResult> {
+  const studentWithHistory = await queryStudentByNumber(studentNumber, sql)
+
+  if (!studentWithHistory) {
+    return {status: 404, body: 'Student not found'}
+  }
+  return finalHtml(
+    renderStudentUpdatePage(studentWithHistory.student, studentWithHistory.history, manipulations),
   )
+}
 
-  if (addItem) {
-    if (addItem === 'names') {
-      ;(transformed[addItem] ??= []).push({firstName: '', lastName: ''})
-    } else {
-      // @ts-expect-error dynamic stuff!
-      ;(transformed[addItem] ??= []).push('')
-    }
+export function showOngoingStudentUpdate(
+  student: Student,
+  manipulations: StudentManipulations,
+): ControllerResult {
+  return finalHtml(renderStudentUpdatePage(student, [], manipulations))
+}
+
+export async function showStudentInHistory(
+  studentNumber: number,
+  operationId: string,
+  sql: Sql,
+): Promise<ControllerResult> {
+  const student = await queryStudentByOperationId(studentNumber, operationId, sql)
+
+  if (!student) {
+    return {status: 404, body: 'Student not found'}
   }
 
-  return transformed
+  return finalHtml(renderStudentViewInHistoryPage(student))
+}
+
+export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {
+  const studentNumber = await model_createStudent(student, undefined, sql)
+
+  return {htmxRedirect: `/students/${studentNumber}`}
+}
+
+export async function updateStudent(student: Student, sql: Sql): Promise<ControllerResult> {
+  const studentNumber = await model_updateStudent(student, undefined, sql)
+
+  return {htmxRedirect: `/students/${studentNumber}`}
 }

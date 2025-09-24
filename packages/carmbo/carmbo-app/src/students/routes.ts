@@ -1,53 +1,43 @@
 import {
+  showOngoingStudentCreate,
+  showOngoingStudentUpdate,
   showStudentCreate,
   showStudentInHistory,
   showStudents,
   showStudentUpdate,
-} from './controller.ts'
-import {
   createStudent,
-  queryStudentByNumber,
-  NewStudentSchema,
-  StudentSchema,
   updateStudent,
-  queryStudentByOperationId,
-} from './model.ts'
+} from './controller.ts'
+import {NewStudentSchema, StudentSchema} from './model.ts'
 import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
+import {dealWithControllerResult} from '../commons/routes-commons.ts'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
-  app.addHook('preHandler', (_request, reply, done) => {
-    reply.type('text/html')
-    done()
-  })
-
   // List students
-  app.get<{Querystring: {flash: string}}>('/', async (request) =>
-    showStudents({flash: request.query.flash}, sql),
+  app.get<{Querystring: {flash: string}}>('/', async (request, reply) =>
+    dealWithControllerResult(reply, await showStudents({flash: request.query.flash}, sql)),
   )
 
   // Create new student
-  app.get('/new', async () => showStudentCreate(undefined, undefined))
+  app.get('/new', async (_request, reply) => dealWithControllerResult(reply, showStudentCreate()))
 
   app
     .withTypeProvider<ZodTypeProvider>()
-    .post('/new', {schema: {body: NewStudentSchema}}, async (request) =>
-      showStudentCreate(request.body, {addItem: request.headers['x-add-item']}),
+    .post('/new', {schema: {body: NewStudentSchema}}, async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        showOngoingStudentCreate(request.body, {addItem: request.headers['x-add-item']}),
+      ),
     )
 
   app
     .withTypeProvider<ZodTypeProvider>()
     .post('/', {schema: {body: NewStudentSchema}}, async (request, reply) => {
-      const studentNumber = await createStudent(request.body, undefined, sql)
-
-      if (!studentNumber) {
-        return reply.status(404).send('Student not found')
-      }
-
-      reply.header('HX-Redirect', `/students/${studentNumber}`)
+      return dealWithControllerResult(reply, await createStudent(request.body, sql))
     })
 
   // Edit existing student
@@ -57,44 +47,23 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       '/:number',
       {schema: {params: z.object({number: z.coerce.number().int()})}},
       async (request, reply) => {
-        const studentWithHistory = await queryStudentByNumber(request.params.number, sql)
-
-        if (!studentWithHistory) {
-          return reply.status(404).send('Student not found')
-        }
-
-        return showStudentUpdate(studentWithHistory, {addItem: request.headers['x-add-item']})
+        return dealWithControllerResult(
+          reply,
+          await showStudentUpdate(
+            request.params.number,
+            {addItem: request.headers['x-add-item']},
+            sql,
+          ),
+        )
       },
     )
-  app.withTypeProvider<ZodTypeProvider>().get(
-    '/:number/by-history/:operationId',
-    {
-      schema: {
-        params: z.object({number: z.coerce.number().int(), operationId: z.uuid()}),
-      },
-    },
-    async (request, reply) => {
-      const student = await queryStudentByOperationId(
-        request.params.number,
-        request.params.operationId,
-        sql,
-      )
-      console.log('***** student in controller', student, request.params)
-
-      if (!student) {
-        return reply.status(404).send('Student not found')
-      }
-
-      return showStudentInHistory(student)
-    },
-  )
 
   app
     .withTypeProvider<ZodTypeProvider>()
     .post(
       '/:number',
       {schema: {body: StudentSchema, params: z.object({number: z.coerce.number().int()})}},
-      async (request) => {
+      async (request, reply) => {
         const studentNumber = request.params.number
 
         assert(
@@ -102,9 +71,9 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           'student number in URL must match ID in body',
         )
 
-        return showStudentUpdate(
-          {student: request.body, history: []},
-          {addItem: request.headers['x-add-item']},
+        return dealWithControllerResult(
+          reply,
+          showOngoingStudentUpdate(request.body, {addItem: request.headers['x-add-item']}),
         )
       },
     )
@@ -122,9 +91,23 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           'student number in URL must match ID in body',
         )
 
-        await updateStudent(request.body, undefined, sql)
-
-        reply.header('HX-Redirect', `/students/${studentNumber}`)
+        return dealWithControllerResult(reply, await updateStudent(request.body, sql))
       },
     )
+
+  // View student in history
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/:number/by-history/:operationId',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int(), operationId: z.uuid()}),
+      },
+    },
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        await showStudentInHistory(request.params.number, request.params.operationId, sql),
+      )
+    },
+  )
 }

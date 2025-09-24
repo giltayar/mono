@@ -1,7 +1,65 @@
+import {assert} from 'console'
 import {html} from '../commons/html-templates.ts'
-import type {Student, StudentForGrid, StudentHistory} from './model.ts'
+import {MainLayout} from '../layouts/main-view.ts'
+import type {NewStudent, Student, StudentForGrid, StudentHistory} from './model.ts'
 
-export function StudentsView({students}: {students: StudentForGrid[]}) {
+export type StudentManipulations = {
+  addItem: string | string[] | undefined
+}
+
+export function renderStudentsPage(flash: string | undefined, students: StudentForGrid[]) {
+  return html`
+    <${MainLayout} title="Students" flash=${flash}>
+      <${StudentsView} students=${students} />
+    </${MainLayout}>
+  `
+}
+
+export function renderStudentsCreatePage(
+  student: NewStudent | undefined,
+  manipulations: StudentManipulations | undefined,
+) {
+  const finalStudent: NewStudent = student
+    ? manipulations
+      ? manipulateStudent(student, manipulations)
+      : student
+    : {
+        names: [{firstName: '', lastName: ''}],
+        emails: [''],
+        phones: [''],
+        facebookNames: [''],
+        birthday: new Date(),
+        cardcomCustomerId: '',
+      }
+
+  return html`
+    <${MainLayout} title="Students">
+      <${StudentCreateView} student=${finalStudent} />
+    </${MainLayout}>
+  `
+}
+
+export function renderStudentUpdatePage(
+  student: Student,
+  history: StudentHistory[],
+  manipulations: StudentManipulations,
+) {
+  return html`
+    <${MainLayout} title="Students">
+      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history}/>
+    </${MainLayout}>
+  `
+}
+
+export function renderStudentViewInHistoryPage(student: Student) {
+  return html`
+    <${MainLayout} title="Students">
+      <${StudentHistoryView} student=${student} />
+    </${MainLayout}>
+  `
+}
+
+function StudentsView({students}: {students: StudentForGrid[]}) {
   return html`
     <h1>Students</h1>
     <table>
@@ -34,7 +92,7 @@ export function StudentsView({students}: {students: StudentForGrid[]}) {
   `
 }
 
-export function StudentCreateView({student}: {student: Student}) {
+function StudentCreateView({student}: {student: Student}) {
   return html`
     <h1>New Student</h1>
     <form hx-post="/students/" hx-target="html" hx-push-url="true">
@@ -47,13 +105,7 @@ export function StudentCreateView({student}: {student: Student}) {
   `
 }
 
-export function StudentUpdateView({
-  student,
-  history,
-}: {
-  student: Student
-  history: StudentHistory[]
-}) {
+function StudentUpdateView({student, history}: {student: Student; history: StudentHistory[]}) {
   return html`
     <h1>Update Student ${student.studentNumber}</h1>
     <form
@@ -83,7 +135,7 @@ export function StudentUpdateView({
   `
 }
 
-export function StudentHistoryView({student}: {student: Student}) {
+function StudentHistoryView({student}: {student: Student}) {
   return html`
     <h1>View Student ${student.studentNumber}</h1>
     <form>
@@ -123,7 +175,7 @@ function RemoveButton() {
   `
 }
 
-export function StudentCreateOrUpdateFormFields({
+function StudentCreateOrUpdateFormFields({
   student,
   operation,
 }: {
@@ -244,4 +296,29 @@ export function StudentCreateOrUpdateFormFields({
       </label>
     </div>
   `
+}
+
+const ARRAY_FIELDS_IN_STUDENT = ['names', 'emails', 'phones', 'facebookNames']
+
+function manipulateStudent<T extends NewStudent | Student>(
+  student: T,
+  manipulations: StudentManipulations,
+): T {
+  const transformed = {...student}
+  const addItem = Array.isArray(manipulations.addItem) ? undefined : manipulations.addItem
+  assert(
+    addItem === undefined || ARRAY_FIELDS_IN_STUDENT.includes(addItem),
+    `Invalid addItem: ${addItem}`,
+  )
+
+  if (addItem) {
+    if (addItem === 'names') {
+      ;(transformed[addItem] ??= []).push({firstName: '', lastName: ''})
+    } else {
+      // @ts-expect-error dynamic stuff!
+      ;(transformed[addItem] ??= []).push('')
+    }
+  }
+
+  return transformed
 }
