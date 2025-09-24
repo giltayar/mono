@@ -5,7 +5,10 @@ import {z} from 'zod'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
-  birthday: z.iso.date().transform((s) => new Date(s)),
+  birthday: z.iso
+    .date()
+    .transform((s) => new Date(s))
+    .optional(),
   names: z.array(z.object({firstName: z.string().min(1), lastName: z.string().min(1)})).optional(),
   emails: z.array(z.email()).optional(),
   phones: z.array(z.string().min(1)).optional(),
@@ -13,7 +16,7 @@ export const StudentSchema = z.object({
   cardcomCustomerId: z.union([z.string(), z.undefined()]),
 })
 
-export const StudentWithOperationIdSchema = StudentSchema.extend({
+export const StudentWithHistoryIdSchema = StudentSchema.extend({
   id: z.uuid(),
 })
 
@@ -27,7 +30,7 @@ export const NewStudentSchema = z.object({
 })
 
 export type Student = z.infer<typeof StudentSchema>
-export type StudentWithOperationId = z.infer<typeof StudentWithOperationIdSchema>
+export type StudentWithHistoryId = z.infer<typeof StudentWithHistoryIdSchema>
 export type NewStudent = z.infer<typeof NewStudentSchema>
 
 export interface StudentForGrid {
@@ -36,56 +39,54 @@ export interface StudentForGrid {
     firstName: string
     lastName: string
   }[]
-  birthday: Date
   emails: string[]
   phones: string[]
 }
 
 export interface StudentHistory {
-  operationId: string
+  historyId: string
   operation: HistoryOperation
   timestamp: Date
 }
 
 export async function listStudents(sql: Sql): Promise<StudentForGrid[]> {
   const result = await sql<StudentForGrid[]>`
-SELECT
-  id,
-  student.student_number,
-  birthday,
-  COALESCE(names, json_build_array()) AS names,
-  COALESCE(emails, json_build_array()) AS emails,
-  COALESCE(phones, json_build_array()) AS phones
-FROM
-  student_operation
-  INNER JOIN student ON last_operation_id = id
-  LEFT JOIN student_integration_cardcom ON operation_id = last_operation_id
-  LEFT JOIN LATERAL (
     SELECT
-      json_agg(json_build_object('firstName', first_name, 'lastName', last_name) ORDER BY item_order) AS names
+      student.student_number,
+      COALESCE(names, json_build_array()) AS names,
+      COALESCE(emails, json_build_array()) AS emails,
+      COALESCE(phones, json_build_array()) AS phones
     FROM
-      student_name
+      student_history
+      INNER JOIN student ON last_history_id = id
+      LEFT JOIN student_integration_cardcom USING (data_id)
+      LEFT JOIN LATERAL (
+        SELECT
+          json_agg(json_build_object('firstName', first_name, 'lastName', last_name) ORDER BY item_order) AS names
+        FROM
+          student_name
+        WHERE
+          student_name.data_id = student_history.data_id
+      ) names ON true
+      LEFT JOIN LATERAL (
+        SELECT
+          json_agg(email ORDER BY item_order) AS emails
+        FROM
+          student_email
+        WHERE
+          student_email.data_id = student_history.data_id
+      ) emails ON true
+      LEFT JOIN LATERAL (
+        SELECT
+          json_agg(phone ORDER BY item_order) AS phones
+        FROM
+          student_phone
+        WHERE
+          student_phone.data_id = student_history.data_id
+      ) phones ON true
     WHERE
-      operation_id = last_operation_id
-  ) names ON true
-  LEFT JOIN LATERAL (
-    SELECT
-      json_agg(email ORDER BY item_order) AS emails
-    FROM
-      student_email
-    WHERE
-      operation_id = last_operation_id
-  ) emails ON true
-  LEFT JOIN LATERAL (
-    SELECT
-      json_agg(phone ORDER BY item_order) AS phones
-    FROM
-      student_phone
-    WHERE
-      operation_id = last_operation_id
-  ) phones ON true
-WHERE
-  operation <> 'delete'  `
+      operation <> 'delete'
+  `
 
   return result
 }
@@ -93,21 +94,22 @@ WHERE
 export async function createStudent(student: NewStudent, reason: string | undefined, sql: Sql) {
   return await sql.begin(async (sql) => {
     const now = new Date()
-    const operationId = crypto.randomUUID()
+    const historyId = crypto.randomUUID()
+    const dataId = crypto.randomUUID()
 
-    const studentNumberResult = await sql`
-  INSERT INTO student_operation VALUES
-    (${operationId}, DEFAULT, ${now}, 'create', ${reason ?? null}, ${student.birthday})
-    RETURNING student_number
-  `
+    const studentNumberResult = await sql<{studentNumber: number}[]>`
+      INSERT INTO student_history VALUES
+        (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', ${reason ?? null})
+      RETURNING student_number
+    `
     const studentNumber = studentNumberResult[0].studentNumber
 
     await sql`
-  INSERT INTO student VALUES
-    (${studentNumber}, ${operationId})
-  `
+      INSERT INTO student VALUES
+        (${studentNumber}, ${historyId}, ${dataId})
+    `
 
-    await addStudentStuff(student, operationId, sql)
+    await addStudentStuff(student, dataId, sql)
 
     return studentNumber
   })
@@ -120,51 +122,85 @@ export async function updateStudent(
 ): Promise<number | undefined> {
   return await sql.begin(async (sql) => {
     const now = new Date()
-    const operationId = crypto.randomUUID()
+    const historyId = crypto.randomUUID()
+    const dataId = crypto.randomUUID()
 
     await sql`
-  INSERT INTO student_operation VALUES
-    (${operationId}, ${student.studentNumber}, ${now}, 'update', ${reason ?? null}, ${student.birthday})
-
-  `
-    const studentNumberResult = await sql`
+      INSERT INTO student_history VALUES
+        (${historyId}, ${dataId}, ${student.studentNumber}, ${now}, 'update', ${reason ?? null})
+    `
+    const updateResult = await sql`
         UPDATE student SET
           student_number = ${student.studentNumber},
-          last_operation_id = ${operationId}
+          last_history_id = ${historyId},
+          last_data_id = ${dataId}
         WHERE student_number = ${student.studentNumber}
-        RETURNING student_number
+        RETURNING 1
       `
 
-    if (studentNumberResult.length === 0) {
+    if (updateResult.length === 0) {
       return undefined
     }
 
-    assert(
-      studentNumberResult.length === 1,
-      `More than one student with ID ${student.studentNumber}`,
-    )
+    assert(updateResult.length === 1, `More than one student with ID ${student.studentNumber}`)
 
-    await addStudentStuff(student, operationId, sql)
+    await addStudentStuff(student, dataId, sql)
 
     return student.studentNumber
+  })
+}
+
+export async function deleteStudent(
+  studentNumber: number,
+  reason: string | undefined,
+  sql: Sql,
+): Promise<string | undefined> {
+  return await sql.begin(async (sql) => {
+    const now = new Date()
+    const historyId = crypto.randomUUID()
+    const dataIdResult = await sql<{last_data_id: string}[]>`
+        INSERT INTO student_history (id, data_id, student_number, timestamp, operation, operation_reason)
+        SELECT ${historyId}, student.last_data_id as last_data_id, student_number, ${now}, 'delete', ${reason ?? null}
+        FROM student_history
+        INNER JOIN student ON student.student_number = ${studentNumber}
+        WHERE id = student.last_history_id
+        RETURNING student.last_data_id
+        `
+
+    if (dataIdResult.length === 0) {
+      return undefined
+    }
+
+    if (dataIdResult.length > 1) {
+      throw new Error(`More than one student with ID ${studentNumber}`)
+    }
+
+    await sql`
+        UPDATE student SET
+          student_number = ${studentNumber},
+          last_history_id = ${historyId}
+          last_data_id = ${dataIdResult[0].last_data_id}
+        WHERE student_number = ${studentNumber}
+     `
+
+    return historyId
   })
 }
 
 export async function queryStudentByNumber(
   studentNumber: number,
   sql: Sql,
-): Promise<{student: StudentWithOperationId; history: StudentHistory[]} | undefined> {
-  const pstudent = sql<StudentWithOperationId[]>`
-WITH
-  current_operation_id (current_operation_id) AS (
-    SELECT
-      last_operation_id
-    FROM
-      student
-    WHERE
-      student_number = ${studentNumber}
-  )
-  ${studentSelect(studentNumber, sql)}
+): Promise<{student: StudentWithHistoryId; history: StudentHistory[]} | undefined> {
+  const pstudent = sql<StudentWithHistoryId[]>`
+    WITH parameters (current_data_id, current_history_id) AS (
+      SELECT
+        last_data_id, last_history_id
+      FROM
+        student
+      WHERE
+        student_number = ${studentNumber}
+    )
+    ${studentSelect(studentNumber, sql)}
   `
 
   const phistory = studentHistorySelect(studentNumber, sql)
@@ -179,20 +215,25 @@ WITH
   return {student: student[0], history}
 }
 
-export async function queryStudentByOperationId(
+export async function queryStudentByHistoryId(
   studentNumber: number,
-  operationId: string,
+  historyId: string,
   sql: Sql,
-): Promise<{student: StudentWithOperationId; history: StudentHistory[]} | undefined> {
-  const phistory = studentHistorySelect(studentNumber, sql)
-  const pstudent = sql<StudentWithOperationId[]>`
-WITH
-  current_operation_id (current_operation_id) AS (
-    SELECT
-      ${operationId}::uuid
-  )
-  ${studentSelect(studentNumber, sql)}
+): Promise<{student: StudentWithHistoryId; history: StudentHistory[]} | undefined> {
+  const pstudent = sql<StudentWithHistoryId[]>`
+    WITH parameters (current_data_id, current_history_id) AS (
+      SELECT
+        data_id, id
+      FROM
+        student_history
+      WHERE
+        id = ${historyId}
+    )
+    ${studentSelect(studentNumber, sql)}
   `
+
+  const phistory = studentHistorySelect(studentNumber, sql)
+
   const [student, history] = await Promise.all([pstudent, phistory])
 
   if (student.length === 0) {
@@ -205,10 +246,10 @@ WITH
 }
 
 function studentSelect(studentNumber: number, sql: Sql) {
-  return sql<StudentWithOperationId[]>`
+  return sql<StudentWithHistoryId[]>`
 SELECT
-  id,
-  student_number,
+  current_history_id as id,
+  ${studentNumber} as student_number,
   birthday,
   student_integration_cardcom.customer_id AS cardcom_customer_id,
   COALESCE(names, json_build_array()) AS names,
@@ -216,9 +257,9 @@ SELECT
   COALESCE(emails, json_build_array()) AS emails,
   COALESCE(phones, json_build_array()) AS phones
 FROM
-  student_operation,
-  current_operation_id
-  LEFT JOIN student_integration_cardcom ON operation_id = current_operation_id
+  parameters
+  LEFT JOIN student_integration_cardcom ON student_integration_cardcom.data_id = current_data_id
+  LEFT JOIN student_data ON student_data.data_id = current_data_id
   LEFT JOIN LATERAL (
     SELECT
       json_agg(
@@ -229,7 +270,7 @@ FROM
     FROM
       student_name
     WHERE
-      operation_id = current_operation_id
+      student_name.data_id = current_data_id
   ) names ON true
   LEFT JOIN LATERAL (
     SELECT
@@ -241,7 +282,7 @@ FROM
     FROM
       student_facebook_name
     WHERE
-      operation_id = current_operation_id
+      student_facebook_name.data_id = current_data_id
   ) facebook_names ON true
   LEFT JOIN LATERAL (
     SELECT
@@ -253,7 +294,7 @@ FROM
     FROM
       student_email
     WHERE
-      operation_id = current_operation_id
+      student_email.data_id = current_data_id
   ) emails ON true
   LEFT JOIN LATERAL (
     SELECT
@@ -265,70 +306,76 @@ FROM
     FROM
       student_phone
     WHERE
-      operation_id = current_operation_id
+      student_phone.data_id = current_data_id
   ) phones ON true
-  WHERE
-    student_operation.student_number = ${studentNumber}
-    AND student_operation.id = current_operation_id;
        `
 }
 
 function studentHistorySelect(studentNumber: number, sql: Sql) {
   return sql<StudentHistory[]>`
 SELECT
-  id as operation_id,
+  id as history_id,
   operation,
   timestamp
 FROM
-  student_operation
+  student_history
 WHERE
-  student_operation.student_number = ${studentNumber}
+  student_history.student_number = ${studentNumber}
 ORDER BY
   timestamp DESC
   `
 }
 
-async function addStudentStuff(student: Student | NewStudent, operationId: string, sql: Sql) {
+async function addStudentStuff(student: Student | NewStudent, dataId: string, sql: Sql) {
   let ops = [] as Promise<unknown>[]
 
-  ops = ops.concat(
-    student.names?.map(
-      (name, index) => sql`
-    INSERT INTO student_name VALUES
-      (${operationId}, ${index}, ${name.firstName}, ${name.lastName})
-    `,
-    ) ?? [],
-  )
+  ops = ops.concat() ?? []
+
   ops = ops.concat(
     student.emails?.map(
       (email, index) => sql`
-    INSERT INTO student_email VALUES
-      (${operationId}, ${index}, ${email})
-    `,
+        INSERT INTO student_email VALUES
+          (${dataId}, ${index}, ${email})
+      `,
     ) ?? [],
   )
+  ops = ops.concat(
+    student.names?.map(
+      (name, index) => sql`
+        INSERT INTO student_name VALUES
+          (${dataId}, ${index}, ${name.firstName}, ${name.lastName})
+      `,
+    ) ?? [],
+  )
+
+  if (student.birthday) {
+    ops = ops.concat(sql`
+      INSERT INTO student_data VALUES
+        (${dataId}, ${student.birthday})
+    `)
+  }
 
   ops = ops.concat(
     student.phones?.map(
       (phone, index) => sql`
-    INSERT INTO student_phone VALUES
-      (${operationId}, ${index}, ${phone})
-    `,
+        INSERT INTO student_phone VALUES
+          (${dataId}, ${index}, ${phone})
+      `,
     ) ?? [],
   )
   ops = ops.concat(
     student.facebookNames?.map(
       (facebookName, index) => sql`
-    INSERT INTO student_facebook_name VALUES
-      (${operationId}, ${index}, ${facebookName})
-    `,
+        INSERT INTO student_facebook_name VALUES
+          (${dataId}, ${index}, ${facebookName})
+      `,
     ) ?? [],
   )
 
   if (student.cardcomCustomerId) {
     ops = ops.concat(sql`
-      INSERT INTO student_integration_cardcom VALUES
-        (${operationId}, ${student.cardcomCustomerId})
+        INSERT INTO student_integration_cardcom VALUES
+          (${dataId}, ${student.cardcomCustomerId})
       `)
   }
 

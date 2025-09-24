@@ -6,7 +6,7 @@ import type {
   Student,
   StudentForGrid,
   StudentHistory,
-  StudentWithOperationId,
+  StudentWithHistoryId,
 } from './model.ts'
 
 export type StudentManipulations = {
@@ -46,7 +46,7 @@ export function renderStudentsCreatePage(
 }
 
 export function renderStudentUpdatePage(
-  student: StudentWithOperationId,
+  student: StudentWithHistoryId,
   history: StudentHistory[],
   manipulations: StudentManipulations,
 ) {
@@ -71,7 +71,7 @@ export function renderStudentFormFields(
 }
 
 export function renderStudentViewInHistoryPage(
-  student: StudentWithOperationId,
+  student: StudentWithHistoryId,
   history: StudentHistory[],
 ) {
   return html`,
@@ -131,7 +131,7 @@ function StudentUpdateView({
   student,
   history,
 }: {
-  student: StudentWithOperationId
+  student: StudentWithHistoryId
   history: StudentHistory[]
 }) {
   return html`
@@ -141,6 +141,7 @@ function StudentUpdateView({
       <section>
         <button type="Submit" value="save">Save</button>
         <button type="Submit" value="discard">Discard</button>
+        <button type="Submit" value="delete" hx-delete="" hx-params="none">Delete</button>
       </section>
       <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
     </form>
@@ -152,10 +153,10 @@ function StudentHistoryView({
   student,
   history,
 }: {
-  student: StudentWithOperationId
+  student: StudentWithHistoryId
   history: StudentHistory[]
 }) {
-  const currentHistory = history.find((h) => h.operationId === student.id)
+  const currentHistory = history.find((h) => h.historyId === student.id)
 
   return html`
     <h1>
@@ -174,7 +175,7 @@ function StudentHistoryList({
   student,
   history,
 }: {
-  student: StudentWithOperationId
+  student: StudentWithHistoryId
   history: StudentHistory[]
 }) {
   return html`
@@ -183,10 +184,10 @@ function StudentHistoryList({
         (entry) =>
           html`<li>
             ${
-              entry.operationId === student.id
+              entry.historyId === student.id
                 ? html`<strong>${entry.operation}</strong>`
                 : html` <a
-                    href=${`/students/${student.studentNumber}/by-history/${entry.operationId}`}
+                    href=${`/students/${student.studentNumber}/by-history/${entry.historyId}`}
                   >
                     ${entry.operation}</a
                   >`
@@ -332,7 +333,7 @@ function StudentCreateOrUpdateFormFields({
           <input
             name="birthday"
             type="date"
-            value="${student.birthday.toISOString().split('T')[0]}"
+            value="${student.birthday ? student.birthday.toISOString().split('T')[0] : ''}"
             ${maybeRo}
           />
         </label>

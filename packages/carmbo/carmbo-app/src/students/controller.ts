@@ -3,9 +3,10 @@ import type {NewStudent, Student} from './model.ts'
 import {
   listStudents,
   queryStudentByNumber,
-  queryStudentByOperationId,
+  queryStudentByHistoryId,
   createStudent as model_createStudent,
   updateStudent as model_updateStudent,
+  deleteStudent as model_deleteStudent,
 } from './model.ts'
 import {
   renderStudentsCreatePage,
@@ -54,7 +55,7 @@ export async function showStudentInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const student = await queryStudentByOperationId(studentNumber, operationId, sql)
+  const student = await queryStudentByHistoryId(studentNumber, operationId, sql)
 
   if (!student) {
     return {status: 404, body: 'Student not found'}
@@ -71,6 +72,20 @@ export async function createStudent(student: NewStudent, sql: Sql): Promise<Cont
 
 export async function updateStudent(student: Student, sql: Sql): Promise<ControllerResult> {
   const studentNumber = await model_updateStudent(student, undefined, sql)
+
+  if (!studentNumber) {
+    return {status: 404, body: 'Student not found'}
+  }
+
+  return {htmxRedirect: `/students/${studentNumber}`}
+}
+
+export async function deleteStudent(studentNumber: number, sql: Sql): Promise<ControllerResult> {
+  const operationId = await model_deleteStudent(studentNumber, undefined, sql)
+
+  if (!operationId) {
+    return {status: 404, body: 'Student not found'}
+  }
 
   return {htmxRedirect: `/students/${studentNumber}`}
 }

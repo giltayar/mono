@@ -6,6 +6,7 @@ import {
   createStudent,
   updateStudent,
   showOngoingStudent,
+  deleteStudent,
 } from './controller.ts'
 import {NewStudentSchema, StudentSchema} from './model.ts'
 import assert from 'node:assert'
@@ -109,4 +110,14 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       )
     },
   )
+
+  // Delete (Archive) student
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .delete(
+      '/:number',
+      {schema: {params: z.object({number: z.coerce.number().int()})}},
+      async (request, reply) =>
+        dealWithControllerResult(reply, await deleteStudent(request.params.number, sql)),
+    )
 }
