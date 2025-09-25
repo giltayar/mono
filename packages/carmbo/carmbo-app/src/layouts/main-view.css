@@ -1,1 +1,2 @@
-@import '../students/style.css';
+@import '../students/style/style.css';
+@import './common.css';

@@ -32,7 +32,10 @@ export function makeApp({
     prefix: '/public/',
     decorateReply: false,
     allowedPath: (pathName) =>
-      pathName.endsWith('scripts.js') || pathName.endsWith('.css') || pathName.endsWith('.png'),
+      pathName.endsWith('scripts.js') ||
+      pathName.endsWith('.css') ||
+      pathName.endsWith('.png') ||
+      pathName.endsWith('.svg'),
   })
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)

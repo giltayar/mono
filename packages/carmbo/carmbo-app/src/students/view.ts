@@ -1,28 +1,10 @@
 import assert from 'node:assert'
 import {html} from '../commons/html-templates.ts'
 import {MainLayout} from '../layouts/main-view.ts'
-import type {
-  NewStudent,
-  Student,
-  StudentForGrid,
-  StudentHistory,
-  StudentWithHistoryInfo,
-} from './model.ts'
+import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from './model.ts'
 
 export type StudentManipulations = {
   addItem: string | string[] | undefined
-}
-
-export function renderStudentsPage(
-  flash: string | undefined,
-  students: StudentForGrid[],
-  {withArchived}: {withArchived: boolean},
-) {
-  return html`
-    <${MainLayout} title="Students" flash=${flash}>
-      <${StudentsView} students=${students} withArchived=${withArchived} />
-    </${MainLayout}>
-  `
 }
 
 export function renderStudentsCreatePage(
@@ -82,61 +64,6 @@ export function renderStudentViewInHistoryPage(
     <${MainLayout} title="Students">
       <${StudentHistoryView} student=${student} history=${history} operationId=${student.id} />
     </${MainLayout}>
-  `
-}
-
-function StudentsView({
-  students,
-  withArchived,
-}: {
-  students: StudentForGrid[]
-  withArchived: boolean
-}) {
-  return html`
-    <div class="students-view">
-      <h1>Students</h1>
-      <section aria-label="Search" class="card">
-        <form action="/students" hx-boosted class="search" role="group">
-          <fieldset>
-            <input
-              type="checkbox"
-              name="with-archived"
-              id="with-archived"
-              checked=${withArchived}
-            />
-            <label for="with-archived">Show archived</label>
-          </fieldset>
-          <button type="submit">Refresh</button>
-        </form>
-      </section>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Names</th>
-            <th>Emails</th>
-            <th>Phones</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${students.map(
-            (student) => html`
-              <tr>
-                <td><a href="/students/${student.studentNumber}">${student.studentNumber}</a></td>
-                <td>
-                  ${student.names.map((name) => `${name.firstName} ${name.lastName}`).join(', ')}
-                </td>
-                <td>${student.emails.join(', ')}</td>
-                <td>${student.phones.join(', ')}</td>
-              </tr>
-            `,
-          )}
-        </tbody>
-      </table>
-      <section>
-        <a href="/students/new">Create new student</a>
-      </section>
-    </div>
   `
 }
 

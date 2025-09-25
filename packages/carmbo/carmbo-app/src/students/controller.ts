@@ -10,12 +10,12 @@ import {
 } from './model.ts'
 import {
   renderStudentsCreatePage,
-  renderStudentsPage,
   renderStudentFormFields,
   renderStudentUpdatePage,
   renderStudentViewInHistoryPage,
   type StudentManipulations,
 } from './view.ts'
+import {renderStudentsPage} from './view-list.ts'
 import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
 
 export async function showStudents(
