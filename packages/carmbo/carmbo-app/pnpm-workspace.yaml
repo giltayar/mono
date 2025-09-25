@@ -6,3 +6,6 @@ minimumReleaseAgeExclude:
   - '@types/*'
   - eslint*
   - '@eslint/*'
+
+neverBuiltDependencies:
+  - es5-ext

@@ -7,6 +7,7 @@ export const EnvironmentVariablesSchema = z.object({
   DB_PORT: z.number().default(5432),
   DB_USERNAME: z.string().default('user'),
   DB_PASSWORD: z.string().default('password'),
+  HOST: z.string().default('localhost'),
   PORT: z.number().default(3000),
 })
 
@@ -21,4 +22,4 @@ const app = await makeApp({
   },
 })
 
-await app.listen({port: env.PORT, host: '0.0.0.0'})
+await app.listen({port: env.PORT, host: env.HOST})

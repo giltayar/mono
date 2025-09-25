@@ -93,39 +93,50 @@ function StudentsView({
   withArchived: boolean
 }) {
   return html`
-    <h1>Students</h1>
-    <form action="/students" hx-boosted>
-      <input type="checkbox" name="with-archived" id="with-archived" checked=${withArchived} />
-      <label for="with-archived">Show archived</label>
-      <button type="submit">Refresh</button>
-    </form>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Names</th>
-          <th>Emails</th>
-          <th>Phones</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${students.map(
-          (student) => html`
-            <tr>
-              <td><a href="/students/${student.studentNumber}">${student.studentNumber}</a></td>
-              <td>
-                ${student.names.map((name) => `${name.firstName} ${name.lastName}`).join(', ')}
-              </td>
-              <td>${student.emails.join(', ')}</td>
-              <td>${student.phones.join(', ')}</td>
-            </tr>
-          `,
-        )}
-      </tbody>
-    </table>
-    <section>
-      <a href="/students/new">Create new student</a>
-    </section>
+    <div class="students-view">
+      <h1>Students</h1>
+      <section aria-label="Search" class="card">
+        <form action="/students" hx-boosted class="search" role="group">
+          <fieldset>
+            <input
+              type="checkbox"
+              name="with-archived"
+              id="with-archived"
+              checked=${withArchived}
+            />
+            <label for="with-archived">Show archived</label>
+          </fieldset>
+          <button type="submit">Refresh</button>
+        </form>
+      </section>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Names</th>
+            <th>Emails</th>
+            <th>Phones</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map(
+            (student) => html`
+              <tr>
+                <td><a href="/students/${student.studentNumber}">${student.studentNumber}</a></td>
+                <td>
+                  ${student.names.map((name) => `${name.firstName} ${name.lastName}`).join(', ')}
+                </td>
+                <td>${student.emails.join(', ')}</td>
+                <td>${student.phones.join(', ')}</td>
+              </tr>
+            `,
+          )}
+        </tbody>
+      </table>
+      <section>
+        <a href="/students/new">Create new student</a>
+      </section>
+    </div>
   `
 }
 

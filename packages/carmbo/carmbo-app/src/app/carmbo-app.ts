@@ -31,7 +31,8 @@ export function makeApp({
     root: new URL('../../src', import.meta.url),
     prefix: '/public/',
     decorateReply: false,
-    allowedPath: (pathName) => pathName.endsWith('scripts.js') || pathName.endsWith('.css'),
+    allowedPath: (pathName) =>
+      pathName.endsWith('scripts.js') || pathName.endsWith('.css') || pathName.endsWith('.png'),
   })
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)

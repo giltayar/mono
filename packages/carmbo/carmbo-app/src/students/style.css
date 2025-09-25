@@ -1,0 +1,12 @@
+.students-view {
+  form.search {
+    width: 30ch;
+    /* display: flex;
+    align-items: center; */
+  }
+
+  /* button[type="submit"] {
+    padding-top: initial 0;
+    width: fit-content;
+  } */
+}
