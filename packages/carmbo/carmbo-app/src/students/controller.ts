@@ -13,10 +13,10 @@ import {
   renderStudentFormFields,
   renderStudentUpdatePage,
   renderStudentViewInHistoryPage,
-  type StudentManipulations,
 } from './view.ts'
 import {renderStudentsPage} from './view-list.ts'
 import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
+import type {StudentManipulations} from './view-student-manipulations.ts'
 
 export async function showStudents(
   {flash, withArchived}: {flash?: string; withArchived: boolean},
