@@ -1,23 +1,5 @@
 import {html} from '../commons/html-templates.ts'
 import type {NewStudent, Student} from './model.ts'
-import {manipulateStudent} from './view-student-manipulations.ts'
-
-export type StudentManipulations = {
-  addItem: string | string[] | undefined
-}
-
-export function renderStudentFormFields(
-  student: Student | NewStudent,
-  manipulations: StudentManipulations,
-  operation: 'read' | 'write',
-) {
-  return html`
-    <${StudentCreateOrUpdateFormFields}
-      student=${manipulateStudent(student, manipulations)}
-      operation=${operation}
-    />
-  `
-}
 
 export function StudentCreateOrUpdateFormFields({
   student,
