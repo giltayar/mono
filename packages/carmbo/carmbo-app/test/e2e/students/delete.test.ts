@@ -25,7 +25,7 @@ test('deleting a student', async ({page}) => {
   await newForm1.phones().trashButton(0).locator.click()
   await newForm1.facebookNames().trashButton(0).locator.click()
 
-  await newForm1.saveButton().locator.click()
+  await newForm1.createButton().locator.click()
   await page.waitForURL(updateStudentModel.urlRegex)
 
   // Go back to student list to create second student
@@ -42,16 +42,16 @@ test('deleting a student', async ({page}) => {
   await newForm2.phones().trashButton(0).locator.click()
   await newForm2.facebookNames().trashButton(0).locator.click()
 
-  await newForm2.saveButton().locator.click()
+  await newForm2.createButton().locator.click()
   await page.waitForURL(updateStudentModel.urlRegex)
 
   // Delete the second student (Bob)
   await updateStudentModel.form().deleteButton().locator.click()
 
-  await expect(updateStudentModel.pageTitle().locator).toContainText('(deleted)')
+  await expect(updateStudentModel.pageTitle().locator).toContainText('(archived)')
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
-  await expect(updateStudentModel.history().items().item(0).locator).toContainText('delete')
-  await expect(updateStudentModel.history().items().item(1).locator).toContainText('create')
+  await expect(updateStudentModel.history().items().item(0).locator).toContainText('archived')
+  await expect(updateStudentModel.history().items().item(1).locator).toContainText('created')
 
   await page.goto(url().href)
 
@@ -61,7 +61,7 @@ test('deleting a student', async ({page}) => {
   const firstRow = studentListModel.list().rows().row(0)
   await expect(firstRow.nameCell().locator).toHaveText('Alice Johnson')
 
-  // Check the "Show archived" checkbox to show deleted students
+  // Check the "Show archived" checkbox to show archived students
   await studentListModel.search().showArchivedCheckbox().locator.click()
   await studentListModel.search().refreshButton().locator.click()
 
@@ -70,7 +70,7 @@ test('deleting a student', async ({page}) => {
 
   await expect(studentListModel.search().showArchivedCheckbox().locator).toBeChecked()
 
-  // Verify both students are present, with one marked as deleted
+  // Verify both students are present, with one marked as archived
   expect(studentListModel.list().rows().row(0).nameCell().locator).toHaveText('Alice Johnson')
   expect(studentListModel.list().rows().row(1).nameCell().locator).toHaveText('Bob Williams')
 
@@ -103,24 +103,24 @@ test('restoring a student', async ({page}) => {
   await newForm1.phones().trashButton(0).locator.click()
   await newForm1.facebookNames().trashButton(0).locator.click()
 
-  await newForm1.saveButton().locator.click()
+  await newForm1.createButton().locator.click()
   await page.waitForURL(updateStudentModel.urlRegex)
 
   // Delete the student
   await updateStudentModel.form().deleteButton().locator.click()
 
-  await expect(updateStudentModel.pageTitle().locator).toContainText('(deleted)')
+  await expect(updateStudentModel.pageTitle().locator).toContainText('(archived)')
 
   await expect(updateStudentModel.form().deleteButton().locator).not.toBeVisible()
 
   await updateStudentModel.form().restoreButton().locator.click()
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(3)
-  await expect(updateStudentModel.history().items().item(0).locator).toContainText('restore')
-  await expect(updateStudentModel.history().items().item(1).locator).toContainText('delete')
-  await expect(updateStudentModel.history().items().item(2).locator).toContainText('create')
+  await expect(updateStudentModel.history().items().item(0).locator).toContainText('restored')
+  await expect(updateStudentModel.history().items().item(1).locator).toContainText('archived')
+  await expect(updateStudentModel.history().items().item(2).locator).toContainText('created')
 
-  await expect(updateStudentModel.pageTitle().locator).not.toContainText('(deleted)')
+  await expect(updateStudentModel.pageTitle().locator).not.toContainText('(archived)')
 
   await page.goto(url().href)
 

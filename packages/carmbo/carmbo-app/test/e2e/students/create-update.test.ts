@@ -28,7 +28,7 @@ test('create student then update her', async ({page}) => {
   await newForm.facebookNames().facebookNameInput(0).locator.fill('johnfb')
 
   // Save the student
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   // Wait for navigation to update page
   await page.waitForURL(updateStudentModel.urlRegex)
@@ -53,7 +53,7 @@ test('create student then update her', async ({page}) => {
 
   // Save the student and verify data
 
-  await newForm.saveButton().locator.click()
+  await updateForm.updateButton().locator.click()
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('Jane')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Smith')
   await expect(updateForm.emails().emailInput(0).locator).toHaveValue('jane.smith@example.com')

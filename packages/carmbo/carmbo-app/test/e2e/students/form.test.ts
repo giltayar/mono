@@ -77,7 +77,7 @@ test('create student and update multiple fields', async ({page}) => {
   await expect(newForm.facebookNames().facebookNameInput(0).locator).toHaveValue('johnfb')
   await expect(newForm.facebookNames().facebookNameInput(1).locator).toHaveValue('fb3')
 
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await page.waitForURL(updateStudentModel.urlRegex)
 
@@ -113,7 +113,7 @@ test('create student and update multiple fields', async ({page}) => {
   await updateForm.facebookNames().facebookNameInput(2).locator.fill('fb4')
   await updateForm.facebookNames().trashButton(0).locator.click()
 
-  await updateForm.saveButton().locator.click()
+  await updateForm.updateButton().locator.click()
 
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('first3')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('last3')
@@ -152,7 +152,7 @@ test('form validations', async ({page}) => {
 
   const newForm = newStudentModel.form()
   // Fill no names
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await expect(page.url()).toMatch(newStudentModel.urlRegex)
 
@@ -162,7 +162,7 @@ test('form validations', async ({page}) => {
   // bad email
   await newForm.emails().emailInput(0).locator.fill('invalid-email')
 
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await expect(page.url()).toMatch(newStudentModel.urlRegex)
   await newForm.emails().emailInput(0).locator.fill('valid@email.copm')
@@ -170,19 +170,19 @@ test('form validations', async ({page}) => {
   // bad phone
   await newForm.phones().phoneInput(0).locator.fill('invalid-phone')
 
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await expect(page.url()).toMatch(newStudentModel.urlRegex)
   await newForm.phones().phoneInput(0).locator.fill('+972-48678.423984')
 
   // bad facebook name
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await expect(page.url()).toMatch(newStudentModel.urlRegex)
 
   await newForm.facebookNames().facebookNameInput(0).locator.fill('valid.fbname')
 
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await page.waitForURL(updateStudentModel.urlRegex)
 })
@@ -207,13 +207,13 @@ test('remove names and other fields', async ({page}) => {
   await newForm.phones().trashButton(0).locator.click()
   await newForm.facebookNames().trashButton(0).locator.click()
 
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await page.waitForURL(updateStudentModel.urlRegex)
 
   const updateForm = updateStudentModel.form()
 
-  await expect(updateForm.saveButton().locator).toBeVisible()
+  await expect(updateForm.updateButton().locator).toBeVisible()
 
   await expect(updateForm.names().firstNameInput(0).locator).not.toBeVisible()
   await expect(updateForm.names().lastNameInput(0).locator).not.toBeVisible()
@@ -237,7 +237,7 @@ test('remove names and other fields', async ({page}) => {
   await updateForm.facebookNames().addButton().locator.click()
   await updateForm.facebookNames().facebookNameInput(0).locator.fill('fb3')
 
-  await updateForm.saveButton().locator.click()
+  await updateForm.updateButton().locator.click()
 
   await expect(page.url()).toMatch(updateStudentModel.urlRegex)
 

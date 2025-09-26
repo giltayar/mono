@@ -27,7 +27,7 @@ test('can view history', async ({page}) => {
   await newForm.phones().trashButton(0).locator.click()
   await newForm.facebookNames().trashButton(0).locator.click()
 
-  await newForm.saveButton().locator.click()
+  await newForm.createButton().locator.click()
 
   await page.waitForURL(updateStudentModel.urlRegex)
 
@@ -39,7 +39,7 @@ test('can view history', async ({page}) => {
 
   await updateForm.names().firstNameInput(0).locator.fill('2')
 
-  await updateForm.saveButton().locator.click()
+  await updateForm.updateButton().locator.click()
 
   await expect(updateHistory.items().locator).toHaveCount(2)
   await expect(updateHistory.items().item(0).locator).toContainText('update')
@@ -90,7 +90,7 @@ test('multiple students have different histories', async ({page}) => {
   await newForm1.phones().trashButton(0).locator.click()
   await newForm1.facebookNames().trashButton(0).locator.click()
 
-  await newForm1.saveButton().locator.click()
+  await newForm1.createButton().locator.click()
   await page.waitForURL(updateStudentModel.urlRegex)
 
   // Get the first student's URL
@@ -100,7 +100,7 @@ test('multiple students have different histories', async ({page}) => {
   const updateForm1 = updateStudentModel.form()
   await updateForm1.names().firstNameInput(0).locator.fill('Alice-Updated')
 
-  await updateForm1.saveButton().locator.click()
+  await updateForm1.updateButton().locator.click()
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
 
@@ -118,7 +118,7 @@ test('multiple students have different histories', async ({page}) => {
   await newForm2.phones().trashButton(0).locator.click()
   await newForm2.facebookNames().trashButton(0).locator.click()
 
-  await newForm2.saveButton().locator.click()
+  await newForm2.createButton().locator.click()
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(1)
 
@@ -129,7 +129,7 @@ test('multiple students have different histories', async ({page}) => {
   const updateForm2 = updateStudentModel.form()
   await updateForm2.names().firstNameInput(0).locator.fill('Bob-Updated')
 
-  await updateForm2.saveButton().locator.click()
+  await updateForm2.updateButton().locator.click()
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
 

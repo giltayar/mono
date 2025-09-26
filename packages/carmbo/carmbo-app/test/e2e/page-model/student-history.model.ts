@@ -2,7 +2,7 @@ import type {Page} from '@playwright/test'
 
 export function createStudentHistoryPageModel(
   page: Page,
-  locator = page.getByRole('list', {name: 'Student History'}),
+  locator = page.getByRole('list', {name: 'History'}),
 ) {
   return {
     locator,

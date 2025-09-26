@@ -16,7 +16,7 @@ export function createStudentListPageModel(page: Page) {
         }),
       }),
     }),
-    createNewStudentButton: (locator = page.getByRole('button', {name: 'New student'})) => ({
+    createNewStudentButton: (locator = page.getByRole('button', {name: 'new student'})) => ({
       locator,
     }),
     search: (locator = page.getByLabel('Search')) => ({

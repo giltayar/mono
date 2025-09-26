@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import {html} from '../commons/html-templates.ts'
 import {MainLayout} from '../layouts/main-view.ts'
 import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from './model.ts'
+import type {HistoryOperation} from '../commons/operation-type.ts'
 
 export type StudentManipulations = {
   addItem: string | string[] | undefined
@@ -69,13 +70,17 @@ export function renderStudentViewInHistoryPage(
 
 function StudentCreateView({student}: {student: Student}) {
   return html`
-    <h1>New Student</h1>
-    <form hx-post="/students/" hx-target="html" hx-push-url="true">
-      <section>
-        <button type="Submit" value="save">Save</button>
-        <button type="Submit" value="discard">Discard</button>
-      </section>
-      <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
+    <h2 class="border-bottom col-md-6 mt-3">New Student</h2>
+    <form hx-post="/students/" hx-target="html" hx-push-url="true" class="col-md-6 mt-3">
+      <div class="ms-auto" style="width: fit-content">
+        <section class="btn-group" aria-label="Form actions">
+          <button class="btn btn-secondary" type="Submit" value="discard">Discard</button>
+          <button class="btn btn-primary" type="Submit" value="save">Create</button>
+        </section>
+      </div>
+      <div class="mt-3">
+        <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
+      </div>
     </form>
   `
 }
@@ -88,21 +93,42 @@ function StudentUpdateView({
   history: StudentHistory[]
 }) {
   return html`
-    <h1>
-      Update Student ${student.studentNumber}<> </>
-      ${student.historyOperation === 'delete' ? '(deleted)' : ''}
-    </h1>
-    <form hx-put="/students/${student.studentNumber}" hx-target="form" hx-replace-url="true">
+    <h2 class="border-bottom col-md-6 mt-3">
+      Update Student ${student.studentNumber}
+      ${student.historyOperation === 'delete'
+        ? html` <small class="text-body-secondary">(archived)</small>`
+        : ''}
+    </h2>
+    <form
+      hx-put="/students/${student.studentNumber}"
+      hx-target="form"
+      hx-replace-url="true"
+      class="col-md-6 mt-3"
+    >
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
-      <input name="delete-operation" type="hidden" value=${student.historyOperation === 'delete' ? 'restore' : 'delete'} />
-      <section>
-        <button type="Submit" value="save">Save</button>
-        <button type="Submit" value="discard">Discard</button>
-        <button type="Submit" value="delete" hx-delete="" hx-params="delete-operation">
-          ${student.historyOperation === 'delete' ? 'Restore' : 'Delete'}
-        </button>
-      </section>
-      <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
+      <input
+        name="delete-operation"
+        type="hidden"
+        value=${student.historyOperation === 'delete' ? 'restore' : 'delete'}
+      />
+      <div class="ms-auto" style="width: fit-content">
+        <section class="btn-group" aria-label="Form actions">
+          <button class="btn btn-secondary" type="Submit" value="discard">Discard</button>
+          <button
+            class="btn btn-danger"
+            type="Submit"
+            value="delete"
+            hx-delete=""
+            hx-params="delete-operation"
+          >
+            ${student.historyOperation === 'delete' ? 'Restore' : 'Archive'}
+          </button>
+          <button class="btn btn-primary" type="Submit" value="save">Update</button>
+        </section>
+      </div>
+      <div class="mt-3">
+        <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
+      </div>
     </form>
     <${StudentHistoryList} student=${student} history=${history} />
   `
@@ -118,13 +144,17 @@ function StudentHistoryView({
   const currentHistory = history.find((h) => h.historyId === student.id)
 
   return html`
-    <h1>
-      View Student ${student.studentNumber} (${currentHistory?.operation ?? 'unknown'} at
-      ${currentHistory ? new Date(currentHistory.timestamp).toLocaleString() : '???'})
-    </h1>
-    <form>
+    <h2 class="border-bottom col-md-6 mt-3">
+      View Student ${student.studentNumber}<> </>
+      <small class="text-body-secondary"
+        >(${historyOperationToText(currentHistory?.operation)})</small
+      >
+    </h2>
+    <form class="col-md-6 mt-3">
       <input name="studentNumber" type="hidden" value=${student.studentNumber} readonly />
-      <${StudentCreateOrUpdateFormFields} student=${student} operation="read" />
+      <div class="mt-3">
+        <${StudentCreateOrUpdateFormFields} student=${student} operation="read" />
+      </div>
     </form>
     <${StudentHistoryList} student=${student} history=${history} />
   `
@@ -138,38 +168,60 @@ function StudentHistoryList({
   history: StudentHistory[]
 }) {
   return html`
-    <ul aria-label="Student History">
-      ${history?.map(
-        (entry) =>
-          html`<li>
-            ${
-              entry.historyId === student.id
-                ? html`<strong>${entry.operation}</strong>`
-                : html` <a
-                    href=${`/students/${student.studentNumber}/by-history/${entry.historyId}`}
-                  >
-                    ${entry.operation}</a
-                  >`
-            }<> </>
-            at ${new Date(entry.timestamp).toLocaleString()}
-          </li>`,
-      )}
+    <h5 class="mt-3 col-md-6 border-bottom">History</h5>
+    <ul
+      aria-label="Student History"
+      class="list-group mt-3 pb-3 col-md-6"
+      style="font-size: 0.9rem"
+    >
+      ${history?.map((entry, i) => {
+        const date = new Date(entry.timestamp)
+        return html`<li class="list-group-item d-flex" style="text-transform: capitalize;">
+          ${entry.historyId === student.id
+            ? html`<strong class="d-block">${historyOperationToText(entry.operation)}</strong>`
+            : html` <a
+                class="d-block"
+                href=${`/students/${student.studentNumber}` +
+                (i > 0 ? `/by-history/${entry.historyId}` : '')}
+              >
+                ${historyOperationToText(entry.operation)}</a
+              >`}
+          <span class="d-block ms-auto" title="${date.toLocaleTimeString('he-IL')}"
+            >${date.toLocaleDateString('he-IL')}</span
+          >
+        </li>`
+      })}
     </ul>
   `
 }
 
-function AddButton({itemsName: itemName}: {itemsName: string}) {
+function AddButton({
+  itemsName,
+  i,
+  l,
+  humanName,
+}: {
+  itemsName: string
+  i?: number
+  l: unknown[]
+  humanName?: string
+}) {
+  const isOnItsOwn = i === undefined && (!l || l.length === 0)
   return html`
     <button
-      class="students-view_add"
+      class="btn students-view_add"
       hx-post=""
       hx-target="closest .students-view_form-fields"
       hx-swap="outerHTML"
       hx-trigger="click delay:1ms"
-      hx-headers=${JSON.stringify({'X-Add-Item': itemName})}
+      hx-headers=${JSON.stringify({'X-Add-Item': itemsName})}
       aria-label="Add"
+      style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
-      +
+      <svg class="feather pe-none" viewbox="0 0 24 24">
+        <use href="/public/students/style/plus-circle.svg" />
+      </svg>
+      ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
   `
 }
@@ -177,13 +229,16 @@ function AddButton({itemsName: itemName}: {itemsName: string}) {
 function RemoveButton() {
   return html`
     <button
-      class="students-view_trash"
+      class="students-view_trash btn btn-outline-secondary"
       hx-post=""
       hx-target="closest .students-view_form-fields"
       hx-swap="outerHTML"
       hx-trigger="click delay:1ms"
+      aria-label="Remove"
     >
-      Trash
+      <svg class="feather pe-none" viewbox="0 0 24 24">
+        <use href="/public/students/style/minus-circle.svg" />
+      </svg>
     </button>
   `
 }
@@ -198,116 +253,157 @@ function StudentCreateOrUpdateFormFields({
   const maybeRo = operation === 'read' ? 'readonly' : ''
 
   return html`
-    <div class="students-view_form-fields">
-      <fieldset>
-        <legend>Names</legend>
-        ${student.names?.map(
-          (name, i) => html`
-            <div class="students-view_item">
-              <label>
-                First Name
-                <input
-                  name="names[${i}][firstName]"
-                  type="text"
-                  value=${name.firstName}
-                  required
-                  ${maybeRo}
-                />
-              </label>
-              <label>
-                Last Name
-                <input
-                  name="names[${i}][lastName]"
-                  type="text"
-                  value=${name.lastName}
-                  required
-                  ${maybeRo}
-                />
-              </label>
-              ${operation === 'write' && html`<${RemoveButton} />`}
-            </div>
-          `,
-        )}
-        ${operation === 'write' && html`<${AddButton} itemsName="names" />`}
-      </fieldset>
+    <div class="students-view_form-fields card">
+      <div class="card-body">
+        <fieldset aria-label="Names" class="mt-3">
+          ${student.names?.map(
+            (name, i, l) => html`
+              <div class="students-view_item input-group">
+                <div class="form-floating">
+                  <input
+                    name="names[${i}][firstName]"
+                    type="text"
+                    value=${name.firstName}
+                    placeholder=" "
+                    required
+                    class="form-control"
+                    id="firstName-${i}"
+                    ${maybeRo}
+                  />
+                  <label for="firstName-${i}">First Name</label>
+                </div>
 
-      <fieldset>
-        <legend>Emails</legend>
-        ${student.emails?.map(
-          (email, i) => html`
-            <div class="students-view_item">
-              <label>
-                Email
-                <input name="emails[${i}]" type="email" value=${email} ${maybeRo} required />
-              </label>
-              ${operation === 'write' && html`<${RemoveButton} />`}
-            </div>
-          `,
-        )}
-        ${operation === 'write' && html`<${AddButton} itemsName="emails" />`}
-      </fieldset>
+                <div class="form-floating">
+                  <input
+                    name="names[${i}][lastName]"
+                    type="text"
+                    value=${name.lastName}
+                    placeholder=" "
+                    required
+                    class="form-control"
+                    id="lastName-${i}"
+                    ${maybeRo}
+                  />
+                  <label for="lastName-${i}">Last Name</label>
+                </div>
+                ${operation === 'write' && html`<${RemoveButton} />`}
+                ${operation === 'write' && html`<${AddButton} itemsName="names" i=${i} l=${l} />`}
+              </div>
+            `,
+          )}
+          ${operation === 'write' &&
+          html`<${AddButton} itemsName="names" humanName="Names" l=${student.names} />`}
+        </fieldset>
 
-      <fieldset>
-        <legend>Phones</legend>
-        ${student.phones?.map(
-          (phone, i) => html`
-            <div class="students-view_item">
-              <label>
-                Phone
-                <input
-                  name="phones[${i}]"
-                  type="tel"
-                  value=${phone}
-                  ${maybeRo}
-                  pattern="^\\+?[\\d\\-\\.]+$"
-                  required
-                />
-              </label>
-              ${operation === 'write' && html`<${RemoveButton} />`}
-            </div>
-          `,
-        )}
-        ${operation === 'write' && html`<${AddButton} itemsName="phones" />`}
-      </fieldset>
+        <fieldset aria-label="Emails" class="mt-3">
+          ${student.emails?.map(
+            (email, i, l) => html`
+              <div class="students-view_item input-group">
+                <div class="form-floating">
+                  <input
+                    name="emails[${i}]"
+                    type="email"
+                    value=${email}
+                    placeholder=" "
+                    required
+                    class="form-control"
+                    id="email-${i}"
+                    ${maybeRo}
+                  />
+                  <label for="email-${i}">Email</label>
+                </div>
+                ${operation === 'write' && html`<${RemoveButton} />`}
+                ${operation === 'write' && html`<${AddButton} itemsName="emails" i=${i} l=${l} />`}
+              </div>
+            `,
+          )}
+          ${operation === 'write' &&
+          html`<${AddButton} itemsName="emails" humanName="Emails" l=${student.emails} />`}
+        </fieldset>
 
-      <fieldset>
-        <legend>Facebook names</legend>
-        ${student.facebookNames?.map(
-          (fb, i) => html`
-            <div class="students-view_item">
-              <label>
-                Facebook name
-                <input name="facebookNames[${i}]" type="text" value=${fb} ${maybeRo} required />
-              </label>
-              ${operation === 'write' && html`<${RemoveButton} />`}
-            </div>
-          `,
-        )}
-        ${operation === 'write' && html`<${AddButton} itemsName="facebookNames" />`}
-      </fieldset>
+        <fieldset aria-label="Phones" class="mt-3">
+          ${student.phones?.map(
+            (phone, i, l) => html`
+              <div class="students-view_item input-group">
+                <div class="form-floating">
+                  <input
+                    name="phones[${i}]"
+                    type="tel"
+                    value=${phone}
+                    placeholder=" "
+                    required
+                    class="form-control"
+                    id="phone-${i}"
+                    pattern="^\\+?[\\d\\-\\.]+$"
+                    ${maybeRo}
+                  />
+                  <label for="phone-${i}">Phone</label>
+                </div>
+                ${operation === 'write' && html`<${RemoveButton} />`}
+                ${operation === 'write' && html`<${AddButton} itemsName="phones" i=${i} l=${l} />`}
+              </div>
+            `,
+          )}
+          ${operation === 'write' &&
+          html`<${AddButton} itemsName="phones" humanName="Phones" l=${student.phones} />`}
+        </fieldset>
 
-      <div>
-        <label>
-          Birthday
+        <fieldset aria-label="Facebook Names" class="mt-3">
+          ${student.facebookNames?.map(
+            (fb, i, l) => html`
+              <div class="students-view_item input-group">
+                <div class="form-floating">
+                  <input
+                    name="facebookNames[${i}]"
+                    type="text"
+                    value=${fb}
+                    placeholder=" "
+                    required
+                    class="form-control"
+                    id="facebookName-${i}"
+                    ${maybeRo}
+                  />
+                  <label for="facebookName-${i}">Facebook Name</label>
+                </div>
+                ${operation === 'write' && html`<${RemoveButton} />`}
+                ${operation === 'write' &&
+                html`<${AddButton} itemsName="facebookNames" i=${i} l=${l} />`}
+              </div>
+            `,
+          )}
+          ${operation === 'write' &&
+          html`<${AddButton}
+            itemsName="facebookNames"
+            humanName="Facebook Names"
+            l=${student.facebookNames}
+          />`}
+        </fieldset>
+
+        <div class="mt-3 form-floating">
           <input
             name="birthday"
             type="date"
+            placeholder=" "
+            class="form-control"
+            id="birthday"
             value="${student.birthday ? student.birthday.toISOString().split('T')[0] : ''}"
             ${maybeRo}
           />
-        </label>
-      </div>
+          <label for="birthday">Birthday</label>
+        </div>
 
-      <div>
-        <label>
-          Cardcom Customer ID
+        <div class="mt-3 form-floating">
           <input
             name="cardcomCustomerId"
             type="text"
+            placeholder=" "
+            class="form-control"
+            id="cardcomCustomerId"
             value="${student.cardcomCustomerId}"
             ${maybeRo}
           />
-        </label>
+          <label for="cardcomCustomerId">Cardcom Customer ID</label>
+        </div>
       </div>
     </div>
   `
@@ -336,4 +432,19 @@ function manipulateStudent<T extends NewStudent | Student>(
   }
 
   return transformed
+}
+
+function historyOperationToText(operation: HistoryOperation | undefined): string {
+  switch (operation) {
+    case 'create':
+      return 'created'
+    case 'update':
+      return 'updated'
+    case 'delete':
+      return 'archived'
+    case 'restore':
+      return 'restored'
+    default:
+      return operation + '???'
+  }
 }

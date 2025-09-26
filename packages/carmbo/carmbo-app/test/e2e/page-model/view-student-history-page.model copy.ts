@@ -1,5 +1,5 @@
 import type {Page} from '@playwright/test'
-import {createStudentFormPageModel} from './student-form.model.ts'
+import {studentFormPageModel} from './student-form.model.ts'
 import {createStudentHistoryPageModel} from './student-history.model.ts'
 
 export function createViewStudentHistoryPageModel(page: Page) {
@@ -8,7 +8,7 @@ export function createViewStudentHistoryPageModel(page: Page) {
     pageTitle: (locator = page.getByRole('heading', {name: /View Student \d+ \(.*\)/})) => ({
       locator,
     }),
-    form: createStudentFormPageModel(page),
+    form: () => studentFormPageModel(page),
     history: () => createStudentHistoryPageModel(page),
   }
 }

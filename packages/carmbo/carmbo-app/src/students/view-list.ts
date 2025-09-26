@@ -24,8 +24,8 @@ function StudentsView({
   return html`
     <div class="students-view mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
-        <h1>Students</h1>
-        <form action="/students" hx-boosted class="mb-1">
+        <h2>Students</h2>
+        <form action="/students" hx-boosted class="mb-1 ms-auto">
           <fieldset class="row align-items-center me-0">
             <label class="form-check-label form-check col-auto"
               ><input

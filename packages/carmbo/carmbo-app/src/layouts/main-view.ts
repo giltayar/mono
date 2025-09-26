@@ -18,8 +18,8 @@ export function MainLayout({
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link rel="stylesheet" href="/public/layouts/main-view.css" />
           <link rel="stylesheet" href="/third-party/bootstrap.min.css" />
-          <script src="/third-party/htmx.min.js" defer></script>
           <script src="/third-party/bootstrap.bundle.min.js" defer></script>
+          <script src="/third-party/htmx.min.js" defer></script>
           <script src="/public/layouts/main-view.scripts.js" type="module"></script>
           <title>${title}</title>
         </head>

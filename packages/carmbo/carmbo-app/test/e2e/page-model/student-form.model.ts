@@ -1,16 +1,8 @@
 import type {Page, Locator} from '@playwright/test'
 
-export function createStudentFormPageModel(page: Page) {
-  return (locator = page.locator('form')) => ({
+export function studentFormPageModel(page: Page, locator = page.locator('form')) {
+  return {
     locator,
-    saveButton: (btnLocator = locator.getByRole('button', {name: 'Save'})) => ({
-      locator: btnLocator,
-    }),
-    discardButton: (btnLocator = locator.getByRole('button', {name: 'Discard'})) => ({
-      locator: btnLocator,
-    }),
-    deleteButton: (locator = page.getByRole('button', {name: 'Delete'})) => ({locator}),
-    restoreButton: (locator = page.getByRole('button', {name: 'Restore'})) => ({locator}),
     names: (namesLocator = locator.getByRole('group', {name: 'Names', exact: true})) => ({
       locator: namesLocator,
       firstNameInput: (i: number) => ({
@@ -48,10 +40,10 @@ export function createStudentFormPageModel(page: Page) {
     cardcomCustomerIdInput: (inputLocator = locator.getByLabel('Cardcom Customer ID')) => ({
       locator: inputLocator,
     }),
-  })
+  }
 }
 
-export type StudentFormPageModel = ReturnType<typeof createStudentFormPageModel>
+export type StudentFormPageModel = ReturnType<typeof studentFormPageModel>
 
 function addAndTrashButtons(itemLocator: Locator) {
   return {
@@ -60,7 +52,7 @@ function addAndTrashButtons(itemLocator: Locator) {
     }),
     trashButton: (
       i: number,
-      locator = itemLocator.getByRole('button', {name: 'Trash'}).nth(i),
+      locator = itemLocator.getByRole('button', {name: 'Remove'}).nth(i),
     ) => ({
       locator,
     }),
