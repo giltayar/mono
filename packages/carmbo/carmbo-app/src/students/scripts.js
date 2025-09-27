@@ -13,3 +13,11 @@ document.addEventListener('click', (event) => {
     event.target.closest('form').reset()
   }
 })
+
+document.addEventListener('htmx:configRequest', (event) => {
+  const birthday = event.detail.parameters.birthday
+
+  if (!birthday) {
+    delete event.detail.parameters.birthday
+  }
+})

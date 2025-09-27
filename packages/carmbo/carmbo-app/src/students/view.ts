@@ -3,11 +3,7 @@ import {MainLayout} from '../layouts/main-view.ts'
 import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from './model.ts'
 import {manipulateStudent, type StudentManipulations} from './view-student-manipulations.ts'
 import {StudentCreateOrUpdateFormFields} from './view-form.ts'
-import {
-  StudentCreateView,
-  StudentHistoryView,
-  StudentUpdateView,
-} from './view-create-update-view.ts'
+import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './view-create-update.ts'
 
 export function renderStudentsCreatePage(
   student: NewStudent | undefined,
@@ -22,7 +18,7 @@ export function renderStudentsCreatePage(
         emails: [''],
         phones: [''],
         facebookNames: [''],
-        birthday: new Date(),
+        birthday: undefined,
         cardcomCustomerId: '',
       }
 

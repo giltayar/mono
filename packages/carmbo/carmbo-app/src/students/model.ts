@@ -23,7 +23,10 @@ export const StudentWithHistoryInfoSchema = StudentSchema.extend({
 })
 
 export const NewStudentSchema = z.object({
-  birthday: z.iso.date().transform((s) => new Date(s)),
+  birthday: z.iso
+    .date()
+    .transform((s) => new Date(s))
+    .optional(),
   names: z.array(z.object({firstName: z.string(), lastName: z.string()})).optional(),
   emails: z.array(z.union([z.email(), z.string()])).optional(),
   phones: z.array(z.string()).optional(),

@@ -118,3 +118,42 @@ test('discard button', async ({page}) => {
   await expect(newForm.names().lastNameInput(0).locator).toHaveValue('Doe')
   await expect(newForm.emails().emailInput(0).locator).not.toBeVisible()
 })
+
+test('birthday field is optional', async ({page}) => {
+  await page.goto(url().href)
+
+  const studentListModel = createStudentListPageModel(page)
+  const newStudentModel = createNewStudentPageModel(page)
+  const updateStudentModel = createUpdateStudentPageModel(page)
+
+  await studentListModel.createNewStudentButton().locator.click()
+
+  await page.waitForURL(newStudentModel.urlRegex)
+
+  await expect(newStudentModel.form().birthdayInput().locator).toHaveValue('')
+
+  await newStudentModel.form().names().firstNameInput(0).locator.fill('John')
+  await newStudentModel.form().names().lastNameInput(0).locator.fill('Doe')
+  await newStudentModel.form().emails().trashButton(0).locator.click()
+  await newStudentModel.form().phones().trashButton(0).locator.click()
+  await newStudentModel.form().facebookNames().trashButton(0).locator.click()
+
+  await newStudentModel.form().createButton().locator.click()
+
+  await page.waitForURL(updateStudentModel.urlRegex)
+
+  await expect(updateStudentModel.form().birthdayInput().locator).toHaveValue('')
+
+  await updateStudentModel.form().names().firstNameInput(0).locator.fill('Jane')
+  await updateStudentModel.form().names().lastNameInput(0).locator.fill('Smith')
+
+  await updateStudentModel.form().updateButton().locator.click()
+
+  await expect(updateStudentModel.form().birthdayInput().locator).toHaveValue('')
+
+  await updateStudentModel.form().birthdayInput().locator.fill('2025-03-04')
+
+  await updateStudentModel.form().updateButton().locator.click()
+
+  await expect(updateStudentModel.history().items().locator).toHaveCount(2)
+})
