@@ -6,4 +6,10 @@ document.addEventListener('click', (event) => {
       el.removeAttribute('name')
     })
   }
+
+  if (target.classList.contains('discard')) {
+    window.location.reload()
+    event.preventDefault()
+    event.target.closest('form').reset()
+  }
 })

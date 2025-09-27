@@ -6,10 +6,10 @@ import {StudentHistoryList, historyOperationToText} from './view-history.ts'
 export function StudentCreateView({student}: {student: Student}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">New Student</h2>
-    <form hx-post="/students/" hx-target="html" hx-push-url="true" class="col-md-6 mt-3">
+    <form hx-post="/students/" hx-target="html" class="col-md-6 mt-3">
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          <button class="btn btn-secondary" type="Submit" value="discard">Discard</button>
+          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
           <button class="btn btn-primary" type="Submit" value="save">Create</button>
         </section>
       </div>
@@ -34,12 +34,7 @@ export function StudentUpdateView({
         ? html` <small class="text-body-secondary">(archived)</small>`
         : ''}
     </h2>
-    <form
-      hx-put="/students/${student.studentNumber}"
-      hx-target="form"
-      hx-replace-url="true"
-      class="col-md-6 mt-3"
-    >
+    <form hx-put="/students/${student.studentNumber}" hx-target="form" class="col-md-6 mt-3">
       <input name="studentNumber" type="hidden" value=${student.studentNumber} />
       <input
         name="delete-operation"
@@ -48,7 +43,7 @@ export function StudentUpdateView({
       />
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          <button class="btn btn-secondary" type="Submit" value="discard">Discard</button>
+          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
           <button
             class="btn btn-danger"
             type="Submit"

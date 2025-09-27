@@ -71,3 +71,50 @@ test('create student then update her', async ({page}) => {
   await expect(firstRow.emailCell().locator).toHaveText('jane.smith@example.com')
   await expect(firstRow.phoneCell().locator).toHaveText('0987654321')
 })
+
+test('discard button', async ({page}) => {
+  await page.goto(url().href)
+  const studentListModel = createStudentListPageModel(page)
+  const newStudentModel = createNewStudentPageModel(page)
+  const updateStudentModel = createUpdateStudentPageModel(page)
+
+  await studentListModel.createNewStudentButton().locator.click()
+  await page.waitForURL(newStudentModel.urlRegex)
+  await expect(newStudentModel.pageTitle().locator).toHaveText('New Student')
+
+  const newForm = newStudentModel.form()
+  await newForm.names().firstNameInput(0).locator.fill('John')
+  await newForm.names().lastNameInput(0).locator.fill('Doe')
+  await newForm.emails().trashButton(0).locator.click()
+
+  await newForm.discardButton().locator.click()
+
+  await expect(newForm.names().firstNameInput(0).locator).toHaveValue('')
+  await expect(newForm.names().lastNameInput(0).locator).toHaveValue('')
+  await expect(newForm.emails().emailInput(0).locator).toHaveValue('')
+
+  await newForm.names().firstNameInput(0).locator.fill('John')
+  await newForm.names().lastNameInput(0).locator.fill('Doe')
+  await newForm.emails().trashButton(0).locator.click()
+  await newForm.phones().trashButton(0).locator.click()
+  await newForm.facebookNames().trashButton(0).locator.click()
+
+  await newForm.createButton().locator.click()
+  await page.waitForURL(updateStudentModel.urlRegex)
+
+  const updateForm = updateStudentModel.form()
+  await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('John')
+  await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Doe')
+  await expect(newForm.emails().emailInput(0).locator).not.toBeVisible()
+
+  await updateForm.names().firstNameInput(0).locator.fill('Jane')
+  await updateForm.names().lastNameInput(0).locator.fill('Smith')
+  await newForm.emails().addButton().locator.click()
+  await expect(newForm.emails().emailInput(0).locator).toBeVisible()
+
+  await updateForm.discardButton().locator.click()
+
+  await expect(newForm.names().firstNameInput(0).locator).toHaveValue('John')
+  await expect(newForm.names().lastNameInput(0).locator).toHaveValue('Doe')
+  await expect(newForm.emails().emailInput(0).locator).not.toBeVisible()
+})

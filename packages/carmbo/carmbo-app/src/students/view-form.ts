@@ -92,7 +92,7 @@ export function StudentCreateOrUpdateFormFields({
                     required
                     class="form-control"
                     id="phone-${i}"
-                    pattern="^\\+?[\\d\\-\\.]+$"
+                    pattern="^\\+?[\\d\\-\\.\\(\\) ]+$"
                     ${maybeRo}
                   />
                   <label for="phone-${i}">Phone</label>
