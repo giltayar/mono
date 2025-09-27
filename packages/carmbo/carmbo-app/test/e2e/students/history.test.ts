@@ -62,10 +62,13 @@ test('can view history', async ({page}) => {
 
   await historyPage.items().item(0).link().locator.click()
 
-  await expect(historyPage.items().locator).toHaveCount(2)
-  await expect(historyPage.items().item(0).locator).toContainText('update')
-  await expect(historyPage.items().item(1).locator).toContainText('create')
-  await expect(historyPage.items().item(0).link().locator).not.toBeVisible()
+  await page.waitForURL(updateStudentModel.urlRegex)
+
+  await expect(updateHistory.items().locator).toHaveCount(2)
+  await expect(updateStudentModel.pageTitle().locator).toHaveText(/Update Student \d+/)
+  await expect(updateHistory.items().item(0).locator).toContainText('update')
+  await expect(updateHistory.items().item(1).locator).toContainText('create')
+  await expect(updateHistory.items().item(0).link().locator).not.toBeVisible()
 
   await expect(historyForm.names().firstNameInput(0).locator).toHaveValue('2')
 })
