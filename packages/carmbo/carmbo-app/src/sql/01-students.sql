@@ -4,6 +4,8 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE IF NOT EXISTS student (
     student_number SERIAL PRIMARY KEY,
     last_history_id UUID,
@@ -20,6 +22,13 @@ CREATE TABLE IF NOT EXISTS student_history (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS student_history_idx ON student_history (student_number, timestamp, operation);
+
+CREATE TABLE IF NOT EXISTS student_search (
+    data_id UUID NOT NULL,
+    searchable_text TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS student_search_idx ON student_search (data_id);
 
 CREATE TABLE IF NOT EXISTS student_data (
     data_id UUID NOT NULL,

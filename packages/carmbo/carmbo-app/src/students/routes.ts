@@ -18,14 +18,33 @@ import {dealWithControllerResult} from '../commons/routes-commons.ts'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   // List students
-  app.get<{Querystring: {flash: string; 'with-archived': string}}>('/', async (request, reply) =>
-    dealWithControllerResult(
-      reply,
-      await showStudents(
-        {flash: request.query.flash, withArchived: 'with-archived' in request.query},
-        sql,
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/',
+    {
+      schema: {
+        querystring: z
+          .object({
+            flash: z.string(),
+            'with-archived': z.string(),
+            q: z.string(),
+            page: z.coerce.number().int().min(0).default(0).optional(),
+          })
+          .partial(),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showStudents(
+          {
+            flash: request.query.flash,
+            withArchived: 'with-archived' in request.query,
+            query: request.query.q,
+            page: request.query.page ?? 0,
+          },
+          sql,
+        ),
       ),
-    ),
   )
 
   // Create new student

@@ -13,7 +13,7 @@ export const EnvironmentVariablesSchema = z.object({
 
 const env = EnvironmentVariablesSchema.parse(process.env)
 
-const app = await makeApp({
+const {app} = await makeApp({
   db: {
     host: env.DB_HOST,
     port: env.DB_PORT,

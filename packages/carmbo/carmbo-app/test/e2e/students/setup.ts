@@ -1,7 +1,6 @@
 import {test} from '@playwright/test'
 import {runDockerCompose, tcpHealthCheck} from '@giltayar/docker-compose-testkit'
 import type {Sql} from 'postgres'
-import postgres from 'postgres'
 import {makeApp} from '../../../src/app/carmbo-app.ts'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
@@ -9,8 +8,8 @@ import type {AddressInfo} from 'node:net'
 export function setup(testUrl: string) {
   let findAddress
   let teardown: (() => Promise<void>) | undefined
-  let sql: Sql
   let app: FastifyInstance
+  let sql: Sql
   let url: URL
 
   test.beforeAll(async () => {
@@ -19,21 +18,16 @@ export function setup(testUrl: string) {
       {variation: testUrl},
     ))
 
-    sql = postgres({
-      host: await findAddress('carmbo-postgres', 5432, {healthCheck: tcpHealthCheck}),
-      database: 'carmbo',
-      username: 'user',
-      password: 'password',
-    })
+    const host = await findAddress('carmbo-postgres', 5432, {healthCheck: tcpHealthCheck})
 
-    app = makeApp({
+    ;({app, sql} = makeApp({
       db: {
-        host: sql.options.host[0],
-        port: sql.options.port[0],
-        username: sql.options.user,
+        host: host.split(':')[0],
+        port: parseInt(host.split(':')[1]),
+        username: 'user',
         password: 'password',
       },
-    })
+    }))
 
     await app.listen()
     app.server.unref()
@@ -44,12 +38,14 @@ export function setup(testUrl: string) {
   })
 
   test.beforeEach(async () => {
-    await sql`TRUNCATE TABLE student CASCADE`
+    await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
   })
 
   test.afterAll(async () => teardown?.())
 
   return {
     url: () => url,
+    sql: () => sql,
   }
 }

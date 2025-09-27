@@ -48,5 +48,5 @@ export function makeApp({
     return {status: 'ok'}
   })
 
-  return app
+  return {app, sql}
 }

@@ -19,12 +19,17 @@ import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
 import type {StudentManipulations} from './view-student-manipulations.ts'
 
 export async function showStudents(
-  {flash, withArchived}: {flash?: string; withArchived: boolean},
+  {
+    flash,
+    withArchived,
+    query,
+    page,
+  }: {flash?: string; withArchived: boolean; query: string | undefined; page: number},
   sql: Sql,
 ): Promise<ControllerResult> {
-  const students = await listStudents(sql, {withArchived})
+  const students = await listStudents(sql, {withArchived, query: query ?? '', limit: 50, page})
 
-  return finalHtml(renderStudentsPage(flash, students, {withArchived}))
+  return finalHtml(renderStudentsPage(flash, students, {withArchived, query: query ?? '', page}))
 }
 
 export function showStudentCreate(): ControllerResult {

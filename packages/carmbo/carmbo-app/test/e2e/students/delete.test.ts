@@ -63,7 +63,6 @@ test('deleting a student', async ({page}) => {
 
   // Check the "Show archived" checkbox to show archived students
   await studentListModel.search().showArchivedCheckbox().locator.click()
-  await studentListModel.search().refreshButton().locator.click()
 
   // Now both students should be visible
   await expect(rows.locator).toHaveCount(2)
@@ -76,7 +75,6 @@ test('deleting a student', async ({page}) => {
 
   // Uncheck the "Show archived" checkbox
   await studentListModel.search().showArchivedCheckbox().locator.click()
-  await studentListModel.search().refreshButton().locator.click()
 
   // Should be back to only showing Alice
   await expect(rows.locator).toHaveCount(1)

@@ -1,7 +1,8 @@
-import type {Sql} from 'postgres'
+import type {PendingQuery, Row, Sql} from 'postgres'
 import {HistoryOperationEnumSchema, type HistoryOperation} from '../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
+import {range} from '@giltayar/functional-commons'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -52,8 +53,26 @@ export interface StudentHistory {
 
 export async function listStudents(
   sql: Sql,
-  {withArchived}: {withArchived: boolean},
+  {
+    withArchived,
+    query,
+    limit,
+    page,
+  }: {withArchived: boolean; query: string; limit: number; page: number},
 ): Promise<StudentForGrid[]> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  process.env.TEST_SEED && (await TEST_seedStudents(sql, 10000))
+
+  const filters: PendingQuery<Row[]>[] = [sql`true`]
+
+  if (!withArchived) {
+    filters.push(sql`operation <> 'delete'`)
+  }
+
+  if (query) {
+    filters.push(sql`searchable_text LIKE '%' || ${sql`${likeEscape(query)}`} || '%'`)
+  }
+
   const result = await sql<StudentForGrid[]>`
     SELECT
       student.student_number,
@@ -63,6 +82,7 @@ export async function listStudents(
     FROM
       student_history
       INNER JOIN student ON last_history_id = id
+      LEFT JOIN student_search USING (data_id)
       LEFT JOIN student_integration_cardcom USING (data_id)
       LEFT JOIN LATERAL (
         SELECT
@@ -88,12 +108,10 @@ export async function listStudents(
         WHERE
           student_phone.data_id = student_history.data_id
       ) phones ON true
-    ${
-      withArchived
-        ? sql``
-        : sql`WHERE operation <> 'delete'
-  `
-    }`
+    ${filters.flatMap((filter, i) => (i === 0 ? [sql`WHERE`, filter] : [sql`AND`, filter]))}
+    ORDER BY student.student_number
+    LIMIT ${limit} OFFSET ${page * limit}
+    `
 
   return result
 }
@@ -341,6 +359,16 @@ async function addStudentStuff(student: Student | NewStudent, dataId: string, sq
 
   ops = ops.concat() ?? []
 
+  ops = ops.concat(sql`
+    INSERT INTO student_search VALUES
+      (${dataId}, ${searchableStudentText(student)})
+  `)
+
+  ops = ops.concat(sql`
+    INSERT INTO student_data VALUES
+      (${dataId}, ${student.birthday ?? null})
+  `)
+
   ops = ops.concat(
     student.emails?.map(
       (email, index) => sql`
@@ -357,13 +385,6 @@ async function addStudentStuff(student: Student | NewStudent, dataId: string, sq
       `,
     ) ?? [],
   )
-
-  if (student.birthday) {
-    ops = ops.concat(sql`
-      INSERT INTO student_data VALUES
-        (${dataId}, ${student.birthday})
-    `)
-  }
 
   ops = ops.concat(
     student.phones?.map(
@@ -390,4 +411,44 @@ async function addStudentStuff(student: Student | NewStudent, dataId: string, sq
   }
 
   await Promise.all(ops)
+}
+
+function searchableStudentText(student: Student | NewStudent): string {
+  const names = student.names?.map((name) => `${name.firstName} ${name.lastName}`).join(' ') ?? ''
+  const emails = student.emails?.join(' ') ?? ''
+  const phones = student.phones?.join(' ') ?? ''
+  const facebookNames = student.facebookNames?.join(' ') ?? ''
+
+  return `${names} ${emails} ${phones} ${facebookNames} ${student.cardcomCustomerId ?? ''}`.trim()
+}
+
+function likeEscape(s: string): string {
+  return s.replace(/[%_\\]/g, (m) => `\\${m}`)
+}
+
+export async function TEST_seedStudents(sql: Sql, count: number) {
+  // eslint-disable-next-line n/no-unpublished-import
+  const chance = new (await import('chance')).Chance(0)
+
+  for (const i of range(0, count)) {
+    if (i % 1000 === 0) {
+      console.log(`Seeding student ${i}`)
+    }
+    await createStudent(
+      {
+        emails: [chance.email(), chance.email()],
+        facebookNames: [chance.name()],
+        names: [
+          {firstName: chance.first(), lastName: chance.last()},
+          {firstName: chance.first(), lastName: chance.last()},
+          {firstName: chance.first(), lastName: chance.last()},
+        ],
+        phones: [chance.phone(), chance.phone(), chance.phone()],
+        birthday: chance.date(),
+        cardcomCustomerId: chance.integer().toString(),
+      },
+      chance.word(),
+      sql,
+    )
+  }
 }
