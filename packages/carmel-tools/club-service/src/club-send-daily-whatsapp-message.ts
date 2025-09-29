@@ -12,7 +12,7 @@ export async function sendDailyWhatsAppMessage(s: ClubServiceData): Promise<void
   const sheetData = await services.googleSheets.readGoogleSheet(
     s.context.dailyMessagesGoogleSheet,
     {
-      numberOfColumns: 4,
+      numberOfColumns: 6,
       sheetIndex: dailyMessagesGoogleSheetTabIndex,
       maxRows: 3000,
     },
@@ -25,14 +25,16 @@ export async function sendDailyWhatsAppMessage(s: ClubServiceData): Promise<void
     return
   }
 
-  const {rowIndex, message} = result
+  const {rowIndex, message, mediaUrl} = result
 
   const rowInSheet = rowIndex + 2 // +2 because of header row and 1-based indexing
 
-  logger.info({whatsappGroupId, message: message.slice(0, 20)}, 'sending-message')
+  logger.info({whatsappGroupId, message: message.slice(0, 20), mediaUrl}, 'sending-message')
 
   // Send the WhatsApp message
-  await services.whatsapp.sendMessageToGroup(whatsappGroupId, message)
+  await services.whatsapp.sendMessageToGroup(whatsappGroupId, message, {
+    mediaUrl: mediaUrl && mediaUrl.trim() ? mediaUrl.trim() : undefined,
+  })
 
   logger.info(
     {

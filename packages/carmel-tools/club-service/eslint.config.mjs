@@ -47,12 +47,16 @@ export default tseslint.config([
       'constructor-super': 'warn',
       'valid-typeof': 'warn',
       'n/exports-style': ['error', 'module.exports'],
-      "n/no-unpublished-import": ["error", { "ignoreTypeImport": true }],
+      'n/no-unpublished-import': ['error', {ignoreTypeImport: true}],
       '@typescript-eslint/no-namespace': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {varsIgnorePattern: '^_', args: 'all', argsIgnorePattern: '^_'},
+      ],
+      'n/no-unsupported-features/node-builtins': [
+        'error',
+        {ignores: ['assert.partialDeepStrictEqual']},
       ],
     },
   },

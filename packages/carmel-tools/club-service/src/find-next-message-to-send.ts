@@ -9,6 +9,7 @@ type ProcessMessageResult =
       found: true
       rowIndex: number
       message: string
+      mediaUrl: string | undefined
     }
 
 export function findNextMessageToSend(rows: string[][]): ProcessMessageResult {
@@ -19,7 +20,7 @@ export function findNextMessageToSend(rows: string[][]): ProcessMessageResult {
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
-    const [date, time, sent, message] = row
+    const [date, time, sent, message, , mediaUrl] = row
 
     // Skip if message was already sent (column 3 has any value)
     if (sent && sent.trim() !== '') {
@@ -57,7 +58,8 @@ export function findNextMessageToSend(rows: string[][]): ProcessMessageResult {
     return {
       found: true,
       rowIndex: i,
-      message: message,
+      message,
+      mediaUrl: mediaUrl ? mediaUrl.trim() : undefined,
     }
   }
 
