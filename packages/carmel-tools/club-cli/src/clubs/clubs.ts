@@ -41,5 +41,13 @@ export const exponential: ClubInformation = {
   subscribedSmooveListId: 931893,
   unubscribedSmooveListId: 1006396,
   continuingSmooveListId: 1060451,
-  whatsappGroupId: '120363298297503251@g.us' as WhatsAppGroupId,
+  whatsappGroupId: '120363298297503251@g.us',
+} as Partial<ClubInformation>
+
+//@ts-expect-error this is a partial club. For testing.
+export const forTesting: ClubInformation = {
+  whatsappGroupId: '120363403406458434@g.us',
+  dailyMessagesGoogleSheet:
+    'https://docs.google.com/spreadsheets/d/1eShTuk7F_Ckc6SFvGyolgVSyAZREE1KICJtKJGXXyBc/edit?gid=1341595384#gid=1341595384',
+  dailyMessagesGoogleSheetTabIndex: 5,
 } as Partial<ClubInformation>
