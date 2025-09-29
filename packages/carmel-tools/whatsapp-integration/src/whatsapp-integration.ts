@@ -3,12 +3,33 @@ import type {
   WhatsAppGroupId,
   WhatsAppContactId,
 } from '@giltayar/carmel-tools-whatsapp-integration/types'
+import {fetchAsBuffer, fetchAsJson, fetchAsJsonWithJsonBody} from '@giltayar/http-commons'
+import mime from 'mime/lite'
 
 export interface WhatsAppIntegrationServiceContext {
   greenApiKey: string
   greenApiInstanceId: number
   greenApiBaseUrl: URL
 }
+
+export type WhatsAppMessage = {} & (
+  | {
+      timestamp: Date
+      messageId: string
+      textMessage: string
+    }
+  | {
+      timestamp: Date
+      messageId: string
+      mediaUrl: string
+      caption: string
+      filename: string
+    }
+  | {
+      timestamp: Date
+      messageId: string
+    }
+)
 
 type WhatsAppIntegrationServiceData = {
   context: WhatsAppIntegrationServiceContext
@@ -21,18 +42,15 @@ export function createWhatsAppIntegrationService(context: WhatsAppIntegrationSer
     fetchWhatsAppGroups: sBind(fetchWhatsAppGroups),
     removeParticipantFromGroup: sBind(removeParticipantFromGroup),
     addParticipantToGroup: sBind(addParticipantToGroup),
-    fetchLastWhatsappGroupsThatWereSentMessage: sBind(fetchLastWhatsappGroupsThatWereSentMessage),
-    fetchLastWhatsappGroupsThatWereReceivedMessage: sBind(
-      fetchLastWhatsappGroupsThatWereReceivedMessage,
-    ),
     sendMessageToGroup: sBind(sendMessageToGroup),
     listParticipantsInGroup: sBind(listParticipantsInGroup),
+    fetchLatestMessagesFromGroup: sBind(fetchLatestMessagesFromGroup),
   }
 }
 
 export type WhatsAppIntegrationService = ReturnType<typeof createWhatsAppIntegrationService>
 
-export async function fetchWhatsAppGroups(
+async function fetchWhatsAppGroups(
   s: WhatsAppIntegrationServiceData,
 ): Promise<{id: WhatsAppGroupId; name: string}[]> {
   const url = createApiUrl(s, 'getContacts')
@@ -54,7 +72,7 @@ export async function fetchWhatsAppGroups(
   }))
 }
 
-export async function removeParticipantFromGroup(
+async function removeParticipantFromGroup(
   s: WhatsAppIntegrationServiceData,
   groupId: WhatsAppGroupId,
   participantId: WhatsAppContactId,
@@ -77,7 +95,7 @@ export async function removeParticipantFromGroup(
   await response.json()
 }
 
-export async function addParticipantToGroup(
+async function addParticipantToGroup(
   s: WhatsAppIntegrationServiceData,
   groupId: WhatsAppGroupId,
   participantId: WhatsAppContactId,
@@ -100,66 +118,7 @@ export async function addParticipantToGroup(
   await response.json()
 }
 
-export interface WhatsAppMessage {
-  chatId: string
-  textMessage: string
-}
-
-/**
- * Fetches the last WhatsApp groups that were sent a message
- * @returns A grouped object of messages by chat ID
- */
-export async function fetchLastWhatsappGroupsThatWereSentMessage(
-  s: WhatsAppIntegrationServiceData,
-): Promise<Record<string, WhatsAppMessage[]>> {
-  const url = createApiUrl(s, 'lastOutgoingMessages')
-
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch last whatsapp groups: ${response.status} ${await response.text()}`,
-    )
-  }
-
-  const data = (await response.json()) as GreenApiMessage[]
-
-  return Object.groupBy(
-    data
-      .filter((d) => d.typeMessage === 'textMessage')
-      .map((d) => ({chatId: d.chatId, textMessage: d.textMessage})),
-    (d) => d.chatId,
-  )
-}
-
-/**
- * Fetches the last WhatsApp groups that received a message
- * @returns A grouped object of messages by chat ID
- */
-export async function fetchLastWhatsappGroupsThatWereReceivedMessage(
-  s: WhatsAppIntegrationServiceData,
-): Promise<Record<string, WhatsAppMessage[]>> {
-  const url = createApiUrl(s, 'lastIncomingMessages')
-
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch last whatsapp groups: ${response.status} ${await response.text()}`,
-    )
-  }
-
-  const data = (await response.json()) as GreenApiMessage[]
-
-  return Object.groupBy(
-    data
-      .filter((d) => d.typeMessage === 'textMessage')
-      .map((d) => ({chatId: d.chatId, textMessage: d.textMessage})),
-    (d) => d.chatId,
-  )
-}
-
-export async function listParticipantsInGroup(
+async function listParticipantsInGroup(
   s: WhatsAppIntegrationServiceData,
   groupId: WhatsAppGroupId,
 ): Promise<WhatsAppContactId[]> {
@@ -193,27 +152,75 @@ async function sendMessageToGroup(
   s: WhatsAppIntegrationServiceData,
   groupId: WhatsAppGroupId,
   message: string,
+  {mediaUrl}: {mediaUrl: string | undefined} = {mediaUrl: undefined},
 ): Promise<void> {
-  const url = createApiUrl(s, 'sendMessage')
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
+  if (!mediaUrl) {
+    await fetchAsJsonWithJsonBody(createApiUrl(s, 'sendMessage'), {
       chatId: groupId,
       message,
-    }),
-  })
+    })
+  } else {
+    const media = await fetchAsBuffer(mediaUrl)
+    const fileExtension = mediaUrl.split('.').at(-1) ?? 'mp4'
 
-  if (!response.ok) {
-    throw new Error(`Failed to send message: ${response.status} ${await response.text()}`)
+    // upload file if it wasn't already loaded to Green API servers
+    const {urlFile} = mediaUrl.includes(`/${s.context.greenApiInstanceId}/`)
+      ? {urlFile: mediaUrl}
+      : ((await fetchAsJson(createApiUrl(s, 'uploadFile'), {
+          method: 'POST',
+          headers: {'Content-Type': mime.getType(fileExtension) ?? 'application/octet-stream'},
+          body: media,
+        })) as {urlFile: string})
+
+    await fetchAsJsonWithJsonBody(createApiUrl(s, 'sendFileByUrl'), {
+      chatId: groupId,
+      urlFile,
+      fileName: 'file.' + fileExtension,
+      caption: message,
+    })
   }
+}
 
-  await response.json()
+async function fetchLatestMessagesFromGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+  count: number,
+): Promise<WhatsAppMessage[]> {
+  const url = createApiUrl(s, 'getChatHistory')
+
+  const response = (await fetchAsJsonWithJsonBody(url, {
+    chatId: groupId,
+    count,
+  })) as GreenApiMessage[]
+
+  return response.map(greenApiMessageToWhatsAppMessage)
 }
 
 interface GreenApiMessage {
-  typeMessage: string
-  chatId: string
-  textMessage: string
+  timestamp: number
+  idMessage: string
+  textMessage?: string
+  downloadUrl?: string
+  caption?: string
+  fileName?: string
+}
+
+function greenApiMessageToWhatsAppMessage(msg: GreenApiMessage): WhatsAppMessage {
+  if (msg.textMessage !== undefined) {
+    return {
+      messageId: msg.idMessage,
+      textMessage: msg.textMessage,
+      timestamp: new Date(msg.timestamp * 1000),
+    }
+  } else if (msg.downloadUrl !== undefined) {
+    return {
+      messageId: msg.idMessage,
+      mediaUrl: msg.downloadUrl,
+      caption: msg.caption ?? '',
+      filename: msg.fileName ?? 'unknown',
+      timestamp: new Date(msg.timestamp * 1000),
+    }
+  } else {
+    return {messageId: msg.idMessage, timestamp: new Date(msg.timestamp * 1000)}
+  }
 }

@@ -5,6 +5,7 @@ import type {
   WhatsAppContactId,
   WhatsAppGroupId,
 } from '@giltayar/carmel-tools-whatsapp-integration/types'
+import type {WhatsAppMessage} from '../../src/whatsapp-integration.ts'
 
 describe('WhatsApp Integration Testkit', () => {
   const testGroupId = '120363123456789012@g.us' as WhatsAppGroupId
@@ -16,14 +17,15 @@ describe('WhatsApp Integration Testkit', () => {
       groups: {
         [testGroupId]: {
           name: 'Test Group',
-          recentSentMessages: ['Hello sent', 'Another sent message'],
-          recentReceivedMessages: ['Hello received'],
+          recentSentMessages: [
+            createTextMessage('Hello sent'),
+            createTextMessage('Another sent message'),
+          ],
           participants: [testParticipant1, testParticipant2],
         },
         ['120363987654321098@g.us' as WhatsAppGroupId]: {
           name: 'Empty Group',
           recentSentMessages: [],
-          recentReceivedMessages: [],
           participants: [],
         },
       },
@@ -40,34 +42,6 @@ describe('WhatsApp Integration Testkit', () => {
       assert.strictEqual(groups[0].id, testGroupId)
       assert.strictEqual(groups[0].name, 'Test Group')
       assert.strictEqual(groups[1].name, 'Empty Group')
-    })
-  })
-
-  describe('fetchLastWhatsappGroupsThatWereSentMessage', () => {
-    it('should return groups that have sent messages', async () => {
-      const service = createTestService()
-
-      const result = await service.fetchLastWhatsappGroupsThatWereSentMessage()
-
-      assert.strictEqual(Object.keys(result).length, 1)
-      assert.ok(result[testGroupId])
-      assert.strictEqual(result[testGroupId].length, 2)
-      assert.strictEqual(result[testGroupId][0].textMessage, 'Hello sent')
-      assert.strictEqual(result[testGroupId][0].chatId, testGroupId)
-    })
-  })
-
-  describe('fetchLastWhatsappGroupsThatWereReceivedMessage', () => {
-    it('should return groups that have received messages', async () => {
-      const service = createTestService()
-
-      const result = await service.fetchLastWhatsappGroupsThatWereReceivedMessage()
-
-      assert.strictEqual(Object.keys(result).length, 1)
-      assert.ok(result[testGroupId])
-      assert.strictEqual(result[testGroupId].length, 1)
-      assert.strictEqual(result[testGroupId][0].textMessage, 'Hello received')
-      assert.strictEqual(result[testGroupId][0].chatId, testGroupId)
     })
   })
 
@@ -143,9 +117,11 @@ describe('WhatsApp Integration Testkit', () => {
 
       await service.sendMessageToGroup(testGroupId, testMessage)
 
-      const sentMessages = await service._test_getSentMessages(testGroupId)
+      const sentMessages = await service.fetchLatestMessagesFromGroup(testGroupId, 10)
+
       assert.strictEqual(sentMessages.length, 3) // 2 initial + 1 new
-      assert.strictEqual(sentMessages[2], testMessage) // New message is at the end
+      assert.ok('textMessage' in sentMessages[2])
+      assert.strictEqual(sentMessages[2].textMessage, testMessage) // New message is at the end
     })
 
     it('should accumulate multiple messages sent to the group', async () => {
@@ -156,10 +132,13 @@ describe('WhatsApp Integration Testkit', () => {
       await service.sendMessageToGroup(testGroupId, message1)
       await service.sendMessageToGroup(testGroupId, message2)
 
-      const sentMessages = await service._test_getSentMessages(testGroupId)
+      const sentMessages = await service.fetchLatestMessagesFromGroup(testGroupId, 10)
+
       assert.strictEqual(sentMessages.length, 4) // 2 initial + 2 new
-      assert.strictEqual(sentMessages[2], message1) // First new message
-      assert.strictEqual(sentMessages[3], message2) // Second new message
+      assert.ok('textMessage' in sentMessages[2])
+      assert.strictEqual(sentMessages[2].textMessage, message1) // First new message
+      assert.ok('textMessage' in sentMessages[3])
+      assert.strictEqual(sentMessages[3].textMessage, message2) // Second new message
     })
 
     it('should throw error if group not found', async () => {
@@ -173,3 +152,10 @@ describe('WhatsApp Integration Testkit', () => {
     })
   })
 })
+function createTextMessage(text: string): WhatsAppMessage {
+  return {
+    messageId: crypto.randomUUID(),
+    textMessage: text,
+    timestamp: new Date(),
+  }
+}

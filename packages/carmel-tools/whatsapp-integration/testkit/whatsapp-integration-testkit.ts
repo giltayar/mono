@@ -1,4 +1,7 @@
-import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {
+  WhatsAppIntegrationService,
+  WhatsAppMessage,
+} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {
   WhatsAppContactId,
   WhatsAppGroupId,
@@ -11,8 +14,7 @@ type WhatsAppIntegrationServiceData = {
       WhatsAppGroupId,
       {
         name: string
-        recentSentMessages: string[]
-        recentReceivedMessages: string[]
+        recentSentMessages: WhatsAppMessage[]
         participants: WhatsAppContactId[]
       }
     >
@@ -24,8 +26,7 @@ export function createFakeWhatsAppIntegrationService(context: {
     WhatsAppGroupId,
     {
       name: string
-      recentSentMessages: string[]
-      recentReceivedMessages: string[]
+      recentSentMessages: WhatsAppMessage[]
       participants: WhatsAppContactId[]
     }
   >
@@ -37,14 +38,11 @@ export function createFakeWhatsAppIntegrationService(context: {
 
   const service: WhatsAppIntegrationService = {
     fetchWhatsAppGroups: sBind(fetchWhatsAppGroups),
-    fetchLastWhatsappGroupsThatWereSentMessage: sBind(fetchLastWhatsappGroupsThatWereSentMessage),
-    fetchLastWhatsappGroupsThatWereReceivedMessage: sBind(
-      fetchLastWhatsappGroupsThatWereReceivedMessage,
-    ),
     removeParticipantFromGroup: sBind(removeParticipantFromGroup),
     addParticipantToGroup: sBind(addParticipantToGroup),
     sendMessageToGroup: sBind(sendMessageToGroup),
     listParticipantsInGroup: sBind(listParticipantsInGroup),
+    fetchLatestMessagesFromGroup: sBind(fetchLatestMessagesFromGroup),
   }
 
   return {
@@ -55,12 +53,6 @@ export function createFakeWhatsAppIntegrationService(context: {
 
       return group.participants
     },
-    _test_getSentMessages: async (groupId: WhatsAppGroupId) => {
-      const group = state.groups[groupId]
-      if (!group) throw new Error(`Group ${groupId} not found`)
-
-      return group.recentSentMessages
-    },
   }
 }
 
@@ -69,28 +61,6 @@ async function fetchWhatsAppGroups(s: WhatsAppIntegrationServiceData) {
     id: id as WhatsAppGroupId,
     name: group.name,
   }))
-}
-
-async function fetchLastWhatsappGroupsThatWereSentMessage(s: WhatsAppIntegrationServiceData) {
-  return Object.fromEntries(
-    Object.entries(s.state.groups)
-      .filter(([, group]) => group.recentSentMessages.length > 0)
-      .map(([id, group]) => [
-        id,
-        group.recentSentMessages.map((m) => ({chatId: id, textMessage: m})),
-      ]),
-  )
-}
-
-async function fetchLastWhatsappGroupsThatWereReceivedMessage(s: WhatsAppIntegrationServiceData) {
-  return Object.fromEntries(
-    Object.entries(s.state.groups)
-      .filter(([, group]) => group.recentReceivedMessages.length > 0)
-      .map(([id, group]) => [
-        id,
-        group.recentReceivedMessages.map((m) => ({chatId: id, textMessage: m})),
-      ]),
-  )
 }
 
 async function removeParticipantFromGroup(
@@ -130,7 +100,11 @@ async function sendMessageToGroup(
   const group = s.state.groups[groupId]
   if (!group) throw new Error(`Group ${groupId} not found`)
 
-  group.recentSentMessages.push(message)
+  group.recentSentMessages.push({
+    messageId: crypto.randomUUID(),
+    textMessage: message,
+    timestamp: new Date(),
+  })
 }
 
 async function listParticipantsInGroup(
@@ -141,4 +115,16 @@ async function listParticipantsInGroup(
   if (!group) throw new Error(`Group ${groupId} not found`)
 
   return group.participants
+}
+
+async function fetchLatestMessagesFromGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+  count: number,
+): Promise<WhatsAppMessage[]> {
+  const group = s.state.groups[groupId]
+
+  if (!group) throw new Error(`Group ${groupId} not found`)
+
+  return group.recentSentMessages.slice(-count)
 }
