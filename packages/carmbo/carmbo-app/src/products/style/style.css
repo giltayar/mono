@@ -1,0 +1,23 @@
+.products-view {
+  h1 {
+    margin-right: auto;
+  }
+
+  table {
+    table-layout: fixed;
+
+    tr td:nth-child(1), th:nth-child(1) {
+      width: 4rem;
+    }
+
+    td:nth-child(1) {
+      text-align: right;
+    }
+  }
+
+  section.add-new {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+  }
+}

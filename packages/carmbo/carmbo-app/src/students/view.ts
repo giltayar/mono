@@ -4,6 +4,7 @@ import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from '
 import {manipulateStudent, type StudentManipulations} from './view-student-manipulations.ts'
 import {StudentCreateOrUpdateFormFields} from './view-form.ts'
 import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './view-create-update.ts'
+import {Layout} from './layout.ts'
 
 export function renderStudentsCreatePage(
   student: NewStudent | undefined,
@@ -23,8 +24,10 @@ export function renderStudentsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Students">
-      <${StudentCreateView} student=${finalStudent} />
+    <${MainLayout} title="Students" activeNavItem="students">
+      <${Layout}>
+        <${StudentCreateView} student=${finalStudent} />
+      </${Layout}>
     </${MainLayout}>
   `
 }
@@ -35,8 +38,10 @@ export function renderStudentUpdatePage(
   manipulations: StudentManipulations,
 ) {
   return html`
-    <${MainLayout} title="Students">
-      <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history} />
+    <${MainLayout} title="Students" activeNavItem="students">
+      <${Layout}>
+        <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history} />
+      </${Layout}>
     </${MainLayout}>
   `
 }
@@ -45,9 +50,11 @@ export function renderStudentViewInHistoryPage(
   student: StudentWithHistoryInfo,
   history: StudentHistory[],
 ) {
-  return html`,
-    <${MainLayout} title="Students">
-      <${StudentHistoryView} student=${student} history=${history} operationId=${student.id} />
+  return html`
+    <${MainLayout} title="Students" activeNavItem="students">
+      <${Layout}>
+          <${StudentHistoryView} student=${student} history=${history} operationId=${student.id} />
+      </${Layout}>
     </${MainLayout}>
   `
 }

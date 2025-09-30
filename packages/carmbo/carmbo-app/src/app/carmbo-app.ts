@@ -4,6 +4,7 @@ import fastifystatic from '@fastify/static'
 import qs from 'qs'
 import postgres from 'postgres'
 import studentRoutes from '../students/routes.ts'
+import productRoutes from '../products/routes.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 
 export function makeApp({
@@ -43,6 +44,7 @@ export function makeApp({
   app.get('/', async (_, reply) => reply.redirect('/students'))
 
   app.register(studentRoutes, {prefix: '/students', sql})
+  app.register(productRoutes, {prefix: '/products', sql})
 
   app.get('/health', async () => {
     return {status: 'ok'}

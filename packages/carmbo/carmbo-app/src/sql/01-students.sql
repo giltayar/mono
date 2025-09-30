@@ -1,5 +1,5 @@
 DO $$ BEGIN
-    CREATE TYPE OPERATION AS ENUM ('create', 'update', 'delete', 'restore');
+    CREATE TYPE HISTORY_OPERATION AS ENUM ('create', 'update', 'delete', 'restore');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS student_history (
     data_id UUID NOT NULL,
     student_number SERIAL,
     timestamp TIMESTAMPTZ,
-    operation OPERATION NOT NULL,
+    operation HISTORY_OPERATION NOT NULL,
     operation_reason TEXT
 );
 

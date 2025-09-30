@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "",
   "type": "module",
   "exports": {},
@@ -45,23 +45,23 @@
     "@fastify/static": "^8.2.0",
     "@giltayar/functional-commons": "^2.0.1",
     "bootstrap": "^5.3.8",
-    "fastify": "^5.6.0",
+    "fastify": "^5.6.1",
     "fastify-type-provider-zod": "^6.0.0",
     "htm": "^3.1.1",
     "htmx.org": "^2.0.7",
     "postgres": "^3.4.7",
     "qs": "^6.14.0",
     "vhtml": "^2.2.0",
-    "zod": "^4.1.9"
+    "zod": "^4.1.11"
   },
   "packageManager": "pnpm@10.17.1",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.36.0",
     "@giltayar/docker-compose-testkit": "^2.1.0",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.55.1",
     "@types/chance": "^1.1.7",
-    "@types/node": "^24.5.2",
+    "@types/node": "^24.6.0",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
     "@typescript/native-preview": "7.0.0-dev.20250927.1",
@@ -72,6 +72,6 @@
     "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.44.0"
+    "typescript-eslint": "^8.44.1"
   }
 }

@@ -6,6 +6,7 @@ export default defineConfig({
   preserveOutput: 'failures-only',
   expect: {timeout: 2000},
   timeout: 5000,
+  workers: 4,
   use: {
     screenshot: 'only-on-failure',
   },

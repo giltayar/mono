@@ -1,29 +1,29 @@
 import {html} from '../commons/html-templates.ts'
 import {MainLayout} from '../layouts/main-view.ts'
 import {Layout} from './layout.ts'
-import type {StudentForGrid} from './model.ts'
+import type {ProductForGrid} from './model.ts'
 
-export function renderStudentsPage(
+export function renderProductsPage(
   flash: string | undefined,
-  students: StudentForGrid[],
+  products: ProductForGrid[],
   {withArchived, query, page}: {withArchived: boolean; query: string; page: number},
 ) {
   return html`
-    <${MainLayout} title="Students" flash=${flash} activeNavItem="students">
+    <${MainLayout} title="Products" flash=${flash} activeNavItem="products">
       <${Layout}>
-        <${StudentsView} students=${students} withArchived=${withArchived} query=${query} page=${page} />
+        <${ProductsView} products=${products} withArchived=${withArchived} query=${query} page=${page} />
       </${Layout}>
     </${MainLayout}>
   `
 }
 
-function StudentsView({
-  students,
+function ProductsView({
+  products,
   withArchived,
   query,
   page,
 }: {
-  students: StudentForGrid[]
+  products: ProductForGrid[]
   withArchived: boolean
   query: string
   page: number
@@ -31,10 +31,10 @@ function StudentsView({
   return html`
     <div class="mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
-        <h2>Students</h2>
+        <h2>Products</h2>
         <form
           class="mb-1 ms-auto"
-          action="/students"
+          action="/products"
           hx-boost
           hx-trigger="input changed delay:500ms"
         >
@@ -64,21 +64,20 @@ function StudentsView({
         <thead>
           <tr>
             <th>ID</th>
-            <th>Names</th>
-            <th>Emails</th>
-            <th>Phones</th>
+            <th>Name</th>
+            <th>Type</th>
           </tr>
         </thead>
         <tbody>
-          ${students.map(
-            (student, i, l) => html`
+          ${products.map(
+            (product, i, l) => html`
               <tr
                 ...${i === l.length - 1
                   ? {
-                      'hx-get': `/students?page=${encodeURIComponent(page + 1)}`,
+                      'hx-get': `/products?page=${encodeURIComponent(page + 1)}`,
                       'hx-trigger': 'revealed',
-                      'hx-select': '.students-view tbody tr',
-                      'hx-include': '.students-view form',
+                      'hx-select': '.products-view tbody tr',
+                      'hx-include': '.products-view form',
                       'hx-swap': 'afterend',
                     }
                   : {}}
@@ -87,22 +86,19 @@ function StudentsView({
                   <a
                     class="btn btn-light btn-sm"
                     role="button"
-                    href="/students/${student.studentNumber}"
-                    >${student.studentNumber}</a
+                    href="/products/${product.productNumber}"
+                    >${product.productNumber}</a
                   >
                 </td>
-                <td>
-                  ${student.names.map((name) => `${name.firstName} ${name.lastName}`).join(', ')}
-                </td>
-                <td>${student.emails.join(', ')}</td>
-                <td>${student.phones.join(', ')}</td>
+                <td>${product.name}</td>
+                <td>${product.productType}</td>
               </tr>
             `,
           )}
         </tbody>
       </table>
       <section class="add-new">
-        <a role="button" class="btn float-end" href="/students/new" aria-label="new student">
+        <a role="button" class="btn float-end" href="/products/new" aria-label="new product">
           <svg class="feather feather-large" viewbox="0 0 24 24">
             <use href="/public/layouts/common-style/plus-circle.svg" />
           </svg>

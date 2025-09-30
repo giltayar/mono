@@ -5,7 +5,7 @@ document.addEventListener('click', (event) => {
 
   const targetElement = /** @type {HTMLElement} */ (target)
 
-  if (targetElement.classList.contains('students-view_trash')) {
+  if (targetElement.classList.contains('products-view_trash')) {
     targetElement.parentElement?.querySelectorAll('*[name]').forEach((el) => {
       el.removeAttribute('name')
     })
@@ -19,9 +19,9 @@ document.addEventListener('click', (event) => {
 })
 
 document.addEventListener('htmx:configRequest', (/** @type {any} */ event) => {
-  const birthday = event.detail.parameters.birthday
-
-  if (!birthday) {
-    delete event.detail.parameters.birthday
+  for (const key in event.detail.parameters) {
+    if (event.detail.parameters[key] === '') {
+      delete event.detail.parameters[key]
+    }
   }
 })

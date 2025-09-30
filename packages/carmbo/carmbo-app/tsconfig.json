@@ -20,8 +20,8 @@
     "declarationDir": "dist",
     "outDir": "dist",
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node", "typed-htmx"]
   },
-  "include": ["src/**/*.[t|j]s", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js", "test/**/*.ts"],
   "exclude": ["node_modules"]
 }

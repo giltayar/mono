@@ -26,6 +26,8 @@ export function StudentCreateOrUpdateFormFields({
                     required
                     class="form-control"
                     id="firstName-${i}"
+                    autocomplete="off"
+                    data-1p-ignore
                     ${maybeRo}
                   />
                   <label for="firstName-${i}">First Name</label>
@@ -40,6 +42,8 @@ export function StudentCreateOrUpdateFormFields({
                     required
                     class="form-control"
                     id="lastName-${i}"
+                    autocomplete="off"
+                    data-1p-ignore
                     ${maybeRo}
                   />
                   <label for="lastName-${i}">Last Name</label>
@@ -66,6 +70,8 @@ export function StudentCreateOrUpdateFormFields({
                     required
                     class="form-control"
                     id="email-${i}"
+                    autocomplete="off"
+                    data-1p-ignore
                     ${maybeRo}
                   />
                   <label for="email-${i}">Email</label>
@@ -93,6 +99,8 @@ export function StudentCreateOrUpdateFormFields({
                     class="form-control"
                     id="phone-${i}"
                     pattern="^\\+?[\\d\\-\\.\\(\\) ]+$"
+                    autocomplete="off"
+                    data-1p-ignore
                     ${maybeRo}
                   />
                   <label for="phone-${i}">Phone</label>
@@ -119,6 +127,8 @@ export function StudentCreateOrUpdateFormFields({
                     required
                     class="form-control"
                     id="facebookName-${i}"
+                    autocomplete="off"
+                    data-1p-ignore
                     ${maybeRo}
                   />
                   <label for="facebookName-${i}">Facebook Name</label>
@@ -158,6 +168,8 @@ export function StudentCreateOrUpdateFormFields({
             class="form-control"
             id="cardcomCustomerId"
             value="${student.cardcomCustomerId}"
+            autocomplete="off"
+            data-1p-ignore
             ${maybeRo}
           />
           <label for="cardcomCustomerId">Cardcom Customer ID</label>
@@ -191,7 +203,7 @@ function AddButton({
       style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/public/students/style/plus-circle.svg" />
+        <use href="/public/layouts/common-style/plus-circle.svg" />
       </svg>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -209,7 +221,7 @@ function RemoveButton() {
       aria-label="Remove"
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/public/students/style/minus-circle.svg" />
+        <use href="/public/layouts/common-style/minus-circle.svg" />
       </svg>
     </button>
   `
