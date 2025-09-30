@@ -1,5 +1,8 @@
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
-import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
+import {
+  createCardcomIntegrationService as createCardcomIntegrationService_,
+  type CardcomIntegrationService,
+} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {createClubService} from '@giltayar/carmel-tools-club-service'
 import {createSmooveIntegrationService as createSmooveIntegrationService_} from '@giltayar/carmel-tools-smoove-integration/service'
 import {createGoogleSheetsIntegrationService} from '@giltayar/carmel-tools-google-sheets-integration/service'
@@ -39,15 +42,19 @@ export function createSmooveIntegrationService(club: ClubInformation) {
   })
 }
 
-export async function createClubServiceFromClub(club: ClubInformation) {
-  const whatsappService = createWhatsAppIntegrationService()
-  const smooveService = createSmooveIntegrationService(club)
-
-  const cardcomService = createCardcomIntegrationService({
+export function createCardcomIntegrationService(): CardcomIntegrationService {
+  return createCardcomIntegrationService_({
     apiKey: env.CARDCOM_API_KEY,
     apiKeyPassword: env.CARDCOM_API_KEY_PASSWORD,
     terminalNumber: '150067',
   })
+}
+
+export async function createClubServiceFromClub(club: ClubInformation) {
+  const whatsappService = createWhatsAppIntegrationService()
+  const smooveService = createSmooveIntegrationService(club)
+
+  const cardcomService = createCardcomIntegrationService()
 
   const academyService = createAcademyIntegrationService({baseUrl: 'https://www.mypages.co.il'})
 

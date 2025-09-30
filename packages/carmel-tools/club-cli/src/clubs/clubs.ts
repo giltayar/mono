@@ -1,6 +1,7 @@
 import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
 
 export const inspiredLivingDaily = {
+  name: 'Inspired Living Daily',
   subscribedSmooveListId: 1012986,
   cancellingSmooveListId: 1032013,
   cancelledSmooveListId: 1032114,
@@ -20,6 +21,7 @@ export const inspiredLivingDaily = {
 export type ClubInformation = typeof inspiredLivingDaily
 
 export const inspiredBusinessDaily: ClubInformation = {
+  name: 'Inspired Business Daily',
   subscribedSmooveListId: 1055111,
   cancellingSmooveListId: 1055114,
   cancelledSmooveListId: 1055113,
