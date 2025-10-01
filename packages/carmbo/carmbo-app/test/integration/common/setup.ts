@@ -1,9 +1,10 @@
 import {test} from '@playwright/test'
-import {runDockerCompose, tcpHealthCheck} from '@giltayar/docker-compose-testkit'
+import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import type {Sql} from 'postgres'
 import {makeApp} from '../../../src/app/carmbo-app.ts'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
+import postgres from 'postgres'
 
 export function setup(testUrl: string) {
   let findAddress
@@ -18,7 +19,7 @@ export function setup(testUrl: string) {
       {variation: testUrl},
     ))
 
-    const host = await findAddress('carmbo-postgres', 5432, {healthCheck: tcpHealthCheck})
+    const host = await findAddress('carmbo-postgres', 5432, {healthCheck: postgresHealthCheck})
 
     ;({app, sql} = makeApp({
       db: {
@@ -34,10 +35,12 @@ export function setup(testUrl: string) {
 
     const {port, address} = app.server.address() as AddressInfo
 
-    url = new URL(`http://${address}:${port}/products`)
+    url = new URL(`http://${address}:${port}`)
   })
 
   test.beforeEach(async () => {
+    await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product_history RESTART IDENTITY CASCADE`
   })
@@ -48,4 +51,18 @@ export function setup(testUrl: string) {
     url: () => url,
     sql: () => sql,
   }
+}
+
+async function postgresHealthCheck(address: string) {
+  const [host, port] = address.split(':')
+
+  const sql = postgres({
+    host,
+    port: parseInt(port, 10),
+    database: 'carmbo',
+    user: 'user',
+    password: 'password',
+  })
+
+  await sql`SELECT 1`
 }

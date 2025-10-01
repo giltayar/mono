@@ -1,13 +1,13 @@
 import {test, expect} from '@playwright/test'
-import {createProductListPageModel} from '../page-model/product-list-page.model.ts'
-import {createNewProductPageModel} from '../page-model/new-product-page.model.ts'
-import {createUpdateProductPageModel} from '../page-model/update-product-page.model.ts'
-import {setup} from './setup.ts'
+import {createProductListPageModel} from '../page-model/products/product-list-page.model.ts'
+import {createNewProductPageModel} from '../page-model/products/new-product-page.model.ts'
+import {createUpdateProductPageModel} from '../page-model/products/update-product-page.model.ts'
+import {setup} from '../common/setup.ts'
 
 const {url} = setup(import.meta.url)
 
 test('create product and update multiple fields', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -125,7 +125,7 @@ test('create product and update multiple fields', async ({page}) => {
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue('group3')
   await expect(updateForm.facebookGroups().facebookGroupInput(1).locator).toHaveValue('group4')
 
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const rows = productListModel.list().rows()
   await expect(rows.locator).toHaveCount(1)
@@ -135,7 +135,7 @@ test('create product and update multiple fields', async ({page}) => {
 })
 
 test('form validations', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -169,7 +169,7 @@ test('form validations', async ({page}) => {
 })
 
 test('remove all array fields', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)

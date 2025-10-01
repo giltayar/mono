@@ -1,8 +1,8 @@
 import {test, expect} from '@playwright/test'
-import {createStudentListPageModel} from '../page-model/student-list-page.model.ts'
-import {setup} from './setup.ts'
+import {createStudentListPageModel} from '../page-model/students/student-list-page.model.ts'
+import {setup} from '../common/setup.ts'
 import {TEST_seedStudents} from '../../../src/students/model.ts'
-import {createUpdateStudentPageModel} from '../page-model/update-student-page.model.ts'
+import {createUpdateStudentPageModel} from '../page-model/students/update-student-page.model.ts'
 
 const {url, sql} = setup(import.meta.url)
 
@@ -11,18 +11,10 @@ test('searching students', async ({page}) => {
 
   await TEST_seedStudents(sql(), 200)
 
-  await page.reload()
-
   await page.goto(url().href)
 
   const studentListModel = createStudentListPageModel(page)
   const updateStudentModel = createUpdateStudentPageModel(page)
-
-  if ((await studentListModel.list().rows().locator.count()) === 0) {
-    await TEST_seedStudents(sql(), 200)
-
-    await page.reload()
-  }
 
   await expect(studentListModel.list().rows().locator).toHaveCount(50)
 

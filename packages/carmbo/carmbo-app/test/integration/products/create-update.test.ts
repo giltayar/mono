@@ -1,13 +1,13 @@
 import {test, expect} from '@playwright/test'
-import {setup} from './setup.ts'
-import {createProductListPageModel} from '../page-model/product-list-page.model.ts'
-import {createNewProductPageModel} from '../page-model/new-product-page.model.ts'
-import {createUpdateProductPageModel} from '../page-model/update-product-page.model.ts'
+import {setup} from '../common/setup.ts'
+import {createProductListPageModel} from '../page-model/products/product-list-page.model.ts'
+import {createNewProductPageModel} from '../page-model/products/new-product-page.model.ts'
+import {createUpdateProductPageModel} from '../page-model/products/update-product-page.model.ts'
 
 const {url} = setup(import.meta.url)
 
 test('create product then update it', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -73,7 +73,7 @@ test('create product then update it', async ({page}) => {
   )
 
   // Back to list
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   // Check that the product appears in the list
   const rows = productListModel.list().rows()
@@ -84,7 +84,8 @@ test('create product then update it', async ({page}) => {
 })
 
 test('discard button', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
+
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
   const updateProductModel = createUpdateProductPageModel(page)
@@ -124,7 +125,7 @@ test('discard button', async ({page}) => {
 })
 
 test('optional fields can be empty', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)

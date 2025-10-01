@@ -1,14 +1,14 @@
 import {test, expect} from '@playwright/test'
-import {createProductListPageModel} from '../page-model/product-list-page.model.ts'
-import {createNewProductPageModel} from '../page-model/new-product-page.model.ts'
-import {createUpdateProductPageModel} from '../page-model/update-product-page.model.ts'
-import {createViewProductHistoryPageModel} from '../page-model/view-product-history-page.model.ts'
-import {setup} from './setup.ts'
+import {createProductListPageModel} from '../page-model/products/product-list-page.model.ts'
+import {createNewProductPageModel} from '../page-model/products/new-product-page.model.ts'
+import {createUpdateProductPageModel} from '../page-model/products/update-product-page.model.ts'
+import {createViewProductHistoryPageModel} from '../page-model/products/view-product-history-page.model.ts'
+import {setup} from '../common/setup.ts'
 
 const {url} = setup(import.meta.url)
 
 test('can view history', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -70,7 +70,7 @@ test('can view history', async ({page}) => {
 })
 
 test('multiple products have different histories', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -100,7 +100,7 @@ test('multiple products have different histories', async ({page}) => {
   await expect(updateProductModel.history().items().locator).toHaveCount(2)
 
   // Go back to product list to create second product
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
   await productListModel.createNewProductButton().locator.click()
   await page.waitForURL(newProductModel.urlRegex)
 

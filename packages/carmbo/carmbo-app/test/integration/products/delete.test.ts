@@ -1,13 +1,13 @@
 import {test, expect} from '@playwright/test'
-import {createProductListPageModel} from '../page-model/product-list-page.model.ts'
-import {createNewProductPageModel} from '../page-model/new-product-page.model.ts'
-import {createUpdateProductPageModel} from '../page-model/update-product-page.model.ts'
-import {setup} from './setup.ts'
+import {createProductListPageModel} from '../page-model/products/product-list-page.model.ts'
+import {createNewProductPageModel} from '../page-model/products/new-product-page.model.ts'
+import {createUpdateProductPageModel} from '../page-model/products/update-product-page.model.ts'
+import {setup} from '../common/setup.ts'
 
 const {url} = setup(import.meta.url)
 
 test('deleting a product', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -25,7 +25,8 @@ test('deleting a product', async ({page}) => {
   await page.waitForURL(updateProductModel.urlRegex)
 
   // Go back to product list to create second product
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
+
   await productListModel.createNewProductButton().locator.click()
   await page.waitForURL(newProductModel.urlRegex)
 
@@ -45,7 +46,7 @@ test('deleting a product', async ({page}) => {
   await expect(updateProductModel.history().items().item(0).locator).toContainText('archived')
   await expect(updateProductModel.history().items().item(1).locator).toContainText('created')
 
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   // Verify only Product Alpha is visible (Product Beta should be archived/hidden)
   const rows = productListModel.list().rows()
@@ -75,7 +76,7 @@ test('deleting a product', async ({page}) => {
 })
 
 test('restoring a product', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   const productListModel = createProductListPageModel(page)
   const newProductModel = createNewProductPageModel(page)
@@ -108,7 +109,7 @@ test('restoring a product', async ({page}) => {
 
   await expect(updateProductModel.pageTitle().locator).not.toContainText('(archived)')
 
-  await page.goto(url().href)
+  await page.goto(new URL('/products', url()).href)
 
   // Verify Product Gamma is visible again
   const rows = productListModel.list().rows()
