@@ -1,4 +1,7 @@
-import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {
+  AcademyCourse,
+  AcademyIntegrationService,
+} from '@giltayar/carmel-tools-academy-integration/service'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 type AcademyIntegrationServiceData = {
@@ -6,10 +9,7 @@ type AcademyIntegrationServiceData = {
 }
 
 export function createFakeAcademyIntegrationService(context: {
-  courses: {
-    id: number
-    name: string
-  }[]
+  courses: AcademyCourse[]
 
   enrolledContacts: Set<string>
 }) {
@@ -36,8 +36,6 @@ async function removeContactFromAccount(
   s.state.enrolledContacts.delete(email)
 }
 
-async function listCourses(
-  s: AcademyIntegrationServiceData,
-): Promise<{id: number; name: string}[]> {
+async function listCourses(s: AcademyIntegrationServiceData): Promise<AcademyCourse[]> {
   return s.state.courses
 }

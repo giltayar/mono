@@ -7,6 +7,11 @@ export interface AcademyIntegrationServiceContext {
   accountApiKey: string
 }
 
+export interface AcademyCourse {
+  id: number
+  name: string
+}
+
 type AcademyIntegrationServiceData = {
   context: AcademyIntegrationServiceContext
 }
@@ -40,9 +45,7 @@ export async function removeContactFromAccount(
   await fetchAsBuffer(url, {method: 'POST'})
 }
 
-export async function listCourses(
-  s: AcademyIntegrationServiceData,
-): Promise<{id: number; name: string}[]> {
+export async function listCourses(s: AcademyIntegrationServiceData): Promise<AcademyCourse[]> {
   const url = new URL(`https://www.mypages.co.il/tasks/${s.context.accountApiKey}/workshops.json`)
 
   const courses = (await fetchAsJson(url)) as {id: number; title: string}[]
