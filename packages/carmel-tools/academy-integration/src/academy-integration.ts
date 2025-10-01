@@ -1,10 +1,10 @@
 // https://inspiredlivingdaily.incontrol.co.il/api/academy
 
+import {fetchAsBuffer, fetchAsJson} from '@giltayar/http-commons'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 export interface AcademyIntegrationServiceContext {
-  // Add any context needed for the service (API keys, base URLs, etc.)
-  baseUrl?: string
+  accountApiKey: string
 }
 
 type AcademyIntegrationServiceData = {
@@ -15,8 +15,8 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
   const sBind: ServiceBind<AcademyIntegrationServiceData> = (f) => bind(f, {context})
 
   return {
-    removeContactFromAllCourses: sBind(removeContactFromAllCourses),
-    fetchChapterIds: sBind(fetchChapterIds),
+    removeContactFromAccount: sBind(removeContactFromAccount),
+    listCourses: sBind(listCourses),
   }
 }
 
@@ -25,64 +25,27 @@ export type AcademyIntegrationService = ReturnType<typeof createAcademyIntegrati
 /**
  * Remove a contact from all specified academy courses
  */
-export async function removeContactFromAllCourses(
+export async function removeContactFromAccount(
   s: AcademyIntegrationServiceData,
   email: string,
-  academyCourses: readonly string[],
 ): Promise<void> {
-  for (const course of academyCourses) {
-    console.log('removing', email, 'course', course)
-
-    await removeContactFromChapter(s, course, email)
-  }
-}
-
-/**
- * Remove a contact from a specific chapter
- */
-async function removeContactFromChapter(
-  s: AcademyIntegrationServiceData,
-  course: string,
-  email: string,
-): Promise<void> {
-  const chapterIdList = await fetchChapterIds(s, course)
+  const courses = await listCourses(s)
   const url = new URL(`https://www.mypages.co.il/tasks/remove/`)
 
-  url.searchParams.set('account_id', course)
-  url.searchParams.set('workshop_id', chapterIdList[0])
+  url.searchParams.set('account_id', s.context.accountApiKey)
+  // This API needs a workshop_id, so we just use the first course's id
+  url.searchParams.set('workshop_id', courses[0].id.toString())
   url.searchParams.set('email', email)
 
-  const response = await fetch(url, {method: 'POST'})
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch ${url} (for ${email}, ${course}): ${
-        response.status
-      }, ${await response.text()}`,
-    )
-  }
-
-  await response.text()
+  await fetchAsBuffer(url, {method: 'POST'})
 }
 
-/**
- * Fetch chapter IDs for a specific course
- */
-export async function fetchChapterIds(
-  _s: AcademyIntegrationServiceData,
-  course: string,
-): Promise<string[]> {
-  const url = `https://www.mypages.co.il/tasks/${course}/workshops.json`
+export async function listCourses(
+  s: AcademyIntegrationServiceData,
+): Promise<{id: number; name: string}[]> {
+  const url = new URL(`https://www.mypages.co.il/tasks/${s.context.accountApiKey}/workshops.json`)
 
-  const response = await fetch(url)
+  const courses = (await fetchAsJson(url)) as {id: number; title: string}[]
 
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch ${url} (for ${course}): ${response.status}, ${await response.text()}`,
-    )
-  }
-
-  const result = (await response.json()) as {id: string}[]
-
-  return result.map((chapter) => chapter.id)
+  return courses.map((c) => ({id: c.id, name: c.title}))
 }

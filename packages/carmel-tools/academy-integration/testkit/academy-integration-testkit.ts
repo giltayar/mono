@@ -6,69 +6,38 @@ type AcademyIntegrationServiceData = {
 }
 
 export function createFakeAcademyIntegrationService(context: {
-  courses: Record<
-    string,
-    {
-      id: string
-      name?: string
-      chapters: string[]
-      enrolledContacts: Set<string>
-    }
-  >
+  courses: {
+    id: number
+    name: string
+  }[]
+
+  enrolledContacts: Set<string>
 }) {
-  const state: AcademyIntegrationServiceData['state'] = {
-    courses: Object.fromEntries(
-      Object.entries(context.courses).map(([id, course]) => [
-        id,
-        {
-          ...course,
-          enrolledContacts: new Set(course.enrolledContacts),
-        },
-      ]),
-    ),
-  }
+  const state: AcademyIntegrationServiceData['state'] = structuredClone(context)
   const sBind: ServiceBind<AcademyIntegrationServiceData> = (f) => bind(f, {state})
 
   const service: AcademyIntegrationService = {
-    removeContactFromAllCourses: sBind(removeContactFromAllCourses),
-    fetchChapterIds: sBind(fetchChapterIds),
+    removeContactFromAccount: sBind(removeContactFromAccount),
+    listCourses: sBind(listCourses),
   }
 
   return {
     ...service,
-    _test_isContactEnrolled: async (courseId: string, email: string): Promise<boolean> => {
-      const course = state.courses[courseId]
-      if (!course) return false
-
-      return course.enrolledContacts.has(email)
+    _test_isContactEnrolled: async (email: string): Promise<boolean> => {
+      return state.enrolledContacts.has(email)
     },
   }
 }
 
-async function removeContactFromAllCourses(
+async function removeContactFromAccount(
   s: AcademyIntegrationServiceData,
   email: string,
-  academyCourses: readonly string[],
 ): Promise<void> {
-  for (const courseId of academyCourses) {
-    const course = s.state.courses[courseId]
-    if (!course) {
-      throw new Error(`Course ${courseId} not found`)
-    }
-
-    // Remove the contact from the course
-    course.enrolledContacts.delete(email)
-  }
+  s.state.enrolledContacts.delete(email)
 }
 
-async function fetchChapterIds(
+async function listCourses(
   s: AcademyIntegrationServiceData,
-  courseId: string,
-): Promise<string[]> {
-  const course = s.state.courses[courseId]
-  if (!course) {
-    throw new Error(`Course ${courseId} not found`)
-  }
-
-  return [...course.chapters]
+): Promise<{id: number; name: string}[]> {
+  return s.state.courses
 }

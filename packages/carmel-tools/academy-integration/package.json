@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-academy-integration",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "type": "module",
   "exports": {
     "./service": {
@@ -52,20 +52,21 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.30.1",
-    "@types/node": "^24.0.12",
-    "@typescript/native-preview": "7.0.0-dev.20250630.1",
-    "eslint": "^9.30.1",
-    "eslint-plugin-n": "^17.21.0",
-    "eslint-plugin-prettier": "^5.5.1",
-    "globals": "^16.3.0",
+    "@eslint/js": "^9.36.0",
+    "@types/node": "^24.6.1",
+    "@typescript/native-preview": "7.0.0-dev.20250930.1",
+    "eslint": "^9.36.0",
+    "eslint-plugin-n": "^17.23.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.36.0"
+    "typescript-eslint": "^8.44.1"
   },
   "dependencies": {
-    "@giltayar/functional-commons": "^1.4.2",
-    "@giltayar/service-commons": "^1.1.2"
+    "@giltayar/functional-commons": "^2.0.1",
+    "@giltayar/http-commons": "^3.1.1",
+    "@giltayar/service-commons": "^1.1.3"
   },
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.17.1"
 }
