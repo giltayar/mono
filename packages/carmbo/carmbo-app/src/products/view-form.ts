@@ -76,13 +76,13 @@ export function ProductCreateOrUpdateFormFields({
 
         <fieldset aria-label="WhatsApp Groups" class="mt-3">
           ${product.whatsappGroups?.map(
-            (groupId, i, l) => html`
+            (group, i, l) => html`
               <div class="products-view_item input-group">
                 <div class="form-floating">
                   <input
-                    name="whatsappGroups[${i}]"
+                    name="whatsappGroups[${i}][id]"
                     type="text"
-                    value=${groupId}
+                    value=${group.id}
                     placeholder=" "
                     required
                     class="form-control"
@@ -91,6 +91,19 @@ export function ProductCreateOrUpdateFormFields({
                     ${maybeRo}
                   />
                   <label for="whatsappGroup-${i}">WhatsApp Group ID</label>
+                </div>
+                <div class="form-floating">
+                  <input
+                    name="whatsappGroups[${i}][timedMessagesGoogleSheetUrl]"
+                    type="url"
+                    value=${group.timedMessagesGoogleSheetUrl}
+                    placeholder=" "
+                    required
+                    class="form-control"
+                    id="whatsappGroupUrl-${i}"
+                    ${maybeRo}
+                  />
+                  <label for="whatsappGroupUrl-${i}">Messages Google Sheet URL</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&

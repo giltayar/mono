@@ -11,7 +11,14 @@ export const ProductSchema = z.object({
   name: z.string().min(1),
   productType: ProductTypeSchema,
   academyCourses: z.array(z.coerce.number().int().positive()).optional(),
-  whatsappGroups: z.array(z.string().regex(/[0-9]+\@g\.us/)).optional(),
+  whatsappGroups: z
+    .array(
+      z.object({
+        id: z.string().regex(/[0-9]+\@g\.us/),
+        timedMessagesGoogleSheetUrl: z.string().url(),
+      }),
+    )
+    .optional(),
   facebookGroups: z.array(z.string().min(1)).optional(),
   smooveListId: z.coerce.number().int().positive().optional(),
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
@@ -29,7 +36,14 @@ export const NewProductSchema = z.object({
   name: z.string().min(1),
   productType: ProductTypeSchema.optional(),
   academyCourses: z.array(z.coerce.number().int().positive()).optional(),
-  whatsappGroups: z.array(z.string().regex(/[0-9]+\@g\.us/)).optional(),
+  whatsappGroups: z
+    .array(
+      z.object({
+        id: z.string().regex(/[0-9]+\@g\.us/),
+        timedMessagesGoogleSheetUrl: z.string().url(),
+      }),
+    )
+    .optional(),
   facebookGroups: z.array(z.string().min(1)).optional(),
   smooveListId: z.coerce.number().int().positive().optional(),
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
@@ -281,7 +295,10 @@ FROM
   LEFT JOIN LATERAL (
     SELECT
       json_agg(
-        whatsapp_group_id
+        json_build_object(
+          'id', whatsapp_group_id,
+          'timedMessagesGoogleSheetUrl', messages_google_sheet_url
+        )
         ORDER BY
           item_order
       ) AS whatsapp_groups
@@ -344,9 +361,9 @@ async function addProductStuff(product: Product | NewProduct, dataId: string, sq
 
   ops = ops.concat(
     product.whatsappGroups?.map(
-      (whatsappGroupId, index) => sql`
+      (whatsappGroup, index) => sql`
         INSERT INTO product_whatsapp_group VALUES
-          (${dataId}, ${index}, ${whatsappGroupId}, ${null})
+          (${dataId}, ${index}, ${whatsappGroup.id}, ${whatsappGroup.timedMessagesGoogleSheetUrl})
       `,
     ) ?? [],
   )
@@ -391,7 +408,7 @@ async function addProductStuff(product: Product | NewProduct, dataId: string, sq
 function searchableProductText(product: Product | NewProduct): string {
   const name = product.name
   const productType = product.productType
-  const whatsappGroups = product.whatsappGroups?.join(' ') ?? ''
+  const whatsappGroups = product.whatsappGroups?.map((g) => g.id).join(' ') ?? ''
   const facebookGroups = product.facebookGroups?.join(' ') ?? ''
   const cardcomProductId = product.cardcomProductId ?? ''
   const smoveListIds = [
@@ -430,7 +447,12 @@ export async function TEST_seedProducts(sql: Sql, count: number) {
           chance.integer({min: 1000, max: 9999}),
           chance.integer({min: 1000, max: 9999}),
         ],
-        whatsappGroups: [`${chance.integer({min: 100000000, max: 999999999})}@g.us`],
+        whatsappGroups: [
+          {
+            id: `${chance.integer({min: 100000000, max: 999999999})}@g.us`,
+            timedMessagesGoogleSheetUrl: chance.url(),
+          },
+        ],
         facebookGroups: [chance.word()],
         smooveListId: chance.integer({min: 1, max: 9999}),
         smooveCancellingListId: chance.integer({min: 1, max: 9999}),

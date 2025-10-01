@@ -25,6 +25,9 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
       whatsappGroupInput: (i: number) => ({
         locator: whatsappLocator.getByLabel(`WhatsApp Group ID`).nth(i),
       }),
+      whatsappGroupGoogleSheetUrlInput: (i: number) => ({
+        locator: whatsappLocator.getByLabel(`Messages Google Sheet URL`).nth(i),
+      }),
       ...addAndTrashButtons(whatsappLocator),
     }),
     facebookGroups: (

@@ -27,8 +27,15 @@ test('create product then update it', async ({page}) => {
   await newForm.academyCourses().addButton().locator.click()
   await newForm.academyCourses().academyCourseInput(0).locator.fill('12345')
   await newForm.whatsappGroups().addButton().locator.click()
+  await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toBeVisible()
   await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('123456789@g.us')
+  await expect(newForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toBeVisible()
+  await newForm
+    .whatsappGroups()
+    .whatsappGroupGoogleSheetUrlInput(0)
+    .locator.fill('https://docs.google.com/spreadsheets/d/test1')
   await newForm.facebookGroups().addButton().locator.click()
+  await expect(newForm.facebookGroups().facebookGroupInput(0).locator).toBeVisible()
   await newForm.facebookGroups().facebookGroupInput(0).locator.fill('test-fb-group')
 
   // Save the product
@@ -48,6 +55,9 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '123456789@g.us',
   )
+  await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
+    'https://docs.google.com/spreadsheets/d/test1',
+  )
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue(
     'test-fb-group',
   )
@@ -57,6 +67,10 @@ test('create product then update it', async ({page}) => {
   await updateForm.productTypeSelect().locator.selectOption('challenge')
   await updateForm.academyCourses().academyCourseInput(0).locator.fill('54321')
   await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('987654321@g.us')
+  await updateForm
+    .whatsappGroups()
+    .whatsappGroupGoogleSheetUrlInput(0)
+    .locator.fill('https://docs.google.com/spreadsheets/d/test2')
   await updateForm.facebookGroups().facebookGroupInput(0).locator.fill('updated-fb-group')
 
   // Save the product and verify data
@@ -67,6 +81,9 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('54321')
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '987654321@g.us',
+  )
+  await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
+    'https://docs.google.com/spreadsheets/d/test2',
   )
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue(
     'updated-fb-group',
