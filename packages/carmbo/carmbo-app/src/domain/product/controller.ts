@@ -1,6 +1,7 @@
 import type {Sql} from 'postgres'
 
-import type {NewProduct, OngoingProduct, Product} from './model.ts'
+import type {NewProduct, Product} from './model.ts'
+import type {OngoingProduct} from './view/model.ts'
 import {
   listProducts,
   queryProductByNumber,
@@ -14,10 +15,10 @@ import {
   renderProductFormFields,
   renderProductUpdatePage,
   renderProductViewInHistoryPage,
-} from './view.ts'
-import {renderProductsPage} from './view-list.ts'
-import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
-import type {ProductManipulations} from './view-product-manipulations.ts'
+} from './view/view.ts'
+import {renderProductsPage} from './view/list.ts'
+import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import type {ProductManipulations} from './view/product-manipulations.ts'
 import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 import {requestContext} from '@fastify/request-context'
 

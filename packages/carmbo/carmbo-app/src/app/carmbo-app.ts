@@ -4,7 +4,7 @@ import fastifystatic from '@fastify/static'
 import qs from 'qs'
 import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../students/routes.ts'
-import productRoutes from '../products/routes.ts'
+import productRoutes from '../domain/product/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
   AcademyCourse,

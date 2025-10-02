@@ -1,9 +1,9 @@
 import type {PendingQuery, Row, Sql} from 'postgres'
-import {HistoryOperationEnumSchema, type HistoryOperation} from '../commons/operation-type.ts'
+import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
 
-const ProductTypeSchema = z.enum(['recorded', 'challenge', 'club', 'bundle'])
+export const ProductTypeSchema = z.enum(['recorded', 'challenge', 'club', 'bundle'])
 export type ProductType = z.infer<typeof ProductTypeSchema>
 
 export const ProductSchema = z.object({
@@ -34,30 +34,9 @@ export const ProductWithHistoryInfoSchema = ProductSchema.extend({
   historyOperation: HistoryOperationEnumSchema,
 })
 
-export const OngoingProductSchema = z.object({
-  name: z.string().min(1).optional(),
-  productType: ProductTypeSchema.optional(),
-  academyCourses: z.array(z.coerce.number().int().positive()).optional(),
-  whatsappGroups: z
-    .array(
-      z.object({
-        id: z.string().regex(/[0-9]+\@g\.us/),
-        timedMessagesGoogleSheetUrl: z.string().url(),
-      }),
-    )
-    .optional(),
-  facebookGroups: z.array(z.string().min(1)).optional(),
-  smooveListId: z.coerce.number().int().positive().optional(),
-  smooveCancellingListId: z.coerce.number().int().positive().optional(),
-  smooveCancelledListId: z.coerce.number().int().positive().optional(),
-  smooveRemovedListId: z.coerce.number().int().positive().optional(),
-  cardcomProductId: z.string().optional(),
-})
-
 export type Product = z.infer<typeof ProductSchema>
 export type NewProduct = z.infer<typeof NewProductSchema>
 export type ProductWithHistoryInfo = z.infer<typeof ProductWithHistoryInfoSchema>
-export type OngoingProduct = z.infer<typeof OngoingProductSchema>
 
 export interface ProductForGrid {
   productNumber: number

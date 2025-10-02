@@ -1,7 +1,8 @@
-import {html} from '../commons/html-templates.ts'
-import type {NewProduct, OngoingProduct, Product} from './model.ts'
+import {html} from '../../../commons/html-templates.ts'
+import type {NewProduct, Product} from '../model.ts'
+import type {OngoingProduct} from './model.ts'
 // eslint-disable-next-line n/no-missing-import
-import {generateAcademyCourseTitle} from './scripts-commons.scripts.js'
+import {generateAcademyCourseTitle} from './js/scripts-commons.scripts.js'
 import {requestContext} from '@fastify/request-context'
 
 export function ProductCreateOrUpdateFormFields({

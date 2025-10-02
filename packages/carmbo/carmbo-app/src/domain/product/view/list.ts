@@ -1,7 +1,7 @@
-import {html} from '../commons/html-templates.ts'
-import {MainLayout} from '../layouts/main-view.ts'
+import {html} from '../../../commons/html-templates.ts'
+import {MainLayout} from '../../../layouts/main-view.ts'
 import {Layout} from './layout.ts'
-import type {ProductForGrid} from './model.ts'
+import type {ProductForGrid} from '../model.ts'
 
 export function renderProductsPage(
   flash: string | undefined,

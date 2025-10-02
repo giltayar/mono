@@ -1,6 +1,6 @@
-import {html} from '../commons/html-templates.ts'
-import type {ProductHistory, ProductWithHistoryInfo} from './model.ts'
-import type {HistoryOperation} from '../commons/operation-type.ts'
+import {html} from '../../../commons/html-templates.ts'
+import type {ProductHistory, ProductWithHistoryInfo} from '../model.ts'
+import type {HistoryOperation} from '../../../commons/operation-type.ts'
 
 export function ProductHistoryList({
   product,

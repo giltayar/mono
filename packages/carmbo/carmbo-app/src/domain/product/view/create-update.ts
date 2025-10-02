@@ -1,8 +1,8 @@
 import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/types'
-import {html} from '../commons/html-templates.ts'
-import type {Product, ProductHistory, ProductWithHistoryInfo} from './model.ts'
-import {ProductCreateOrUpdateFormFields} from './view-form.ts'
-import {ProductHistoryList, historyOperationToText} from './view-history.ts'
+import {html} from '../../../commons/html-templates.ts'
+import type {Product, ProductHistory, ProductWithHistoryInfo} from '../model.ts'
+import {ProductCreateOrUpdateFormFields} from './form.ts'
+import {ProductHistoryList, historyOperationToText} from './history.ts'
 
 export function ProductCreateView({product}: {product: Product}) {
   return html`
