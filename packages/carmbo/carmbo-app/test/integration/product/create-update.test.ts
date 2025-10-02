@@ -29,7 +29,7 @@ test('create product then update it', async ({page}) => {
   await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1')
   await newForm.whatsappGroups().addButton().locator.click()
   await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toBeVisible()
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('123456789@g.us')
+  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
   await expect(newForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toBeVisible()
   await newForm
     .whatsappGroups()
@@ -54,7 +54,7 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.productTypeSelect().locator).toHaveValue('recorded')
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
-    '123456789@g.us',
+    '1@g.us: Test Group 1',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/test1',
@@ -68,7 +68,7 @@ test('create product then update it', async ({page}) => {
   await updateForm.productTypeSelect().locator.selectOption('challenge')
   await updateForm.academyCourses().academyCourseInput(0).locator.fill('33')
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('33')
-  await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('987654321@g.us')
+  await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('2@g.us')
   await updateForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)
@@ -84,7 +84,7 @@ test('create product then update it', async ({page}) => {
     '33: Course 2',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
-    '987654321@g.us',
+    '2@g.us: Test Group 2',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/test2',

@@ -15,7 +15,7 @@ export const ProductSchema = z.object({
     .array(
       z.object({
         id: z.string().regex(/[0-9]+\@g\.us/),
-        timedMessagesGoogleSheetUrl: z.url(),
+        timedMessagesGoogleSheetUrl: z.url().optional(),
       }),
     )
     .optional(),
@@ -345,7 +345,7 @@ async function addProductStuff(product: Product | NewProduct, dataId: string, sq
     product.whatsappGroups?.map(
       (whatsappGroup, index) => sql`
         INSERT INTO product_whatsapp_group VALUES
-          (${dataId}, ${index}, ${whatsappGroup.id}, ${whatsappGroup.timedMessagesGoogleSheetUrl})
+          (${dataId}, ${index}, ${whatsappGroup.id}, ${whatsappGroup.timedMessagesGoogleSheetUrl ?? null})
       `,
     ) ?? [],
   )

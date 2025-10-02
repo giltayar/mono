@@ -27,11 +27,12 @@ document.addEventListener('htmx:configRequest', (/** @type {any} */ event) => {
 })
 
 document.addEventListener('change', (/** @type {any} */ event) => {
-  if (event.target && event.target.classList.contains('academy-course-title')) {
+  if (event.target && event.target.classList.contains('pick-item-title')) {
     const element = /** @type {HTMLInputElement} */ (event.target)
+    const datalistId = element.getAttribute('list')
     const value = element.value
     const courseId = value.split(':', 1)[0].trim()
-    const datalist = document.getElementById('academy-courses-list')
+    const datalist = document.getElementById(datalistId ?? '')
     const options = datalist?.children
     let found = false
 
@@ -45,7 +46,7 @@ document.addEventListener('change', (/** @type {any} */ event) => {
         break
       }
     }
-    element.setCustomValidity(found ? '' : 'Please select a valid course from the list')
+    element.setCustomValidity(found ? '' : 'Please select a valid item from the list')
 
     const hiddenInput = document.getElementById(element.id + '_value')
 

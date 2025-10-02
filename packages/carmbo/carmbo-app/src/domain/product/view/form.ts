@@ -2,7 +2,7 @@ import {html} from '../../../commons/html-templates.ts'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 // eslint-disable-next-line n/no-missing-import
-import {generateAcademyCourseTitle} from './js/scripts-commons.scripts.js'
+import {generateItemTitle} from './js/scripts-commons.scripts.js'
 import {requestContext} from '@fastify/request-context'
 
 export function ProductCreateOrUpdateFormFields({
@@ -13,6 +13,7 @@ export function ProductCreateOrUpdateFormFields({
   operation: 'read' | 'write'
 }) {
   const courses = requestContext.get('courses')!
+  const whatsappGroups = requestContext.get('whatsappGroups')!
   const maybeRo = operation === 'read' ? 'readonly' : ''
 
   return html`
@@ -52,7 +53,7 @@ export function ProductCreateOrUpdateFormFields({
           ${product.academyCourses?.map(
             (courseId, i, l) => html`
               <div class="products-view_item input-group">
-                <div class="form-floating autoComplete_wrapper">
+                <div class="form-floating">
                   <input
                     name="academyCourses[${i}]"
                     id="academyCourse-${i}_value"
@@ -64,16 +65,14 @@ export function ProductCreateOrUpdateFormFields({
                     list="academy-courses-list"
                     placeholder=" "
                     required
-                    class="form-control academy-course-title"
+                    class="form-control pick-item-title"
                     id="academyCourse-${i}"
                     spellcheck="false"
                     autocorrect="off"
                     autocomplete="off"
                     autocapitalize="off"
                     value=${courseId
-                      ? generateAcademyCourseTitle(
-                          courses.find((c) => c.id === courseId) ?? {id: courseId, name: '???'},
-                        )
+                      ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
                       : ''}
                     ${maybeRo}
                   />
@@ -100,13 +99,27 @@ export function ProductCreateOrUpdateFormFields({
                 <div class="form-floating">
                   <input
                     name="whatsappGroups[${i}][id]"
-                    type="text"
+                    id="whatsappGroup-${i}_value"
+                    type="hidden"
                     value=${group.id}
+                  />
+                  <input
+                    type="text"
+                    list="whatsapp-groups-list"
                     placeholder=" "
                     required
-                    class="form-control"
+                    class="form-control pick-item-title"
                     id="whatsappGroup-${i}"
-                    pattern="[0-9]+@g\\.us"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    value=${group.id
+                      ? generateItemTitle(
+                          group.id,
+                          whatsappGroups.find((g) => g.id === group.id)?.name,
+                        )
+                      : ''}
                     ${maybeRo}
                   />
                   <label for="whatsappGroup-${i}">WhatsApp Group ID</label>
@@ -117,7 +130,6 @@ export function ProductCreateOrUpdateFormFields({
                     type="url"
                     value=${group.timedMessagesGoogleSheetUrl}
                     placeholder=" "
-                    required
                     class="form-control"
                     id="whatsappGroupUrl-${i}"
                     ${maybeRo}
@@ -240,7 +252,16 @@ export function ProductCreateOrUpdateFormFields({
         (course) =>
           html`<option
             data-course-id="${course.id}"
-            value="${generateAcademyCourseTitle(course)}"
+            value="${generateItemTitle(course.id, course.name)}"
+          />`,
+      )}
+    </datalist>
+    <datalist id="whatsapp-groups-list">
+      ${whatsappGroups.map(
+        (group) =>
+          html`<option
+            data-course-id="${group.id}"
+            value="${generateItemTitle(group.id, group.name)}"
           />`,
       )}
     </datalist>

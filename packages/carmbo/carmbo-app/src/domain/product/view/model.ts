@@ -8,8 +8,8 @@ export const OngoingProductSchema = z.object({
   whatsappGroups: z
     .array(
       z.object({
-        id: z.string(),
-        timedMessagesGoogleSheetUrl: z.string(),
+        id: z.string().optional(),
+        timedMessagesGoogleSheetUrl: z.string().optional(),
       }),
     )
     .optional(),

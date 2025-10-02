@@ -1,9 +1,13 @@
 /**
- * @param {import('@giltayar/carmel-tools-academy-integration/service').AcademyCourse | undefined} course
+ * @param {number | string} id
+ * @param {string | undefined} name
+ *
+ * @returns {string}
  */
-export function generateAcademyCourseTitle(course) {
-  if (!course) {
-    return '???'
+export function generateItemTitle(id, name) {
+  if (!name) {
+    return id.toString()
+  } else {
+    return `${id}: ${name}`
   }
-  return `${course.id}: ${course.name}`
 }

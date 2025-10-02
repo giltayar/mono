@@ -6,6 +6,7 @@ import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
 import postgres from 'postgres'
 import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
+import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 
 export function setup(testUrl: string) {
   let findAddress
@@ -36,6 +37,25 @@ export function setup(testUrl: string) {
           {id: 777, name: 'Course 3'},
         ],
         enrolledContacts: new Set<string>(),
+      }),
+      whatsappIntegration: createFakeWhatsAppIntegrationService({
+        groups: {
+          '1@g.us': {
+            name: 'Test Group 1',
+            recentSentMessages: [],
+            participants: [],
+          },
+          '2@g.us': {
+            name: 'Test Group 2',
+            recentSentMessages: [],
+            participants: [],
+          },
+          '3@g.us': {
+            name: 'Test Group 3',
+            recentSentMessages: [],
+            participants: [],
+          },
+        },
       }),
     }))
 

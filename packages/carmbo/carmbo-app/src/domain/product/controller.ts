@@ -21,6 +21,7 @@ import {finalHtml, type ControllerResult} from '../../commons/controller-result.
 import type {ProductManipulations} from './view/product-manipulations.ts'
 import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 import {requestContext} from '@fastify/request-context'
+import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 export async function showProducts(
   {
@@ -37,7 +38,9 @@ export async function showProducts(
 }
 
 export async function showProductCreate(): Promise<ControllerResult> {
-  requestContext.set('courses', await listCourses())
+  const [courses, whatsappGroups] = await Promise.all([listCourses(), listWhatsAppGroups()])
+  requestContext.set('courses', courses)
+  requestContext.set('whatsappGroups', whatsappGroups)
 
   return finalHtml(renderProductsCreatePage(undefined, undefined))
 }
@@ -47,8 +50,13 @@ export async function showProductUpdate(
   manipulations: ProductManipulations,
   sql: Sql,
 ): Promise<ControllerResult> {
-  requestContext.set('courses', await listCourses())
-  const productWithHistory = await queryProductByNumber(productNumber, sql)
+  const [courses, whatsappGroups, productWithHistory] = await Promise.all([
+    listCourses(),
+    listWhatsAppGroups(),
+    queryProductByNumber(productNumber, sql),
+  ])
+  requestContext.set('courses', courses)
+  requestContext.set('whatsappGroups', whatsappGroups)
 
   if (!productWithHistory) {
     return {status: 404, body: 'Product not found'}
@@ -62,7 +70,9 @@ export async function showOngoingProduct(
   product: OngoingProduct,
   manipulations: ProductManipulations,
 ): Promise<ControllerResult> {
-  requestContext.set('courses', await listCourses())
+  const [courses, whatsappGroups] = await Promise.all([listCourses(), listWhatsAppGroups()])
+  requestContext.set('courses', courses)
+  requestContext.set('whatsappGroups', whatsappGroups)
 
   return finalHtml(renderProductFormFields(product, manipulations, 'write'))
 }
@@ -72,9 +82,13 @@ export async function showProductInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
-  requestContext.set('courses', await listCourses())
-
-  const product = await queryProductByHistoryId(productNumber, operationId, sql)
+  const [courses, whatsappGroups, product] = await Promise.all([
+    listCourses(),
+    listWhatsAppGroups(),
+    queryProductByHistoryId(productNumber, operationId, sql),
+  ])
+  requestContext.set('courses', courses)
+  requestContext.set('whatsappGroups', whatsappGroups)
 
   if (!product) {
     return {status: 404, body: 'Product not found'}
@@ -130,4 +144,23 @@ async function listCourses() {
   }
 
   return cachedCourses.courses
+}
+
+const cachedWhatsAppGroups: {
+  groups: WhatsAppGroup[] | undefined
+  timestamp: number
+} = {
+  groups: undefined,
+  timestamp: 0,
+}
+
+async function listWhatsAppGroups() {
+  const whatsappIntegration = requestContext.get('whatsappIntegration')!
+
+  if (Date.now() - cachedWhatsAppGroups.timestamp > 1 * 60 * 1000 || !cachedWhatsAppGroups.groups) {
+    cachedWhatsAppGroups.groups = await whatsappIntegration.fetchWhatsAppGroups()
+    cachedWhatsAppGroups.timestamp = Date.now()
+  }
+
+  return cachedWhatsAppGroups.groups
 }

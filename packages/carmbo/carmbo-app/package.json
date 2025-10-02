@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "1.16.2",
+  "version": "1.17.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -50,6 +50,7 @@
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^8.2.0",
     "@giltayar/carmel-tools-academy-integration": "^3.1.0",
+    "@giltayar/carmel-tools-whatsapp-integration": "^2.5.1",
     "@giltayar/functional-commons": "^2.0.1",
     "@tarekraafat/autocomplete.js": "^10.2.9",
     "bootstrap": "^5.3.8",

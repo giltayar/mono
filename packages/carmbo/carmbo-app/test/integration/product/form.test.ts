@@ -37,34 +37,34 @@ test('create product and update multiple fields', async ({page}) => {
 
   // Fill the WhatsApp groups
   await newForm.whatsappGroups().addButton().locator.click()
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('123456789@g.us')
+  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
   await newForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)
     .locator.fill('https://docs.google.com/spreadsheets/d/url1')
   await newForm.whatsappGroups().addButton().locator.click()
-  await newForm.whatsappGroups().whatsappGroupInput(1).locator.fill('987654321@g.us')
+  await newForm.whatsappGroups().whatsappGroupInput(1).locator.fill('2@g.us')
   await newForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(1)
     .locator.fill('https://docs.google.com/spreadsheets/d/url2')
   await newForm.whatsappGroups().addButton().locator.click()
-
-  // Wait for the third WhatsApp group field to appear
-  await expect(newForm.whatsappGroups().whatsappGroupInput(2).locator).toBeVisible()
-
-  await newForm.whatsappGroups().whatsappGroupInput(2).locator.fill('111111111@g.us')
+  await newForm.whatsappGroups().whatsappGroupInput(2).locator.fill('3@g.us')
   await newForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(2)
     .locator.fill('https://docs.google.com/spreadsheets/d/url3')
   await newForm.whatsappGroups().trashButton(1).locator.click()
 
-  await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue('123456789@g.us')
+  await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
+    '1@g.us: Test Group 1',
+  )
   await expect(newForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/url1',
   )
-  await expect(newForm.whatsappGroups().whatsappGroupInput(1).locator).toHaveValue('111111111@g.us')
+  await expect(newForm.whatsappGroups().whatsappGroupInput(1).locator).toHaveValue(
+    '3@g.us: Test Group 3',
+  )
   await expect(newForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(1).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/url3',
   )
@@ -99,13 +99,13 @@ test('create product and update multiple fields', async ({page}) => {
   )
 
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
-    '123456789@g.us',
+    '1@g.us: Test Group 1',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/url1',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(1).locator).toHaveValue(
-    '111111111@g.us',
+    '3@g.us: Test Group 3',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(1).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/url3',
@@ -125,7 +125,7 @@ test('create product and update multiple fields', async ({page}) => {
 
   await updateForm.whatsappGroups().addButton().locator.click()
   await expect(updateForm.whatsappGroups().whatsappGroupInput(2).locator).toBeVisible()
-  await updateForm.whatsappGroups().whatsappGroupInput(2).locator.fill('222222222@g.us')
+  await updateForm.whatsappGroups().whatsappGroupInput(2).locator.fill('2@g.us')
   await updateForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(2)
@@ -149,13 +149,13 @@ test('create product and update multiple fields', async ({page}) => {
     '33: Course 2',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
-    '111111111@g.us',
+    '3@g.us: Test Group 3',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/url3',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(1).locator).toHaveValue(
-    '222222222@g.us',
+    '2@g.us: Test Group 2',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(1).locator).toHaveValue(
     'https://docs.google.com/spreadsheets/d/url4',
@@ -192,18 +192,18 @@ test('form validations', async ({page}) => {
 
   await newForm.nameInput().locator.fill('Valid Product')
 
-  // Add invalid WhatsApp group (must match pattern)
+  // Add invalid WhatsApp group (must be in the list)
   await newForm.whatsappGroups().addButton().locator.click()
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('invalid-whatsapp')
+  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('76736@g.us')
 
   await newForm.createButton().locator.click()
 
   await expect(page.url()).toMatch(newProductModel.urlRegex)
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('123456789@g.us')
+  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
   await newForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)
-    .locator.fill('https://docs.google.com/spreadsheets/d/test1 ')
+    .locator.fill('https://docs.google.com/spreadsheets/d/test1')
 
   await newForm.academyCourses().addButton().locator.click()
   // Fill invalid academy course (must be a number)

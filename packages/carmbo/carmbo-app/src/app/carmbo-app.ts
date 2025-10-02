@@ -11,21 +11,29 @@ import type {
   AcademyIntegrationService,
 } from '@giltayar/carmel-tools-academy-integration/service'
 import {fastifyRequestContext} from '@fastify/request-context'
+import type {
+  WhatsAppGroup,
+  WhatsAppIntegrationService,
+} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
     academyIntegration: AcademyIntegrationService
+    whatsappIntegration: WhatsAppIntegrationService
     sql: Sql
     courses: AcademyCourse[] | undefined
+    whatsappGroups: WhatsAppGroup[] | undefined
   }
 }
 
 export function makeApp({
   db: {host, port, username, password},
   academyIntegration,
+  whatsappIntegration,
 }: {
   db: {host: string; port: number; username: string; password: string}
   academyIntegration: AcademyIntegrationService
+  whatsappIntegration: WhatsAppIntegrationService
 }) {
   const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
@@ -39,7 +47,13 @@ export function makeApp({
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
   app.register(fastifyRequestContext, {
-    defaultStoreValues: {sql, academyIntegration, courses: undefined},
+    defaultStoreValues: {
+      sql,
+      academyIntegration,
+      whatsappIntegration,
+      courses: undefined,
+      whatsappGroups: undefined,
+    },
   })
   app.register(fastifystatic, {
     root: new URL('../../dist', import.meta.url),
