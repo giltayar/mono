@@ -49,6 +49,10 @@
 			"path": "packages/carmel-tools/academy-integration"
 		},
 		{
+			"name": "smoove-integration",
+			"path": "packages/carmel-tools/smoove-integration"
+		},
+		{
 			"name": "whatsapp-integration",
 			"path": "packages/carmel-tools/whatsapp-integration"
 		},
