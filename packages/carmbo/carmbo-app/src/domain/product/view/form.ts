@@ -193,7 +193,6 @@ export function ProductCreateOrUpdateFormFields({
             type="text"
             list="smoove-lists-list"
             placeholder=" "
-            required
             class="form-control pick-item-title"
             id="smooveListId"
             spellcheck="false"
@@ -222,7 +221,6 @@ export function ProductCreateOrUpdateFormFields({
             type="text"
             list="smoove-lists-list"
             placeholder=" "
-            required
             class="form-control pick-item-title"
             id="smooveCancellingListId"
             spellcheck="false"
@@ -251,7 +249,6 @@ export function ProductCreateOrUpdateFormFields({
             type="text"
             list="smoove-lists-list"
             placeholder=" "
-            required
             class="form-control pick-item-title"
             id="smooveCancelledListId"
             spellcheck="false"
@@ -280,7 +277,6 @@ export function ProductCreateOrUpdateFormFields({
             type="text"
             list="smoove-lists-list"
             placeholder=" "
-            required
             class="form-control pick-item-title"
             id="smooveRemovedListId"
             spellcheck="false"

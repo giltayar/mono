@@ -197,8 +197,28 @@ test('form validations', async ({page}) => {
   await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('76736@g.us')
 
   await newForm.createButton().locator.click()
-
   await expect(page.url()).toMatch(newProductModel.urlRegex)
+
+  await newForm.smooveListIdInput().locator.fill('34343443')
+  await newForm.createButton().locator.click()
+  await expect(page.url()).toMatch(newProductModel.urlRegex)
+  await newForm.smooveListIdInput().locator.fill('')
+
+  await newForm.smooveCancellingListIdInput().locator.fill('34343443')
+  await newForm.createButton().locator.click()
+  await expect(page.url()).toMatch(newProductModel.urlRegex)
+  await newForm.smooveCancellingListIdInput().locator.fill('')
+
+  await newForm.smooveCancelledListIdInput().locator.fill('34343443')
+  await newForm.createButton().locator.click()
+  await expect(page.url()).toMatch(newProductModel.urlRegex)
+  await newForm.smooveCancelledListIdInput().locator.fill('')
+
+  await newForm.smooveRemovedListIdInput().locator.fill('34343443')
+  await newForm.createButton().locator.click()
+  await expect(page.url()).toMatch(newProductModel.urlRegex)
+  await newForm.smooveRemovedListIdInput().locator.fill('')
+
   await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
   await newForm
     .whatsappGroups()

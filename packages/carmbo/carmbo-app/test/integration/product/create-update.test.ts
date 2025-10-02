@@ -39,6 +39,12 @@ test('create product then update it', async ({page}) => {
   await expect(newForm.facebookGroups().facebookGroupInput(0).locator).toBeVisible()
   await newForm.facebookGroups().facebookGroupInput(0).locator.fill('test-fb-group')
 
+  await newForm.smooveListIdInput().locator.fill('2')
+  await newForm.smooveCancellingListIdInput().locator.fill('4')
+  await newForm.smooveCancelledListIdInput().locator.fill('6')
+  await newForm.smooveRemovedListIdInput().locator.fill('8')
+  await newForm.cardcomProductIdInput().locator.fill('prod-123')
+
   // Save the product
   await newForm.createButton().locator.click()
 
@@ -63,6 +69,18 @@ test('create product then update it', async ({page}) => {
     'test-fb-group',
   )
 
+  await expect(updateForm.smooveListIdInput().locator).toHaveValue('2: Smoove List ID 1')
+  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue(
+    '4: Smoove List Cancelling 2',
+  )
+  await expect(updateForm.smooveCancelledListIdInput().locator).toHaveValue(
+    '6: Smoove List Cancelled 3',
+  )
+  await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
+    '8: Smoove List Removed 4',
+  )
+  await updateForm.cardcomProductIdInput().locator.fill('prod-123')
+
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
   await updateForm.productTypeSelect().locator.selectOption('challenge')
@@ -74,6 +92,11 @@ test('create product then update it', async ({page}) => {
     .whatsappGroupGoogleSheetUrlInput(0)
     .locator.fill('https://docs.google.com/spreadsheets/d/test2')
   await updateForm.facebookGroups().facebookGroupInput(0).locator.fill('updated-fb-group')
+  await updateForm.smooveListIdInput().locator.fill('10')
+  await updateForm.smooveCancellingListIdInput().locator.fill('12')
+  await updateForm.smooveCancelledListIdInput().locator.fill('14')
+  await updateForm.smooveRemovedListIdInput().locator.fill('16')
+  await updateForm.cardcomProductIdInput().locator.fill('prod-456')
 
   // Save the product and verify data
 
@@ -92,6 +115,17 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue(
     'updated-fb-group',
   )
+  await expect(updateForm.smooveListIdInput().locator).toHaveValue('10: Smoove List ID A')
+  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue(
+    '12: Smoove List Cancelling B',
+  )
+  await expect(updateForm.smooveCancelledListIdInput().locator).toHaveValue(
+    '14: Smoove List Cancelled C',
+  )
+  await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
+    '16: Smoove List Removed D',
+  )
+  await updateForm.cardcomProductIdInput().locator.fill('prod-456')
 
   // Back to list
   await page.goto(new URL('/products', url()).href)
@@ -126,6 +160,11 @@ test('discard button', async ({page}) => {
 
   await newForm.nameInput().locator.fill('Test Product')
   await newForm.productTypeSelect().locator.selectOption('bundle')
+  await newForm.smooveListIdInput().locator.fill('2')
+  await newForm.smooveCancellingListIdInput().locator.fill('4')
+  await newForm.smooveCancelledListIdInput().locator.fill('6')
+  await newForm.smooveRemovedListIdInput().locator.fill('8')
+  await newForm.cardcomProductIdInput().locator.fill('prod-123')
 
   await newForm.createButton().locator.click()
   await page.waitForURL(updateProductModel.urlRegex)
@@ -139,10 +178,28 @@ test('discard button', async ({page}) => {
   await updateForm.academyCourses().addButton().locator.click()
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toBeVisible()
 
+  await updateForm.smooveListIdInput().locator.fill('10')
+  await updateForm.smooveCancellingListIdInput().locator.fill('12')
+  await updateForm.smooveCancelledListIdInput().locator.fill('14')
+  await updateForm.smooveRemovedListIdInput().locator.fill('16')
+  await updateForm.cardcomProductIdInput().locator.fill('prod-456')
+
   await updateForm.discardButton().locator.click()
 
   await expect(updateForm.nameInput().locator).toHaveValue('Test Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('bundle')
+
+  await expect(updateForm.smooveListIdInput().locator).toHaveValue('2: Smoove List ID 1')
+  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue(
+    '4: Smoove List Cancelling 2',
+  )
+  await expect(updateForm.smooveCancelledListIdInput().locator).toHaveValue(
+    '6: Smoove List Cancelled 3',
+  )
+  await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
+    '8: Smoove List Removed 4',
+  )
+  await updateForm.cardcomProductIdInput().locator.fill('prod-123')
 })
 
 test('optional fields can be empty', async ({page}) => {
