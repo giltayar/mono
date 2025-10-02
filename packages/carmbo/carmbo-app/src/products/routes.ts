@@ -48,14 +48,16 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   // Create new product
-  app.get('/new', async (_request, reply) => dealWithControllerResult(reply, showProductCreate()))
+  app.get('/new', async (_request, reply) =>
+    dealWithControllerResult(reply, await showProductCreate()),
+  )
 
   app
     .withTypeProvider<ZodTypeProvider>()
     .post('/new', {schema: {body: NewProductSchema}}, async (request, reply) =>
       dealWithControllerResult(
         reply,
-        showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
+        await showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
       ),
     )
 
@@ -98,7 +100,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
         return dealWithControllerResult(
           reply,
-          showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
+          await showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
         )
       },
     )

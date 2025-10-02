@@ -1,4 +1,5 @@
 import type {Sql} from 'postgres'
+
 import type {NewProduct, Product} from './model.ts'
 import {
   listProducts,
@@ -17,6 +18,8 @@ import {
 import {renderProductsPage} from './view-list.ts'
 import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
 import type {ProductManipulations} from './view-product-manipulations.ts'
+import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
+import {requestContext} from '@fastify/request-context'
 
 export async function showProducts(
   {
@@ -32,7 +35,9 @@ export async function showProducts(
   return finalHtml(renderProductsPage(flash, products, {withArchived, query: query ?? '', page}))
 }
 
-export function showProductCreate(): ControllerResult {
+export async function showProductCreate(): Promise<ControllerResult> {
+  requestContext.set('courses', await listCourses())
+
   return finalHtml(renderProductsCreatePage(undefined, undefined))
 }
 
@@ -41,6 +46,8 @@ export async function showProductUpdate(
   manipulations: ProductManipulations,
   sql: Sql,
 ): Promise<ControllerResult> {
+  requestContext.set('courses', await listCourses())
+
   const productWithHistory = await queryProductByNumber(productNumber, sql)
 
   if (!productWithHistory) {
@@ -51,10 +58,12 @@ export async function showProductUpdate(
   )
 }
 
-export function showOngoingProduct(
+export async function showOngoingProduct(
   product: Product | NewProduct,
   manipulations: ProductManipulations,
-): ControllerResult {
+): Promise<ControllerResult> {
+  requestContext.set('courses', await listCourses())
+
   return finalHtml(renderProductFormFields(product, manipulations, 'write'))
 }
 
@@ -63,6 +72,8 @@ export async function showProductInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
+  requestContext.set('courses', await listCourses())
+
   const product = await queryProductByHistoryId(productNumber, operationId, sql)
 
   if (!product) {
@@ -100,4 +111,23 @@ export async function deleteProduct(
   }
 
   return {htmxRedirect: `/products/${productNumber}`}
+}
+
+const cachedCourses: {
+  courses: AcademyCourse[] | undefined
+  timestamp: number
+} = {
+  courses: undefined,
+  timestamp: 0,
+}
+
+async function listCourses() {
+  const academyIntegration = requestContext.get('academyIntegration')!
+
+  if (Date.now() - cachedCourses.timestamp > 1 * 60 * 1000 || !cachedCourses.courses) {
+    cachedCourses.courses = await academyIntegration.listCourses()
+    cachedCourses.timestamp = Date.now()
+  }
+
+  return cachedCourses.courses
 }

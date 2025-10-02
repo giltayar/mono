@@ -5,6 +5,7 @@ import {makeApp} from '../../../src/app/carmbo-app.ts'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
 import postgres from 'postgres'
+import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
 
 export function setup(testUrl: string) {
   let findAddress
@@ -28,6 +29,14 @@ export function setup(testUrl: string) {
         username: 'user',
         password: 'password',
       },
+      academyIntegration: createFakeAcademyIntegrationService({
+        courses: [
+          {id: 1, name: 'Course 1'},
+          {id: 33, name: 'Course 2'},
+          {id: 777, name: 'Course 3'},
+        ],
+        enrolledContacts: new Set<string>(),
+      }),
     }))
 
     await app.listen()

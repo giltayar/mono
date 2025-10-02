@@ -2,15 +2,30 @@ import fastify from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifystatic from '@fastify/static'
 import qs from 'qs'
-import postgres from 'postgres'
+import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../students/routes.ts'
 import productRoutes from '../products/routes.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
+import type {
+  AcademyCourse,
+  AcademyIntegrationService,
+} from '@giltayar/carmel-tools-academy-integration/service'
+import {fastifyRequestContext} from '@fastify/request-context'
+
+declare module '@fastify/request-context' {
+  interface RequestContextData {
+    academyIntegration: AcademyIntegrationService
+    sql: Sql
+    courses: AcademyCourse[] | undefined
+  }
+}
 
 export function makeApp({
   db: {host, port, username, password},
+  academyIntegration,
 }: {
   db: {host: string; port: number; username: string; password: string}
+  academyIntegration: AcademyIntegrationService
 }) {
   const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
@@ -23,14 +38,17 @@ export function makeApp({
   })
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
+  app.register(fastifyRequestContext, {
+    defaultStoreValues: {sql, academyIntegration, courses: undefined},
+  })
   app.register(fastifystatic, {
     root: new URL('../../dist', import.meta.url),
-    prefix: '/third-party/',
+    prefix: '/dist/',
     decorateReply: false,
   })
   app.register(fastifystatic, {
     root: new URL('../../src', import.meta.url),
-    prefix: '/public/',
+    prefix: '/src/',
     decorateReply: false,
     allowedPath: (pathName) =>
       pathName.endsWith('scripts.js') ||

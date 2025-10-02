@@ -1,5 +1,8 @@
 import {html} from '../commons/html-templates.ts'
 import type {NewProduct, Product} from './model.ts'
+// eslint-disable-next-line n/no-missing-import
+import {generateAcademyCourseTitle} from './scripts-commons.scripts.js'
+import {requestContext} from '@fastify/request-context'
 
 export function ProductCreateOrUpdateFormFields({
   product,
@@ -8,6 +11,7 @@ export function ProductCreateOrUpdateFormFields({
   product: Product | NewProduct
   operation: 'read' | 'write'
 }) {
+  const courses = requestContext.get('courses')!
   const maybeRo = operation === 'read' ? 'readonly' : ''
 
   return html`
@@ -47,15 +51,29 @@ export function ProductCreateOrUpdateFormFields({
           ${product.academyCourses?.map(
             (courseId, i, l) => html`
               <div class="products-view_item input-group">
-                <div class="form-floating">
+                <div class="form-floating autoComplete_wrapper">
                   <input
                     name="academyCourses[${i}]"
-                    type="number"
+                    id="academyCourse-${i}_value"
+                    type="hidden"
                     value=${courseId}
+                  />
+                  <input
+                    type="text"
+                    list="academy-courses-list"
                     placeholder=" "
                     required
-                    class="form-control"
+                    class="form-control academy-course-title"
                     id="academyCourse-${i}"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    value=${courseId
+                      ? generateAcademyCourseTitle(
+                          courses.find((c) => c.id === courseId) ?? {id: courseId, name: '???'},
+                        )
+                      : ''}
                     ${maybeRo}
                   />
                   <label for="academyCourse-${i}">Academy Course ID</label>
@@ -216,6 +234,15 @@ export function ProductCreateOrUpdateFormFields({
         </div>
       </div>
     </div>
+    <datalist id="academy-courses-list">
+      ${courses.map(
+        (course) =>
+          html`<option
+            data-course-id="${course.id}"
+            value="${generateAcademyCourseTitle(course)}"
+          />`,
+      )}
+    </datalist>
   `
 }
 
@@ -243,7 +270,7 @@ function AddButton({
       style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/public/layouts/common-style/plus-circle.svg" />
+        <use href="/src/layouts/common-style/plus-circle.svg" />
       </svg>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -261,7 +288,7 @@ function RemoveButton() {
       aria-label="Remove"
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/public/layouts/common-style/minus-circle.svg" />
+        <use href="/src/layouts/common-style/minus-circle.svg" />
       </svg>
     </button>
   `

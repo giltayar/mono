@@ -203,7 +203,7 @@ function AddButton({
       style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/public/layouts/common-style/plus-circle.svg" />
+        <use href="/src/layouts/common-style/plus-circle.svg" />
       </svg>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -221,7 +221,7 @@ function RemoveButton() {
       aria-label="Remove"
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/public/layouts/common-style/minus-circle.svg" />
+        <use href="/src/layouts/common-style/minus-circle.svg" />
       </svg>
     </button>
   `

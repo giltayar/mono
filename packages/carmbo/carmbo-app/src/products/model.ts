@@ -33,7 +33,7 @@ export const ProductWithHistoryInfoSchema = ProductSchema.extend({
 })
 
 export const NewProductSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1).optional(),
   productType: ProductTypeSchema.optional(),
   academyCourses: z.array(z.coerce.number().int().positive()).optional(),
   whatsappGroups: z
@@ -347,7 +347,7 @@ async function addProductStuff(product: Product | NewProduct, dataId: string, sq
 
   ops = ops.concat(sql`
     INSERT INTO product_data VALUES
-      (${dataId}, ${product.name}, ${product.productType ?? 'recorded'})
+      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'})
   `)
 
   ops = ops.concat(

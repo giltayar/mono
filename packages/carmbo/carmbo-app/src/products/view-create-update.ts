@@ -1,3 +1,4 @@
+import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/types'
 import {html} from '../commons/html-templates.ts'
 import type {Product, ProductHistory, ProductWithHistoryInfo} from './model.ts'
 import {ProductCreateOrUpdateFormFields} from './view-form.ts'
@@ -23,9 +24,11 @@ export function ProductCreateView({product}: {product: Product}) {
 export function ProductUpdateView({
   product,
   history,
+  courses,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
+  courses: AcademyCourse[]
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -57,7 +60,11 @@ export function ProductUpdateView({
         </section>
       </div>
       <div class="mt-3">
-        <${ProductCreateOrUpdateFormFields} product=${product} operation="write" />
+        <${ProductCreateOrUpdateFormFields}
+          product=${product}
+          operation="write"
+          courses=${courses}
+        />
       </div>
     </form>
     <${ProductHistoryList} product=${product} history=${history} />

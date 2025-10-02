@@ -18,10 +18,10 @@ export function MainLayout({
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <link rel="stylesheet" href="/public/layouts/common-style/style.css" />
-          <link rel="stylesheet" href="/third-party/bootstrap.min.css" />
-          <script src="/third-party/bootstrap.bundle.min.js" defer></script>
-          <script src="/third-party/htmx.min.js" defer></script>
+          <link rel="stylesheet" href="/src/layouts/common-style/style.css" />
+          <link rel="stylesheet" href="/dist/bootstrap.min.css" />
+          <script src="/dist/htmx.min.js"></script>
+          <script src="/dist/bootstrap.bundle.min.js" defer></script>
           <title>${title}</title>
         </head>
         <body>
@@ -47,7 +47,7 @@ function NavBar({
       <div class="container-fluid">
         <a class="navbar-brand" href="/"
           ><img
-            src="/public/layouts/common-style/carmel-egger-icon.png"
+            src="/src/layouts/common-style/carmel-egger-icon.png"
             width="30"
             height="30"
             alt="Carmel Egger Logo"

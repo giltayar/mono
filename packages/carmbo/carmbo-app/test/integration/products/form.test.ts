@@ -24,16 +24,16 @@ test('create product and update multiple fields', async ({page}) => {
 
   // Fill the academy courses
   await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(0).locator.fill('12345')
+  await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
   await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(1).locator.fill('67890')
+  await newForm.academyCourses().academyCourseInput(1).locator.fill('33')
   await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(2).locator.fill('11111')
+  await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
 
   await newForm.academyCourses().trashButton(1).locator.click()
 
-  await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('12345')
-  await expect(newForm.academyCourses().academyCourseInput(1).locator).toHaveValue('11111')
+  await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
+  await expect(newForm.academyCourses().academyCourseInput(1).locator).toHaveValue('777: Course 3')
 
   // Fill the WhatsApp groups
   await newForm.whatsappGroups().addButton().locator.click()
@@ -93,8 +93,10 @@ test('create product and update multiple fields', async ({page}) => {
   await expect(updateForm.nameInput().locator).toHaveValue('Test Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('recorded')
 
-  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('12345')
-  await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue('11111')
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
+  await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue(
+    '777: Course 3',
+  )
 
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '123456789@g.us',
@@ -118,7 +120,7 @@ test('create product and update multiple fields', async ({page}) => {
 
   await updateForm.academyCourses().addButton().locator.click()
   await expect(updateForm.academyCourses().academyCourseInput(2).locator).toBeVisible()
-  await updateForm.academyCourses().academyCourseInput(2).locator.fill('22222')
+  await updateForm.academyCourses().academyCourseInput(2).locator.fill('33')
   await updateForm.academyCourses().trashButton(0).locator.click()
 
   await updateForm.whatsappGroups().addButton().locator.click()
@@ -140,9 +142,12 @@ test('create product and update multiple fields', async ({page}) => {
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('challenge')
 
-  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('11111')
-  await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue('22222')
-
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue(
+    '777: Course 3',
+  )
+  await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue(
+    '33: Course 2',
+  )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '111111111@g.us',
   )
@@ -200,6 +205,18 @@ test('form validations', async ({page}) => {
     .whatsappGroupGoogleSheetUrlInput(0)
     .locator.fill('https://docs.google.com/spreadsheets/d/test1 ')
 
+  await newForm.academyCourses().addButton().locator.click()
+  // Fill invalid academy course (must be a number)
+  await newForm.academyCourses().academyCourseInput(0).locator.fill('723674')
+
+  await newForm.createButton().locator.click()
+
+  await expect(page.url()).toMatch(newProductModel.urlRegex)
+
+  // Fill valid academy course (must be a number)
+  await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('723674')
+  await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+
   // Now it should succeed
   await newForm.createButton().locator.click()
 
@@ -238,7 +255,7 @@ test('remove all array fields', async ({page}) => {
 
   // Add new fields
   await updateForm.academyCourses().addButton().locator.click()
-  await updateForm.academyCourses().academyCourseInput(0).locator.fill('99999')
+  await updateForm.academyCourses().academyCourseInput(0).locator.fill('1')
 
   await updateForm.whatsappGroups().addButton().locator.click()
   await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('999999999@g.us')
@@ -254,7 +271,7 @@ test('remove all array fields', async ({page}) => {
 
   await expect(page.url()).toMatch(updateProductModel.urlRegex)
 
-  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('99999')
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '999999999@g.us',
   )

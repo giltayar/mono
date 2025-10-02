@@ -25,7 +25,8 @@ test('create product then update it', async ({page}) => {
 
   // Add and fill array fields
   await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(0).locator.fill('12345')
+  await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+  await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1')
   await newForm.whatsappGroups().addButton().locator.click()
   await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toBeVisible()
   await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('123456789@g.us')
@@ -51,7 +52,7 @@ test('create product then update it', async ({page}) => {
   const updateForm = updateProductModel.form()
   await expect(updateForm.nameInput().locator).toHaveValue('Test Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('recorded')
-  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('12345')
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '123456789@g.us',
   )
@@ -65,7 +66,8 @@ test('create product then update it', async ({page}) => {
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
   await updateForm.productTypeSelect().locator.selectOption('challenge')
-  await updateForm.academyCourses().academyCourseInput(0).locator.fill('54321')
+  await updateForm.academyCourses().academyCourseInput(0).locator.fill('33')
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('33')
   await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('987654321@g.us')
   await updateForm
     .whatsappGroups()
@@ -78,7 +80,9 @@ test('create product then update it', async ({page}) => {
   await updateForm.updateButton().locator.click()
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('challenge')
-  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('54321')
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue(
+    '33: Course 2',
+  )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '987654321@g.us',
   )

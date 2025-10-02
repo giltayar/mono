@@ -17,12 +17,8 @@ export function manipulateProduct<T extends NewProduct | Product>(
   )
 
   if (addItem) {
-    if (addItem === 'academyCourses') {
-      ;(transformed[addItem] ??= []).push(0)
-    } else {
-      // @ts-expect-error dynamic stuff!
-      ;(transformed[addItem] ??= []).push('')
-    }
+    // @ts-expect-error dynamic stuff!
+    ;(transformed[addItem] ??= []).push('')
   }
 
   return transformed
