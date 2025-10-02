@@ -45,9 +45,15 @@
 			"path": "packages/commons/url-commons"
 		},
 		{
+			"name": "academy-integration",
+			"path": "packages/carmel-tools/academy-integration"
+		},
+		{
+			"name": "carmbo-design",
 			"path": "packages/carmbo/carmbo-design"
 		},
 		{
+			"name": "carmbo-app",
 			"path": "packages/carmbo/carmbo-app"
 		}
 	],
