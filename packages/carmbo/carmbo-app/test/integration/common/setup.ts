@@ -7,6 +7,7 @@ import type {AddressInfo} from 'node:net'
 import postgres from 'postgres'
 import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
+import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
 
 export function setup(testUrl: string) {
   let findAddress
@@ -56,6 +57,15 @@ export function setup(testUrl: string) {
             participants: [],
           },
         },
+      }),
+      smooveIntegration: createFakeSmooveIntegrationService({
+        lists: [
+          {id: 2, name: 'Smoove List ID 1'},
+          {id: 4, name: 'Smoove List Cancelling 2'},
+          {id: 6, name: 'Smoove List Cancelled 3'},
+          {id: 8, name: 'Smoove List Removed 4'},
+        ],
+        contacts: {},
       }),
     }))
 

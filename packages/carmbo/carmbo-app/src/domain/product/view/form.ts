@@ -14,6 +14,7 @@ export function ProductCreateOrUpdateFormFields({
 }) {
   const courses = requestContext.get('courses')!
   const whatsappGroups = requestContext.get('whatsappGroups')!
+  const smooveLists = requestContext.get('smooveLists')!
   const maybeRo = operation === 'read' ? 'readonly' : ''
 
   return html`
@@ -184,11 +185,27 @@ export function ProductCreateOrUpdateFormFields({
         <div class="mt-3 form-floating">
           <input
             name="smooveListId"
-            type="number"
+            id="smooveListId_value"
+            type="hidden"
+            value=${product.smooveListId ?? ''}
+          />
+          <input
+            type="text"
+            list="smoove-lists-list"
             placeholder=" "
-            class="form-control"
+            required
+            class="form-control pick-item-title"
             id="smooveListId"
-            value="${product.smooveListId ?? ''}"
+            spellcheck="false"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="off"
+            value=${product.smooveListId
+              ? generateItemTitle(
+                  product.smooveListId,
+                  smooveLists.find((g) => g.id === product.smooveListId)?.name,
+                )
+              : ''}
             ${maybeRo}
           />
           <label for="smooveListId">Smoove List ID</label>
@@ -197,11 +214,27 @@ export function ProductCreateOrUpdateFormFields({
         <div class="mt-3 form-floating">
           <input
             name="smooveCancellingListId"
-            type="number"
+            id="smooveCancellingListId_value"
+            type="hidden"
+            value=${product.smooveCancellingListId ?? ''}
+          />
+          <input
+            type="text"
+            list="smoove-lists-list"
             placeholder=" "
-            class="form-control"
+            required
+            class="form-control pick-item-title"
             id="smooveCancellingListId"
-            value="${product.smooveCancellingListId ?? ''}"
+            spellcheck="false"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="off"
+            value=${product.smooveCancellingListId
+              ? generateItemTitle(
+                  product.smooveCancellingListId,
+                  smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
+                )
+              : ''}
             ${maybeRo}
           />
           <label for="smooveCancellingListId">Smoove Cancelling List ID</label>
@@ -210,11 +243,27 @@ export function ProductCreateOrUpdateFormFields({
         <div class="mt-3 form-floating">
           <input
             name="smooveCancelledListId"
-            type="number"
+            id="smooveCancelledListId_value"
+            type="hidden"
+            value=${product.smooveCancelledListId ?? ''}
+          />
+          <input
+            type="text"
+            list="smoove-lists-list"
             placeholder=" "
-            class="form-control"
+            required
+            class="form-control pick-item-title"
             id="smooveCancelledListId"
-            value="${product.smooveCancelledListId ?? ''}"
+            spellcheck="false"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="off"
+            value=${product.smooveCancelledListId
+              ? generateItemTitle(
+                  product.smooveCancelledListId,
+                  smooveLists.find((g) => g.id === product.smooveCancelledListId)?.name,
+                )
+              : ''}
             ${maybeRo}
           />
           <label for="smooveCancelledListId">Smoove Cancelled List ID</label>
@@ -223,11 +272,27 @@ export function ProductCreateOrUpdateFormFields({
         <div class="mt-3 form-floating">
           <input
             name="smooveRemovedListId"
-            type="number"
+            id="smooveRemovedListId_value"
+            type="hidden"
+            value=${product.smooveRemovedListId ?? ''}
+          />
+          <input
+            type="text"
+            list="smoove-lists-list"
             placeholder=" "
-            class="form-control"
+            required
+            class="form-control pick-item-title"
             id="smooveRemovedListId"
-            value="${product.smooveRemovedListId ?? ''}"
+            spellcheck="false"
+            autocorrect="off"
+            autocomplete="off"
+            autocapitalize="off"
+            value=${product.smooveRemovedListId
+              ? generateItemTitle(
+                  product.smooveRemovedListId,
+                  smooveLists.find((g) => g.id === product.smooveRemovedListId)?.name,
+                )
+              : ''}
             ${maybeRo}
           />
           <label for="smooveRemovedListId">Smoove Removed List ID</label>
@@ -262,6 +327,15 @@ export function ProductCreateOrUpdateFormFields({
           html`<option
             data-course-id="${group.id}"
             value="${generateItemTitle(group.id, group.name)}"
+          />`,
+      )}
+    </datalist>
+    <datalist id="smoove-lists-list">
+      ${smooveLists.map(
+        (list) =>
+          html`<option
+            data-course-id="${list.id}"
+            value="${generateItemTitle(list.id, list.name)}"
           />`,
       )}
     </datalist>

@@ -3,6 +3,7 @@ import {makeApp} from './carmbo-app.ts'
 import * as z from 'zod'
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_HOST: z.string().default('localhost'),
@@ -14,6 +15,8 @@ export const EnvironmentVariablesSchema = z.object({
   ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string(),
   GREEN_API_KEY: z.string(),
   GREEN_API_INSTANCE: z.coerce.number(),
+  SMOOVE_API_KEY: z.string().optional().default(''),
+  SMOOVE_API_URL: z.string().url().optional().default('https://rest.smoove.io/v1/'),
 })
 
 const env = EnvironmentVariablesSchema.parse(process.env)
@@ -32,6 +35,12 @@ const {app} = await makeApp({
     greenApiKey: env.GREEN_API_KEY,
     greenApiInstanceId: env.GREEN_API_INSTANCE,
     greenApiBaseUrl: new URL('https://7105.api.greenapi.com'),
+  }),
+  smooveIntegration: createSmooveIntegrationService({
+    apiKey: env.SMOOVE_API_KEY,
+    apiUrl: env.SMOOVE_API_URL,
+    cardComRecurringPaymentIdCustomFieldId: '',
+    cardComAccountIdCustomFieldId: '',
   }),
 })
 

@@ -15,14 +15,20 @@ import type {
   WhatsAppGroup,
   WhatsAppIntegrationService,
 } from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {
+  SmooveList,
+  SmooveIntegrationService,
+} from '@giltayar/carmel-tools-smoove-integration/service'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
+    smooveIntegration: SmooveIntegrationService
     sql: Sql
     courses: AcademyCourse[] | undefined
     whatsappGroups: WhatsAppGroup[] | undefined
+    smooveLists: SmooveList[] | undefined
   }
 }
 
@@ -30,10 +36,12 @@ export function makeApp({
   db: {host, port, username, password},
   academyIntegration,
   whatsappIntegration,
+  smooveIntegration,
 }: {
   db: {host: string; port: number; username: string; password: string}
   academyIntegration: AcademyIntegrationService
   whatsappIntegration: WhatsAppIntegrationService
+  smooveIntegration: SmooveIntegrationService
 }) {
   const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
@@ -51,8 +59,10 @@ export function makeApp({
       sql,
       academyIntegration,
       whatsappIntegration,
+      smooveIntegration,
       courses: undefined,
       whatsappGroups: undefined,
+      smooveLists: undefined,
     },
   })
   app.register(fastifystatic, {

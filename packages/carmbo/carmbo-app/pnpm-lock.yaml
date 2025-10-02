@@ -20,6 +20,9 @@ importers:
       '@giltayar/carmel-tools-academy-integration':
         specifier: ^3.1.0
         version: 3.1.0
+      '@giltayar/carmel-tools-smoove-integration':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@giltayar/carmel-tools-whatsapp-integration':
         specifier: ^2.5.1
         version: 2.5.1
@@ -50,6 +53,9 @@ importers:
       qs:
         specifier: ^6.14.0
         version: 6.14.0
+      smoove-integration:
+        specifier: link:@giltayar/carmel-tools/smoove-integration
+        version: link:@giltayar/carmel-tools/smoove-integration
       vhtml:
         specifier: ^2.2.0
         version: 2.2.0
@@ -187,6 +193,10 @@ packages:
 
   '@giltayar/carmel-tools-academy-integration@3.1.0':
     resolution: {integrity: sha512-gvQ9vcVEmz03gPUCQHMR3IxlJAr2Vd99CkJtv/ZxQbzZ5fsxgEg/i08EZVt22+Jxawx1d6g84gyCeZKcYQu5Kw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/3.1.0/e8acebfe7da9cb0fd53ff8ccb56d82cb908418b2}
+    engines: {node: '>=24.3.0'}
+
+  '@giltayar/carmel-tools-smoove-integration@3.1.1':
+    resolution: {integrity: sha512-RIR0J/z11s4lF1M9VN5nSw8wwueUIjI0c+khF0fMgDTBugX0thyBpT5Tb11AYwJ2TsvRO4bUJoEdOv3FkX449A==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-smoove-integration/3.1.1/9ed8343e06981ab8847042bb3622cd8aca8440a8}
     engines: {node: '>=24.3.0'}
 
   '@giltayar/carmel-tools-whatsapp-integration@2.5.1':
@@ -1854,6 +1864,12 @@ snapshots:
       - supports-color
 
   '@giltayar/carmel-tools-academy-integration@3.1.0':
+    dependencies:
+      '@giltayar/functional-commons': 2.0.1
+      '@giltayar/http-commons': 3.1.1
+      '@giltayar/service-commons': 1.1.3
+
+  '@giltayar/carmel-tools-smoove-integration@3.1.1':
     dependencies:
       '@giltayar/functional-commons': 2.0.1
       '@giltayar/http-commons': 3.1.1

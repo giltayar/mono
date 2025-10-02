@@ -22,6 +22,7 @@ import type {ProductManipulations} from './view/product-manipulations.ts'
 import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 import {requestContext} from '@fastify/request-context'
 import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/service'
 
 export async function showProducts(
   {
@@ -38,9 +39,14 @@ export async function showProducts(
 }
 
 export async function showProductCreate(): Promise<ControllerResult> {
-  const [courses, whatsappGroups] = await Promise.all([listCourses(), listWhatsAppGroups()])
+  const [courses, whatsappGroups, smooveLists] = await Promise.all([
+    listCourses(),
+    listWhatsAppGroups(),
+    listSmooveLists(),
+  ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
+  requestContext.set('smooveLists', smooveLists)
 
   return finalHtml(renderProductsCreatePage(undefined, undefined))
 }
@@ -50,13 +56,15 @@ export async function showProductUpdate(
   manipulations: ProductManipulations,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const [courses, whatsappGroups, productWithHistory] = await Promise.all([
+  const [courses, whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
     listCourses(),
     listWhatsAppGroups(),
+    listSmooveLists(),
     queryProductByNumber(productNumber, sql),
   ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
+  requestContext.set('smooveLists', smooveLists)
 
   if (!productWithHistory) {
     return {status: 404, body: 'Product not found'}
@@ -70,9 +78,14 @@ export async function showOngoingProduct(
   product: OngoingProduct,
   manipulations: ProductManipulations,
 ): Promise<ControllerResult> {
-  const [courses, whatsappGroups] = await Promise.all([listCourses(), listWhatsAppGroups()])
+  const [courses, whatsappGroups, smooveLists] = await Promise.all([
+    listCourses(),
+    listWhatsAppGroups(),
+    listSmooveLists(),
+  ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
+  requestContext.set('smooveLists', smooveLists)
 
   return finalHtml(renderProductFormFields(product, manipulations, 'write'))
 }
@@ -82,13 +95,15 @@ export async function showProductInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const [courses, whatsappGroups, product] = await Promise.all([
+  const [courses, whatsappGroups, smooveLists, product] = await Promise.all([
     listCourses(),
     listWhatsAppGroups(),
+    listSmooveLists(),
     queryProductByHistoryId(productNumber, operationId, sql),
   ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
+  requestContext.set('smooveLists', smooveLists)
 
   if (!product) {
     return {status: 404, body: 'Product not found'}
@@ -163,4 +178,23 @@ async function listWhatsAppGroups() {
   }
 
   return cachedWhatsAppGroups.groups
+}
+
+const cachedSmooveLists: {
+  groups: SmooveList[] | undefined
+  timestamp: number
+} = {
+  groups: undefined,
+  timestamp: 0,
+}
+
+async function listSmooveLists() {
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+
+  if (Date.now() - cachedSmooveLists.timestamp > 1 * 60 * 1000 || !cachedSmooveLists.groups) {
+    cachedSmooveLists.groups = await smooveIntegration.fetchLists()
+    cachedSmooveLists.timestamp = Date.now()
+  }
+
+  return cachedSmooveLists.groups
 }
