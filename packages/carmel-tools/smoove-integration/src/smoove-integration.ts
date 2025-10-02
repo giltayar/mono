@@ -1,11 +1,13 @@
 // https://rest.smoove.io/#!/Account/Account_Get
 
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
+import {fetchAsJson} from '@giltayar/http-commons'
 import type {
   SmooveContact,
   SmooveContactInList,
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
+  SmooveGroup,
 } from './types.js'
 
 // Re-export types for external consumption
@@ -14,6 +16,7 @@ export type {
   SmooveContactInList,
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
+  SmooveGroup as SmooveList,
 } from './types.js'
 
 export interface SmooveIntegrationServiceContext {
@@ -35,6 +38,7 @@ export function createSmooveIntegrationService(context: SmooveIntegrationService
     fetchSmooveContact: sBind(fetchSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
     updateSmooveContactWithRecurringPayment: sBind(updateSmooveContactWithRecurringPayment),
+    fetchLists: sBind(fetchLists),
   }
 }
 
@@ -197,6 +201,45 @@ export async function updateSmooveContactWithRecurringPayment(
   }
 
   return await response.json()
+}
+
+export async function fetchLists(s: SmooveIntegrationServiceData): Promise<SmooveGroup[]> {
+  type SmooveApiGroup = {
+    id: number
+    name: string
+  }
+
+  let fullResults: SmooveApiGroup[] = []
+  for (let i = 1; ; i += 1) {
+    const result = await fetchByPage(i)
+    if (result.length === 0) {
+      break
+    }
+
+    fullResults = [...fullResults, ...result]
+
+    if (result.length < 500) {
+      break
+    }
+  }
+
+  return fullResults
+
+  async function fetchByPage(page: number): Promise<SmooveApiGroup[]> {
+    const url = new URL('Lists', s.context.apiUrl)
+    // Yeah, it's called page but it isn't really
+    url.searchParams.append('page', String(page))
+    url.searchParams.append('itemsPerPage', String(500))
+
+    const result = (await fetchAsJson(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    })) as SmooveApiGroup[]
+
+    return result
+  }
 }
 
 function maybeIsoToDate(iso: string): Date {

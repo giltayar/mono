@@ -38,6 +38,7 @@ export function createFakeSmooveIntegrationService(context: {
     fetchSmooveContact: sBind(fetchSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
     updateSmooveContactWithRecurringPayment: sBind(updateSmooveContactWithRecurringPayment),
+    fetchLists: sBind(fetchLists),
   }
 
   return {
@@ -160,4 +161,11 @@ async function updateSmooveContactWithRecurringPayment(
   contact.cardcomRecurringPaymentId = recurringPaymentId
 
   return {success: true}
+}
+
+async function fetchLists(s: SmooveIntegrationServiceData) {
+  return Object.values(s.state.lists).map((list) => ({
+    id: list.id,
+    name: list.name,
+  }))
 }

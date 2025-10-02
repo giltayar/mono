@@ -53,6 +53,10 @@ export default tseslint.config([
         'warn',
         {varsIgnorePattern: '^_', args: 'all', argsIgnorePattern: '^_'},
       ],
+      'n/no-unsupported-features/node-builtins': [
+        'error',
+        {ignores: ['assert.partialDeepStrictEqual']},
+      ],
     },
   },
 ])

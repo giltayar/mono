@@ -19,3 +19,8 @@ export interface SmooveContactChangeListsOptions {
 export interface SmooveFetchContactOptions {
   by?: 'id' | 'email'
 }
+
+export interface SmooveGroup {
+  id: number
+  name: string
+}
