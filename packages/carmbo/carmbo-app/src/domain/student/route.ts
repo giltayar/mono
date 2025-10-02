@@ -9,12 +9,13 @@ import {
   deleteStudent,
 } from './controller.ts'
 import {NewStudentSchema, StudentSchema} from './model.ts'
+import {OngoingStudentSchema} from './view/model.ts'
 import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
-import {dealWithControllerResult} from '../commons/routes-commons.ts'
+import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   // List students
@@ -52,7 +53,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
   app
     .withTypeProvider<ZodTypeProvider>()
-    .post('/new', {schema: {body: NewStudentSchema}}, async (request, reply) =>
+    .post('/new', {schema: {body: OngoingStudentSchema}}, async (request, reply) =>
       dealWithControllerResult(
         reply,
         showOngoingStudent(request.body, {addItem: request.headers['x-add-item']}),
@@ -87,15 +88,8 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     .withTypeProvider<ZodTypeProvider>()
     .post(
       '/:number',
-      {schema: {body: StudentSchema, params: z.object({number: z.coerce.number().int()})}},
+      {schema: {body: OngoingStudentSchema, params: z.object({number: z.coerce.number().int()})}},
       async (request, reply) => {
-        const studentNumber = request.params.number
-
-        assert(
-          studentNumber === request.body.studentNumber,
-          'student number in URL must match ID in body',
-        )
-
         return dealWithControllerResult(
           reply,
           showOngoingStudent(request.body, {addItem: request.headers['x-add-item']}),

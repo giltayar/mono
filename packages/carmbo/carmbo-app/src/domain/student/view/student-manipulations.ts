@@ -1,11 +1,12 @@
 import assert from 'node:assert'
-import type {NewStudent, Student} from './model.ts'
+import type {Student} from '../model.ts'
+import type {OngoingStudent} from './model.ts'
 
 export type StudentManipulations = {
   addItem: string | string[] | undefined
 }
 
-export function manipulateStudent<T extends NewStudent | Student>(
+export function manipulateStudent<T extends OngoingStudent | Student>(
   student: T,
   manipulations: StudentManipulations,
 ): T {

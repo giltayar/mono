@@ -1,7 +1,7 @@
-import {html} from '../commons/html-templates.ts'
-import {MainLayout} from '../layouts/main-view.ts'
+import {html} from '../../../commons/html-templates.ts'
+import {MainLayout} from '../../../layouts/main-view.ts'
 import {Layout} from './layout.ts'
-import type {StudentForGrid} from './model.ts'
+import type {StudentForGrid} from '../model.ts'
 
 export function renderStudentsPage(
   flash: string | undefined,

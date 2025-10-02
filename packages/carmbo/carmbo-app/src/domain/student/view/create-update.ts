@@ -1,7 +1,7 @@
-import {html} from '../commons/html-templates.ts'
-import type {Student, StudentHistory, StudentWithHistoryInfo} from './model.ts'
-import {StudentCreateOrUpdateFormFields} from './view-form.ts'
-import {StudentHistoryList, historyOperationToText} from './view-history.ts'
+import {html} from '../../../commons/html-templates.ts'
+import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
+import {StudentCreateOrUpdateFormFields} from './form.ts'
+import {StudentHistoryList, historyOperationToText} from './history.ts'
 
 export function StudentCreateView({student}: {student: Student}) {
   return html`

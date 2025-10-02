@@ -1,11 +1,12 @@
-import {html} from '../commons/html-templates.ts'
-import type {NewStudent, Student} from './model.ts'
+import {html} from '../../../commons/html-templates.ts'
+import type {Student} from '../model.ts'
+import type {OngoingStudent} from './model.ts'
 
 export function StudentCreateOrUpdateFormFields({
   student,
   operation,
 }: {
-  student: Student | NewStudent
+  student: Student | OngoingStudent
   operation: 'read' | 'write'
 }) {
   const maybeRo = operation === 'read' ? 'readonly' : ''
@@ -21,7 +22,7 @@ export function StudentCreateOrUpdateFormFields({
                   <input
                     name="names[${i}][firstName]"
                     type="text"
-                    value=${name.firstName}
+                    value=${name?.firstName ?? ''}
                     placeholder=" "
                     required
                     class="form-control"
@@ -37,7 +38,7 @@ export function StudentCreateOrUpdateFormFields({
                   <input
                     name="names[${i}][lastName]"
                     type="text"
-                    value=${name.lastName}
+                    value=${name?.lastName ?? ''}
                     placeholder=" "
                     required
                     class="form-control"

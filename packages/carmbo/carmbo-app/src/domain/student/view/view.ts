@@ -1,16 +1,17 @@
-import {html} from '../commons/html-templates.ts'
-import {MainLayout} from '../layouts/main-view.ts'
-import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from './model.ts'
-import {manipulateStudent, type StudentManipulations} from './view-student-manipulations.ts'
-import {StudentCreateOrUpdateFormFields} from './view-form.ts'
-import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './view-create-update.ts'
+import {html} from '../../../commons/html-templates.ts'
+import {MainLayout} from '../../../layouts/main-view.ts'
+import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
+import type {OngoingStudent} from './model.ts'
+import {manipulateStudent, type StudentManipulations} from './student-manipulations.ts'
+import {StudentCreateOrUpdateFormFields} from './form.ts'
+import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
 
 export function renderStudentsCreatePage(
-  student: NewStudent | undefined,
+  student: OngoingStudent | undefined,
   manipulations: StudentManipulations | undefined,
 ) {
-  const finalStudent: NewStudent = student
+  const finalStudent: OngoingStudent = student
     ? manipulations
       ? manipulateStudent(student, manipulations)
       : student
@@ -60,7 +61,7 @@ export function renderStudentViewInHistoryPage(
 }
 
 export function renderStudentFormFields(
-  student: Student | NewStudent,
+  student: Student | OngoingStudent,
   manipulations: StudentManipulations,
   operation: 'read' | 'write',
 ) {

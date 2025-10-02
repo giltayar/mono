@@ -1,5 +1,5 @@
 import type {PendingQuery, Row, Sql} from 'postgres'
-import {HistoryOperationEnumSchema, type HistoryOperation} from '../commons/operation-type.ts'
+import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
 import {range} from '@giltayar/functional-commons'
@@ -14,29 +14,19 @@ export const StudentSchema = z.object({
   emails: z.array(z.email()).optional(),
   phones: z.array(z.string().min(1)).optional(),
   facebookNames: z.array(z.string()).optional(),
-  cardcomCustomerId: z.union([z.string(), z.undefined()]),
+  cardcomCustomerId: z.string().optional(),
 })
+
+export const NewStudentSchema = StudentSchema.omit({studentNumber: true})
+export type NewStudent = z.infer<typeof NewStudentSchema>
 
 export const StudentWithHistoryInfoSchema = StudentSchema.extend({
   id: z.uuid(),
   historyOperation: HistoryOperationEnumSchema,
 })
 
-export const NewStudentSchema = z.object({
-  birthday: z.iso
-    .date()
-    .transform((s) => new Date(s))
-    .optional(),
-  names: z.array(z.object({firstName: z.string(), lastName: z.string()})).optional(),
-  emails: z.array(z.union([z.email(), z.string()])).optional(),
-  phones: z.array(z.string()).optional(),
-  facebookNames: z.array(z.string()).optional(),
-  cardcomCustomerId: z.union([z.string(), z.undefined()]),
-})
-
 export type Student = z.infer<typeof StudentSchema>
 export type StudentWithHistoryInfo = z.infer<typeof StudentWithHistoryInfoSchema>
-export type NewStudent = z.infer<typeof NewStudentSchema>
 
 export interface StudentForGrid {
   studentNumber: number

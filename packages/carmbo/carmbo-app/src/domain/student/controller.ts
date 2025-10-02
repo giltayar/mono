@@ -1,5 +1,6 @@
 import type {Sql} from 'postgres'
 import type {NewStudent, Student} from './model.ts'
+import type {OngoingStudent} from './view/model.ts'
 import {
   listStudents,
   queryStudentByNumber,
@@ -13,10 +14,10 @@ import {
   renderStudentFormFields,
   renderStudentUpdatePage,
   renderStudentViewInHistoryPage,
-} from './view.ts'
-import {renderStudentsPage} from './view-list.ts'
-import {finalHtml, type ControllerResult} from '../commons/controller-result.ts'
-import type {StudentManipulations} from './view-student-manipulations.ts'
+} from './view/view.ts'
+import {renderStudentsPage} from './view/list.ts'
+import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import type {StudentManipulations} from './view/student-manipulations.ts'
 
 export async function showStudents(
   {
@@ -52,7 +53,7 @@ export async function showStudentUpdate(
 }
 
 export function showOngoingStudent(
-  student: Student | NewStudent,
+  student: OngoingStudent,
   manipulations: StudentManipulations,
 ): ControllerResult {
   return finalHtml(renderStudentFormFields(student, manipulations, 'write'))

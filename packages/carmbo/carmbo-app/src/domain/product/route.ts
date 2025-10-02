@@ -90,15 +90,8 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     .withTypeProvider<ZodTypeProvider>()
     .post(
       '/:number',
-      {schema: {body: ProductSchema, params: z.object({number: z.coerce.number().int()})}},
+      {schema: {body: OngoingProductSchema, params: z.object({number: z.coerce.number().int()})}},
       async (request, reply) => {
-        const productNumber = request.params.number
-
-        assert(
-          productNumber === request.body.productNumber,
-          'product number in URL must match ID in body',
-        )
-
         return dealWithControllerResult(
           reply,
           await showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
