@@ -50,9 +50,12 @@ export function createWhatsAppIntegrationService(context: WhatsAppIntegrationSer
 
 export type WhatsAppIntegrationService = ReturnType<typeof createWhatsAppIntegrationService>
 
-async function fetchWhatsAppGroups(
-  s: WhatsAppIntegrationServiceData,
-): Promise<{id: WhatsAppGroupId; name: string}[]> {
+export type WhatsAppGroup = {
+  id: WhatsAppGroupId
+  name: string
+}
+
+async function fetchWhatsAppGroups(s: WhatsAppIntegrationServiceData): Promise<WhatsAppGroup[]> {
   const url = createApiUrl(s, 'getContacts')
   url.searchParams.append('group', 'true')
 
@@ -65,7 +68,7 @@ async function fetchWhatsAppGroups(
     throw new Error(`Failed to fetch ${url}: ${response.status} ${await response.text()}`)
   }
 
-  const data = (await response.json()) as {id: WhatsAppGroupId; name: string}[]
+  const data = (await response.json()) as WhatsAppGroup[]
   return data.map((contact) => ({
     id: contact.id,
     name: contact.name,
