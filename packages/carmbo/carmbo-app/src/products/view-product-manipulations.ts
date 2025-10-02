@@ -1,11 +1,11 @@
 import assert from 'node:assert'
-import type {NewProduct, Product} from './model.ts'
+import type {OngoingProduct} from './model.ts'
 
 export type ProductManipulations = {
   addItem: string | string[] | undefined
 }
 
-export function manipulateProduct<T extends NewProduct | Product>(
+export function manipulateProduct<T extends OngoingProduct>(
   product: T,
   manipulations: ProductManipulations,
 ): T {

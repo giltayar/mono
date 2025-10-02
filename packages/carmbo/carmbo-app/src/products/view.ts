@@ -1,16 +1,22 @@
 import {html} from '../commons/html-templates.ts'
 import {MainLayout} from '../layouts/main-view.ts'
-import type {NewProduct, Product, ProductHistory, ProductWithHistoryInfo} from './model.ts'
+import type {
+  NewProduct,
+  OngoingProduct,
+  Product,
+  ProductHistory,
+  ProductWithHistoryInfo,
+} from './model.ts'
 import {manipulateProduct, type ProductManipulations} from './view-product-manipulations.ts'
 import {ProductCreateOrUpdateFormFields} from './view-form.ts'
 import {ProductCreateView, ProductHistoryView, ProductUpdateView} from './view-create-update.ts'
 import {Layout} from './layout.ts'
 
 export function renderProductsCreatePage(
-  product: NewProduct | undefined,
+  product: OngoingProduct | undefined,
   manipulations: ProductManipulations | undefined,
 ) {
-  const finalProduct: NewProduct = product
+  const finalProduct: OngoingProduct = product
     ? manipulations
       ? manipulateProduct(product, manipulations)
       : product
@@ -64,7 +70,7 @@ export function renderProductViewInHistoryPage(
 }
 
 export function renderProductFormFields(
-  product: Product | NewProduct,
+  product: Product | OngoingProduct | NewProduct,
   manipulations: ProductManipulations,
   operation: 'read' | 'write',
 ) {

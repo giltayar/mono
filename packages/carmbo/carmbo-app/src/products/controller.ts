@@ -1,6 +1,6 @@
 import type {Sql} from 'postgres'
 
-import type {NewProduct, Product} from './model.ts'
+import type {NewProduct, OngoingProduct, Product} from './model.ts'
 import {
   listProducts,
   queryProductByNumber,
@@ -47,7 +47,6 @@ export async function showProductUpdate(
   sql: Sql,
 ): Promise<ControllerResult> {
   requestContext.set('courses', await listCourses())
-
   const productWithHistory = await queryProductByNumber(productNumber, sql)
 
   if (!productWithHistory) {
@@ -59,7 +58,7 @@ export async function showProductUpdate(
 }
 
 export async function showOngoingProduct(
-  product: Product | NewProduct,
+  product: OngoingProduct,
   manipulations: ProductManipulations,
 ): Promise<ControllerResult> {
   requestContext.set('courses', await listCourses())

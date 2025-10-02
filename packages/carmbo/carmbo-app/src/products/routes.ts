@@ -8,7 +8,7 @@ import {
   showOngoingProduct,
   deleteProduct,
 } from './controller.ts'
-import {NewProductSchema, ProductSchema} from './model.ts'
+import {NewProductSchema, OngoingProductSchema, ProductSchema} from './model.ts'
 import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
@@ -54,7 +54,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
   app
     .withTypeProvider<ZodTypeProvider>()
-    .post('/new', {schema: {body: NewProductSchema}}, async (request, reply) =>
+    .post('/new', {schema: {body: OngoingProductSchema}}, async (request, reply) =>
       dealWithControllerResult(
         reply,
         await showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),

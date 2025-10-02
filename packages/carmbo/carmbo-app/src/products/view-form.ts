@@ -1,5 +1,5 @@
 import {html} from '../commons/html-templates.ts'
-import type {NewProduct, Product} from './model.ts'
+import type {NewProduct, OngoingProduct, Product} from './model.ts'
 // eslint-disable-next-line n/no-missing-import
 import {generateAcademyCourseTitle} from './scripts-commons.scripts.js'
 import {requestContext} from '@fastify/request-context'
@@ -8,7 +8,7 @@ export function ProductCreateOrUpdateFormFields({
   product,
   operation,
 }: {
-  product: Product | NewProduct
+  product: Product | OngoingProduct | NewProduct
   operation: 'read' | 'write'
 }) {
   const courses = requestContext.get('courses')!

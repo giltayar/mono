@@ -15,7 +15,7 @@ export const ProductSchema = z.object({
     .array(
       z.object({
         id: z.string().regex(/[0-9]+\@g\.us/),
-        timedMessagesGoogleSheetUrl: z.string().url(),
+        timedMessagesGoogleSheetUrl: z.url(),
       }),
     )
     .optional(),
@@ -24,15 +24,17 @@ export const ProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
-  cardcomProductId: z.union([z.string(), z.undefined()]),
+  cardcomProductId: z.string().optional(),
 })
+
+export const NewProductSchema = ProductSchema.omit({productNumber: true})
 
 export const ProductWithHistoryInfoSchema = ProductSchema.extend({
   id: z.uuid(),
   historyOperation: HistoryOperationEnumSchema,
 })
 
-export const NewProductSchema = z.object({
+export const OngoingProductSchema = z.object({
   name: z.string().min(1).optional(),
   productType: ProductTypeSchema.optional(),
   academyCourses: z.array(z.coerce.number().int().positive()).optional(),
@@ -49,12 +51,13 @@ export const NewProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
-  cardcomProductId: z.union([z.string(), z.undefined()]).optional(),
+  cardcomProductId: z.string().optional(),
 })
 
 export type Product = z.infer<typeof ProductSchema>
-export type ProductWithHistoryInfo = z.infer<typeof ProductWithHistoryInfoSchema>
 export type NewProduct = z.infer<typeof NewProductSchema>
+export type ProductWithHistoryInfo = z.infer<typeof ProductWithHistoryInfoSchema>
+export type OngoingProduct = z.infer<typeof OngoingProductSchema>
 
 export interface ProductForGrid {
   productNumber: number
