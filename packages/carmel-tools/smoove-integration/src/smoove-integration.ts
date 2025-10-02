@@ -7,7 +7,7 @@ import type {
   SmooveContactInList,
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
-  SmooveGroup,
+  SmooveList,
 } from './types.js'
 
 // Re-export types for external consumption
@@ -16,7 +16,7 @@ export type {
   SmooveContactInList,
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
-  SmooveGroup as SmooveList,
+  SmooveList,
 } from './types.js'
 
 export interface SmooveIntegrationServiceContext {
@@ -203,7 +203,7 @@ export async function updateSmooveContactWithRecurringPayment(
   return await response.json()
 }
 
-export async function fetchLists(s: SmooveIntegrationServiceData): Promise<SmooveGroup[]> {
+export async function fetchLists(s: SmooveIntegrationServiceData): Promise<SmooveList[]> {
   type SmooveApiGroup = {
     id: number
     name: string

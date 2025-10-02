@@ -20,7 +20,7 @@ export interface SmooveFetchContactOptions {
   by?: 'id' | 'email'
 }
 
-export interface SmooveGroup {
+export interface SmooveList {
   id: number
   name: string
 }
