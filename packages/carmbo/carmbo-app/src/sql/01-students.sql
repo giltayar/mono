@@ -69,10 +69,3 @@ CREATE TABLE IF NOT EXISTS student_name (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS student_name_idx ON student_name (data_id, item_order);
-
-CREATE TABLE IF NOT EXISTS student_integration_cardcom (
-    data_id UUID NOT NULL,
-    customer_id TEXT NOT NULL
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS student_integration_cardcom_idx ON student_integration_cardcom (data_id);

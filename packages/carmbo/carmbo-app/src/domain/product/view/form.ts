@@ -293,19 +293,6 @@ export function ProductCreateOrUpdateFormFields({
           />
           <label for="smooveRemovedListId">Smoove Removed List ID</label>
         </div>
-
-        <div class="mt-3 form-floating">
-          <input
-            name="cardcomProductId"
-            type="text"
-            placeholder=" "
-            class="form-control"
-            id="cardcomProductId"
-            value="${product.cardcomProductId ?? ''}"
-            ${maybeRo}
-          />
-          <label for="cardcomProductId">Cardcom Product ID</label>
-        </div>
       </div>
     </div>
     <datalist id="academy-courses-list">

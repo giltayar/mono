@@ -37,9 +37,6 @@ export function studentFormPageModel(page: Page, locator = page.locator('form'))
     birthdayInput: (inputLocator = locator.getByLabel(`Birthday`)) => ({
       locator: inputLocator,
     }),
-    cardcomCustomerIdInput: (inputLocator = locator.getByLabel('Cardcom Customer ID')) => ({
-      locator: inputLocator,
-    }),
   }
 }
 

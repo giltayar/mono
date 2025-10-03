@@ -160,21 +160,6 @@ export function StudentCreateOrUpdateFormFields({
           />
           <label for="birthday">Birthday</label>
         </div>
-
-        <div class="mt-3 form-floating">
-          <input
-            name="cardcomCustomerId"
-            type="text"
-            placeholder=" "
-            class="form-control"
-            id="cardcomCustomerId"
-            value="${student.cardcomCustomerId}"
-            autocomplete="off"
-            data-1p-ignore
-            ${maybeRo}
-          />
-          <label for="cardcomCustomerId">Cardcom Customer ID</label>
-        </div>
       </div>
     </div>
   `

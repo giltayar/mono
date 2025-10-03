@@ -21,7 +21,6 @@ export function renderStudentsCreatePage(
         phones: [''],
         facebookNames: [''],
         birthday: undefined,
-        cardcomCustomerId: '',
       }
 
   return html`

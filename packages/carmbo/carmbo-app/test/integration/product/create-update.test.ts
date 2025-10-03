@@ -43,7 +43,6 @@ test('create product then update it', async ({page}) => {
   await newForm.smooveCancellingListIdInput().locator.fill('4')
   await newForm.smooveCancelledListIdInput().locator.fill('6')
   await newForm.smooveRemovedListIdInput().locator.fill('8')
-  await newForm.cardcomProductIdInput().locator.fill('prod-123')
 
   // Save the product
   await newForm.createButton().locator.click()
@@ -79,7 +78,6 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '8: Smoove List Removed 4',
   )
-  await updateForm.cardcomProductIdInput().locator.fill('prod-123')
 
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
@@ -96,7 +94,6 @@ test('create product then update it', async ({page}) => {
   await updateForm.smooveCancellingListIdInput().locator.fill('12')
   await updateForm.smooveCancelledListIdInput().locator.fill('14')
   await updateForm.smooveRemovedListIdInput().locator.fill('16')
-  await updateForm.cardcomProductIdInput().locator.fill('prod-456')
 
   // Save the product and verify data
 
@@ -125,7 +122,6 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '16: Smoove List Removed D',
   )
-  await updateForm.cardcomProductIdInput().locator.fill('prod-456')
 
   // Back to list
   await page.goto(new URL('/products', url()).href)
@@ -164,7 +160,6 @@ test('discard button', async ({page}) => {
   await newForm.smooveCancellingListIdInput().locator.fill('4')
   await newForm.smooveCancelledListIdInput().locator.fill('6')
   await newForm.smooveRemovedListIdInput().locator.fill('8')
-  await newForm.cardcomProductIdInput().locator.fill('prod-123')
 
   await newForm.createButton().locator.click()
   await page.waitForURL(updateProductModel.urlRegex)
@@ -182,7 +177,6 @@ test('discard button', async ({page}) => {
   await updateForm.smooveCancellingListIdInput().locator.fill('12')
   await updateForm.smooveCancelledListIdInput().locator.fill('14')
   await updateForm.smooveRemovedListIdInput().locator.fill('16')
-  await updateForm.cardcomProductIdInput().locator.fill('prod-456')
 
   await updateForm.discardButton().locator.click()
 
@@ -199,7 +193,6 @@ test('discard button', async ({page}) => {
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '8: Smoove List Removed 4',
   )
-  await updateForm.cardcomProductIdInput().locator.fill('prod-123')
 })
 
 test('optional fields can be empty', async ({page}) => {
@@ -214,7 +207,6 @@ test('optional fields can be empty', async ({page}) => {
   await page.waitForURL(newProductModel.urlRegex)
 
   await expect(newProductModel.form().smooveListIdInput().locator).toHaveValue('')
-  await expect(newProductModel.form().cardcomProductIdInput().locator).toHaveValue('')
 
   await newProductModel.form().nameInput().locator.fill('Minimal Product')
   await newProductModel.form().productTypeSelect().locator.selectOption('recorded')
@@ -224,7 +216,6 @@ test('optional fields can be empty', async ({page}) => {
   await page.waitForURL(updateProductModel.urlRegex)
 
   await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue('')
-  await expect(updateProductModel.form().cardcomProductIdInput().locator).toHaveValue('')
 
   await updateProductModel.form().nameInput().locator.fill('Updated Minimal Product')
   await updateProductModel.form().productTypeSelect().locator.selectOption('club')
@@ -232,13 +223,10 @@ test('optional fields can be empty', async ({page}) => {
   await updateProductModel.form().updateButton().locator.click()
 
   await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue('')
-  await expect(updateProductModel.form().cardcomProductIdInput().locator).toHaveValue('')
 
   await updateProductModel.form().smooveListIdInput().locator.fill('12345')
-  await updateProductModel.form().cardcomProductIdInput().locator.fill('prod-123')
 
   await updateProductModel.form().updateButton().locator.click()
 
   await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue('12345')
-  await expect(updateProductModel.form().cardcomProductIdInput().locator).toHaveValue('prod-123')
 })

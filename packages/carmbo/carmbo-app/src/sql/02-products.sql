@@ -72,11 +72,3 @@ CREATE TABLE IF NOT EXISTS product_integration_smoove (
 
 CREATE UNIQUE INDEX IF NOT EXISTS product_integration_smoove_idx ON product_integration_smoove (data_id);
 
-
-CREATE TABLE IF NOT EXISTS product_integration_cardcom (
-    data_id UUID NOT NULL,
-    product_id TEXT NOT NULL
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS product_integration_cardcom_idx ON product_integration_cardcom (data_id);
-

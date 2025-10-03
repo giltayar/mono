@@ -14,7 +14,6 @@ export const StudentSchema = z.object({
   emails: z.array(z.email()).optional(),
   phones: z.array(z.string().min(1)).optional(),
   facebookNames: z.array(z.string()).optional(),
-  cardcomCustomerId: z.string().optional(),
 })
 
 export const NewStudentSchema = StudentSchema.omit({studentNumber: true})
@@ -54,7 +53,7 @@ export async function listStudents(
   }: {withArchived: boolean; query: string; limit: number; page: number},
 ): Promise<StudentForGrid[]> {
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  process.env.TEST_SEED && (await TEST_seedStudents(sql, 10000))
+  process.env.TEST_SEED && (await TEST_seedStudents(sql, 200))
 
   const filters: PendingQuery<Row[]>[] = [sql`true`]
 
@@ -76,7 +75,6 @@ export async function listStudents(
       student_history
       INNER JOIN student ON last_history_id = id
       LEFT JOIN student_search USING (data_id)
-      LEFT JOIN student_integration_cardcom USING (data_id)
       LEFT JOIN LATERAL (
         SELECT
           json_agg(json_build_object('firstName', first_name, 'lastName', last_name) ORDER BY item_order) AS names
@@ -271,7 +269,6 @@ SELECT
   student_history.operation as history_operation,
   ${studentNumber} as student_number,
   birthday,
-  student_integration_cardcom.customer_id AS cardcom_customer_id,
   COALESCE(names, json_build_array()) AS names,
   COALESCE(facebook_names, json_build_array()) AS facebook_names,
   COALESCE(emails, json_build_array()) AS emails,
@@ -279,7 +276,6 @@ SELECT
 FROM
   parameters
   LEFT JOIN student_history ON student_history.id = current_history_id
-  LEFT JOIN student_integration_cardcom ON student_integration_cardcom.data_id = current_data_id
   LEFT JOIN student_data ON student_data.data_id = current_data_id
   LEFT JOIN LATERAL (
     SELECT
@@ -396,13 +392,6 @@ async function addStudentStuff(student: Student | NewStudent, dataId: string, sq
     ) ?? [],
   )
 
-  if (student.cardcomCustomerId) {
-    ops = ops.concat(sql`
-        INSERT INTO student_integration_cardcom VALUES
-          (${dataId}, ${student.cardcomCustomerId})
-      `)
-  }
-
   await Promise.all(ops)
 }
 
@@ -412,7 +401,7 @@ function searchableStudentText(student: Student | NewStudent): string {
   const phones = student.phones?.join(' ') ?? ''
   const facebookNames = student.facebookNames?.join(' ') ?? ''
 
-  return `${names} ${emails} ${phones} ${facebookNames} ${student.cardcomCustomerId ?? ''}`.trim()
+  return `${names} ${emails} ${phones} ${facebookNames}`.trim()
 }
 
 function likeEscape(s: string): string {
@@ -438,7 +427,6 @@ export async function TEST_seedStudents(sql: Sql, count: number) {
         ],
         phones: [chance.phone(), chance.phone(), chance.phone()],
         birthday: chance.date(),
-        cardcomCustomerId: chance.integer().toString(),
       },
       chance.word(),
       sql,

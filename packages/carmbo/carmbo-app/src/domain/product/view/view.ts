@@ -25,7 +25,6 @@ export function renderProductsCreatePage(
         smooveCancellingListId: undefined,
         smooveCancelledListId: undefined,
         smooveRemovedListId: undefined,
-        cardcomProductId: undefined,
       }
 
   return html`

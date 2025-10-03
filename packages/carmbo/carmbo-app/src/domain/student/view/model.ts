@@ -11,6 +11,5 @@ export const OngoingStudentSchema = z.object({
   emails: z.array(z.string().optional()).optional(),
   phones: z.array(z.string().optional()).optional(),
   facebookNames: z.array(z.string().optional()).optional(),
-  cardcomCustomerId: z.string().optional(),
 })
 export type OngoingStudent = z.infer<typeof OngoingStudentSchema>

@@ -24,7 +24,6 @@ export const ProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
-  cardcomProductId: z.string().optional(),
 })
 
 export const NewProductSchema = ProductSchema.omit({productNumber: true})
@@ -248,7 +247,6 @@ SELECT
   ${productNumber} as product_number,
   product_data.name AS name,
   product_data.product_type AS product_type,
-  product_integration_cardcom.product_id AS cardcom_product_id,
   product_integration_smoove.list_id AS smoove_list_id,
   product_integration_smoove.cancelling_list_id AS smoove_cancelling_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
@@ -260,7 +258,6 @@ FROM
   parameters
   LEFT JOIN product_history ON product_history.id = current_history_id
   LEFT JOIN product_data ON product_data.data_id = current_data_id
-  LEFT JOIN product_integration_cardcom ON product_integration_cardcom.data_id = current_data_id
   LEFT JOIN product_integration_smoove ON product_integration_smoove.data_id = current_data_id
   LEFT JOIN LATERAL (
     SELECT
@@ -377,13 +374,6 @@ async function addProductStuff(product: Product | NewProduct, dataId: string, sq
       `)
   }
 
-  if (product.cardcomProductId) {
-    ops = ops.concat(sql`
-        INSERT INTO product_integration_cardcom VALUES
-          (${dataId}, ${product.cardcomProductId})
-      `)
-  }
-
   await Promise.all(ops)
 }
 
@@ -392,7 +382,6 @@ function searchableProductText(product: Product | NewProduct): string {
   const productType = product.productType
   const whatsappGroups = product.whatsappGroups?.map((g) => g.id).join(' ') ?? ''
   const facebookGroups = product.facebookGroups?.join(' ') ?? ''
-  const cardcomProductId = product.cardcomProductId ?? ''
   const smoveListIds = [
     product.smooveListId,
     product.smooveCancelledListId,
@@ -404,7 +393,7 @@ function searchableProductText(product: Product | NewProduct): string {
     .map((x) => x.toString())
     .join(' ')
 
-  return `${name} ${productType} ${whatsappGroups} ${facebookGroups} ${cardcomProductId} ${smoveListIds}`.trim()
+  return `${name} ${productType} ${whatsappGroups} ${facebookGroups} ${smoveListIds}`.trim()
 }
 
 function likeEscape(s: string): string {
@@ -440,7 +429,6 @@ export async function TEST_seedProducts(sql: Sql, count: number) {
         smooveCancellingListId: chance.integer({min: 1, max: 9999}),
         smooveCancelledListId: chance.integer({min: 1, max: 9999}),
         smooveRemovedListId: chance.integer({min: 1, max: 9999}),
-        cardcomProductId: chance.string({length: 8, alpha: true, numeric: true}),
       },
       chance.word(),
       sql,
