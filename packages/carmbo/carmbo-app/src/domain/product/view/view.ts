@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import {MainLayout} from '../../../layouts/main-view.ts'
+import {MainLayout} from '../../../layout/main-view.ts'
 import type {NewProduct, Product, ProductHistory, ProductWithHistoryInfo} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {manipulateProduct, type ProductManipulations} from './product-manipulations.ts'

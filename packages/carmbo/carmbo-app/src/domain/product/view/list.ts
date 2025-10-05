@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import {MainLayout} from '../../../layouts/main-view.ts'
+import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {ProductForGrid} from '../model.ts'
 
@@ -100,7 +100,7 @@ function ProductsView({
       <section class="add-new">
         <a role="button" class="btn float-end" href="/products/new" aria-label="new product">
           <svg class="feather feather-large" viewbox="0 0 24 24">
-            <use href="/src/layouts/common-style/plus-circle.svg" />
+            <use href="/src/layout/common-style/plus-circle.svg" />
           </svg>
         </a>
       </section>

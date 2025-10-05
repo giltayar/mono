@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import {MainLayout} from '../../../layouts/main-view.ts'
+import {MainLayout} from '../../../layout/main-view.ts'
 import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import type {OngoingStudent} from './model.ts'
 import {manipulateStudent, type StudentManipulations} from './student-manipulations.ts'
