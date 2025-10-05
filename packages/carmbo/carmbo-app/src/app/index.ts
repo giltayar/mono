@@ -1,9 +1,13 @@
 import process from 'node:process'
 import {makeApp} from './carmbo-app.ts'
 import * as z from 'zod'
+import retry from 'p-retry'
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import {TEST_seedStudents} from '../domain/student/model.ts'
+import {TEST_seedProducts} from '../domain/product/model.ts'
+import {TEST_seedSalesEvents} from '../domain/sales-event/model.ts'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_HOST: z.string().default('localhost'),
@@ -21,7 +25,7 @@ export const EnvironmentVariablesSchema = z.object({
 
 const env = EnvironmentVariablesSchema.parse(process.env)
 
-const {app} = await makeApp({
+const {app, sql} = await makeApp({
   db: {
     host: env.DB_HOST,
     port: env.DB_PORT,
@@ -44,4 +48,25 @@ const {app} = await makeApp({
   }),
 })
 
+await seedIfNeeded()
+
 await app.listen({port: env.PORT, host: env.HOST})
+
+async function seedIfNeeded() {
+  const seedCount = process.env.TEST_SEED ? parseInt(process.env.TEST_SEED) : 0
+
+  const studentCountResult = await retry(
+    () => sql<{count: string}[]>`SELECT count(*) as count FROM student LIMIT 1`,
+    {retries: 5, minTimeout: 1000, maxTimeout: 1000},
+  )
+
+  if (studentCountResult[0].count === '0') {
+    console.log(`Seeding ${seedCount}...`)
+    await Promise.all([
+      TEST_seedStudents(sql, seedCount),
+      TEST_seedProducts(sql, seedCount),
+      TEST_seedSalesEvents(sql, seedCount, seedCount),
+    ])
+    console.log(`Ended seeding ${seedCount}...`)
+  }
+}

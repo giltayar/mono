@@ -1,0 +1,95 @@
+import {html} from '../../../commons/html-templates.ts'
+import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model.ts'
+import {SalesEventCreateOrUpdateFormFields} from './form.ts'
+import {SalesEventHistoryList, historyOperationToText} from './history.ts'
+
+export function SalesEventCreateView({salesEvent}: {salesEvent: SalesEvent}) {
+  return html`
+    <h2 class="border-bottom col-md-6 mt-3">New Sales Event</h2>
+    <form hx-post="/sales-events/" hx-target="html" class="col-md-6 mt-3">
+      <div class="ms-auto" style="width: fit-content">
+        <section class="btn-group" aria-label="Form actions">
+          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
+          <button class="btn btn-primary" type="Submit" value="save">Create</button>
+        </section>
+      </div>
+      <div class="mt-3">
+        <${SalesEventCreateOrUpdateFormFields} salesEvent=${salesEvent} operation="write" />
+      </div>
+    </form>
+  `
+}
+
+export function SalesEventUpdateView({
+  salesEvent,
+  history,
+}: {
+  salesEvent: SalesEventWithHistoryInfo
+  history: SalesEventHistory[]
+}) {
+  return html`
+    <h2 class="border-bottom col-md-6 mt-3">
+      Update Sales Event ${salesEvent.salesEventNumber}
+      ${salesEvent.historyOperation === 'delete'
+        ? html` <small class="text-body-secondary">(archived)</small>`
+        : ''}
+    </h2>
+    <form
+      hx-put="/sales-events/${salesEvent.salesEventNumber}"
+      hx-target="form"
+      class="col-md-6 mt-3"
+    >
+      <input name="salesEventNumber" type="hidden" value=${salesEvent.salesEventNumber} />
+      <input
+        name="delete-operation"
+        type="hidden"
+        value=${salesEvent.historyOperation === 'delete' ? 'restore' : 'delete'}
+      />
+      <div class="ms-auto" style="width: fit-content">
+        <section class="btn-group" aria-label="Form actions">
+          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
+          <button
+            class="btn btn-danger"
+            type="Submit"
+            value="delete"
+            hx-delete=""
+            hx-params="delete-operation"
+          >
+            ${salesEvent.historyOperation === 'delete' ? 'Restore' : 'Archive'}
+          </button>
+          <button class="btn btn-primary" type="Submit" value="save">Update</button>
+        </section>
+      </div>
+      <div class="mt-3">
+        <${SalesEventCreateOrUpdateFormFields} salesEvent=${salesEvent} operation="write" />
+      </div>
+    </form>
+    <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
+  `
+}
+
+export function SalesEventHistoryView({
+  salesEvent,
+  history,
+}: {
+  salesEvent: SalesEventWithHistoryInfo
+  history: SalesEventHistory[]
+}) {
+  const currentHistory = history.find((h) => h.historyId === salesEvent.id)
+
+  return html`
+    <h2 class="border-bottom col-md-6 mt-3">
+      View Sales Event ${salesEvent.salesEventNumber}<> </>
+      <small class="text-body-secondary"
+        >(${historyOperationToText(currentHistory?.operation)})</small
+      >
+    </h2>
+    <form class="col-md-6 mt-3">
+      <input name="salesEventNumber" type="hidden" value=${salesEvent.salesEventNumber} readonly />
+      <div class="mt-3">
+        <${SalesEventCreateOrUpdateFormFields} salesEvent=${salesEvent} operation="read" />
+      </div>
+    </form>
+    <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
+  `
+}

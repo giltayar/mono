@@ -5,6 +5,7 @@ import qs from 'qs'
 import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
 import productRoutes from '../domain/product/route.ts'
+import salesEvents from '../domain/sales-event/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
   AcademyCourse,
@@ -87,6 +88,7 @@ export function makeApp({
 
   app.register(studentRoutes, {prefix: '/students', sql})
   app.register(productRoutes, {prefix: '/products', sql})
+  app.register(salesEvents, {prefix: '/sales-events', sql})
 
   app.get('/health', async () => {
     return {status: 'ok'}

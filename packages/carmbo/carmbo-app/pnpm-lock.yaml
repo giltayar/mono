@@ -47,6 +47,9 @@ importers:
       htmx.org:
         specifier: ^2.0.7
         version: 2.0.7
+      p-retry:
+        specifier: ^7.0.0
+        version: 7.0.0
       postgres:
         specifier: ^3.4.7
         version: 3.4.7

@@ -52,9 +52,6 @@ export async function listStudents(
     page,
   }: {withArchived: boolean; query: string; limit: number; page: number},
 ): Promise<StudentForGrid[]> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  process.env.TEST_SEED && (await TEST_seedStudents(sql, 200))
-
   const filters: PendingQuery<Row[]>[] = [sql`true`]
 
   if (!withArchived) {
