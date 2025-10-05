@@ -18,8 +18,10 @@ import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
+  const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
   // List sales events
-  app.withTypeProvider<ZodTypeProvider>().get(
+  appWithTypes.get(
     '/',
     {
       schema: {
@@ -50,74 +52,69 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
   // Create new sales event
   app.get('/new', async (_request, reply) =>
-    dealWithControllerResult(reply, await showSalesEventCreate()),
+    dealWithControllerResult(reply, await showSalesEventCreate(sql)),
   )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .post('/new', {schema: {body: OngoingSalesEventSchema}}, async (request, reply) =>
-      dealWithControllerResult(
-        reply,
-        await showOngoingSalesEvent(request.body, {addItem: request.headers['x-add-item']}),
-      ),
-    )
+  appWithTypes.post('/new', {schema: {body: OngoingSalesEventSchema}}, async (request, reply) =>
+    dealWithControllerResult(
+      reply,
+      await showOngoingSalesEvent(request.body, {addItem: request.headers['x-add-item']}, sql),
+    ),
+  )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .post('/', {schema: {body: NewSalesEventSchema}}, async (request, reply) => {
-      return dealWithControllerResult(reply, await createSalesEvent(request.body, sql))
-    })
+  appWithTypes.post('/', {schema: {body: NewSalesEventSchema}}, async (request, reply) => {
+    return dealWithControllerResult(reply, await createSalesEvent(request.body, sql))
+  })
 
   // Edit existing sales event
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .get(
-      '/:number',
-      {schema: {params: z.object({number: z.coerce.number().int()})}},
-      async (request, reply) => {
-        return dealWithControllerResult(
-          reply,
-          await showSalesEventUpdate(
-            request.params.number,
-            {addItem: request.headers['x-add-item']},
-            sql,
-          ),
-        )
-      },
-    )
-
-  app.withTypeProvider<ZodTypeProvider>().post(
+  appWithTypes.get(
     '/:number',
-    {
-      schema: {body: OngoingSalesEventSchema, params: z.object({number: z.coerce.number().int()})},
-    },
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
     async (request, reply) => {
       return dealWithControllerResult(
         reply,
-        await showOngoingSalesEvent(request.body, {addItem: request.headers['x-add-item']}),
+        await showSalesEventUpdate(
+          request.params.number,
+          {addItem: request.headers['x-add-item']},
+          sql,
+        ),
       )
     },
   )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .put(
-      '/:number',
-      {schema: {body: SalesEventSchema, params: z.object({number: z.coerce.number().int()})}},
-      async (request, reply) => {
-        const salesEventNumber = request.params.number
-
-        assert(
-          salesEventNumber === request.body.salesEventNumber,
-          'sales event number in URL must match ID in body',
-        )
-
-        return dealWithControllerResult(reply, await updateSalesEvent(request.body, sql))
+  appWithTypes.post(
+    '/:number',
+    {
+      schema: {
+        body: OngoingSalesEventSchema,
+        params: z.object({number: z.coerce.number().int()}),
       },
-    )
+    },
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        await showOngoingSalesEvent(request.body, {addItem: request.headers['x-add-item']}, sql),
+      )
+    },
+  )
+
+  appWithTypes.put(
+    '/:number',
+    {schema: {body: SalesEventSchema, params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      const salesEventNumber = request.params.number
+
+      assert(
+        salesEventNumber === request.body.salesEventNumber,
+        'sales event number in URL must match ID in body',
+      )
+
+      return dealWithControllerResult(reply, await updateSalesEvent(request.body, sql))
+    },
+  )
 
   // View sales event in history
-  app.withTypeProvider<ZodTypeProvider>().get(
+  appWithTypes.get(
     '/:number/by-history/:operationId',
     {
       schema: {
@@ -133,7 +130,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   // Delete (Archive) sales event
-  app.withTypeProvider<ZodTypeProvider>().delete(
+  appWithTypes.delete(
     '/:number',
     {
       schema: {

@@ -1,15 +1,18 @@
+import {requestContext} from '@fastify/request-context'
 import {html} from '../../../commons/html-templates.ts'
-import type {NewSalesEvent, SalesEvent} from '../model.ts'
+import {generateItemTitle} from '../../../commons/view-commons.ts'
+import type {SalesEvent} from '../model.ts'
 import type {OngoingSalesEvent} from './model.ts'
 
 export function SalesEventCreateOrUpdateFormFields({
   salesEvent,
   operation,
 }: {
-  salesEvent: SalesEvent | OngoingSalesEvent | NewSalesEvent
+  salesEvent: SalesEvent | OngoingSalesEvent
   operation: 'read' | 'write'
 }) {
   const maybeRo = operation === 'read' ? 'readonly' : ''
+  const products = requestContext.get('products')!
 
   return html`
     <div class="sales-events-view_form-fields card">
@@ -71,22 +74,30 @@ export function SalesEventCreateOrUpdateFormFields({
 
         <fieldset aria-label="Products for Sale" class="mt-3">
           ${salesEvent.productsForSale?.map(
-            (productNumber, i, l) => html`
+            (productForSaleId, i, l) => html`
               <div class="sales-events-view_item input-group">
                 <div class="form-floating">
                   <input
                     name="productsForSale[${i}]"
-                    type="number"
-                    value=${productNumber}
+                    id="productsForSale-${i}_value"
+                    type="hidden"
+                    value="${productForSaleId}"
+                  />
+                  <input
+                    id="productsForSale-${i}"
+                    value=${productForSaleId
+                      ? generateItemTitle(
+                          productForSaleId,
+                          products.find((p) => p.id === productForSaleId)?.name,
+                        )
+                      : ''}
+                    list="products-list"
+                    type="text"
                     placeholder=" "
                     required
-                    class="form-control"
-                    id="productForSale-${i}"
-                    min="1"
-                    step="1"
-                    ${maybeRo}
+                    class="form-control pick-item-title"
                   />
-                  <label for="productForSale-${i}">Product Number</label>
+                  <label for="productsForSale-${i}">Product For Sale</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -103,6 +114,11 @@ export function SalesEventCreateOrUpdateFormFields({
         </fieldset>
       </div>
     </div>
+    <datalist id="products-list">
+      ${products.map(
+        (p) => html`<option data-id="${p.id}" value="${generateItemTitle(p.id, p.name)}" />`,
+      )}
+    </datalist>
   `
 }
 
@@ -130,7 +146,7 @@ function AddButton({
       style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/src/layout/common-style/plus-circle.svg" />
+        <use href="/src/layout/style/plus-circle.svg" />
       </svg>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -148,7 +164,7 @@ function RemoveButton() {
       aria-label="Remove"
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/src/layout/common-style/minus-circle.svg" />
+        <use href="/src/layout/style/minus-circle.svg" />
       </svg>
     </button>
   `

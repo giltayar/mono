@@ -2,6 +2,7 @@ import type {PendingQuery, Row, Sql} from 'postgres'
 import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
+import {sqlTextSearch} from '../../commons/sql-commons.ts'
 
 export const SalesEventSchema = z.object({
   salesEventNumber: z.coerce.number().int().positive(),
@@ -9,7 +10,7 @@ export const SalesEventSchema = z.object({
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
   landingPageUrl: z.url().optional(),
-  productsForSale: z.array(z.coerce.number().int().positive()).optional(),
+  productsForSale: z.array(z.coerce.number().int().positive().optional()).optional(),
 })
 
 export const NewSalesEventSchema = SalesEventSchema.omit({salesEventNumber: true})
@@ -28,7 +29,7 @@ export interface SalesEventForGrid {
   name: string
   fromDate?: Date
   toDate?: Date
-  productsForSale: string[]
+  productsForSale: {id: number; name: string}[]
 }
 
 export interface SalesEventHistory {
@@ -53,7 +54,7 @@ export async function listSalesEvents(
   }
 
   if (query) {
-    filters.push(sql`searchable_text LIKE '%' || ${sql`${likeEscape(query)}`} || '%'`)
+    filters.push(sql`searchable_text ${sql`${sqlTextSearch(query, sql)}`} || '%'`)
   }
 
   return await sql<SalesEventForGrid[]>`
@@ -70,11 +71,9 @@ export async function listSalesEvents(
       LEFT JOIN sales_event_data USING (data_id)
       LEFT JOIN LATERAL (
         SELECT
-          json_agg(product_data.name ORDER BY item_order) AS products_for_sale
+          json_agg(product_number ORDER BY item_order) AS products_for_sale
         FROM
           sales_event_product_for_sale
-          INNER JOIN product ON product.product_number = sales_event_product_for_sale.product_number
-          INNER JOIN product_data ON product_data.data_id = product.last_data_id
         WHERE
           sales_event_product_for_sale.data_id = sales_event_history.data_id
       ) products_for_sale ON true
@@ -106,7 +105,7 @@ export async function createSalesEvent(
         (${salesEventNumber}, ${historyId}, ${dataId})
     `
 
-    await addSalesEventStuff(salesEvent, dataId, sql)
+    await addSalesEventStuff(salesEventNumber, salesEvent, dataId, sql)
 
     return salesEventNumber
   })
@@ -144,7 +143,7 @@ export async function updateSalesEvent(
       `More than one sales event with ID ${salesEvent.salesEventNumber}`,
     )
 
-    await addSalesEventStuff(salesEvent, dataId, sql)
+    await addSalesEventStuff(salesEvent.salesEventNumber, salesEvent, dataId, sql)
 
     return salesEvent.salesEventNumber
   })
@@ -248,32 +247,34 @@ export async function querySalesEventByHistoryId(
 
 function salesEventSelect(salesEventNumber: number, sql: Sql) {
   return sql<SalesEventWithHistoryInfo[]>`
-SELECT
-  current_history_id as id,
-  sales_event_history.operation as history_operation,
-  ${salesEventNumber} as sales_event_number,
-  sales_event_data.name AS name,
-  sales_event_data.from_date AS from_date,
-  sales_event_data.to_date AS to_date,
-  sales_event_data.landing_page_url AS landing_page_url,
-  COALESCE(products_for_sale, json_build_array()) AS products_for_sale
-FROM
-  parameters
-  LEFT JOIN sales_event_history ON sales_event_history.id = current_history_id
-  LEFT JOIN sales_event_data ON sales_event_data.data_id = current_data_id
-  LEFT JOIN LATERAL (
     SELECT
-      json_agg(
-        product_number
-        ORDER BY
-          item_order
-      ) AS products_for_sale
+      current_history_id as id,
+      sales_event_history.operation as history_operation,
+      ${salesEventNumber} as sales_event_number,
+      sales_event_data.name AS name,
+      sales_event_data.from_date AS from_date,
+      sales_event_data.to_date AS to_date,
+      sales_event_data.landing_page_url AS landing_page_url,
+      COALESCE(products_for_sale, json_build_array()) AS products_for_sale
     FROM
-      sales_event_product_for_sale
-    WHERE
-      sales_event_product_for_sale.data_id = current_data_id
-  ) products_for_sale ON true
-       `
+      parameters
+      LEFT JOIN sales_event_history ON sales_event_history.id = current_history_id
+      LEFT JOIN sales_event_data ON sales_event_data.data_id = current_data_id
+      LEFT JOIN LATERAL (
+        SELECT
+          json_agg(
+            sales_event_product_for_sale.product_number
+            ORDER BY
+              item_order
+          ) AS products_for_sale
+        FROM
+          sales_event_product_for_sale
+        JOIN product ON product.product_number = sales_event_product_for_sale.product_number
+        JOIN product_data ON product_data.data_id = product.last_data_id
+        WHERE
+          sales_event_product_for_sale.data_id = current_data_id
+      ) products_for_sale ON true
+  `
 }
 
 function salesEventHistorySelect(salesEventNumber: number, sql: Sql) {
@@ -292,6 +293,7 @@ ORDER BY
 }
 
 async function addSalesEventStuff(
+  salesEventNumber: number,
   salesEvent: SalesEvent | NewSalesEvent,
   dataId: string,
   sql: Sql,
@@ -300,7 +302,7 @@ async function addSalesEventStuff(
 
   ops = ops.concat(sql`
     INSERT INTO sales_event_search VALUES
-      (${dataId}, ${searchableSalesEventText(salesEvent)})
+      (${dataId}, ${searchableSalesEventText(salesEventNumber, salesEvent)})
   `)
 
   ops = ops.concat(sql`
@@ -309,28 +311,29 @@ async function addSalesEventStuff(
   `)
 
   ops = ops.concat(
-    salesEvent.productsForSale?.map(
-      (productNumber, index) => sql`
+    salesEvent.productsForSale
+      ?.filter((product) => product !== undefined)
+      .map(
+        (product, index) => sql`
         INSERT INTO sales_event_product_for_sale VALUES
-          (${dataId}, ${index}, ${productNumber})
+          (${dataId}, ${index}, ${product ?? ''})
       `,
-    ) ?? [],
+      ) ?? [],
   )
 
   await Promise.all(ops)
 }
 
-function searchableSalesEventText(salesEvent: SalesEvent | NewSalesEvent): string {
+function searchableSalesEventText(
+  salesEventNumber: number,
+  salesEvent: SalesEvent | NewSalesEvent,
+): string {
   const name = salesEvent.name
   const landingPageUrl = salesEvent.landingPageUrl ?? ''
   const fromDate = salesEvent.fromDate?.toISOString() ?? ''
   const toDate = salesEvent.toDate?.toISOString() ?? ''
 
-  return `${name} ${landingPageUrl} ${fromDate} ${toDate}`.trim()
-}
-
-function likeEscape(s: string): string {
-  return s.replace(/[%_\\]/g, (m) => `\\${m}`)
+  return `${salesEventNumber} ${name} ${landingPageUrl} ${fromDate} ${toDate}`.trim()
 }
 
 export async function TEST_seedSalesEvents(sql: Sql, count: number, productCount: number) {
@@ -356,6 +359,15 @@ export async function TEST_seedSalesEvents(sql: Sql, count: number, productCount
       sql,
     )
   }
+}
+
+export async function listProductsForChoosing(sql: Sql): Promise<{id: number; name: string}[]> {
+  return await sql<{id: number; name: string}[]>`
+      SELECT product.product_number as id, name
+      FROM product_data
+      JOIN product ON product.last_data_id = product_data.data_id
+      ORDER BY product.product_number
+  `
 }
 
 function range(start: number, end: number): number[] {

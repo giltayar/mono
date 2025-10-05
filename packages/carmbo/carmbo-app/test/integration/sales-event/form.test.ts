@@ -3,8 +3,52 @@ import {createSalesEventListPageModel} from '../page-model/sales-events/sales-ev
 import {createNewSalesEventPageModel} from '../page-model/sales-events/new-sales-event-page.model.ts'
 import {createUpdateSalesEventPageModel} from '../page-model/sales-events/update-sales-event-page.model.ts'
 import {setup} from '../common/setup.ts'
+import {createProduct} from '../../../src/domain/product/model.ts'
 
-const {url} = setup(import.meta.url)
+const {url, sql} = setup(import.meta.url)
+
+test.beforeEach(async () => {
+  await createProduct(
+    {
+      name: 'abc',
+      productType: 'bundle',
+    },
+    undefined,
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'def',
+      productType: 'bundle',
+    },
+    undefined,
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'ghi',
+      productType: 'bundle',
+    },
+    undefined,
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'jkl',
+      productType: 'bundle',
+    },
+    undefined,
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'mno',
+      productType: 'bundle',
+    },
+    undefined,
+    sql(),
+  )
+})
 
 test('create sales event and update multiple fields', async ({page}) => {
   await page.goto(new URL('/sales-events', url()).href)
@@ -47,8 +91,8 @@ test('create sales event and update multiple fields', async ({page}) => {
   await expect(updateForm.toDateInput().locator).toHaveValue('2025-01-31')
   await expect(updateForm.landingPageUrlInput().locator).toHaveValue('https://example.com/sale')
 
-  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('1')
-  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('3')
+  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
+  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('3: ghi')
 })
 
 test('add and remove products for sale dynamically', async ({page}) => {
@@ -69,46 +113,46 @@ test('add and remove products for sale dynamically', async ({page}) => {
 
   // Add multiple products
   await newForm.productsForSale().addButton().locator.click()
-  await newForm.productsForSale().productInput(0).locator.fill('10')
+  await newForm.productsForSale().productInput(0).locator.fill('1')
   await newForm.productsForSale().addButton().locator.click()
-  await newForm.productsForSale().productInput(1).locator.fill('20')
+  await newForm.productsForSale().productInput(1).locator.fill('2')
   await newForm.productsForSale().addButton().locator.click()
-  await newForm.productsForSale().productInput(2).locator.fill('30')
+  await newForm.productsForSale().productInput(2).locator.fill('3')
   await newForm.productsForSale().addButton().locator.click()
-  await newForm.productsForSale().productInput(3).locator.fill('40')
+  await newForm.productsForSale().productInput(3).locator.fill('4')
 
   // Remove second product (20)
   await newForm.productsForSale().trashButton(1).locator.click()
 
   // Verify remaining products
-  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('10')
-  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('30')
-  await expect(newForm.productsForSale().productInput(2).locator).toHaveValue('40')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3')
+  await expect(newForm.productsForSale().productInput(2).locator).toHaveValue('4')
 
   // Remove first product (10)
   await newForm.productsForSale().trashButton(0).locator.click()
 
   // Verify remaining products
-  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('30')
-  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('40')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('3')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('4')
 
   await newForm.createButton().locator.click()
 
   await page.waitForURL(updateSalesEventModel.urlRegex)
 
   const updateForm = updateSalesEventModel.form()
-  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('30')
-  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('40')
+  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('3: ghi')
+  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('4: jkl')
 
   // Add more products in update mode
   await updateForm.productsForSale().addButton().locator.click()
-  await updateForm.productsForSale().productInput(2).locator.fill('50')
+  await updateForm.productsForSale().productInput(2).locator.fill('5')
 
   await updateForm.updateButton().locator.click()
 
-  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('30')
-  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('40')
-  await expect(updateForm.productsForSale().productInput(2).locator).toHaveValue('50')
+  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('3: ghi')
+  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('4: jkl')
+  await expect(updateForm.productsForSale().productInput(2).locator).toHaveValue('5: mno')
 })
 
 test('update dates and landing page url', async ({page}) => {

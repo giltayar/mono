@@ -1,11 +1,12 @@
 import assert from 'node:assert'
 import type {OngoingSalesEvent} from './model.ts'
+import type {SalesEvent} from '../model.ts'
 
 export type SalesEventManipulations = {
   addItem: string | string[] | undefined
 }
 
-export function manipulateSalesEvent<T extends OngoingSalesEvent>(
+export function manipulateSalesEvent<T extends OngoingSalesEvent | SalesEvent>(
   salesEvent: T,
   manipulations: SalesEventManipulations,
 ): T {

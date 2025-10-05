@@ -30,6 +30,7 @@ declare module '@fastify/request-context' {
     courses: AcademyCourse[] | undefined
     whatsappGroups: WhatsAppGroup[] | undefined
     smooveLists: SmooveList[] | undefined
+    products: {id: number; name: string}[] | undefined
   }
 }
 
@@ -64,6 +65,7 @@ export function makeApp({
       courses: undefined,
       whatsappGroups: undefined,
       smooveLists: undefined,
+      products: undefined,
     },
   })
   app.register(fastifystatic, {

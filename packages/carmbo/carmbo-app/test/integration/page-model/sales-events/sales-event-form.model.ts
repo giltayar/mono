@@ -20,7 +20,7 @@ export function salesEventFormPageModel(page: Page, locator = page.locator('form
     ) => ({
       locator: productsLocator,
       productInput: (i: number) => ({
-        locator: productsLocator.getByLabel(`Product Number`).nth(i),
+        locator: productsLocator.getByLabel(`Product For Sale`).nth(i),
       }),
       ...addAndTrashButtons(productsLocator),
     }),

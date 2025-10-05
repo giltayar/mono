@@ -1,8 +1,7 @@
 import {html} from '../../../commons/html-templates.ts'
+import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
-// eslint-disable-next-line n/no-missing-import
-import {generateItemTitle} from './js/scripts-commons.scripts.js'
 import {requestContext} from '@fastify/request-context'
 
 export function ProductCreateOrUpdateFormFields({
@@ -62,19 +61,19 @@ export function ProductCreateOrUpdateFormFields({
                     value=${courseId}
                   />
                   <input
-                    type="text"
+                    id="academyCourse-${i}"
+                    value=${courseId
+                      ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
+                      : ''}
                     list="academy-courses-list"
+                    type="text"
                     placeholder=" "
                     required
                     class="form-control pick-item-title"
-                    id="academyCourse-${i}"
                     spellcheck="false"
                     autocorrect="off"
                     autocomplete="off"
                     autocapitalize="off"
-                    value=${courseId
-                      ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
-                      : ''}
                     ${maybeRo}
                   />
                   <label for="academyCourse-${i}">Academy Course ID</label>
@@ -299,7 +298,7 @@ export function ProductCreateOrUpdateFormFields({
       ${courses.map(
         (course) =>
           html`<option
-            data-course-id="${course.id}"
+            data-id="${course.id}"
             value="${generateItemTitle(course.id, course.name)}"
           />`,
       )}
@@ -307,19 +306,13 @@ export function ProductCreateOrUpdateFormFields({
     <datalist id="whatsapp-groups-list">
       ${whatsappGroups.map(
         (group) =>
-          html`<option
-            data-course-id="${group.id}"
-            value="${generateItemTitle(group.id, group.name)}"
-          />`,
+          html`<option data-id="${group.id}" value="${generateItemTitle(group.id, group.name)}" />`,
       )}
     </datalist>
     <datalist id="smoove-lists-list">
       ${smooveLists.map(
         (list) =>
-          html`<option
-            data-course-id="${list.id}"
-            value="${generateItemTitle(list.id, list.name)}"
-          />`,
+          html`<option data-id="${list.id}" value="${generateItemTitle(list.id, list.name)}" />`,
       )}
     </datalist>
   `
@@ -349,7 +342,7 @@ function AddButton({
       style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/src/layout/common-style/plus-circle.svg" />
+        <use href="/src/layout/style/plus-circle.svg" />
       </svg>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -367,7 +360,7 @@ function RemoveButton() {
       aria-label="Remove"
     >
       <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/src/layout/common-style/minus-circle.svg" />
+        <use href="/src/layout/style/minus-circle.svg" />
       </svg>
     </button>
   `

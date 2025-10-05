@@ -1,11 +1,6 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
-import type {
-  NewSalesEvent,
-  SalesEvent,
-  SalesEventHistory,
-  SalesEventWithHistoryInfo,
-} from '../model.ts'
+import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model.ts'
 import type {OngoingSalesEvent} from './model.ts'
 import {manipulateSalesEvent, type SalesEventManipulations} from './sales-event-manipulations.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'
@@ -72,7 +67,7 @@ export function renderSalesEventViewInHistoryPage(
 }
 
 export function renderSalesEventFormFields(
-  salesEvent: SalesEvent | OngoingSalesEvent | NewSalesEvent,
+  salesEvent: SalesEvent | OngoingSalesEvent,
   manipulations: SalesEventManipulations,
   operation: 'read' | 'write',
 ) {

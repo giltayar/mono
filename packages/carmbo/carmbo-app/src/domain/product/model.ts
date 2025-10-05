@@ -2,6 +2,7 @@ import type {PendingQuery, Row, Sql} from 'postgres'
 import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
+import {sqlTextSearch} from '../../commons/sql-commons.ts'
 
 export const ProductTypeSchema = z.enum(['recorded', 'challenge', 'club', 'bundle'])
 export type ProductType = z.infer<typeof ProductTypeSchema>
@@ -65,7 +66,7 @@ export async function listProducts(
   }
 
   if (query) {
-    filters.push(sql`searchable_text LIKE '%' || ${sql`${likeEscape(query)}`} || '%'`)
+    filters.push(sql`searchable_text ${sqlTextSearch(query, sql)}`)
   }
 
   return await sql<ProductForGrid[]>`
@@ -102,7 +103,7 @@ export async function createProduct(product: NewProduct, reason: string | undefi
         (${productNumber}, ${historyId}, ${dataId})
     `
 
-    await addProductStuff(product, dataId, sql)
+    await addProductStuff(productNumber, product, dataId, sql)
 
     return productNumber
   })
@@ -137,7 +138,7 @@ export async function updateProduct(
 
     assert(updateResult.length === 1, `More than one product with ID ${product.productNumber}`)
 
-    await addProductStuff(product, dataId, sql)
+    await addProductStuff(product.productNumber, product, dataId, sql)
 
     return product.productNumber
   })
@@ -316,12 +317,17 @@ ORDER BY
   `
 }
 
-async function addProductStuff(product: Product | NewProduct, dataId: string, sql: Sql) {
+async function addProductStuff(
+  productNumber: number,
+  product: Product | NewProduct,
+  dataId: string,
+  sql: Sql,
+) {
   let ops = [] as Promise<unknown>[]
 
   ops = ops.concat(sql`
     INSERT INTO product_search VALUES
-      (${dataId}, ${searchableProductText(product)})
+      (${dataId}, ${searchableProductText(productNumber, product)})
   `)
 
   ops = ops.concat(sql`
@@ -377,7 +383,7 @@ async function addProductStuff(product: Product | NewProduct, dataId: string, sq
   await Promise.all(ops)
 }
 
-function searchableProductText(product: Product | NewProduct): string {
+function searchableProductText(productNumber: number, product: Product | NewProduct): string {
   const name = product.name
   const productType = product.productType
   const whatsappGroups = product.whatsappGroups?.map((g) => g.id).join(' ') ?? ''
@@ -393,11 +399,7 @@ function searchableProductText(product: Product | NewProduct): string {
     .map((x) => x.toString())
     .join(' ')
 
-  return `${name} ${productType} ${whatsappGroups} ${facebookGroups} ${smoveListIds}`.trim()
-}
-
-function likeEscape(s: string): string {
-  return s.replace(/[%_\\]/g, (m) => `\\${m}`)
+  return `${productNumber} ${name} ${productType} ${whatsappGroups} ${facebookGroups} ${smoveListIds}`.trim()
 }
 
 export async function TEST_seedProducts(sql: Sql, count: number) {

@@ -3,6 +3,7 @@ import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/o
 import {assert} from 'node:console'
 import {z} from 'zod'
 import {range} from '@giltayar/functional-commons'
+import {sqlTextSearch} from '../../commons/sql-commons.ts'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -59,7 +60,7 @@ export async function listStudents(
   }
 
   if (query) {
-    filters.push(sql`searchable_text LIKE '%' || ${sql`${likeEscape(query)}`} || '%'`)
+    filters.push(sql`searchable_text ${sql`${sqlTextSearch(query, sql)}`}`)
   }
 
   const result = await sql<StudentForGrid[]>`
@@ -122,7 +123,7 @@ export async function createStudent(student: NewStudent, reason: string | undefi
         (${studentNumber}, ${historyId}, ${dataId})
     `
 
-    await addStudentStuff(student, dataId, sql)
+    await addStudentStuff(studentNumber, student, dataId, sql)
 
     return studentNumber
   })
@@ -157,7 +158,7 @@ export async function updateStudent(
 
     assert(updateResult.length === 1, `More than one student with ID ${student.studentNumber}`)
 
-    await addStudentStuff(student, dataId, sql)
+    await addStudentStuff(student.studentNumber, student, dataId, sql)
 
     return student.studentNumber
   })
@@ -340,14 +341,19 @@ ORDER BY
   `
 }
 
-async function addStudentStuff(student: Student | NewStudent, dataId: string, sql: Sql) {
+async function addStudentStuff(
+  studentNumber: number,
+  student: Student | NewStudent,
+  dataId: string,
+  sql: Sql,
+) {
   let ops = [] as Promise<unknown>[]
 
   ops = ops.concat() ?? []
 
   ops = ops.concat(sql`
     INSERT INTO student_search VALUES
-      (${dataId}, ${searchableStudentText(student)})
+      (${dataId}, ${searchableStudentText(studentNumber, student)})
   `)
 
   ops = ops.concat(sql`
@@ -392,17 +398,13 @@ async function addStudentStuff(student: Student | NewStudent, dataId: string, sq
   await Promise.all(ops)
 }
 
-function searchableStudentText(student: Student | NewStudent): string {
+function searchableStudentText(studentNumber: number, student: Student | NewStudent): string {
   const names = student.names?.map((name) => `${name.firstName} ${name.lastName}`).join(' ') ?? ''
   const emails = student.emails?.join(' ') ?? ''
   const phones = student.phones?.join(' ') ?? ''
   const facebookNames = student.facebookNames?.join(' ') ?? ''
 
-  return `${names} ${emails} ${phones} ${facebookNames}`.trim()
-}
-
-function likeEscape(s: string): string {
-  return s.replace(/[%_\\]/g, (m) => `\\${m}`)
+  return `${studentNumber} ${names} ${emails} ${phones} ${facebookNames}`.trim()
 }
 
 export async function TEST_seedStudents(sql: Sql, count: number) {

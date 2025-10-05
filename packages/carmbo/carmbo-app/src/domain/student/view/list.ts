@@ -36,7 +36,7 @@ function StudentsView({
           class="mb-1 ms-auto"
           action="/students"
           hx-boost
-          hx-trigger="input changed delay:500ms"
+          hx-trigger="input changed throttle:500ms"
         >
           <fieldset class="row align-items-center me-0">
             <label class="form-check-label form-check col-auto"
@@ -104,7 +104,7 @@ function StudentsView({
       <section class="add-new">
         <a role="button" class="btn float-end" href="/students/new" aria-label="new student">
           <svg class="feather feather-large" viewbox="0 0 24 24">
-            <use href="/src/layout/common-style/plus-circle.svg" />
+            <use href="/src/layout/style/plus-circle.svg" />
           </svg>
         </a>
       </section>

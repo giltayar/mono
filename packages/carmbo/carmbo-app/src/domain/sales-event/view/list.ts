@@ -36,7 +36,7 @@ function SalesEventsView({
           class="mb-1 ms-auto"
           action="/sales-events"
           hx-boost
-          hx-trigger="input changed delay:500ms"
+          hx-trigger="input changed throttle:500ms"
         >
           <fieldset class="row align-items-center me-0">
             <label class="form-check-label form-check col-auto"
@@ -93,7 +93,7 @@ function SalesEventsView({
                 </td>
                 <td>${salesEvent.name}</td>
                 <td dir="rtl">${formatDateRange(salesEvent.fromDate, salesEvent.toDate)}</td>
-                <td>${salesEvent.productsForSale.join(', ')}</td>
+                <td>${salesEvent.productsForSale.map((p) => p.name).join(', ')}</td>
               </tr>
             `,
           )}
@@ -107,7 +107,7 @@ function SalesEventsView({
           aria-label="new sales event"
         >
           <svg class="feather feather-large" viewbox="0 0 24 24">
-            <use href="/src/layout/common-style/plus-circle.svg" />
+            <use href="/src/layout/style/plus-circle.svg" />
           </svg>
         </a>
       </section>

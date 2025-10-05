@@ -9,6 +9,7 @@ import {
   createSalesEvent as model_createSalesEvent,
   updateSalesEvent as model_updateSalesEvent,
   deleteSalesEvent as model_deleteSalesEvent,
+  listProductsForChoosing as model_listProductsForChoosing,
 } from './model.ts'
 import {
   renderSalesEventsCreatePage,
@@ -19,6 +20,7 @@ import {
 import {renderSalesEventsPage} from './view/list.ts'
 import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
 import type {SalesEventManipulations} from './view/sales-event-manipulations.ts'
+import {requestContext} from '@fastify/request-context'
 
 export async function showSalesEvents(
   {
@@ -29,6 +31,9 @@ export async function showSalesEvents(
   }: {flash?: string; withArchived: boolean; query: string | undefined; page: number},
   sql: Sql,
 ): Promise<ControllerResult> {
+  const products = await listProductsForChoosing(sql)
+  requestContext.set('products', products)
+
   const salesEvents = await listSalesEvents(sql, {
     withArchived,
     query: query ?? '',
@@ -41,7 +46,10 @@ export async function showSalesEvents(
   )
 }
 
-export async function showSalesEventCreate(): Promise<ControllerResult> {
+export async function showSalesEventCreate(sql: Sql): Promise<ControllerResult> {
+  const products = await listProductsForChoosing(sql)
+  requestContext.set('products', products)
+
   return finalHtml(renderSalesEventsCreatePage(undefined, undefined))
 }
 
@@ -50,7 +58,15 @@ export async function showSalesEventUpdate(
   manipulations: SalesEventManipulations,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const salesEventWithHistory = await querySalesEventByNumber(salesEventNumber, sql)
+  const [products, salesEventWithHistory] = await Promise.all([
+    listProductsForChoosing(sql),
+    querySalesEventByNumber(salesEventNumber, sql),
+  ])
+  requestContext.set('products', products)
+
+  if (!salesEventWithHistory) {
+    return {status: 404, body: 'Sales event not found'}
+  }
 
   if (!salesEventWithHistory) {
     return {status: 404, body: 'Sales event not found'}
@@ -67,7 +83,11 @@ export async function showSalesEventUpdate(
 export async function showOngoingSalesEvent(
   salesEvent: OngoingSalesEvent,
   manipulations: SalesEventManipulations,
+  sql: Sql,
 ): Promise<ControllerResult> {
+  const products = await listProductsForChoosing(sql)
+  requestContext.set('products', products)
+
   return finalHtml(renderSalesEventFormFields(salesEvent, manipulations, 'write'))
 }
 
@@ -76,7 +96,11 @@ export async function showSalesEventInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const salesEvent = await querySalesEventByHistoryId(salesEventNumber, operationId, sql)
+  const [products, salesEvent] = await Promise.all([
+    listProductsForChoosing(sql),
+    querySalesEventByHistoryId(salesEventNumber, operationId, sql),
+  ])
+  requestContext.set('products', products)
 
   if (!salesEvent) {
     return {status: 404, body: 'Sales event not found'}
@@ -90,19 +114,6 @@ export async function createSalesEvent(
   sql: Sql,
 ): Promise<ControllerResult> {
   const salesEventNumber = await model_createSalesEvent(salesEvent, undefined, sql)
-
-  return {htmxRedirect: `/sales-events/${salesEventNumber}`}
-}
-
-export async function updateSalesEvent(
-  salesEvent: SalesEvent,
-  sql: Sql,
-): Promise<ControllerResult> {
-  const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, sql)
-
-  if (!salesEventNumber) {
-    return {status: 404, body: 'Sales event not found'}
-  }
 
   return {htmxRedirect: `/sales-events/${salesEventNumber}`}
 }
@@ -124,4 +135,37 @@ export async function deleteSalesEvent(
   }
 
   return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+}
+
+export async function updateSalesEvent(
+  salesEvent: SalesEvent,
+  sql: Sql,
+): Promise<ControllerResult> {
+  const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, sql)
+
+  if (!salesEventNumber) {
+    return {status: 404, body: 'Sales event not found'}
+  }
+
+  return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+}
+
+const cachedProductsForChoosing: {
+  groups: {id: number; name: string}[] | undefined
+  timestamp: number
+} = {
+  groups: undefined,
+  timestamp: 0,
+}
+
+async function listProductsForChoosing(sql: Sql) {
+  if (
+    Date.now() - cachedProductsForChoosing.timestamp > 1 * 60 * 1000 ||
+    !cachedProductsForChoosing.groups
+  ) {
+    cachedProductsForChoosing.groups = await model_listProductsForChoosing(sql)
+    cachedProductsForChoosing.timestamp = Date.now()
+  }
+
+  return cachedProductsForChoosing.groups
 }
