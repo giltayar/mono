@@ -147,3 +147,26 @@ test('update dates and landing page url', async ({page}) => {
     'https://example.com/updated-date-sale',
   )
 })
+
+test('ensure optional fields are optional', async ({page}) => {
+  await page.goto(new URL('/sales-events', url()).href)
+
+  const salesEventListModel = createSalesEventListPageModel(page)
+  const newSalesEventModel = createNewSalesEventPageModel(page)
+  const updateSalesEventModel = createUpdateSalesEventPageModel(page)
+
+  await salesEventListModel.createNewSalesEventButton().locator.click()
+
+  const newForm = newSalesEventModel.form()
+  await newForm.nameInput().locator.fill('Optional Fields Sale')
+
+  await newForm.createButton().locator.click()
+
+  await page.waitForURL(updateSalesEventModel.urlRegex)
+
+  const updateForm = updateSalesEventModel.form()
+  await expect(updateForm.nameInput().locator).toHaveValue('Optional Fields Sale')
+  await expect(updateForm.fromDateInput().locator).toHaveValue('')
+  await expect(updateForm.toDateInput().locator).toHaveValue('')
+  await expect(updateForm.landingPageUrlInput().locator).toHaveValue('')
+})
