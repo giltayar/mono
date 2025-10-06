@@ -1,8 +1,8 @@
 import {test, expect} from '@playwright/test'
-import {createStudentListPageModel} from '../page-model/students/student-list-page.model.ts'
-import {createNewStudentPageModel} from '../page-model/students/new-student-page.model.ts'
-import {createUpdateStudentPageModel} from '../page-model/students/update-student-page.model.ts'
-import {createViewStudentHistoryPageModel} from '../page-model/students/view-student-history-page.model copy.ts'
+import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
+import {createNewStudentPageModel} from '../../page-model/students/new-student-page.model.ts'
+import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
+import {createViewStudentHistoryPageModel} from '../../page-model/students/view-student-history-page.model copy.ts'
 import {setup} from '../common/setup.ts'
 
 const {url} = setup(import.meta.url)

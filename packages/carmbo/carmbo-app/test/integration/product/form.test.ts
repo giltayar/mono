@@ -1,7 +1,7 @@
 import {test, expect} from '@playwright/test'
-import {createProductListPageModel} from '../page-model/products/product-list-page.model.ts'
-import {createNewProductPageModel} from '../page-model/products/new-product-page.model.ts'
-import {createUpdateProductPageModel} from '../page-model/products/update-product-page.model.ts'
+import {createProductListPageModel} from '../../page-model/products/product-list-page.model.ts'
+import {createNewProductPageModel} from '../../page-model/products/new-product-page.model.ts'
+import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 import {setup} from '../common/setup.ts'
 
 const {url} = setup(import.meta.url)

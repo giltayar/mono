@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -29,10 +29,13 @@
     "build": "mkdir -p dist && rm -rf dist/* && FORCE_COLOR=1 run-p 'build:*'",
     "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/htmx.min.js",
     "build:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css dist/ && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dist/",
+    "postbuild": "run-p 'postbuild:*'",
+    "postbuild:docker": "docker build -t giltayar/carmbo-app:$npm_package_version . --secret id=npmrc,src=$HOME/.npmrc",
     "test": "FORCE_COLOR=1 run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
-    "test:playwright": "NODE_ENV=test playwright test --config=test/integration"
+    "test:playwright": "NODE_ENV=test playwright test --config=test/integration",
+    "test:playwright-e2e": "NODE_ENV=test playwright test --config=test/e2e"
   },
   "keywords": [
     "javascript",

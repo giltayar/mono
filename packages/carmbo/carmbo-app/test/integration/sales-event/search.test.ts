@@ -1,8 +1,8 @@
 import {test, expect} from '@playwright/test'
-import {createSalesEventListPageModel} from '../page-model/sales-events/sales-event-list-page.model.ts'
+import {createSalesEventListPageModel} from '../../page-model/sales-events/sales-event-list-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {TEST_seedSalesEvents} from '../../../src/domain/sales-event/model.ts'
-import {createUpdateSalesEventPageModel} from '../page-model/sales-events/update-sales-event-page.model.ts'
+import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {TEST_seedProducts} from '../../../src/domain/product/model.ts'
 
 const {url, sql} = setup(import.meta.url)

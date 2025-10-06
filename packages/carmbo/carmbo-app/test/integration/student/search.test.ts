@@ -1,8 +1,8 @@
 import {test, expect} from '@playwright/test'
-import {createStudentListPageModel} from '../page-model/students/student-list-page.model.ts'
+import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {TEST_seedStudents} from '../../../src/domain/student/model.ts'
-import {createUpdateStudentPageModel} from '../page-model/students/update-student-page.model.ts'
+import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 
 const {url, sql} = setup(import.meta.url)
 

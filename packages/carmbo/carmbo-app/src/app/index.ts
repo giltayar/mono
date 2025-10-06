@@ -19,8 +19,9 @@ export const EnvironmentVariablesSchema = z.object({
   ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string(),
   GREEN_API_KEY: z.string(),
   GREEN_API_INSTANCE: z.coerce.number(),
-  SMOOVE_API_KEY: z.string().optional().default(''),
+  SMOOVE_API_KEY: z.string(),
   SMOOVE_API_URL: z.url().optional().default('https://rest.smoove.io/v1/'),
+  FORCE_NO_AUTH: z.string().optional(),
   CARMBO_AUTH0_CLIENT_ID: z.string(),
   CARMBO_AUTH0_CLIENT_SECRET: z.string(),
   CARMBO_AUTH0_SESSION_SECRET: z.string(),
@@ -51,13 +52,15 @@ const {app, sql} = await makeApp({
       cardComAccountIdCustomFieldId: '',
     }),
   },
-  auth0: {
-    clientId: env.CARMBO_AUTH0_CLIENT_ID,
-    clientSecret: env.CARMBO_AUTH0_CLIENT_SECRET,
-    domain: 'carmelegger.eu.auth0.com',
-    appBaseUrl: `http://${env.HOST}:${env.PORT}`,
-    sessionSecret: env.CARMBO_AUTH0_SESSION_SECRET,
-  },
+  auth0: env.FORCE_NO_AUTH
+    ? undefined
+    : {
+        clientId: env.CARMBO_AUTH0_CLIENT_ID,
+        clientSecret: env.CARMBO_AUTH0_CLIENT_SECRET,
+        domain: 'carmelegger.eu.auth0.com',
+        appBaseUrl: `http://${env.HOST}:${env.PORT}`,
+        sessionSecret: env.CARMBO_AUTH0_SESSION_SECRET,
+      },
 })
 
 await seedIfNeeded()
