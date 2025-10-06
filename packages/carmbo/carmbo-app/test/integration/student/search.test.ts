@@ -71,21 +71,23 @@ test('searching students', async ({page}) => {
   await expect(studentListModel.list().rows().row(0).idLink().locator).toHaveText('50')
   await expect(studentListModel.list().rows().row(0).emailCell().locator).toContainText('jabi.ee')
 
-  await studentListModel.search().queryInput().locator.fill('ll')
+  await page.goto(url().href)
+
+  await studentListModel.search().queryInput().locator.fill('st')
 
   await expect(studentListModel.list().rows().locator).toHaveCount(50)
 
-  await expect(studentListModel.list().rows().row(0).idLink().locator).toHaveText('2')
+  await expect(studentListModel.list().rows().row(0).idLink().locator).toHaveText('8')
   await expect(studentListModel.list().rows().row(0).nameCell().locator).toContainText(
-    'Carl van den Poel, Bryan Haynes, Leila Falciani',
+    'Robert Vangelisti, Lydia Moody, Maude Cambi',
   )
-  await expect(studentListModel.list().rows().row(1).idLink().locator).toHaveText('4')
+  await expect(studentListModel.list().rows().row(1).idLink().locator).toHaveText('14')
   await expect(studentListModel.list().rows().row(1).nameCell().locator).toContainText(
-    'Louise Guarducci, Bradley Lévêque, Della Barry',
+    'Winnie Maruyama, Addie Harmon, Cole Xu',
   )
   await studentListModel.list().rows().locator.nth(49).scrollIntoViewIfNeeded()
 
-  await expect(studentListModel.list().rows().locator).toHaveCount(99)
+  await expect(studentListModel.list().rows().locator).toHaveCount(52)
 
   await page.goto(url().href + 'students/1')
 

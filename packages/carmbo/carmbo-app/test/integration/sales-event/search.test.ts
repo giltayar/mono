@@ -42,7 +42,7 @@ test('searching sales events', async ({page}) => {
   await expect(salesEventListModel.list().rows().locator).toHaveCount(200)
 
   // test search by name
-  // NOTE: These values are hallucinated - update with actual seeded data when running tests
+  await page.goto(new URL('/sales-events', url()).href)
 
   await salesEventListModel.search().queryInput().locator.fill('wu')
 
@@ -55,7 +55,8 @@ test('searching sales events', async ({page}) => {
   )
 
   // test search by landing page url
-  // NOTE: These values are hallucinated - update with actual seeded data
+
+  await page.goto(new URL('/sales-events', url()).href)
 
   await salesEventListModel.search().queryInput().locator.fill('hepopwew')
   expect(salesEventListModel.list().rows().locator).toHaveCount(1)
@@ -64,7 +65,7 @@ test('searching sales events', async ({page}) => {
   )
 
   // test search by date
-  // NOTE: These values are hallucinated - update with actual seeded data
+  await page.goto(new URL('/sales-events', url()).href)
 
   await salesEventListModel.search().queryInput().locator.fill('2118')
 

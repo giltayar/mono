@@ -29,7 +29,7 @@ export interface SalesEventForGrid {
   name: string
   fromDate?: Date
   toDate?: Date
-  productsForSale: {id: number; name: string}[]
+  productsForSale: string[]
 }
 
 export interface SalesEventHistory {
@@ -71,9 +71,11 @@ export async function listSalesEvents(
       LEFT JOIN sales_event_data USING (data_id)
       LEFT JOIN LATERAL (
         SELECT
-          json_agg(product_number ORDER BY item_order) AS products_for_sale
+          json_agg(product_data.name ORDER BY item_order) AS products_for_sale
         FROM
           sales_event_product_for_sale
+        JOIN product ON product.product_number = sales_event_product_for_sale.product_number
+        JOIN product_data ON product_data.data_id = product.last_data_id
         WHERE
           sales_event_product_for_sale.data_id = sales_event_history.data_id
       ) products_for_sale ON true

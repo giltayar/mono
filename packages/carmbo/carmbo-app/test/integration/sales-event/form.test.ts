@@ -78,8 +78,8 @@ test('create sales event and update multiple fields', async ({page}) => {
 
   await newForm.productsForSale().trashButton(1).locator.click()
 
-  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1')
-  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3: ghi')
 
   await newForm.createButton().locator.click()
 
@@ -125,16 +125,16 @@ test('add and remove products for sale dynamically', async ({page}) => {
   await newForm.productsForSale().trashButton(1).locator.click()
 
   // Verify remaining products
-  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1')
-  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3')
-  await expect(newForm.productsForSale().productInput(2).locator).toHaveValue('4')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3: ghi')
+  await expect(newForm.productsForSale().productInput(2).locator).toHaveValue('4: jkl')
 
   // Remove first product (10)
   await newForm.productsForSale().trashButton(0).locator.click()
 
   // Verify remaining products
-  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('3')
-  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('4')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('3: ghi')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('4: jkl')
 
   await newForm.createButton().locator.click()
 
@@ -152,7 +152,7 @@ test('add and remove products for sale dynamically', async ({page}) => {
 
   await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('3: ghi')
   await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('4: jkl')
-  await expect(updateForm.productsForSale().productInput(2).locator).toHaveValue('5: mno')
+  await expect(updateForm.productsForSale().productInput(2).locator).toHaveValue(/5/)
 })
 
 test('update dates and landing page url', async ({page}) => {

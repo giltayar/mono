@@ -1,4 +1,4 @@
-document.addEventListener('htmx:validation:validate', (/** @type {any} */ event) => {
+document.addEventListener('change', (/** @type {any} */ event) => {
   const target = event.target
 
   if (target && target.classList.contains('pick-item-title')) {

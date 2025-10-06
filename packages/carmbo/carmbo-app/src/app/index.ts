@@ -55,10 +55,14 @@ await app.listen({port: env.PORT, host: env.HOST})
 async function seedIfNeeded() {
   const seedCount = process.env.TEST_SEED ? parseInt(process.env.TEST_SEED) : 0
 
-  const studentCountResult = await retry(
-    () => sql<{count: string}[]>`SELECT count(*) as count FROM student LIMIT 1`,
-    {retries: 5, minTimeout: 1000, maxTimeout: 1000},
-  )
+  const studentCountResult =
+    seedCount > 0
+      ? await retry(() => sql<{count: string}[]>`SELECT count(*) as count FROM student LIMIT 1`, {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 1000,
+        })
+      : [{count: 1111}]
 
   if (studentCountResult[0].count === '0') {
     console.log(`Seeding ${seedCount}...`)

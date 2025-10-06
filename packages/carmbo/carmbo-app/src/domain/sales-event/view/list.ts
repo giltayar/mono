@@ -93,7 +93,7 @@ function SalesEventsView({
                 </td>
                 <td>${salesEvent.name}</td>
                 <td dir="rtl">${formatDateRange(salesEvent.fromDate, salesEvent.toDate)}</td>
-                <td>${salesEvent.productsForSale.map((p) => p.name).join(', ')}</td>
+                <td>${salesEvent.productsForSale.join(', ')}</td>
               </tr>
             `,
           )}
