@@ -64,6 +64,7 @@ export function makeApp({
     username,
     password,
     transform: {...postgres.camel},
+    ssl: host.includes('neon') ? 'require' : undefined,
   })
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
