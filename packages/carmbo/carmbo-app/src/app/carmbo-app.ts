@@ -36,11 +36,11 @@ declare module '@fastify/request-context' {
 }
 
 export function makeApp({
-  db: {host, port, username, password},
+  db: {database, host, port, username, password},
   services: {academyIntegration, whatsappIntegration, smooveIntegration},
   auth0,
 }: {
-  db: {host: string; port: number; username: string; password: string}
+  db: {database: string; host: string; port: number; username: string; password: string}
   services: {
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
@@ -60,7 +60,7 @@ export function makeApp({
   const sql = postgres({
     host,
     port,
-    database: 'carmbo',
+    database,
     username,
     password,
     transform: {...postgres.camel},

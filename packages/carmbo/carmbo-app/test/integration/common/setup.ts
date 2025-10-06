@@ -26,6 +26,7 @@ export function setup(testUrl: string) {
 
     ;({app, sql} = makeApp({
       db: {
+        database: 'carmbo',
         host: host.split(':')[0],
         port: parseInt(host.split(':')[1]),
         username: 'user',

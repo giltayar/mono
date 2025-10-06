@@ -21,6 +21,7 @@ services:
   app:
     image: giltayar/carmbo-app:${npm_package_version}
     environment:
+      - DB_DATABASE=carmbo
       - DB_HOST=postgres
       - HOST=0.0.0.0
       - ACADEMY_CARMEL_ACCOUNT_API_KEY=${ACADEMY_CARMEL_ACCOUNT_API_KEY}

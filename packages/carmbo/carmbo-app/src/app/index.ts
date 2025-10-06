@@ -10,6 +10,7 @@ import {TEST_seedProducts} from '../domain/product/model.ts'
 import {TEST_seedSalesEvents} from '../domain/sales-event/model.ts'
 
 export const EnvironmentVariablesSchema = z.object({
+  DB_DATABASE: z.string().default('carmbo'),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.coerce.number().default(5432),
   DB_USERNAME: z.string().default('user'),
@@ -31,6 +32,7 @@ const env = EnvironmentVariablesSchema.parse(process.env)
 
 const {app, sql} = await makeApp({
   db: {
+    database: env.DB_DATABASE,
     host: env.DB_HOST,
     port: env.DB_PORT,
     username: env.DB_USERNAME,
