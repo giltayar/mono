@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -27,7 +27,7 @@
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf /tmp/carmbo-app/.db-data",
     "build": "mkdir -p dist && rm -rf dist/* && FORCE_COLOR=1 run-p 'build:*'",
-    "build:htmx": "cp node_modules/htmx.org/dist/htmx.js dist/htmx.min.js",
+    "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/htmx.min.js",
     "build:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css dist/ && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dist/",
     "test": "FORCE_COLOR=1 run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
@@ -46,6 +46,7 @@
     "type": "git"
   },
   "dependencies": {
+    "@auth0/auth0-fastify": "^1.0.2",
     "@fastify/formbody": "^8.0.2",
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^8.2.0",

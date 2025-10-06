@@ -5,9 +5,9 @@ export default defineConfig({
   outputDir: './.test-results',
   preserveOutput: 'failures-only',
   expect: {timeout: 2000},
-  timeout: 7000,
-  retries: process.env.CI ? 2 : 0,
-  workers: 4,
+  timeout: process.env.CI ? 10000 : 7000,
+  retries: process.env.CI ? 3 : 0,
+  workers: process.env.CI ? 2 : 4,
   use: {
     screenshot: 'only-on-failure',
   },

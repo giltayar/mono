@@ -31,46 +31,49 @@ export function setup(testUrl: string) {
         username: 'user',
         password: 'password',
       },
-      academyIntegration: createFakeAcademyIntegrationService({
-        courses: [
-          {id: 1, name: 'Course 1'},
-          {id: 33, name: 'Course 2'},
-          {id: 777, name: 'Course 3'},
-        ],
-        enrolledContacts: new Set<string>(),
-      }),
-      whatsappIntegration: createFakeWhatsAppIntegrationService({
-        groups: {
-          '1@g.us': {
-            name: 'Test Group 1',
-            recentSentMessages: [],
-            participants: [],
+      services: {
+        academyIntegration: createFakeAcademyIntegrationService({
+          courses: [
+            {id: 1, name: 'Course 1'},
+            {id: 33, name: 'Course 2'},
+            {id: 777, name: 'Course 3'},
+          ],
+          enrolledContacts: new Set<string>(),
+        }),
+        whatsappIntegration: createFakeWhatsAppIntegrationService({
+          groups: {
+            '1@g.us': {
+              name: 'Test Group 1',
+              recentSentMessages: [],
+              participants: [],
+            },
+            '2@g.us': {
+              name: 'Test Group 2',
+              recentSentMessages: [],
+              participants: [],
+            },
+            '3@g.us': {
+              name: 'Test Group 3',
+              recentSentMessages: [],
+              participants: [],
+            },
           },
-          '2@g.us': {
-            name: 'Test Group 2',
-            recentSentMessages: [],
-            participants: [],
-          },
-          '3@g.us': {
-            name: 'Test Group 3',
-            recentSentMessages: [],
-            participants: [],
-          },
-        },
-      }),
-      smooveIntegration: createFakeSmooveIntegrationService({
-        lists: [
-          {id: 2, name: 'Smoove List ID 1'},
-          {id: 4, name: 'Smoove List Cancelling 2'},
-          {id: 6, name: 'Smoove List Cancelled 3'},
-          {id: 8, name: 'Smoove List Removed 4'},
-          {id: 10, name: 'Smoove List ID A'},
-          {id: 12, name: 'Smoove List Cancelling B'},
-          {id: 14, name: 'Smoove List Cancelled C'},
-          {id: 16, name: 'Smoove List Removed D'},
-        ],
-        contacts: {},
-      }),
+        }),
+        smooveIntegration: createFakeSmooveIntegrationService({
+          lists: [
+            {id: 2, name: 'Smoove List ID 1'},
+            {id: 4, name: 'Smoove List Cancelling 2'},
+            {id: 6, name: 'Smoove List Cancelled 3'},
+            {id: 8, name: 'Smoove List Removed 4'},
+            {id: 10, name: 'Smoove List ID A'},
+            {id: 12, name: 'Smoove List Cancelling B'},
+            {id: 14, name: 'Smoove List Cancelled C'},
+            {id: 16, name: 'Smoove List Removed D'},
+          ],
+          contacts: {},
+        }),
+      },
+      auth0: undefined,
     }))
 
     await app.listen()

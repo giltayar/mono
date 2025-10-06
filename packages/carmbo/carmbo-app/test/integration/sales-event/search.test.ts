@@ -42,11 +42,10 @@ test('searching sales events', async ({page}) => {
   await expect(salesEventListModel.list().rows().locator).toHaveCount(200)
 
   // test search by name
-  await page.goto(new URL('/sales-events', url()).href)
-
   await salesEventListModel.search().queryInput().locator.fill('wu')
 
-  expect(salesEventListModel.list().rows().locator).toHaveCount(14)
+  await expect(salesEventListModel.list().rows().locator).toHaveCount(14)
+
   await expect(salesEventListModel.list().rows().row(0).nameCell().locator).toHaveText(
     'wunruk lihcug',
   )
@@ -59,17 +58,15 @@ test('searching sales events', async ({page}) => {
   await page.goto(new URL('/sales-events', url()).href)
 
   await salesEventListModel.search().queryInput().locator.fill('hepopwew')
-  expect(salesEventListModel.list().rows().locator).toHaveCount(1)
+  await expect(salesEventListModel.list().rows().locator).toHaveCount(1)
   await expect(salesEventListModel.list().rows().row(0).nameCell().locator).toHaveText(
     'mapuuka sacwus',
   )
 
   // test search by date
-  await page.goto(new URL('/sales-events', url()).href)
-
   await salesEventListModel.search().queryInput().locator.fill('2118')
 
-  expect(salesEventListModel.list().rows().locator).toHaveCount(7)
+  await expect(salesEventListModel.list().rows().locator).toHaveCount(7)
   await expect(salesEventListModel.list().rows().row(3).nameCell().locator).toHaveText('jiv me')
 
   // test archived sales events

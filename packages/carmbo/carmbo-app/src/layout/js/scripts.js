@@ -19,8 +19,8 @@ document.addEventListener('change', (/** @type {any} */ event) => {
         break
       }
     }
+    console.log('setting custom validity', !found)
     element.setCustomValidity(found ? '' : 'Please select a valid item from the list')
-    element.reportValidity()
 
     hiddenIdInput?.setAttribute('value', itemId.toString())
   }

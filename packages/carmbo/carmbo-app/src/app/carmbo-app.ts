@@ -1,7 +1,8 @@
-import fastify from 'fastify'
+import fastify, {type FastifyInstance} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifystatic from '@fastify/static'
 import qs from 'qs'
+import Auth0 from '@auth0/auth0-fastify'
 import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
 import productRoutes from '../domain/product/route.ts'
@@ -36,14 +37,24 @@ declare module '@fastify/request-context' {
 
 export function makeApp({
   db: {host, port, username, password},
-  academyIntegration,
-  whatsappIntegration,
-  smooveIntegration,
+  services: {academyIntegration, whatsappIntegration, smooveIntegration},
+  auth0,
 }: {
   db: {host: string; port: number; username: string; password: string}
-  academyIntegration: AcademyIntegrationService
-  whatsappIntegration: WhatsAppIntegrationService
-  smooveIntegration: SmooveIntegrationService
+  services: {
+    academyIntegration: AcademyIntegrationService
+    whatsappIntegration: WhatsAppIntegrationService
+    smooveIntegration: SmooveIntegrationService
+  }
+  auth0:
+    | {
+        domain: string
+        clientId: string
+        clientSecret: string
+        appBaseUrl: string
+        sessionSecret: string
+      }
+    | undefined
 }) {
   const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
@@ -56,6 +67,8 @@ export function makeApp({
   })
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
+  app.setValidatorCompiler(validatorCompiler)
+  app.setSerializerCompiler(serializerCompiler)
   app.register(fastifyRequestContext, {
     defaultStoreValues: {
       sql,
@@ -68,6 +81,11 @@ export function makeApp({
       products: undefined,
     },
   })
+
+  if (auth0) {
+    app.register(Auth0, auth0)
+  }
+
   app.register(fastifystatic, {
     root: new URL('../../dist', import.meta.url),
     prefix: '/dist/',
@@ -83,18 +101,29 @@ export function makeApp({
       pathName.endsWith('.png') ||
       pathName.endsWith('.svg'),
   })
-  app.setValidatorCompiler(validatorCompiler)
-  app.setSerializerCompiler(serializerCompiler)
 
   app.get('/', async (_, reply) => reply.redirect('/students'))
 
-  app.register(studentRoutes, {prefix: '/students', sql})
-  app.register(productRoutes, {prefix: '/products', sql})
-  app.register(salesEvents, {prefix: '/sales-events', sql})
+  app.register((app) => {
+    addAuth0Hook(app, app.auth0Client)
 
+    app.register(studentRoutes, {prefix: '/students', sql})
+    app.register(productRoutes, {prefix: '/products', sql})
+    app.register(salesEvents, {prefix: '/sales-events', sql})
+  })
   app.get('/health', async () => {
     return {status: 'ok'}
   })
 
   return {app, sql}
+}
+function addAuth0Hook(app: FastifyInstance, auth0Client: any) {
+  if (auth0Client)
+    app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
+      const session = await auth0Client.getSession({request, reply})
+
+      if (!session) {
+        reply.redirect('/auth/login')
+      }
+    })
 }

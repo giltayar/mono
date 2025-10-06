@@ -20,7 +20,10 @@ export const EnvironmentVariablesSchema = z.object({
   GREEN_API_KEY: z.string(),
   GREEN_API_INSTANCE: z.coerce.number(),
   SMOOVE_API_KEY: z.string().optional().default(''),
-  SMOOVE_API_URL: z.string().url().optional().default('https://rest.smoove.io/v1/'),
+  SMOOVE_API_URL: z.url().optional().default('https://rest.smoove.io/v1/'),
+  CARMBO_AUTH0_CLIENT_ID: z.string(),
+  CARMBO_AUTH0_CLIENT_SECRET: z.string(),
+  CARMBO_AUTH0_SESSION_SECRET: z.string(),
 })
 
 const env = EnvironmentVariablesSchema.parse(process.env)
@@ -32,20 +35,29 @@ const {app, sql} = await makeApp({
     username: env.DB_USERNAME,
     password: env.DB_PASSWORD,
   },
-  academyIntegration: createAcademyIntegrationService({
-    accountApiKey: env.ACADEMY_CARMEL_ACCOUNT_API_KEY,
-  }),
-  whatsappIntegration: createWhatsAppIntegrationService({
-    greenApiKey: env.GREEN_API_KEY,
-    greenApiInstanceId: env.GREEN_API_INSTANCE,
-    greenApiBaseUrl: new URL('https://7105.api.greenapi.com'),
-  }),
-  smooveIntegration: createSmooveIntegrationService({
-    apiKey: env.SMOOVE_API_KEY,
-    apiUrl: env.SMOOVE_API_URL,
-    cardComRecurringPaymentIdCustomFieldId: '',
-    cardComAccountIdCustomFieldId: '',
-  }),
+  services: {
+    academyIntegration: createAcademyIntegrationService({
+      accountApiKey: env.ACADEMY_CARMEL_ACCOUNT_API_KEY,
+    }),
+    whatsappIntegration: createWhatsAppIntegrationService({
+      greenApiKey: env.GREEN_API_KEY,
+      greenApiInstanceId: env.GREEN_API_INSTANCE,
+      greenApiBaseUrl: new URL('https://7105.api.greenapi.com'),
+    }),
+    smooveIntegration: createSmooveIntegrationService({
+      apiKey: env.SMOOVE_API_KEY,
+      apiUrl: env.SMOOVE_API_URL,
+      cardComRecurringPaymentIdCustomFieldId: '',
+      cardComAccountIdCustomFieldId: '',
+    }),
+  },
+  auth0: {
+    clientId: env.CARMBO_AUTH0_CLIENT_ID,
+    clientSecret: env.CARMBO_AUTH0_CLIENT_SECRET,
+    domain: 'carmelegger.eu.auth0.com',
+    appBaseUrl: `http://${env.HOST}:${env.PORT}`,
+    sessionSecret: env.CARMBO_AUTH0_SESSION_SECRET,
+  },
 })
 
 await seedIfNeeded()

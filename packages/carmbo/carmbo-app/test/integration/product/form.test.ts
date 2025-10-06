@@ -201,6 +201,7 @@ test('form validations', async ({page}) => {
 
   await newForm.smooveListIdInput().locator.fill('34343443')
   await newForm.createButton().locator.click()
+
   await expect(page.url()).toMatch(newProductModel.urlRegex)
   await newForm.smooveListIdInput().locator.fill('')
 
