@@ -15,6 +15,7 @@ export const EnvironmentVariablesSchema = z.object({
   DB_PORT: z.coerce.number().default(5432),
   DB_USERNAME: z.string().default('user'),
   DB_PASSWORD: z.string().default('password'),
+  APP_BASE_URL: z.string().optional(),
   HOST: z.string().default('localhost'),
   PORT: z.coerce.number().default(3000),
   ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string(),
@@ -60,7 +61,7 @@ const {app, sql} = await makeApp({
         clientId: env.CARMBO_AUTH0_CLIENT_ID,
         clientSecret: env.CARMBO_AUTH0_CLIENT_SECRET,
         domain: 'carmelegger.eu.auth0.com',
-        appBaseUrl: `http://${env.HOST}:${env.PORT}`,
+        appBaseUrl: env.APP_BASE_URL ? env.APP_BASE_URL : `http://${env.HOST}:${env.PORT}`,
         sessionSecret: env.CARMBO_AUTH0_SESSION_SECRET,
       },
 })
