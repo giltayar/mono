@@ -1,6 +1,6 @@
 // https://inspiredlivingdaily.incontrol.co.il/api/academy
 
-import {fetchAsBuffer, fetchAsJson} from '@giltayar/http-commons'
+import {fetchAsBuffer, fetchAsJson, fetchAsTextWithJsonBody} from '@giltayar/http-commons'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 export interface AcademyIntegrationServiceContext {
@@ -22,6 +22,7 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
   return {
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
+    addStudentToCourse: sBind(addStudentToCourse),
   }
 }
 
@@ -51,4 +52,21 @@ export async function listCourses(s: AcademyIntegrationServiceData): Promise<Aca
   const courses = (await fetchAsJson(url)) as {id: number; title: string}[]
 
   return courses.map((c) => ({id: c.id, name: c.title}))
+}
+
+// This will add the student to the course. If the student doesn't exist, it will add the student with
+// the given name and phone. Otherwise it will ignore them
+export async function addStudentToCourse(
+  s: AcademyIntegrationServiceData,
+  student: {email: string; name: string; phone: string},
+  courseId: number,
+): Promise<void> {
+  const url = new URL(`https://www.mypages.co.il/tasks/add/api/${s.context.accountApiKey}`)
+
+  await fetchAsTextWithJsonBody(url, {
+    workshop_ids: courseId.toString(),
+    email: student.email,
+    name: student.name,
+    phone: student.phone,
+  })
 }

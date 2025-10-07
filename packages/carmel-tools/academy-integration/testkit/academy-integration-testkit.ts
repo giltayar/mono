@@ -11,7 +11,7 @@ type AcademyIntegrationServiceData = {
 export function createFakeAcademyIntegrationService(context: {
   courses: AcademyCourse[]
 
-  enrolledContacts: Set<string>
+  enrolledContacts: Map<string, {name: string; phone: string; enrolledInCourses: number[]}>
 }) {
   const state: AcademyIntegrationServiceData['state'] = structuredClone(context)
   const sBind: ServiceBind<AcademyIntegrationServiceData> = (f) => bind(f, {state})
@@ -19,13 +19,14 @@ export function createFakeAcademyIntegrationService(context: {
   const service: AcademyIntegrationService = {
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
+    addStudentToCourse: sBind(addStudentToCourse),
   }
 
   return {
     ...service,
-    _test_isContactEnrolled: async (email: string): Promise<boolean> => {
-      return state.enrolledContacts.has(email)
-    },
+    _test_getContact: (email: string) => state.enrolledContacts.get(email),
+    _test_isContactEnrolledInCourse: (email: string, courseId: number): boolean =>
+      state.enrolledContacts.get(email)?.enrolledInCourses.includes(courseId) ?? false,
   }
 }
 
@@ -38,4 +39,22 @@ async function removeContactFromAccount(
 
 async function listCourses(s: AcademyIntegrationServiceData): Promise<AcademyCourse[]> {
   return s.state.courses
+}
+
+export async function addStudentToCourse(
+  s: AcademyIntegrationServiceData,
+  student: {email: string; name: string; phone: string},
+  courseId: number,
+): Promise<void> {
+  const hasStudent = s.state.enrolledContacts.has(student.email)
+
+  if (!hasStudent) {
+    s.state.enrolledContacts.set(student.email, {
+      name: student.name,
+      phone: student.phone,
+      enrolledInCourses: [],
+    })
+  }
+
+  s.state.enrolledContacts.get(student.email)!.enrolledInCourses.push(courseId)
 }
