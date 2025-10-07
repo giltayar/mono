@@ -5,6 +5,10 @@ import {normalizeEmail} from '../../commons/email.ts'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {makeError} from '@giltayar/functional-commons'
+import type {
+  SmooveContact,
+  SmooveIntegrationService,
+} from '@giltayar/carmel-tools-smoove-integration/service'
 
 export const CardcomSaleWebhookJsonSchema = z.object({
   ApprovelNumber: z.string(),
@@ -63,6 +67,7 @@ export async function handleCardcomOneTimeSale(
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
   academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ) {
   const student = await sql.begin(async (sql) => {
@@ -94,7 +99,12 @@ export async function handleCardcomOneTimeSale(
     academyIntegration,
     sql,
   )
-  await subscribeStudentToSmooveLists(finalStudent, salesEvent)
+  await subscribeStudentToSmooveLists(
+    student.studentNumber,
+    salesEventNumber,
+    smooveIntegration,
+    sql,
+  )
 }
 
 async function findSalesEvent(salesEventNumber: number, sql: Sql): Promise<boolean> {
@@ -108,27 +118,51 @@ async function findStudent(
   email: string,
   phone: string,
   sql: Sql,
-): Promise<{
-  studentNumber: number
-  email: string
-  firstName: string
-  lastName: string
-  phone: string
-}> {
+): Promise<
+  | {
+      studentNumber: number
+      email: string
+      firstName: string
+      lastName: string
+      phone: string
+    }
+  | undefined
+> {
   const finalEmail = normalizeEmail(email)
   const finalPhone = normalizePhoneNumber(phone)
 
-  const result = await sql<{student_number: number}[]>`
-    SELECT s.student_number
+  const result = await sql<
+    {
+      studentNumber: number
+      email: string
+      firstName: string
+      lastName: string
+      phone: string
+    }[]
+  >`
+    SELECT DISTINCT
+      s.student_number,
+      se.email,
+      sn.first_name,
+      sn.last_name,
+      sp.phone
     FROM student s
+    INNER JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
+    INNER JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
+    INNER JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
     WHERE s.last_data_id IN (
-      SELECT se.data_id FROM student_email se WHERE se.email = ${finalEmail}
+      SELECT se2.data_id FROM student_email se2 WHERE se2.email = ${finalEmail}
       UNION
-      SELECT sp.data_id FROM student_phone sp WHERE sp.phone = ${finalPhone}
+      SELECT sp2.data_id FROM student_phone sp2 WHERE sp2.phone = ${finalPhone}
     )
+    LIMIT 1
   `
 
-  return result.map((row) => row.student_number)[0]
+  if (result.length === 0) {
+    return undefined
+  }
+
+  return result[0]
 }
 
 async function createStudentFromCardcomSale(
@@ -326,4 +360,56 @@ export async function connectStudentWithAcademyCourses(
       }),
     ),
   )
+}
+async function subscribeStudentToSmooveLists(
+  studentNumber: number,
+  salesEventNumber: number,
+  smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
+) {
+  const smooveProductsLists = await sql<
+    {
+      listId: string
+      cancellingListId: string
+      cancelledListId: string
+      removedListId: string
+    }[]
+  >`
+    SELECT
+      pis.list_id as list_id,
+      pis.cancelling_list_id as cancellingListId,
+      pis.cancelled_list_id as cancelledListId,
+      pis.removed_list_id as removedListId
+    FROM sales_event sev
+    INNER JOIN sales_event_product_for_sale sepfs ON sepfs.data_id = sev.last_data_id
+    INNER JOIN product p ON p.product_number = sepfs.product_number
+    INNER JOIN product_integration_smoove pis ON pis.product_id = p.id
+    WHERE sev.sales_event_number = ${salesEventNumber};
+  `
+
+  const smooveContactIdResult = await sql<{contactId: string}[]>`
+    SELECT
+      contact_id
+    FROM student
+    INNER JOIN student_integration_smoove sis ON sis.data_id = student.last_data_id
+    WHERE student_number = ${studentNumber}
+  `
+
+  const contactId =
+    smooveContactIdResult.length > 0 ? smooveContactIdResult[0].contactId : undefined
+
+  if (!contactId) {
+    return
+  }
+
+  for (const smooveProductLists of smooveProductsLists) {
+    await smooveIntegration.changeContactLinkedLists({id: parseInt(contactId)} as SmooveContact, {
+      subscribeTo: [parseInt(smooveProductLists.listId)],
+      unsubscribeFrom: [
+        parseInt(smooveProductLists.cancellingListId),
+        parseInt(smooveProductLists.cancelledListId),
+        parseInt(smooveProductLists.removedListId),
+      ],
+    })
+  }
 }

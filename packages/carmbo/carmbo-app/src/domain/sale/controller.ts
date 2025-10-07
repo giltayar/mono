@@ -8,12 +8,14 @@ export async function dealWithCardcomOneTimeSale(
   const now = new Date()
   const sql = requestContext.get('sql')!
   const academyIntegration = requestContext.get('academyIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
 
   await handleCardcomOneTimeSale(
     salesEventNumber,
     cardcomSaleWebhookJson,
     now,
     academyIntegration,
+    smooveIntegration,
     sql,
   )
 }
