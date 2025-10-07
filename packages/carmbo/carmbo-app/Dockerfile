@@ -1,11 +1,11 @@
-FROM node:24.4-alpine
+FROM node:24.9-slim
 
 # Update system packages to patch vulnerabilities
-RUN apk update && apk upgrade
+RUN apt update && apt upgrade
 
 # Add Tini
-RUN apk add --no-cache tini
-ENTRYPOINT ["/sbin/tini", "--"]
+RUN apt install tini
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Install pnpm
 RUN npm install -g pnpm
