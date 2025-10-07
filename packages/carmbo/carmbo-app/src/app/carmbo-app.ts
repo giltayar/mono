@@ -1,4 +1,4 @@
-import fastify, {type FastifyInstance} from 'fastify'
+import fastify, {type FastifyBaseLogger, type FastifyInstance} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifystatic from '@fastify/static'
 import qs from 'qs'
@@ -28,6 +28,7 @@ declare module '@fastify/request-context' {
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
     smooveIntegration: SmooveIntegrationService
+    logger: FastifyBaseLogger
     sql: Sql
     courses: AcademyCourse[] | undefined
     whatsappGroups: WhatsAppGroup[] | undefined
@@ -72,16 +73,17 @@ export function makeApp({
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.register(fastifyRequestContext, {
-    defaultStoreValues: {
+    defaultStoreValues: (request) => ({
       sql,
       academyIntegration,
       whatsappIntegration,
       smooveIntegration,
       courses: undefined,
+      logger: request.log,
       whatsappGroups: undefined,
       smooveLists: undefined,
       products: undefined,
-    },
+    }),
   })
 
   if (auth0) {

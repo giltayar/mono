@@ -4,6 +4,7 @@ import {assert} from 'node:console'
 import {z} from 'zod'
 import {range} from '@giltayar/functional-commons'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
+import type {CardcomSaleWebhookJson} from '../sale/model.ts'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),

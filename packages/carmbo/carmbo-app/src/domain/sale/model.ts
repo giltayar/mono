@@ -1,0 +1,329 @@
+import type {Sql} from 'postgres'
+import z from 'zod'
+import retry from 'p-retry'
+import {normalizeEmail} from '../../commons/email.ts'
+import {normalizePhoneNumber} from '../../commons/phone.ts'
+import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import {makeError} from '@giltayar/functional-commons'
+
+export const CardcomSaleWebhookJsonSchema = z.object({
+  ApprovelNumber: z.string(),
+  CardOwnerName: z.string(),
+  CardOwnerPhone: z.string(),
+  CouponNumber: z.string().optional(),
+  DealDate: z.string(),
+  DealTime: z.string(),
+  internaldealnumber: z.string(),
+  invoicenumber: z.string(),
+  terminalnumber: z.string(),
+  responsecode: z.string(),
+  UserEmail: z.email(),
+
+  suminfull: z.string(),
+
+  ProdTotalLines: z.string(),
+
+  ProdPrice: z.string(),
+  ProdQuantity: z.string(),
+  ProductID: z.string(),
+
+  ProdPrice1: z.string().optional(),
+  ProdQuantity1: z.string().optional(),
+  ProductID1: z.string().optional(),
+
+  ProdPrice2: z.string().optional(),
+  ProdQuantity2: z.string().optional(),
+  ProductID2: z.string().optional(),
+
+  ProdPrice3: z.string().optional(),
+  ProdQuantity3: z.string().optional(),
+  ProductID3: z.string().optional(),
+
+  ProdPrice4: z.string().optional(),
+  ProdQuantity4: z.string().optional(),
+  ProductID4: z.string().optional(),
+
+  ProdPrice5: z.string().optional(),
+  ProdQuantity5: z.string().optional(),
+  ProductID5: z.string().optional(),
+
+  ProdPrice6: z.string().optional(),
+  ProdQuantity6: z.string().optional(),
+  ProductID6: z.string().optional(),
+
+  ProdPrice7: z.string().optional(),
+  ProdQuantity7: z.string().optional(),
+  ProductID7: z.string().optional(),
+})
+
+export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema>
+
+export async function handleCardcomOneTimeSale(
+  salesEventNumber: number,
+  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+  now: Date,
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+) {
+  const student = await sql.begin(async (sql) => {
+    const doesSalesEventExist = await findSalesEvent(salesEventNumber, sql)
+    if (!doesSalesEventExist) {
+      throw makeError(`Sales event not found: ${salesEventNumber}`, {httpStatus: 400})
+    }
+
+    const student = await findStudent(
+      cardcomSaleWebhookJson.UserEmail,
+      cardcomSaleWebhookJson.CardOwnerPhone,
+      sql,
+    )
+    const finalStudent =
+      student ?? (await createStudentFromCardcomSale(cardcomSaleWebhookJson, now, sql))
+
+    await createSale(finalStudent.studentNumber, salesEventNumber, cardcomSaleWebhookJson, now, sql)
+
+    return finalStudent
+  })
+
+  await connectStudentWithAcademyCourses(
+    salesEventNumber,
+    {
+      email: student.email,
+      name: student.firstName + ' ' + student.lastName,
+      phone: student.phone,
+    },
+    academyIntegration,
+    sql,
+  )
+  await subscribeStudentToSmooveLists(finalStudent, salesEvent)
+}
+
+async function findSalesEvent(salesEventNumber: number, sql: Sql): Promise<boolean> {
+  const result =
+    await sql`SELECT 1 FROM sales_events WHERE sales_event_number = ${salesEventNumber} LIMIT 1`
+
+  return result.length > 0
+}
+
+async function findStudent(
+  email: string,
+  phone: string,
+  sql: Sql,
+): Promise<{
+  studentNumber: number
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+}> {
+  const finalEmail = normalizeEmail(email)
+  const finalPhone = normalizePhoneNumber(phone)
+
+  const result = await sql<{student_number: number}[]>`
+    SELECT s.student_number
+    FROM student s
+    WHERE s.last_data_id IN (
+      SELECT se.data_id FROM student_email se WHERE se.email = ${finalEmail}
+      UNION
+      SELECT sp.data_id FROM student_phone sp WHERE sp.phone = ${finalPhone}
+    )
+  `
+
+  return result.map((row) => row.student_number)[0]
+}
+
+async function createStudentFromCardcomSale(
+  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+  now: Date,
+  sql: Sql,
+): Promise<{
+  studentNumber: number
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+}> {
+  const email = normalizeEmail(cardcomSaleWebhookJson.UserEmail)
+  const phone = normalizePhoneNumber(cardcomSaleWebhookJson.CardOwnerPhone)
+
+  return await sql.begin(async (sql) => {
+    const historyId = crypto.randomUUID()
+    const dataId = crypto.randomUUID()
+    const {firstName, lastName} = generateNameFromCardcomSale(cardcomSaleWebhookJson)
+
+    // Create student history record and get student number
+    const studentNumberResult = await sql<{student_number: number}[]>`
+      INSERT INTO student_history VALUES
+        (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
+      RETURNING student_number
+    `
+    const studentNumber = studentNumberResult[0].student_number
+    let ops = [] as Promise<unknown>[]
+
+    ops = ops.concat(sql`
+      INSERT INTO student VALUES
+        (${studentNumber}, ${historyId}, ${dataId})
+    `)
+
+    ops = ops.concat(sql`
+      INSERT INTO student_name VALUES
+        (${dataId}, 0, ${firstName}, ${lastName})
+    `)
+
+    ops = ops.concat(sql`
+      INSERT INTO student_email VALUES
+        (${dataId}, 0, ${email})
+    `)
+
+    ops = ops.concat(sql`
+      INSERT INTO student_phone VALUES
+        (${dataId}, 0, ${phone})
+    `)
+
+    const searchableText = `${studentNumber} ${firstName} ${lastName} ${email} ${phone}`.trim()
+    ops = ops.concat(sql`
+      INSERT INTO student_search VALUES
+        (${dataId}, ${searchableText})
+    `)
+
+    await Promise.all(ops)
+
+    return {studentNumber, email, firstName, lastName, phone}
+  })
+}
+
+async function createSale(
+  studentNumber: number,
+  saleEventNumber: number,
+  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+  now: Date,
+  sql: Sql,
+): Promise<number> {
+  return await sql.begin(async (sql) => {
+    const historyId = crypto.randomUUID()
+    const dataId = crypto.randomUUID()
+
+    // Create sale history record and get sale number
+    const saleNumberResult = await sql<{sale_number: number}[]>`
+      INSERT INTO sale_history VALUES
+        (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
+      RETURNING sale_number
+    `
+    const saleNumber = saleNumberResult[0].sale_number
+
+    const saleTimestamp = new Date(
+      `${cardcomSaleWebhookJson.DealDate} ${cardcomSaleWebhookJson.DealTime}`,
+    )
+
+    const finalSaleRevenue = cardcomSaleWebhookJson.suminfull
+
+    let ops = [] as Promise<unknown>[]
+
+    // Insert main sale record
+    ops = ops.concat(sql`
+      INSERT INTO sale VALUES
+        (${saleNumber}, ${historyId}, ${dataId})
+    `)
+
+    // Insert sale data
+    ops = ops.concat(sql`
+      INSERT INTO sale_data VALUES
+        (${dataId}, ${saleEventNumber}, ${studentNumber}, ${finalSaleRevenue})
+    `)
+
+    ops = ops.concat(sql`
+      INSERT INTO sale_data_cardcom VALUES
+        (${dataId}, ${JSON.stringify(cardcomSaleWebhookJson)}, ${cardcomSaleWebhookJson.invoicenumber},
+         ${cardcomSaleWebhookJson.terminalnumber}, ${cardcomSaleWebhookJson.ApprovelNumber},
+         ${saleTimestamp}, ${cardcomSaleWebhookJson.UserEmail}, ${cardcomSaleWebhookJson.CouponNumber ?? null})
+    `)
+
+    const products = extractProductsFromCardcom(cardcomSaleWebhookJson)
+    ops = ops.concat(
+      products.map(
+        (product, index) => sql`
+        INSERT INTO sale_product VALUES
+          (${dataId}, ${index}, ${product.productId}, ${product.quantity}, ${product.price})
+      `,
+      ),
+    )
+
+    const searchableText =
+      `${saleNumber} ${cardcomSaleWebhookJson.CardOwnerName} ${cardcomSaleWebhookJson.UserEmail} ${cardcomSaleWebhookJson.invoicenumber}`.trim()
+    ops = ops.concat(sql`
+      INSERT INTO sale_search VALUES
+        (${dataId}, ${searchableText})
+    `)
+
+    await Promise.all(ops)
+
+    return saleNumber
+  })
+}
+
+function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
+  const products = []
+
+  products.push({
+    productId: cardcomSaleWebhookJson.ProductID,
+    quantity: cardcomSaleWebhookJson.ProdQuantity,
+    price: cardcomSaleWebhookJson.ProdPrice,
+  })
+
+  for (let i = 1; i <= parseInt(cardcomSaleWebhookJson.ProdTotalLines); i++) {
+    const productIdKey = `ProductID${i}` as keyof CardcomSaleWebhookJson
+    const quantityKey = `ProdQuantity${i}` as keyof CardcomSaleWebhookJson
+    const priceKey = `ProdPrice${i}` as keyof CardcomSaleWebhookJson
+
+    const productId = cardcomSaleWebhookJson[productIdKey]
+    const quantity = cardcomSaleWebhookJson[quantityKey]
+    const price = cardcomSaleWebhookJson[priceKey]
+
+    if (productId && quantity && price) {
+      products.push({
+        productId: productId,
+        quantity: quantity,
+        price: price,
+      })
+    }
+  }
+
+  return products
+}
+
+function generateNameFromCardcomSale(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
+  const nameParts = cardcomSaleWebhookJson.CardOwnerName.trim().split(/\s+/, 2)
+
+  const firstName = nameParts[0]
+  const lastName = nameParts[1] ?? '?'
+
+  return {firstName, lastName}
+}
+
+export async function connectStudentWithAcademyCourses(
+  saleEventNumber: number,
+  student: {email: string; name: string; phone: string},
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+): Promise<void> {
+  // Get student info and all academy courses for products in the sale's sales event
+  const courses = await sql<{courseId: string}[]>`
+    SELECT DISTINCT
+      pac.workshop_id as course_id
+    FROM sales_event sev
+    INNER JOIN sales_event_product_for_sale sepfs ON sepfs.data_id = sev.last_data_id
+    INNER JOIN product p ON p.product_number = sepfs.product_number
+    INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
+    WHERE sev.sales_event_number = ${saleEventNumber}
+    ORDER BY pac.workshop_id
+  `
+
+  await Promise.all(
+    courses.map(({courseId}) =>
+      retry(() => academyIntegration.addStudentToCourse(student, parseInt(courseId)), {
+        retries: 5,
+        minTimeout: 1000,
+        maxTimeout: 5000,
+      }),
+    ),
+  )
+}

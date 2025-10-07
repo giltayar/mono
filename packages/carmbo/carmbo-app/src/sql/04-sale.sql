@@ -34,7 +34,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS sale_search_idx ON sale_search (data_id);
 CREATE TABLE
   IF NOT EXISTS sale_data (
     data_id UUID NOT NULL,
-    name TEXT NOT NULL,
     sale_event_number INTEGER NOT NULL,
     student_number INTEGER NOT NULL,
     final_sale_revenue NUMERIC(10,2)

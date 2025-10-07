@@ -4,8 +4,6 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
 CREATE TABLE IF NOT EXISTS student (
     student_number SERIAL PRIMARY KEY,
     last_history_id UUID,

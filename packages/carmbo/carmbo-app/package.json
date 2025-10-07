@@ -54,7 +54,7 @@
     "@fastify/formbody": "^8.0.2",
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^8.2.0",
-    "@giltayar/carmel-tools-academy-integration": "^3.1.0",
+    "@giltayar/carmel-tools-academy-integration": "^4.0.0",
     "@giltayar/carmel-tools-smoove-integration": "^3.1.1",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.5.1",
     "@giltayar/functional-commons": "^2.0.1",
@@ -71,17 +71,17 @@
     "vhtml": "^2.2.0",
     "zod": "^4.1.11"
   },
-  "packageManager": "pnpm@10.18.0",
+  "packageManager": "pnpm@10.18.1",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.37.0",
     "@giltayar/docker-compose-testkit": "^2.1.0",
     "@playwright/test": "^1.55.1",
     "@types/chance": "^1.1.7",
-    "@types/node": "^24.6.2",
+    "@types/node": "^24.7.0",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20251004.1",
+    "@typescript/native-preview": "7.0.0-dev.20251007.1",
     "chance": "^1.1.13",
     "eslint": "^9.37.0",
     "eslint-plugin-n": "^17.23.1",
@@ -89,6 +89,6 @@
     "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.44.1"
+    "typescript-eslint": "^8.45.0"
   }
 }
