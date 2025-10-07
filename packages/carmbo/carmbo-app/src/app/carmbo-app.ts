@@ -7,6 +7,7 @@ import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
 import productRoutes from '../domain/product/route.ts'
 import salesEvents from '../domain/sales-event/route.ts'
+import {apiRoute as salesApiRoute} from '../domain/sale/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
   AcademyCourse,
@@ -112,12 +113,14 @@ export function makeApp({
     app.register(productRoutes, {prefix: '/products', sql})
     app.register(salesEvents, {prefix: '/sales-events', sql})
   })
-  app.get('/health', async () => {
-    return {status: 'ok'}
-  })
+
+  app.register(salesApiRoute, {prefix: '/api/sales', secret: auth0?.sessionSecret ?? 'secret'})
+
+  app.get('/health', async () => ({status: 'ok'}))
 
   return {app, sql}
 }
+
 function addAuth0Hook(app: FastifyInstance, auth0Client: any) {
   if (auth0Client)
     app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
