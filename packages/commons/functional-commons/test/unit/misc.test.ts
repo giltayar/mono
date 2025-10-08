@@ -19,6 +19,7 @@ import {
   group,
   clone,
   sresult,
+  assertNever,
 } from '../../src/functional-commons.ts'
 
 describe('functional-commons', function () {
@@ -345,6 +346,28 @@ describe('functional-commons', function () {
         }),
         [42, undefined],
       )
+    })
+  })
+
+  describe('assertNever', () => {
+    it('should not fail compilation on exhaustive check', () => {
+      const foo: 'a' | 'b' = Math.random() < 0.5 ? 'a' : 'b'
+
+      if (foo === 'a') {
+      } else if (foo === 'b') {
+      } else {
+        assertNever(foo)
+      }
+    })
+
+    it('should fail compilation on non-exhaustive check', () => {
+      const foo: 'a' | 'b' = Math.random() < 0.5 ? 'a' : 'b'
+
+      if (foo === 'a') {
+      } else {
+        //@ts-expect-error this should fail exhaustiveness
+        assert.throw(() => assertNever(foo))
+      }
     })
   })
 })

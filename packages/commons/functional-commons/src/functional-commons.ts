@@ -253,3 +253,7 @@ export function sresult<T>(
     return [error as Error, undefined]
   }
 }
+
+export function assertNever(something: never): never {
+  throw new Error(`Unexpected value: ${something}`)
+}
