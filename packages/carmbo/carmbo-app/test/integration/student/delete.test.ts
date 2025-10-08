@@ -21,7 +21,7 @@ test('deleting a student', async ({page}) => {
   await newForm1.names().firstNameInput(0).locator.fill('Alice')
   await newForm1.names().lastNameInput(0).locator.fill('Johnson')
 
-  await newForm1.emails().trashButton(0).locator.click()
+  await newForm1.emails().emailInput(0).locator.fill('alice.johnson@example.com')
   await newForm1.phones().trashButton(0).locator.click()
   await newForm1.facebookNames().trashButton(0).locator.click()
 
@@ -38,7 +38,7 @@ test('deleting a student', async ({page}) => {
   await newForm2.names().firstNameInput(0).locator.fill('Bob')
   await newForm2.names().lastNameInput(0).locator.fill('Williams')
 
-  await newForm2.emails().trashButton(0).locator.click()
+  await newForm1.emails().emailInput(0).locator.fill('bob.williams@example.com')
   await newForm2.phones().trashButton(0).locator.click()
   await newForm2.facebookNames().trashButton(0).locator.click()
 
@@ -97,7 +97,7 @@ test('restoring a student', async ({page}) => {
   await newForm1.names().firstNameInput(0).locator.fill('Alice')
   await newForm1.names().lastNameInput(0).locator.fill('Johnson')
 
-  await newForm1.emails().trashButton(0).locator.click()
+  await newForm1.emails().emailInput(0).locator.fill('alice.johnson@example.com')
   await newForm1.phones().trashButton(0).locator.click()
   await newForm1.facebookNames().trashButton(0).locator.click()
 

@@ -18,6 +18,7 @@ import {
 import {renderStudentsPage} from './view/list.ts'
 import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
 import type {StudentManipulations} from './view/student-manipulations.ts'
+import {requestContext} from '@fastify/request-context'
 
 export async function showStudents(
   {
@@ -74,13 +75,17 @@ export async function showStudentInHistory(
 }
 
 export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {
-  const studentNumber = await model_createStudent(student, undefined, sql)
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+
+  const studentNumber = await model_createStudent(student, undefined, smooveIntegration, sql)
 
   return {htmxRedirect: `/students/${studentNumber}`}
 }
 
 export async function updateStudent(student: Student, sql: Sql): Promise<ControllerResult> {
-  const studentNumber = await model_updateStudent(student, undefined, sql)
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+
+  const studentNumber = await model_updateStudent(student, undefined, smooveIntegration, sql)
 
   if (!studentNumber) {
     return {status: 404, body: 'Student not found'}
@@ -94,7 +99,15 @@ export async function deleteStudent(
   deleteOperation: 'delete' | 'restore',
   sql: Sql,
 ): Promise<ControllerResult> {
-  const operationId = await model_deleteStudent(studentNumber, undefined, deleteOperation, sql)
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+
+  const operationId = await model_deleteStudent(
+    studentNumber,
+    undefined,
+    deleteOperation,
+    smooveIntegration,
+    sql,
+  )
 
   if (!operationId) {
     return {status: 404, body: 'Student not found'}

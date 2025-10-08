@@ -95,7 +95,8 @@ test('discard button', async ({page}) => {
 
   await newForm.names().firstNameInput(0).locator.fill('John')
   await newForm.names().lastNameInput(0).locator.fill('Doe')
-  await newForm.emails().trashButton(0).locator.click()
+  await newForm.emails().emailInput(0).locator.fill('john.doe@example.com')
+
   await newForm.phones().trashButton(0).locator.click()
   await newForm.facebookNames().trashButton(0).locator.click()
 
@@ -105,7 +106,7 @@ test('discard button', async ({page}) => {
   const updateForm = updateStudentModel.form()
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('John')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Doe')
-  await expect(newForm.emails().emailInput(0).locator).not.toBeVisible()
+  await expect(newForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
 
   await updateForm.names().firstNameInput(0).locator.fill('Jane')
   await updateForm.names().lastNameInput(0).locator.fill('Smith')
@@ -116,7 +117,7 @@ test('discard button', async ({page}) => {
 
   await expect(newForm.names().firstNameInput(0).locator).toHaveValue('John')
   await expect(newForm.names().lastNameInput(0).locator).toHaveValue('Doe')
-  await expect(newForm.emails().emailInput(0).locator).not.toBeVisible()
+  await expect(newForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
 })
 
 test('birthday field is optional', async ({page}) => {
@@ -134,7 +135,7 @@ test('birthday field is optional', async ({page}) => {
 
   await newStudentModel.form().names().firstNameInput(0).locator.fill('John')
   await newStudentModel.form().names().lastNameInput(0).locator.fill('Doe')
-  await newStudentModel.form().emails().trashButton(0).locator.click()
+  await newStudentModel.form().emails().emailInput(0).locator.fill('john.doe@example.com')
   await newStudentModel.form().phones().trashButton(0).locator.click()
   await newStudentModel.form().facebookNames().trashButton(0).locator.click()
 

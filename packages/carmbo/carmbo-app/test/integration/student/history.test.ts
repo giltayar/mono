@@ -22,8 +22,8 @@ test('can view history', async ({page}) => {
   const newForm = newStudentModel.form()
   await newForm.names().firstNameInput(0).locator.fill('1')
   await newForm.names().lastNameInput(0).locator.fill('Doe')
+  await newForm.emails().emailInput(0).locator.fill('1.doe@example.com')
 
-  await newForm.emails().trashButton(0).locator.click()
   await newForm.phones().trashButton(0).locator.click()
   await newForm.facebookNames().trashButton(0).locator.click()
 
@@ -88,8 +88,8 @@ test('multiple students have different histories', async ({page}) => {
   const newForm1 = newStudentModel.form()
   await newForm1.names().firstNameInput(0).locator.fill('Alice')
   await newForm1.names().lastNameInput(0).locator.fill('Johnson')
+  await newForm1.emails().emailInput(0).locator.fill('alice.johnson@example.com')
 
-  await newForm1.emails().trashButton(0).locator.click()
   await newForm1.phones().trashButton(0).locator.click()
   await newForm1.facebookNames().trashButton(0).locator.click()
 
@@ -117,7 +117,7 @@ test('multiple students have different histories', async ({page}) => {
   await newForm2.names().firstNameInput(0).locator.fill('Bob')
   await newForm2.names().lastNameInput(0).locator.fill('Williams')
 
-  await newForm2.emails().trashButton(0).locator.click()
+  await newForm2.emails().emailInput(0).locator.fill('bob.williams@example.com')
   await newForm2.phones().trashButton(0).locator.click()
   await newForm2.facebookNames().trashButton(0).locator.click()
 

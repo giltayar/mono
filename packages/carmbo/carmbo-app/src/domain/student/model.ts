@@ -4,7 +4,8 @@ import {assert} from 'node:console'
 import {z} from 'zod'
 import {range} from '@giltayar/functional-commons'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
-import type {CardcomSaleWebhookJson} from '../sale/model.ts'
+import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import {assertNever} from '@giltayar/functional-commons'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -12,8 +13,8 @@ export const StudentSchema = z.object({
     .date()
     .transform((s) => new Date(s))
     .optional(),
-  names: z.array(z.object({firstName: z.string().min(1), lastName: z.string().min(1)})).optional(),
-  emails: z.array(z.email()).optional(),
+  names: z.array(z.object({firstName: z.string().min(1), lastName: z.string().min(1)})).min(1),
+  emails: z.array(z.email()).min(1),
   phones: z.array(z.string().min(1)).optional(),
   facebookNames: z.array(z.string()).optional(),
 })
@@ -106,7 +107,12 @@ export async function listStudents(
   return result
 }
 
-export async function createStudent(student: NewStudent, reason: string | undefined, sql: Sql) {
+export async function createStudent(
+  student: NewStudent,
+  reason: string | undefined,
+  smooveIntegration: SmooveIntegrationService | undefined,
+  sql: Sql,
+) {
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -119,12 +125,20 @@ export async function createStudent(student: NewStudent, reason: string | undefi
     `
     const studentNumber = studentNumberResult[0].studentNumber
 
+    const {smooveId} = (await smooveIntegration?.createSmooveContact({
+      email: student.emails[0],
+      firstName: student.names[0].firstName,
+      lastName: student.names[0].lastName,
+      telephone: student.phones?.[0],
+      birthday: student.birthday,
+    })) ?? {smooveId: 0}
+
     await sql`
       INSERT INTO student VALUES
         (${studentNumber}, ${historyId}, ${dataId})
     `
 
-    await addStudentStuff(studentNumber, student, dataId, sql)
+    await addStudentStuff(studentNumber, student, smooveId, dataId, sql)
 
     return studentNumber
   })
@@ -133,8 +147,11 @@ export async function createStudent(student: NewStudent, reason: string | undefi
 export async function updateStudent(
   student: Student,
   reason: string | undefined,
+  smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ): Promise<number | undefined> {
+  const smooveId = await getSmooveId(student.studentNumber, sql)
+
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -159,16 +176,37 @@ export async function updateStudent(
 
     assert(updateResult.length === 1, `More than one student with ID ${student.studentNumber}`)
 
-    await addStudentStuff(student.studentNumber, student, dataId, sql)
+    await addStudentStuff(student.studentNumber, student, smooveId, dataId, sql)
+
+    if (smooveId > 0)
+      await smooveIntegration.updateSmooveContact(smooveId, {
+        email: student.emails[0],
+        birthday: student.birthday,
+        firstName: student.names?.[0].firstName ?? '',
+        lastName: student.names?.[0].lastName ?? '',
+        telephone: student.phones?.[0] ?? '',
+      })
 
     return student.studentNumber
   })
+}
+
+async function getSmooveId(studentNumber: number, sql: Sql) {
+  const smooveIdResult = await sql<{smooveContactId: string}[]>`
+    SELECT smoove_contact_id
+    FROM student_integration_smoove sis
+    JOIN student s ON s.last_data_id = sis.data_id
+    WHERE s.student_number = ${studentNumber}
+  `
+
+  return parseInt(smooveIdResult[0].smooveContactId)
 }
 
 export async function deleteStudent(
   studentNumber: number,
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
+  smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ): Promise<string | undefined> {
   return await sql.begin(async (sql) => {
@@ -190,6 +228,7 @@ export async function deleteStudent(
     if (dataIdResult.length > 1) {
       throw new Error(`More than one student with ID ${studentNumber}`)
     }
+    const smooveId = await getSmooveId(studentNumber, sql)
 
     await sql`
         UPDATE student SET
@@ -198,6 +237,14 @@ export async function deleteStudent(
           last_data_id = ${dataIdResult[0].dataId}
         WHERE student_number = ${studentNumber}
      `
+
+    if (deleteOperation === 'delete') {
+      await smooveIntegration.deleteSmooveContact(smooveId)
+    } else if (deleteOperation === 'restore') {
+      await smooveIntegration.restoreSmooveContact(smooveId)
+    } else {
+      assertNever(deleteOperation)
+    }
 
     return historyId
   })
@@ -345,6 +392,7 @@ ORDER BY
 async function addStudentStuff(
   studentNumber: number,
   student: Student | NewStudent,
+  smooveId: number,
   dataId: string,
   sql: Sql,
 ) {
@@ -396,6 +444,8 @@ async function addStudentStuff(
     ) ?? [],
   )
 
+  ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+
   await Promise.all(ops)
 }
 
@@ -408,7 +458,11 @@ function searchableStudentText(studentNumber: number, student: Student | NewStud
   return `${studentNumber} ${names} ${emails} ${phones} ${facebookNames}`.trim()
 }
 
-export async function TEST_seedStudents(sql: Sql, count: number) {
+export async function TEST_seedStudents(
+  sql: Sql,
+  smooveIntegration: SmooveIntegrationService | undefined,
+  count: number,
+) {
   // eslint-disable-next-line n/no-unpublished-import
   const chance = new (await import('chance')).Chance(0)
 
@@ -429,6 +483,7 @@ export async function TEST_seedStudents(sql: Sql, count: number) {
         birthday: chance.date(),
       },
       chance.word(),
+      smooveIntegration,
       sql,
     )
   }

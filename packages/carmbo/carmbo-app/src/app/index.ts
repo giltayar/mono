@@ -8,6 +8,7 @@ import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-inte
 import {TEST_seedStudents} from '../domain/student/model.ts'
 import {TEST_seedProducts} from '../domain/product/model.ts'
 import {TEST_seedSalesEvents} from '../domain/sales-event/model.ts'
+import {throw_} from '@giltayar/functional-commons'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_DATABASE: z.string().default('carmbo'),
@@ -29,7 +30,15 @@ export const EnvironmentVariablesSchema = z.object({
   CARMBO_AUTH0_SESSION_SECRET: z.string(),
 })
 
-const env = EnvironmentVariablesSchema.parse(process.env)
+const env = EnvironmentVariablesSchema.parse(
+  process.env.NODE_ENV === 'production'
+    ? process.env
+    : {
+        ...process.env,
+        SMOOVE_API_KEY:
+          process.env.SMOOVE_GIL_API_KEY ?? throw_(new Error('SMOOVE_TEST_API_KEY is not set')),
+      },
+)
 
 const {app, sql} = await makeApp({
   db: {
@@ -51,8 +60,6 @@ const {app, sql} = await makeApp({
     smooveIntegration: createSmooveIntegrationService({
       apiKey: env.SMOOVE_API_KEY,
       apiUrl: env.SMOOVE_API_URL,
-      cardComRecurringPaymentIdCustomFieldId: '',
-      cardComAccountIdCustomFieldId: '',
     }),
   },
   auth0: env.FORCE_NO_AUTH
@@ -85,7 +92,7 @@ async function seedIfNeeded() {
   if (studentCountResult[0].count === '0') {
     console.log(`Seeding ${seedCount}...`)
     await Promise.all([
-      TEST_seedStudents(sql, seedCount),
+      TEST_seedStudents(sql, undefined, seedCount),
       TEST_seedProducts(sql, seedCount),
       TEST_seedSalesEvents(sql, seedCount, seedCount),
     ])

@@ -187,7 +187,7 @@ test('form validations', async ({page}) => {
   await page.waitForURL(updateStudentModel.urlRegex)
 })
 
-test('remove names and other fields', async ({page}) => {
+test('remove any possible fields', async ({page}) => {
   await page.goto(url().href)
 
   const studentListModel = createStudentListPageModel(page)
@@ -198,11 +198,10 @@ test('remove names and other fields', async ({page}) => {
 
   await page.waitForURL(newStudentModel.urlRegex)
 
-  // Remove all possible names
   const newForm = newStudentModel.form()
-  await newForm.names().trashButton(0).locator.click()
-
-  await newForm.emails().trashButton(0).locator.click()
+  await newForm.names().firstNameInput(0).locator.fill('John')
+  await newForm.names().lastNameInput(0).locator.fill('Doe')
+  await newForm.emails().emailInput(0).locator.fill('john.doe@example.com')
 
   await newForm.phones().trashButton(0).locator.click()
   await newForm.facebookNames().trashButton(0).locator.click()
@@ -215,21 +214,8 @@ test('remove names and other fields', async ({page}) => {
 
   await expect(updateForm.updateButton().locator).toBeVisible()
 
-  await expect(updateForm.names().firstNameInput(0).locator).not.toBeVisible()
-  await expect(updateForm.names().lastNameInput(0).locator).not.toBeVisible()
-
-  await expect(updateForm.emails().emailInput(0).locator).not.toBeVisible()
-
   await expect(updateForm.phones().phoneInput(0).locator).not.toBeVisible()
   await expect(updateForm.facebookNames().facebookNameInput(0).locator).not.toBeVisible()
-
-  // Add new fields
-  await updateForm.names().addButton().locator.click()
-  await updateForm.names().firstNameInput(0).locator.fill('first3')
-  await updateForm.names().lastNameInput(0).locator.fill('last3')
-
-  await updateForm.emails().addButton().locator.click()
-  await updateForm.emails().emailInput(0).locator.fill('email3@example.com')
 
   await updateForm.phones().addButton().locator.click()
   await updateForm.phones().phoneInput(0).locator.fill('3333333333')
@@ -241,10 +227,6 @@ test('remove names and other fields', async ({page}) => {
 
   await expect(page.url()).toMatch(updateStudentModel.urlRegex)
 
-  await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('first3')
-  await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('last3')
-
-  await expect(updateForm.emails().emailInput(0).locator).toHaveValue('email3@example.com')
   await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('3333333333')
   await expect(updateForm.facebookNames().facebookNameInput(0).locator).toHaveValue('fb3')
 })

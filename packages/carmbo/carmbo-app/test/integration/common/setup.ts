@@ -8,6 +8,7 @@ import postgres from 'postgres'
 import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
+import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 
 export function setup(testUrl: string) {
   let findAddress
@@ -15,6 +16,7 @@ export function setup(testUrl: string) {
   let app: FastifyInstance
   let sql: Sql
   let url: URL
+  let smooveIntegration: SmooveIntegrationService
 
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
@@ -24,6 +26,19 @@ export function setup(testUrl: string) {
 
     const host = await findAddress('carmbo-postgres', 5432, {healthCheck: postgresHealthCheck})
 
+    smooveIntegration = createFakeSmooveIntegrationService({
+      lists: [
+        {id: 2, name: 'Smoove List ID 1'},
+        {id: 4, name: 'Smoove List Cancelling 2'},
+        {id: 6, name: 'Smoove List Cancelled 3'},
+        {id: 8, name: 'Smoove List Removed 4'},
+        {id: 10, name: 'Smoove List ID A'},
+        {id: 12, name: 'Smoove List Cancelling B'},
+        {id: 14, name: 'Smoove List Cancelled C'},
+        {id: 16, name: 'Smoove List Removed D'},
+      ],
+      contacts: {},
+    })
     ;({app, sql} = makeApp({
       db: {
         database: 'carmbo',
@@ -39,7 +54,7 @@ export function setup(testUrl: string) {
             {id: 33, name: 'Course 2'},
             {id: 777, name: 'Course 3'},
           ],
-          enrolledContacts: new Set<string>(),
+          enrolledContacts: new Map(),
         }),
         whatsappIntegration: createFakeWhatsAppIntegrationService({
           groups: {
@@ -60,19 +75,7 @@ export function setup(testUrl: string) {
             },
           },
         }),
-        smooveIntegration: createFakeSmooveIntegrationService({
-          lists: [
-            {id: 2, name: 'Smoove List ID 1'},
-            {id: 4, name: 'Smoove List Cancelling 2'},
-            {id: 6, name: 'Smoove List Cancelled 3'},
-            {id: 8, name: 'Smoove List Removed 4'},
-            {id: 10, name: 'Smoove List ID A'},
-            {id: 12, name: 'Smoove List Cancelling B'},
-            {id: 14, name: 'Smoove List Cancelled C'},
-            {id: 16, name: 'Smoove List Removed D'},
-          ],
-          contacts: {},
-        }),
+        smooveIntegration,
       },
       auth0: undefined,
     }))
@@ -99,6 +102,7 @@ export function setup(testUrl: string) {
   return {
     url: () => url,
     sql: () => sql,
+    smooveIntegration: () => smooveIntegration,
   }
 }
 

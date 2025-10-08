@@ -1,7 +1,12 @@
 // https://rest.smoove.io/#!/Account/Account_Get
 
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
-import {fetchAsJson, fetchAsJsonWithJsonBody} from '@giltayar/http-commons'
+import {
+  fetchAsJson,
+  fetchAsJsonWithJsonBody,
+  fetchAsText,
+  fetchAsTextWithJsonBody,
+} from '@giltayar/http-commons'
 import type {
   SmooveContact,
   SmooveContactInList,
@@ -157,6 +162,11 @@ async function createSmooveContact(
       cellPhone: contact.telephone,
       dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
     }),
+    {
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    },
   )) as {id: number}
 
   return {smooveId: response.id}
@@ -179,6 +189,12 @@ async function updateSmooveContact(
       cellPhone: contact.telephone,
       dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
     }),
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    },
   )
 }
 
@@ -186,9 +202,20 @@ async function deleteSmooveContact(
   s: SmooveIntegrationServiceData,
   smooveId: number,
 ): Promise<void> {
-  const url = new URL(`Contacts/${encodeURIComponent(smooveId)}?by=ContactId`, s.context.apiUrl)
+  const url = new URL(
+    `Contacts/${encodeURIComponent(smooveId)}/Unsubscribe?by=ContactId`,
+    s.context.apiUrl,
+  )
 
-  await fetchAsJsonWithJsonBody(url, {deleted: true})
+  await fetchAsTextWithJsonBody(
+    url,
+    {reason: 'deleted by backoffice'},
+    {
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    },
+  )
 }
 
 async function restoreSmooveContact(
@@ -196,11 +223,16 @@ async function restoreSmooveContact(
   smooveId: number,
 ): Promise<void> {
   const url = new URL(
-    `Contacts/${encodeURIComponent(smooveId)}?by=ContactId&restoreIfDeleted=true`,
+    `Contacts/${encodeURIComponent(smooveId)}/Resubscribe?by=ContactId`,
     s.context.apiUrl,
   )
 
-  await fetchAsJsonWithJsonBody(url, {deleted: false})
+  await fetchAsText(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${s.context.apiKey}`,
+    },
+  })
 }
 
 async function changeContactLinkedLists(

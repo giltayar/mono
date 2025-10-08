@@ -4,12 +4,12 @@ import {setup} from '../common/setup.ts'
 import {TEST_seedStudents} from '../../../src/domain/student/model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 
-const {url, sql} = setup(import.meta.url)
+const {url, sql, smooveIntegration} = setup(import.meta.url)
 
 test('searching students', async ({page}) => {
   test.slow()
 
-  await TEST_seedStudents(sql(), 200)
+  await TEST_seedStudents(sql(), smooveIntegration(), 200)
 
   await page.goto(url().href)
 

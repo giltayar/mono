@@ -5,10 +5,7 @@ import {normalizeEmail} from '../../commons/email.ts'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {makeError} from '@giltayar/functional-commons'
-import type {
-  SmooveContact,
-  SmooveIntegrationService,
-} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 
 export const CardcomSaleWebhookJsonSchema = z.object({
   ApprovelNumber: z.string(),
@@ -403,7 +400,7 @@ async function subscribeStudentToSmooveLists(
   }
 
   for (const smooveProductLists of smooveProductsLists) {
-    await smooveIntegration.changeContactLinkedLists({id: parseInt(contactId)} as SmooveContact, {
+    await smooveIntegration.changeContactLinkedLists(parseInt(contactId), {
       subscribeTo: [parseInt(smooveProductLists.listId)],
       unsubscribeFrom: [
         parseInt(smooveProductLists.cancellingListId),
