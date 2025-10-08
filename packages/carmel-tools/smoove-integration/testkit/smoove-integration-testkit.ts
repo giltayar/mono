@@ -1,9 +1,10 @@
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {
-  SmooveContact,
   SmooveContactInList,
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
+  SmooveContactWithIdAndLists,
+  SmooveContact,
 } from '@giltayar/carmel-tools-smoove-integration/types'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
@@ -18,11 +19,10 @@ export function createFakeSmooveIntegrationService(context: {
       id: number
       email: string
       telephone: string
-      cardcomRecurringPaymentId: string
-      cardcomAccountId: string
       lists: number[]
       signupDate: Date
-      isBlacklisted?: boolean
+      birthday?: Date
+      isDeleted?: boolean
     }
   >
   lists: Record<number, {id: number; name: string}>
@@ -36,34 +36,17 @@ export function createFakeSmooveIntegrationService(context: {
   const service: SmooveIntegrationService = {
     fetchContactsOfList: sBind(fetchContactsOfList),
     fetchSmooveContact: sBind(fetchSmooveContact),
+    createSmooveContact: sBind(createSmooveContact),
+    updateSmooveContact: sBind(updateSmooveContact),
+    deleteSmooveContact: sBind(deleteSmooveContact),
+    restoreSmooveContact: sBind(restoreSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
-    updateSmooveContactWithRecurringPayment: sBind(updateSmooveContactWithRecurringPayment),
     fetchLists: sBind(fetchLists),
   }
 
   return {
     ...service,
-    _test_addContact: async (contact: {
-      id: number
-      email: string
-      telephone: string
-      cardcomRecurringPaymentId: string
-      cardcomAccountId: string
-      lists: number[]
-      signupDate: Date
-      isBlacklisted?: boolean
-    }) => {
-      state.contacts[contact.id] = structuredClone(contact)
-    },
-    _test_addList: async (list: {id: number; name: string}) => {
-      state.lists[list.id] = structuredClone(list)
-    },
-    _test_setContactBlacklisted: async (contactId: number, isBlacklisted: boolean) => {
-      const contact = state.contacts[contactId]
-      if (contact) {
-        contact.isBlacklisted = isBlacklisted
-      }
-    },
+    _test_isContactDeleted: (id: number) => !!state.contacts[id].isDeleted,
   }
 }
 
@@ -77,8 +60,7 @@ async function fetchContactsOfList(
       id: contact.id,
       email: contact.email,
       telephone: contact.telephone,
-      cardcomRecurringPaymentId: contact.cardcomRecurringPaymentId,
-      cardcomAccountId: contact.cardcomAccountId,
+      birthday: undefined,
       lists_Linked: [...contact.lists],
       signupDate: contact.signupDate,
     }))
@@ -87,15 +69,15 @@ async function fetchContactsOfList(
 
 async function fetchSmooveContact(
   s: SmooveIntegrationServiceData,
-  id: string,
+  id: number | string,
   {by = 'id'}: SmooveFetchContactOptions = {},
-): Promise<SmooveContact> {
+): Promise<SmooveContactWithIdAndLists> {
   let contact: (typeof s.state.contacts)[number] | undefined
 
   if (by === 'id') {
-    contact = s.state.contacts[parseInt(id)]
+    contact = s.state.contacts[typeof id == 'number' ? id : parseInt(id)]
   } else if (by === 'email') {
-    contact = Object.values(s.state.contacts).find((c) => c.email === id)
+    contact = Object.values(s.state.contacts).find((c) => c.email === String(id))
   }
 
   if (!contact) {
@@ -106,20 +88,19 @@ async function fetchSmooveContact(
     id: contact.id,
     email: contact.email,
     telephone: contact.telephone,
-    cardcomRecurringPaymentId: contact.cardcomRecurringPaymentId,
-    cardcomAccountId: contact.cardcomAccountId,
+    birthday: undefined,
     lists_Linked: [...contact.lists],
   }
 }
 
 async function changeContactLinkedLists(
   s: SmooveIntegrationServiceData,
-  smooveContact: SmooveContact,
+  smooveId: number,
   {subscribeTo, unsubscribeFrom}: SmooveContactChangeListsOptions,
 ): Promise<unknown> {
-  const contact = s.state.contacts[smooveContact.id]
+  const contact = s.state.contacts[smooveId]
   if (!contact) {
-    throw new Error(`Contact ${smooveContact.id} not found`)
+    throw new Error(`Contact ${smooveId} not found`)
   }
 
   // Add new subscriptions
@@ -140,27 +121,75 @@ async function changeContactLinkedLists(
   return {success: true}
 }
 
-async function updateSmooveContactWithRecurringPayment(
+async function createSmooveContact(
   s: SmooveIntegrationServiceData,
-  email: string,
-  accountId: string,
-  recurringPaymentId: string,
-): Promise<'blacklisted' | 'not-exists' | unknown> {
-  const contact = Object.values(s.state.contacts).find((c) => c.email === email)
+  contact: SmooveContact,
+): Promise<{smooveId: number}> {
+  const existingContact = Object.values(s.state.contacts).find((c) => c.email === contact.email)
 
+  if (existingContact) {
+    existingContact.telephone = contact.telephone ?? existingContact.telephone
+    existingContact.birthday = contact.birthday ?? existingContact.birthday
+    existingContact.email = contact.email ?? existingContact.email
+
+    return {smooveId: existingContact.id}
+  }
+
+  const newId = Math.max(0, ...Object.keys(s.state.contacts).map(Number)) + 1
+
+  s.state.contacts[newId] = {
+    id: newId,
+    email: contact.email,
+    telephone: contact.telephone ?? '',
+    lists: [] as number[],
+    signupDate: new Date(),
+    isDeleted: false,
+  }
+
+  return {smooveId: newId}
+}
+
+async function updateSmooveContact(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+  contact: SmooveContact,
+): Promise<void> {
+  const existingContact = s.state.contacts[smooveId]
+  if (!existingContact) {
+    throw new Error(`Contact ${smooveId} not found`)
+  }
+
+  // Update the contact fields
+  existingContact.email = contact.email
+  if (contact.telephone !== undefined) {
+    existingContact.telephone = contact.telephone
+  }
+}
+
+async function deleteSmooveContact(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+): Promise<void> {
+  const contact = s.state.contacts[smooveId]
   if (!contact) {
-    return 'not-exists'
+    throw new Error(`Contact ${smooveId} not found`)
   }
 
-  if (contact.isBlacklisted) {
-    return 'blacklisted'
+  // Mark as blacklisted (soft delete)
+  contact.isDeleted = true
+}
+
+async function restoreSmooveContact(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+): Promise<void> {
+  const contact = s.state.contacts[smooveId]
+  if (!contact) {
+    throw new Error(`Contact ${smooveId} not found`)
   }
 
-  // Update the contact
-  contact.cardcomAccountId = accountId
-  contact.cardcomRecurringPaymentId = recurringPaymentId
-
-  return {success: true}
+  // Remove blacklisted status (restore)
+  contact.isDeleted = false
 }
 
 async function fetchLists(s: SmooveIntegrationServiceData) {

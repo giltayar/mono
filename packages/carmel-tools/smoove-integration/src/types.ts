@@ -1,14 +1,18 @@
 export interface SmooveContact {
-  id: number
   email: string
-  telephone: string
-  cardcomRecurringPaymentId: string
-  cardcomAccountId: string
+  telephone: string | undefined
+  birthday: Date | undefined
+}
+
+export interface SmooveContactWithIdAndLists extends SmooveContact {
+  id: number
   lists_Linked: number[]
 }
 
 export interface SmooveContactInList extends SmooveContact {
+  id: number
   signupDate: Date
+  lists_Linked: number[]
 }
 
 export interface SmooveContactChangeListsOptions {

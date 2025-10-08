@@ -1,13 +1,14 @@
 // https://rest.smoove.io/#!/Account/Account_Get
 
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
-import {fetchAsJson} from '@giltayar/http-commons'
+import {fetchAsJson, fetchAsJsonWithJsonBody} from '@giltayar/http-commons'
 import type {
   SmooveContact,
   SmooveContactInList,
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
   SmooveList,
+  SmooveContactWithIdAndLists,
 } from './types.js'
 
 // Re-export types for external consumption
@@ -22,8 +23,6 @@ export type {
 export interface SmooveIntegrationServiceContext {
   apiKey: string
   apiUrl: string
-  cardComRecurringPaymentIdCustomFieldId: string
-  cardComAccountIdCustomFieldId: string
 }
 
 type SmooveIntegrationServiceData = {
@@ -36,15 +35,18 @@ export function createSmooveIntegrationService(context: SmooveIntegrationService
   return {
     fetchContactsOfList: sBind(fetchContactsOfList),
     fetchSmooveContact: sBind(fetchSmooveContact),
+    createSmooveContact: sBind(createSmooveContact),
+    updateSmooveContact: sBind(updateSmooveContact),
+    deleteSmooveContact: sBind(deleteSmooveContact),
+    restoreSmooveContact: sBind(restoreSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
-    updateSmooveContactWithRecurringPayment: sBind(updateSmooveContactWithRecurringPayment),
     fetchLists: sBind(fetchLists),
   }
 }
 
 export type SmooveIntegrationService = ReturnType<typeof createSmooveIntegrationService>
 
-export async function fetchContactsOfList(
+async function fetchContactsOfList(
   s: SmooveIntegrationServiceData,
   listId: number,
 ): Promise<SmooveContactInList[]> {
@@ -54,7 +56,7 @@ export async function fetchContactsOfList(
     phone: string
     cellPhone: string
     lists_Linked: number[]
-    customFields: Record<string, string>
+    dateOfBirth: string
     listAssociationTime: string
   }
 
@@ -71,67 +73,54 @@ export async function fetchContactsOfList(
   return fullResults.map((c: SmooveApiContact) => ({
     id: c.id,
     email: c.email,
-    cardcomRecurringPaymentId: c.customFields[s.context.cardComRecurringPaymentIdCustomFieldId],
-    cardcomAccountId: c.customFields[s.context.cardComAccountIdCustomFieldId],
     telephone: c.cellPhone || c.phone,
     signupDate: maybeIsoToDate(c.listAssociationTime),
+    birthday: c.dateOfBirth ? maybeIsoToDate(c.dateOfBirth) : undefined,
     lists_Linked: c.lists_Linked,
   }))
 
   async function fetchByPage(page: number): Promise<SmooveApiContact[]> {
     const url = new URL(`Lists/${listId}/Contacts`, s.context.apiUrl)
-    url.searchParams.append('fields', 'id,email,listAssociationTime,phone,cellPhone')
+    url.searchParams.append('fields', 'id,email,listAssociationTime,phone,cellPhone,dateOfBirth')
     url.searchParams.append('page', String(page))
     url.searchParams.append('itemsPerPage', String(100))
     url.searchParams.append('sort', '-id')
-    url.searchParams.append('includeCustomFields', 'true')
+    url.searchParams.append('includeCustomFields', 'false')
     url.searchParams.append('includeLinkedLists', 'true')
     url.searchParams.append('includeListAssociationTime', 'true')
 
-    const response = await fetch(url, {
+    return (await fetchAsJson(url, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${s.context.apiKey}`,
       },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.status}, ${await response.text()}`)
-    }
-
-    return (await response.json()) as SmooveApiContact[]
+    })) as SmooveApiContact[]
   }
 }
 
-export async function fetchSmooveContact(
+async function fetchSmooveContact(
   s: SmooveIntegrationServiceData,
-  id: string,
+  id: number | string,
   {by = 'id'}: SmooveFetchContactOptions = {},
-): Promise<SmooveContact> {
+): Promise<SmooveContactWithIdAndLists> {
   const url = new URL(`Contacts/${id}`, s.context.apiUrl)
   url.searchParams.append('by', by === 'id' ? 'ContactId' : 'Email')
-  url.searchParams.append('fields', 'id,email,hokNumber,phone,cellPhone')
+  url.searchParams.append('fields', 'id,email,hokNumber,phone,cellPhone,dateOfBirth')
+  url.searchParams.append('includeCustomFields', 'false')
   url.searchParams.append('includeLinkedLists', 'true')
-  url.searchParams.append('includeCustomFields', 'true')
 
-  const response = await fetch(url, {
+  const result = (await fetchAsJson(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${s.context.apiKey}`,
       'Content-Type': 'application/json',
     },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status}, ${await response.text()}`)
-  }
-
-  const result = (await response.json()) as {
+  })) as {
     id: number
     email: string
     lists_Linked: number[]
-    customFields: Record<string, string>
     cellPhone: string
+    dateOfBirth: string
     phone: string
   }
 
@@ -139,19 +128,75 @@ export async function fetchSmooveContact(
     id: result.id,
     email: result.email,
     lists_Linked: result.lists_Linked,
-    cardcomRecurringPaymentId:
-      result.customFields[s.context.cardComRecurringPaymentIdCustomFieldId],
-    cardcomAccountId: result.customFields[s.context.cardComAccountIdCustomFieldId],
     telephone: result.cellPhone || result.phone,
+    birthday: result.dateOfBirth ? maybeIsoToDate(result.dateOfBirth) : undefined,
   }
 }
 
-export async function changeContactLinkedLists(
+async function createSmooveContact(
   s: SmooveIntegrationServiceData,
-  smooveContact: SmooveContact,
+  contact: SmooveContact,
+): Promise<{smooveId: number}> {
+  const url = new URL(`Contacts?updateIfExists=true&restoreIfDeleted=true`, s.context.apiUrl)
+
+  const response = (await fetchAsJsonWithJsonBody(
+    url,
+    removeUndefinedFields({
+      email: contact.email,
+      phone: contact.telephone,
+      cellPhone: contact.telephone,
+      dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
+    }),
+  )) as {id: number}
+
+  return {smooveId: response.id}
+}
+
+async function updateSmooveContact(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+  contact: SmooveContact,
+): Promise<void> {
+  const url = new URL(`Contacts/${encodeURIComponent(smooveId)}?by=ContactId`, s.context.apiUrl)
+
+  await fetchAsJsonWithJsonBody(
+    url,
+    removeUndefinedFields({
+      email: contact.email,
+      phone: contact.telephone,
+      cellPhone: contact.telephone,
+      dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
+    }),
+  )
+}
+
+async function deleteSmooveContact(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+): Promise<void> {
+  const url = new URL(`Contacts/${encodeURIComponent(smooveId)}?by=ContactId`, s.context.apiUrl)
+
+  await fetchAsJsonWithJsonBody(url, {deleted: true})
+}
+
+async function restoreSmooveContact(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+): Promise<void> {
+  const url = new URL(
+    `Contacts/${encodeURIComponent(smooveId)}?by=ContactId&restoreIfDeleted=true`,
+    s.context.apiUrl,
+  )
+
+  await fetchAsJsonWithJsonBody(url, {deleted: false})
+}
+
+async function changeContactLinkedLists(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
   {subscribeTo, unsubscribeFrom}: SmooveContactChangeListsOptions,
 ): Promise<unknown> {
-  const url = new URL(`Contacts/${smooveContact.id}`, s.context.apiUrl)
+  const url = new URL(`Contacts/${smooveId}`, s.context.apiUrl)
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -163,41 +208,6 @@ export async function changeContactLinkedLists(
 
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: ${response.status}, ${await response.text()}`)
-  }
-
-  return await response.json()
-}
-
-export async function updateSmooveContactWithRecurringPayment(
-  s: SmooveIntegrationServiceData,
-  email: string,
-  accountId: string,
-  recurringPaymentId: string,
-): Promise<'blacklisted' | 'not-exists' | unknown> {
-  const url = new URL(`Contacts/${encodeURIComponent(email)}?by=Email`, s.context.apiUrl)
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${s.context.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email,
-      customFields: {
-        [s.context.cardComRecurringPaymentIdCustomFieldId]: recurringPaymentId,
-        [s.context.cardComAccountIdCustomFieldId]: parseInt(accountId),
-      },
-    }),
-  })
-
-  if (!response.ok) {
-    const responseBody = await response.text()
-    if (responseBody.includes('ErrBlackListed')) {
-      return 'blacklisted'
-    } else if (responseBody.includes('ErrExists')) {
-      return 'not-exists'
-    }
-    throw new Error(`Failed to fetch ${url}: ${response.status}, ${responseBody}`)
   }
 
   return await response.json()
@@ -248,4 +258,18 @@ function maybeIsoToDate(iso: string): Date {
   } else {
     return new Date(iso + '+02:00')
   }
+}
+
+function removeUndefinedFields(
+  options: Record<string, string | number | boolean | undefined>,
+): Record<string, string | number | boolean> {
+  const result: Record<string, string | number | boolean> = {}
+
+  for (const [k, v] of Object.entries(options)) {
+    if (v !== undefined) {
+      result[k] = v
+    }
+  }
+
+  return result
 }
