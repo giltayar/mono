@@ -13,6 +13,8 @@ describe('Smoove Integration Testkit', () => {
       contacts: {
         [testContactId]: {
           id: testContactId,
+          firstName: 'testfirstname',
+          lastName: 'testlastname',
           email: testEmail,
           telephone: '972501234567',
           lists: [testListId],
@@ -21,6 +23,8 @@ describe('Smoove Integration Testkit', () => {
         67890: {
           id: 67890,
           email: 'another@example.com',
+          firstName: '67890First',
+          lastName: '67890Last',
           telephone: '972509876543',
           lists: [anotherListId],
           signupDate: new Date('2024-02-01'),
@@ -28,6 +32,8 @@ describe('Smoove Integration Testkit', () => {
         11111: {
           id: 11111,
           email: 'blacklisted@example.com',
+          firstName: '111111First',
+          lastName: '111111Last',
           telephone: '972501111111',
           lists: [],
           signupDate: new Date('2024-03-01'),
@@ -36,6 +42,8 @@ describe('Smoove Integration Testkit', () => {
         22222: {
           id: 22222,
           email: 'whatever@example.com',
+          firstName: '22222First',
+          lastName: '22222Last',
           telephone: '972501234567',
           lists: [testListId],
           signupDate: new Date('2024-04-02'),
@@ -87,6 +95,8 @@ describe('Smoove Integration Testkit', () => {
 
       const {smooveId} = await service.createSmooveContact({
         email: 'highest@example.com',
+        firstName: 'first',
+        lastName: 'last',
         telephone: '972501111111',
         birthday: undefined,
       })
@@ -108,6 +118,8 @@ describe('Smoove Integration Testkit', () => {
 
       assert.strictEqual(contacts.length, 3)
       assert.strictEqual(contacts[0].id, smooveId) // Higher ID first
+      assert.strictEqual(contacts[0].firstName, 'first')
+      assert.strictEqual(contacts[0].lastName, 'last')
       assert.strictEqual(contacts[1].id, 22222)
     })
   })
@@ -226,6 +238,8 @@ describe('Smoove Integration Testkit', () => {
 
       const {smooveId} = await service.createSmooveContact({
         email: 'new@example.com',
+        firstName: 'first',
+        lastName: 'last',
         telephone: '972501234567',
         birthday: undefined,
       })
@@ -235,6 +249,8 @@ describe('Smoove Integration Testkit', () => {
       assert.ok(retrievedContact)
       assert.strictEqual(retrievedContact.email, 'new@example.com')
       assert.strictEqual(retrievedContact.telephone, '972501234567')
+      assert.strictEqual(retrievedContact.firstName, 'first')
+      assert.strictEqual(retrievedContact.lastName, 'last')
       assert.deepStrictEqual(retrievedContact.lists_Linked, [])
     })
 
@@ -244,6 +260,8 @@ describe('Smoove Integration Testkit', () => {
       // Use existing email but different telephone
       const {smooveId} = await service.createSmooveContact({
         email: testEmail, // This email already exists
+        firstName: 'firstUpdated',
+        lastName: 'lastUpdated',
         telephone: '972509999999', // Different telephone
         birthday: undefined,
       })
@@ -253,6 +271,8 @@ describe('Smoove Integration Testkit', () => {
       assert.ok(retrievedContact)
       assert.strictEqual(retrievedContact.email, testEmail)
       assert.strictEqual(retrievedContact.telephone, '972509999999') // Should be updated
+      assert.strictEqual(retrievedContact.firstName, 'firstUpdated') // Should be updated
+      assert.strictEqual(retrievedContact.lastName, 'lastUpdated') // Should be updated
       assert.ok(retrievedContact.lists_Linked.includes(testListId)) // Should keep existing lists
     })
 
@@ -261,12 +281,17 @@ describe('Smoove Integration Testkit', () => {
 
       const {smooveId: id1} = await service.createSmooveContact({
         email: 'first@example.com',
+        firstName: 'first',
+        lastName: 'last',
+
         telephone: undefined,
         birthday: undefined,
       })
 
       const {smooveId: id2} = await service.createSmooveContact({
         email: 'second@example.com',
+        firstName: 'first2',
+        lastName: 'last2',
         telephone: undefined,
         birthday: undefined,
       })
@@ -280,6 +305,8 @@ describe('Smoove Integration Testkit', () => {
 
       const {smooveId} = await service.createSmooveContact({
         email: 'notelephone@example.com',
+        firstName: 'first',
+        lastName: 'last',
         telephone: undefined,
         birthday: undefined,
       })
@@ -297,6 +324,8 @@ describe('Smoove Integration Testkit', () => {
 
       await service.updateSmooveContact(testContactId, {
         email: 'updated@example.com',
+        firstName: 'firstUpdated',
+        lastName: 'lastUpdated',
         telephone: '972501111111',
         birthday: undefined,
       })
@@ -305,6 +334,9 @@ describe('Smoove Integration Testkit', () => {
       assert.ok(updatedContact)
       assert.strictEqual(updatedContact.email, 'updated@example.com')
       assert.strictEqual(updatedContact.telephone, '972501111111')
+      assert.strictEqual(updatedContact.firstName, 'firstUpdated')
+      assert.strictEqual(updatedContact.lastName, 'lastUpdated')
+
       assert.ok(updatedContact.lists_Linked.includes(testListId)) // Should keep existing lists
     })
 
@@ -315,6 +347,8 @@ describe('Smoove Integration Testkit', () => {
         () =>
           service.updateSmooveContact(999999, {
             email: 'test@example.com',
+            firstName: 'first',
+            lastName: 'last',
             telephone: '972501111111',
             birthday: undefined,
           }),

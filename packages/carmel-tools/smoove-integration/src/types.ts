@@ -1,4 +1,6 @@
 export interface SmooveContact {
+  firstName: string
+  lastName: string
   email: string
   telephone: string | undefined
   birthday: Date | undefined

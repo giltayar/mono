@@ -52,6 +52,8 @@ async function fetchContactsOfList(
 ): Promise<SmooveContactInList[]> {
   type SmooveApiContact = {
     id: number
+    firstName: string
+    lastName: string
     email: string
     phone: string
     cellPhone: string
@@ -73,6 +75,8 @@ async function fetchContactsOfList(
   return fullResults.map((c: SmooveApiContact) => ({
     id: c.id,
     email: c.email,
+    firstName: c.firstName,
+    lastName: c.lastName,
     telephone: c.cellPhone || c.phone,
     signupDate: maybeIsoToDate(c.listAssociationTime),
     birthday: c.dateOfBirth ? maybeIsoToDate(c.dateOfBirth) : undefined,
@@ -117,6 +121,8 @@ async function fetchSmooveContact(
     },
   })) as {
     id: number
+    firstName: string
+    lastName: string
     email: string
     lists_Linked: number[]
     cellPhone: string
@@ -127,6 +133,8 @@ async function fetchSmooveContact(
   return {
     id: result.id,
     email: result.email,
+    firstName: result.firstName,
+    lastName: result.lastName,
     lists_Linked: result.lists_Linked,
     telephone: result.cellPhone || result.phone,
     birthday: result.dateOfBirth ? maybeIsoToDate(result.dateOfBirth) : undefined,
@@ -143,6 +151,8 @@ async function createSmooveContact(
     url,
     removeUndefinedFields({
       email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
       phone: contact.telephone,
       cellPhone: contact.telephone,
       dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
@@ -163,6 +173,8 @@ async function updateSmooveContact(
     url,
     removeUndefinedFields({
       email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
       phone: contact.telephone,
       cellPhone: contact.telephone,
       dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,

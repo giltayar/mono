@@ -18,6 +18,8 @@ export function createFakeSmooveIntegrationService(context: {
     {
       id: number
       email: string
+      firstName: string
+      lastName: string
       telephone: string
       lists: number[]
       signupDate: Date
@@ -59,6 +61,8 @@ async function fetchContactsOfList(
     .map((contact) => ({
       id: contact.id,
       email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
       telephone: contact.telephone,
       birthday: undefined,
       lists_Linked: [...contact.lists],
@@ -87,6 +91,8 @@ async function fetchSmooveContact(
   return {
     id: contact.id,
     email: contact.email,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
     telephone: contact.telephone,
     birthday: undefined,
     lists_Linked: [...contact.lists],
@@ -131,6 +137,8 @@ async function createSmooveContact(
     existingContact.telephone = contact.telephone ?? existingContact.telephone
     existingContact.birthday = contact.birthday ?? existingContact.birthday
     existingContact.email = contact.email ?? existingContact.email
+    existingContact.firstName = contact.firstName ?? existingContact.firstName
+    existingContact.lastName = contact.lastName ?? existingContact.lastName
 
     return {smooveId: existingContact.id}
   }
@@ -140,6 +148,8 @@ async function createSmooveContact(
   s.state.contacts[newId] = {
     id: newId,
     email: contact.email,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
     telephone: contact.telephone ?? '',
     lists: [] as number[],
     signupDate: new Date(),
@@ -164,6 +174,8 @@ async function updateSmooveContact(
   if (contact.telephone !== undefined) {
     existingContact.telephone = contact.telephone
   }
+  existingContact.firstName = contact.firstName
+  existingContact.lastName = contact.lastName
 }
 
 async function deleteSmooveContact(
