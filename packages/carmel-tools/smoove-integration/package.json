@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-smoove-integration",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "type": "module",
   "exports": {
     "./service": {
@@ -54,7 +54,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.37.0",
     "@types/node": "^24.7.0",
-    "@typescript/native-preview": "7.0.0-dev.20251008.1",
+    "@typescript/native-preview": "7.0.0-dev.20251009.1",
     "eslint": "^9.37.0",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
@@ -64,7 +64,7 @@
     "typescript-eslint": "^8.45.0"
   },
   "dependencies": {
-    "@giltayar/functional-commons": "^2.0.1",
+    "@giltayar/functional-commons": "^2.1.0",
     "@giltayar/http-commons": "^3.1.1",
     "@giltayar/service-commons": "^1.1.3"
   },
