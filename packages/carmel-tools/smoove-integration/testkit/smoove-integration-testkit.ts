@@ -94,7 +94,7 @@ async function fetchSmooveContact(
     firstName: contact.firstName,
     lastName: contact.lastName,
     telephone: contact.telephone,
-    birthday: undefined,
+    birthday: contact.birthday,
     lists_Linked: [...contact.lists],
   }
 }
@@ -151,6 +151,7 @@ async function createSmooveContact(
     firstName: contact.firstName,
     lastName: contact.lastName,
     telephone: contact.telephone ?? '',
+    birthday: contact.birthday,
     lists: [] as number[],
     signupDate: new Date(),
     isDeleted: false,
@@ -176,6 +177,7 @@ async function updateSmooveContact(
   }
   existingContact.firstName = contact.firstName
   existingContact.lastName = contact.lastName
+  existingContact.birthday = contact.birthday
 }
 
 async function deleteSmooveContact(
