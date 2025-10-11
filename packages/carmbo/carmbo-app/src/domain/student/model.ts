@@ -150,9 +150,9 @@ export async function updateStudent(
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ): Promise<number | undefined> {
-  const smooveId = await getSmooveId(student.studentNumber, sql)
-
   return await sql.begin(async (sql) => {
+    const smooveId = await getSmooveId(student.studentNumber, sql)
+
     const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
@@ -397,8 +397,6 @@ async function addStudentStuff(
   sql: Sql,
 ) {
   let ops = [] as Promise<unknown>[]
-
-  ops = ops.concat() ?? []
 
   ops = ops.concat(sql`
     INSERT INTO student_search VALUES

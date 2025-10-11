@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: password
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - '5432:5432'
+      - '5432'
     volumes:
       # Mount SQL scripts to be executed on container startup (ordered by filename)
       - ./../../src/sql:/docker-entrypoint-initdb.d:ro
@@ -27,7 +27,7 @@ services:
       - ACADEMY_CARMEL_ACCOUNT_API_KEY=${ACADEMY_CARMEL_ACCOUNT_API_KEY}
       - GREEN_API_KEY=${GREEN_API_KEY}
       - GREEN_API_INSTANCE=${GREEN_API_INSTANCE}
-      - SMOOVE_API_KEY=${SMOOVE_GIL_API_KEY}
+      - SMOOVE_API_KEY=${SMOOVE_TEST_API_KEY}
       - SMOOVE_API_URL=https://rest.smoove.io/v1/
       - CARMBO_AUTH0_CLIENT_ID=${CARMBO_AUTH0_CLIENT_ID}
       - CARMBO_AUTH0_CLIENT_SECRET=${CARMBO_AUTH0_CLIENT_SECRET}
@@ -35,6 +35,6 @@ services:
       - FORCE_NO_AUTH=${FORCE_NO_AUTH}
 
     ports:
-      - '3000:3000'
+      - '3000'
     healthcheck:
       test: 'curl localhost:3000'

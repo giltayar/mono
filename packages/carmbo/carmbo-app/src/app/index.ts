@@ -36,7 +36,7 @@ const env = EnvironmentVariablesSchema.parse(
     : {
         ...process.env,
         SMOOVE_API_KEY:
-          process.env.SMOOVE_GIL_API_KEY ?? throw_(new Error('SMOOVE_TEST_API_KEY is not set')),
+          process.env.SMOOVE_TEST_API_KEY ?? throw_(new Error('SMOOVE_TEST_API_KEY is not set')),
       },
 )
 

@@ -2,8 +2,16 @@ import {test} from '@playwright/test'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import type {Sql} from 'postgres'
 import postgres from 'postgres'
+import {
+  createSmooveIntegrationService,
+  type SmooveIntegrationService,
+} from '@giltayar/carmel-tools-smoove-integration/service'
 
-export function setup(testUrl: string) {
+export function setup(testUrl: string): {
+  url: () => URL
+  sql: () => Sql
+  smooveIntegration: SmooveIntegrationService
+} {
   let findAddress
   let teardown: (() => Promise<void>) | undefined
   let sql: Sql
@@ -48,9 +56,15 @@ export function setup(testUrl: string) {
 
   test.afterAll(async () => teardown?.())
 
+  const smooveIntegration: SmooveIntegrationService = createSmooveIntegrationService({
+    apiKey: process.env.SMOOVE_TEST_API_KEY!,
+    apiUrl: 'https://rest.smoove.io/v1/',
+  })
+
   return {
     url: () => url,
     sql: () => sql,
+    smooveIntegration,
   }
 }
 

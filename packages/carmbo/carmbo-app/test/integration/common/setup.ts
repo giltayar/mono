@@ -10,7 +10,11 @@ import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whats
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 
-export function setup(testUrl: string) {
+export function setup(testUrl: string): {
+  url: () => URL
+  sql: () => Sql
+  smooveIntegration: () => SmooveIntegrationService
+} {
   let findAddress
   let teardown: (() => Promise<void>) | undefined
   let app: FastifyInstance

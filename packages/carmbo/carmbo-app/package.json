@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "3.4.2",
+  "version": "3.5.2",
   "description": "",
   "type": "module",
   "exports": {
@@ -50,12 +50,12 @@
     "type": "git"
   },
   "dependencies": {
-    "@auth0/auth0-fastify": "^1.0.2",
+    "@auth0/auth0-fastify": "^1.2.0",
     "@fastify/formbody": "^8.0.2",
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^8.2.0",
     "@giltayar/carmel-tools-academy-integration": "^4.0.0",
-    "@giltayar/carmel-tools-smoove-integration": "link:../../carmel-tools/smoove-integration",
+    "@giltayar/carmel-tools-smoove-integration": "^4.1.4",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.5.1",
     "@giltayar/functional-commons": "^2.1.0",
     "@tarekraafat/autocomplete.js": "^10.2.9",
@@ -67,21 +67,20 @@
     "p-retry": "^7.0.0",
     "postgres": "^3.4.7",
     "qs": "^6.14.0",
-    "smoove-integration": "link:@giltayar/carmel-tools/smoove-integration",
     "vhtml": "^2.2.0",
     "zod": "^4.1.11"
   },
-  "packageManager": "pnpm@10.18.1",
+  "packageManager": "pnpm@10.18.2",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.37.0",
     "@giltayar/docker-compose-testkit": "^2.1.0",
     "@playwright/test": "^1.55.1",
     "@types/chance": "^1.1.7",
-    "@types/node": "^24.7.0",
+    "@types/node": "^24.7.1",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20251008.1",
+    "@typescript/native-preview": "7.0.0-dev.20251011.1",
     "chance": "^1.1.13",
     "eslint": "^9.37.0",
     "eslint-plugin-n": "^17.23.1",
