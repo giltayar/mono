@@ -171,7 +171,7 @@ async function fetchSmooveContact(
     lastName: result.lastName,
     lists_Linked: result.lists_Linked,
     telephone: result.cellPhone || result.phone,
-    birthday: result.dateOfBirth ? maybeIsoToDate(result.dateOfBirth) : undefined,
+    birthday: result.dateOfBirth ? new Date(result.dateOfBirth.slice(0, 10)) : undefined,
   }
 }
 
