@@ -107,6 +107,32 @@ async function fetchContactsOfList(
   }
 }
 
+async function createSmooveContact(
+  s: SmooveIntegrationServiceData,
+  contact: SmooveContact,
+): Promise<{smooveId: number}> {
+  const url = new URL(`Contacts?updateIfExists=true&restoreIfDeleted=true`, s.context.apiUrl)
+
+  const response = (await fetchAsJsonWithJsonBody(
+    url,
+    removeUndefinedFields({
+      email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      phone: contact.telephone,
+      cellPhone: contact.telephone,
+      dateOfBirth: contact.birthday ? contact.birthday.toISOString().slice(0, 10) : undefined,
+    }),
+    {
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    },
+  )) as {id: number}
+
+  return {smooveId: response.id}
+}
+
 async function fetchSmooveContact(
   s: SmooveIntegrationServiceData,
   id: number | string,
@@ -114,7 +140,10 @@ async function fetchSmooveContact(
 ): Promise<SmooveContactWithIdAndLists> {
   const url = new URL(`Contacts/${id}`, s.context.apiUrl)
   url.searchParams.append('by', by === 'id' ? 'ContactId' : 'Email')
-  url.searchParams.append('fields', 'id,email,hokNumber,phone,cellPhone,dateOfBirth')
+  url.searchParams.append(
+    'fields',
+    'id,email,hokNumber,phone,cellPhone,dateOfBirth,firstName,lastName',
+  )
   url.searchParams.append('includeCustomFields', 'false')
   url.searchParams.append('includeLinkedLists', 'true')
 
@@ -146,32 +175,6 @@ async function fetchSmooveContact(
   }
 }
 
-async function createSmooveContact(
-  s: SmooveIntegrationServiceData,
-  contact: SmooveContact,
-): Promise<{smooveId: number}> {
-  const url = new URL(`Contacts?updateIfExists=true&restoreIfDeleted=true`, s.context.apiUrl)
-
-  const response = (await fetchAsJsonWithJsonBody(
-    url,
-    removeUndefinedFields({
-      email: contact.email,
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      phone: contact.telephone,
-      cellPhone: contact.telephone,
-      dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
-    }),
-    {
-      headers: {
-        Authorization: `Bearer ${s.context.apiKey}`,
-      },
-    },
-  )) as {id: number}
-
-  return {smooveId: response.id}
-}
-
 async function updateSmooveContact(
   s: SmooveIntegrationServiceData,
   smooveId: number,
@@ -187,7 +190,7 @@ async function updateSmooveContact(
       lastName: contact.lastName,
       phone: contact.telephone,
       cellPhone: contact.telephone,
-      dateOfBirth: contact.birthday ? contact.birthday.toISOString() : undefined,
+      dateOfBirth: contact.birthday ? contact.birthday.toISOString().slice(0, 10) : undefined,
     }),
     {
       method: 'PUT',
