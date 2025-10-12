@@ -1,0 +1,77 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "Carmel Egger Logo" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "Carmel Egger Logo" [ref=e7] [cursor=pointer]
+        - list [ref=e9]:
+          - listitem [ref=e10]:
+            - link "Students" [ref=e11] [cursor=pointer]:
+              - /url: /students
+          - listitem [ref=e12]:
+            - link "Products" [ref=e13] [cursor=pointer]:
+              - /url: /products
+          - listitem [ref=e14]:
+            - link "Sales events" [ref=e15] [cursor=pointer]:
+              - /url: /sales-events
+          - listitem [ref=e16]:
+            - link "Sales" [ref=e17] [cursor=pointer]:
+              - /url: /sales
+  - main [ref=e18]:
+    - generic [ref=e19]:
+      - heading "Sale 1" [level=2] [ref=e20]
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: Sale Number
+          - textbox [ref=e25]: "1"
+        - generic [ref=e26]:
+          - generic [ref=e27]: Timestamp
+          - textbox [ref=e28]: 12 Oct 2025, 15:25
+        - generic [ref=e29]:
+          - generic [ref=e30]: Sales Event
+          - textbox "Sales Event Number" [ref=e31]: "1: Test Sales Event"
+        - generic [ref=e32]:
+          - generic [ref=e33]: Student
+          - textbox "Student Number" [ref=e34]: "1: John Doe"
+        - generic [ref=e35]:
+          - generic [ref=e36]: Final Sale Revenue
+          - textbox [ref=e37]: ₪200.00
+        - generic [ref=e38]:
+          - generic [ref=e39]: Cardcom Invoice Number
+          - textbox [ref=e40]: "895085"
+        - generic [ref=e41]:
+          - generic [ref=e42]: Products
+          - generic [ref=e44]:
+            - 'heading "Product 1: Product One" [level=6] [ref=e45]'
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - generic [ref=e48]: Product
+                - generic [ref=e49]: "1: Product One"
+              - generic [ref=e50]:
+                - generic [ref=e51]: "Quantity:"
+                - generic [ref=e52]: "1"
+              - generic [ref=e53]:
+                - generic [ref=e54]: "Unit Price:"
+                - generic [ref=e55]: ₪100.00
+          - generic [ref=e57]:
+            - 'heading "Product 2: Product Two" [level=6] [ref=e58]'
+            - generic [ref=e59]:
+              - generic [ref=e60]:
+                - generic [ref=e61]: Product
+                - generic [ref=e62]: "2: Product Two"
+              - generic [ref=e63]:
+                - generic [ref=e64]: "Quantity:"
+                - generic [ref=e65]: "2"
+              - generic [ref=e66]:
+                - generic [ref=e67]: "Unit Price:"
+                - generic [ref=e68]: ₪50.00
+      - heading "History" [level=5] [ref=e69]
+      - list "Sale History" [ref=e70]:
+        - listitem [ref=e71]:
+          - strong [ref=e72]: created
+          - generic "15:25:21" [ref=e73]: 12.10.2025
+```

@@ -14,6 +14,7 @@ export function setup(testUrl: string): {
   url: () => URL
   sql: () => Sql
   smooveIntegration: () => SmooveIntegrationService
+  academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
 } {
   let findAddress
   let teardown: (() => Promise<void>) | undefined
@@ -21,6 +22,7 @@ export function setup(testUrl: string): {
   let sql: Sql
   let url: URL
   let smooveIntegration: SmooveIntegrationService
+  let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
 
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
@@ -43,6 +45,14 @@ export function setup(testUrl: string): {
       ],
       contacts: {},
     })
+    academyIntegration = createFakeAcademyIntegrationService({
+      courses: [
+        {id: 1, name: 'Course 1'},
+        {id: 33, name: 'Course 2'},
+        {id: 777, name: 'Course 3'},
+      ],
+      enrolledContacts: new Map(),
+    })
     ;({app, sql} = makeApp({
       db: {
         database: 'carmbo',
@@ -52,14 +62,7 @@ export function setup(testUrl: string): {
         password: 'password',
       },
       services: {
-        academyIntegration: createFakeAcademyIntegrationService({
-          courses: [
-            {id: 1, name: 'Course 1'},
-            {id: 33, name: 'Course 2'},
-            {id: 777, name: 'Course 3'},
-          ],
-          enrolledContacts: new Map(),
-        }),
+        academyIntegration,
         whatsappIntegration: createFakeWhatsAppIntegrationService({
           groups: {
             '1@g.us': {
@@ -100,6 +103,12 @@ export function setup(testUrl: string): {
     await sql`TRUNCATE TABLE product_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sales_event RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sales_event_history RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_history RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_info RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_info_product RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_info_cardcom RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_info_search RESTART IDENTITY CASCADE`
   })
 
   test.afterAll(async () => teardown?.())
@@ -108,6 +117,7 @@ export function setup(testUrl: string): {
     url: () => url,
     sql: () => sql,
     smooveIntegration: () => smooveIntegration,
+    academyIntegration: () => academyIntegration,
   }
 }
 

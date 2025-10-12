@@ -7,7 +7,7 @@ import z from 'zod'
 import {normalizeEmail} from '../../commons/email.ts'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
 
-export const CardcomSaleWebhookJsonSchema = z.object({
+export const CardcomSaleWebhookJsonSchema = z.looseObject({
   ApprovelNumber: z.string(),
   CardOwnerName: z.string(),
   CardOwnerPhone: z.string(),
@@ -82,24 +82,30 @@ export async function handleCardcomOneTimeSale(
       student ??
       (await createStudentFromCardcomSale(cardcomSaleWebhookJson, now, smooveIntegration, sql))
 
-    await createSale(finalStudent.studentNumber, salesEventNumber, cardcomSaleWebhookJson, now, sql)
+    const saleNumber = await createSale(
+      finalStudent.studentNumber,
+      salesEventNumber,
+      cardcomSaleWebhookJson,
+      now,
+      sql,
+    )
 
-    return finalStudent
+    return {student: finalStudent, saleNumber}
   })
 
   const academyConnectionP = connectStudentWithAcademyCourses(
-    salesEventNumber,
+    student.saleNumber,
     {
-      email: student.email,
-      name: student.firstName + ' ' + student.lastName,
-      phone: student.phone,
+      email: student.student.email,
+      name: student.student.firstName + ' ' + student.student.lastName,
+      phone: student.student.phone,
     },
     academyIntegration,
     sql,
   )
   const smooveConnectionP = subscribeStudentToSmooveLists(
-    student.studentNumber,
-    salesEventNumber,
+    student.student.studentNumber,
+    student.saleNumber,
     smooveIntegration,
     sql,
   )
@@ -312,9 +318,9 @@ function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJs
     const quantityKey = `ProdQuantity${i}` as keyof CardcomSaleWebhookJson
     const priceKey = `ProdPrice${i}` as keyof CardcomSaleWebhookJson
 
-    const productId = cardcomSaleWebhookJson[productIdKey]
-    const quantity = cardcomSaleWebhookJson[quantityKey]
-    const price = cardcomSaleWebhookJson[priceKey]
+    const productId = cardcomSaleWebhookJson[productIdKey] as string
+    const quantity = cardcomSaleWebhookJson[quantityKey] as string
+    const price = cardcomSaleWebhookJson[priceKey] as string
 
     if (productId && quantity && price) {
       products.push({
@@ -337,21 +343,20 @@ function generateNameFromCardcomSale(cardcomSaleWebhookJson: CardcomSaleWebhookJ
 }
 
 async function connectStudentWithAcademyCourses(
-  saleEventNumber: number,
+  saleNumber: number,
   student: {email: string; name: string; phone: string},
   academyIntegration: AcademyIntegrationService,
   sql: Sql,
 ): Promise<void> {
-  // Get student info and all academy courses for products in the sale's sales event
+  // Get student info and all academy courses for products in the actual sale
   const courses = await sql<{courseId: string}[]>`
     SELECT DISTINCT
       pac.workshop_id as course_id
 
-    FROM sales_event sev
-    INNER JOIN sales_event_product_for_sale sepfs ON sepfs.data_id = sev.last_data_id
-    INNER JOIN product p ON p.product_number = sepfs.product_number
+    FROM sale_info_product sip
+    INNER JOIN product p ON p.product_number = sip.product_number
     INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
-    WHERE sev.sales_event_number = ${saleEventNumber}
+    WHERE sip.sale_number = ${saleNumber}
     ORDER BY pac.workshop_id
   `
 
@@ -368,7 +373,7 @@ async function connectStudentWithAcademyCourses(
 
 async function subscribeStudentToSmooveLists(
   studentNumber: number,
-  salesEventNumber: number,
+  saleNumber: number,
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ) {
@@ -385,11 +390,10 @@ async function subscribeStudentToSmooveLists(
       pis.cancelling_list_id as cancellingListId,
       pis.cancelled_list_id as cancelledListId,
       pis.removed_list_id as removedListId
-    FROM sales_event sev
-    INNER JOIN sales_event_product_for_sale sepfs ON sepfs.data_id = sev.last_data_id
-    INNER JOIN product p ON p.product_number = sepfs.product_number
+    FROM sale_info_product sip
+    INNER JOIN product p ON p.product_number = sip.product_number
     INNER JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
-    WHERE sev.sales_event_number = ${salesEventNumber};
+    WHERE sip.sale_number = ${saleNumber};
   `
 
   const smooveContactIdResult = await sql<{smooveContactId: string}[]>`
