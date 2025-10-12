@@ -29,6 +29,10 @@ const argv = await yargs(hideBin(process.argv))
     type: 'string',
     description: 'Customer phone number',
   })
+  .option('name', {
+    type: 'string',
+    description: 'Customer name',
+  })
   .option('secret', {
     type: 'string',
     description: 'API secret',
@@ -68,7 +72,7 @@ const dealTime = now.toTimeString().split(' ')[0] // HH:MM:SS
 
 const webhookData: CardcomSaleWebhookJson = {
   ApprovelNumber: chance.integer({min: 1000000, max: 9999999}).toString(),
-  CardOwnerName: chance.name(),
+  CardOwnerName: argv.name ?? chance.name(),
   CardOwnerPhone: argv.phone ?? chance.phone({formatted: false}),
   CouponNumber: chance.bool() ? chance.string({length: 8, alpha: true, numeric: true}) : undefined,
   DealDate: dealDate,

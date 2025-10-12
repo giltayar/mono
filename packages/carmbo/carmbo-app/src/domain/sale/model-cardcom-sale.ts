@@ -2,7 +2,6 @@ import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-int
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {makeError} from '@giltayar/functional-commons'
 import type {Sql} from 'postgres'
-import {presult, unwrapPresult} from '@giltayar/promise-commons'
 import retry from 'p-retry'
 import z from 'zod'
 import {normalizeEmail} from '../../commons/email.ts'
@@ -181,61 +180,58 @@ async function createStudentFromCardcomSale(
   const email = normalizeEmail(cardcomSaleWebhookJson.UserEmail)
   const phone = normalizePhoneNumber(cardcomSaleWebhookJson.CardOwnerPhone)
 
-  return await sql.begin(async (sql) => {
-    const historyId = crypto.randomUUID()
-    const dataId = crypto.randomUUID()
-    const {firstName, lastName} = generateNameFromCardcomSale(cardcomSaleWebhookJson)
+  const historyId = crypto.randomUUID()
+  const dataId = crypto.randomUUID()
+  const {firstName, lastName} = generateNameFromCardcomSale(cardcomSaleWebhookJson)
 
-    const smoovePresult = presult(
-      smooveIntegration.createSmooveContact({
-        email,
-        telephone: phone,
-        firstName,
-        lastName,
-        birthday: undefined,
-      }),
-    )
-
-    // Create student history record and get student number
-    const studentNumberResult = await sql<{student_number: number}[]>`
+  const studentNumberResult = await sql<{studentNumber: string}[]>`
       INSERT INTO student_history VALUES
         (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
       RETURNING student_number
     `
-    const studentNumber = studentNumberResult[0].student_number
-    let ops = [] as Promise<unknown>[]
+  const studentNumber = parseInt(studentNumberResult[0].studentNumber)
 
-    ops = ops.concat(sql`
+  const {smooveId} = await smooveIntegration.createSmooveContact({
+    email,
+    telephone: phone,
+    firstName,
+    lastName,
+    birthday: undefined,
+  })
+
+  let ops = [] as Promise<unknown>[]
+
+  ops = ops.concat(sql`
       INSERT INTO student VALUES
         (${studentNumber}, ${historyId}, ${dataId})
     `)
 
-    ops = ops.concat(sql`
+  ops = ops.concat(sql`
       INSERT INTO student_name VALUES
         (${dataId}, 0, ${firstName}, ${lastName})
     `)
 
-    ops = ops.concat(sql`
+  ops = ops.concat(sql`
       INSERT INTO student_email VALUES
         (${dataId}, 0, ${email})
     `)
 
-    ops = ops.concat(sql`
+  ops = ops.concat(sql`
       INSERT INTO student_phone VALUES
         (${dataId}, 0, ${phone})
     `)
 
-    const searchableText = `${studentNumber} ${firstName} ${lastName} ${email} ${phone}`.trim()
-    ops = ops.concat(sql`
+  const searchableText = `${studentNumber} ${firstName} ${lastName} ${email} ${phone}`.trim()
+  ops = ops.concat(sql`
       INSERT INTO student_search VALUES
         (${dataId}, ${searchableText})
     `)
 
-    await Promise.all(ops)
-    await unwrapPresult(smoovePresult)
+  ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
 
-    return {studentNumber, email, firstName, lastName, phone}
-  })
+  await Promise.all(ops)
+
+  return {studentNumber, email, firstName, lastName, phone}
 }
 
 async function createSale(
@@ -332,10 +328,10 @@ function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJs
   return products
 }
 function generateNameFromCardcomSale(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
-  const nameParts = cardcomSaleWebhookJson.CardOwnerName.trim().split(/\s+/, 2)
+  const nameParts = cardcomSaleWebhookJson.CardOwnerName.trim().split(/\s+/)
 
   const firstName = nameParts[0]
-  const lastName = nameParts[1] ?? '?'
+  const lastName = nameParts.slice(1).join(' ')
 
   return {firstName, lastName}
 }
@@ -350,6 +346,7 @@ async function connectStudentWithAcademyCourses(
   const courses = await sql<{courseId: string}[]>`
     SELECT DISTINCT
       pac.workshop_id as course_id
+
     FROM sales_event sev
     INNER JOIN sales_event_product_for_sale sepfs ON sepfs.data_id = sev.last_data_id
     INNER JOIN product p ON p.product_number = sepfs.product_number

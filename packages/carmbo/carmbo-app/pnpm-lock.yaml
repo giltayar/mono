@@ -41,9 +41,6 @@ importers:
       '@giltayar/url-commons':
         specifier: ^2.1.0
         version: 2.1.0
-      '@tarekraafat/autocomplete.js':
-        specifier: ^10.2.9
-        version: 10.2.9
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.33
@@ -332,9 +329,6 @@ packages:
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
-
-  '@tarekraafat/autocomplete.js@10.2.9':
-    resolution: {integrity: sha512-A7OP3iJDTWeO85M3Vxu391acu9SmDguormHpMZ13khuyM180dKl9O1gAXSDA322XwkYuUU1Ad7WchW1TQNNuDw==}
 
   '@types/chance@1.1.7':
     resolution: {integrity: sha512-40you9610GTQPJyvjMBgmj9wiDO6qXhbfjizNYod/fmvLSfUUxURAJMTD8tjmbcZSsyYE5iEUox61AAcCjW/wQ==}
@@ -2082,8 +2076,6 @@ snapshots:
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
-
-  '@tarekraafat/autocomplete.js@10.2.9': {}
 
   '@types/chance@1.1.7': {}
 

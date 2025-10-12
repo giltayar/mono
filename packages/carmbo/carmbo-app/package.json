@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "",
   "type": "module",
   "exports": {
@@ -62,7 +62,6 @@
     "@giltayar/http-commons": "^3.1.1",
     "@giltayar/promise-commons": "^2.0.0",
     "@giltayar/url-commons": "^2.1.0",
-    "@tarekraafat/autocomplete.js": "^10.2.9",
     "@types/yargs": "^17.0.33",
     "bootstrap": "^5.3.8",
     "chance": "^1.1.13",
