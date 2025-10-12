@@ -339,7 +339,6 @@ function searchableSalesEventText(
 }
 
 export async function TEST_seedSalesEvents(sql: Sql, count: number, productCount: number) {
-  // eslint-disable-next-line n/no-unpublished-import
   const chance = new (await import('chance')).Chance(0)
 
   for (const i of range(0, count)) {

@@ -2,14 +2,14 @@ import type {FastifyInstance} from 'fastify'
 import {z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
-import {CardcomSaleWebhookJsonSchema} from './model.ts'
+import {CardcomSaleWebhookJsonSchema} from './model-cardcom-sale.ts'
 import {dealWithCardcomOneTimeSale, showSales, showSale, showSaleInHistory} from './controller.ts'
 import {
   dealWithControllerResult,
   dealWithControllerResultAsync,
 } from '../../commons/routes-commons.ts'
 
-export function apiRoute(app: FastifyInstance, {secret}: {secret: string}) {
+export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undefined}) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   appWithTypes.post(
@@ -21,16 +21,14 @@ export function apiRoute(app: FastifyInstance, {secret}: {secret: string}) {
       },
     },
     async (request, reply) => {
-      if (request.query.secret !== secret) {
+      if (secret && request.query.secret !== secret) {
         request.log.warn({query: request.query}, 'cardcom-one-time-sale-wrong-secret')
         return reply.status(403).send({error: 'Forbidden'})
       }
 
-      await dealWithControllerResultAsync(reply, () =>
+      return await dealWithControllerResultAsync(reply, () =>
         dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
       )
-
-      return {}
     },
   )
 }

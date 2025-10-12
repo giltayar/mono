@@ -27,7 +27,7 @@ export function SaleView({sale, history}: {sale: SaleWithHistoryInfo; history: S
           <input
             type="text"
             class="form-control"
-            value=${sale.saleEventNumber}
+            value=${`${sale.saleEventNumber}: ${sale.salesEventName}`}
             readonly
             title="Sales Event Number"
           />
@@ -38,7 +38,7 @@ export function SaleView({sale, history}: {sale: SaleWithHistoryInfo; history: S
           <input
             type="text"
             class="form-control"
-            value=${sale.studentNumber}
+            value=${`${sale.studentNumber}: ${sale.studentName}`}
             readonly
             title="Student Number"
           />
@@ -83,8 +83,8 @@ export function SaleView({sale, history}: {sale: SaleWithHistoryInfo; history: S
                         </h6>
                         <div class="row">
                           <div class="col-md-4">
-                            <small class="text-muted">Product Number:</small>
-                            <div>${product.productNumber}</div>
+                            <small class="text-muted">Product</small>
+                            <div>${product.productNumber}: ${product.productName}</div>
                           </div>
                           <div class="col-md-4">
                             <small class="text-muted">Quantity:</small>

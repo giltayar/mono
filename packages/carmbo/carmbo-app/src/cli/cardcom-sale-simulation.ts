@@ -1,8 +1,8 @@
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
 import Chance from 'chance'
-import type {CardcomSaleWebhookJson} from '../domain/sale/model.ts'
-import {fetchAsJsonWithJsonBody} from '@giltayar/http-commons'
+import type {CardcomSaleWebhookJson} from '../domain/sale/model-cardcom-sale.ts'
+import {fetchAsTextWithJsonBody} from '@giltayar/http-commons'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 
 const chance = new Chance()
@@ -98,5 +98,5 @@ const url = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', argv
   'sales-event': argv.salesEvent.toString(),
 })
 
-console.log('Sending Cardcom webhook simulation to', url.toString())
-console.log(await fetchAsJsonWithJsonBody(url.toString(), webhookData))
+console.log('Sending Cardcom webhook simulation to', url.toString(), argv.salesEvent.toString())
+console.log(await fetchAsTextWithJsonBody(url.toString(), webhookData))

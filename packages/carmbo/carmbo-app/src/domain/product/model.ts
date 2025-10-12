@@ -403,7 +403,6 @@ function searchableProductText(productNumber: number, product: Product | NewProd
 }
 
 export async function TEST_seedProducts(sql: Sql, count: number) {
-  // eslint-disable-next-line n/no-unpublished-import
   const chance = new (await import('chance')).Chance(0)
 
   const productTypes: ProductType[] = ['recorded', 'challenge', 'club', 'bundle']

@@ -1,14 +1,10 @@
 import {requestContext} from '@fastify/request-context'
-import {
-  handleCardcomOneTimeSale,
-  type CardcomSaleWebhookJson,
-  listSales,
-  querySaleByNumber,
-  querySaleByHistoryId,
-} from './model.ts'
+import {listSales, querySaleByNumber, querySaleByHistoryId} from './model.ts'
+import {type CardcomSaleWebhookJson} from './model-cardcom-sale.ts'
+import {handleCardcomOneTimeSale} from './model-cardcom-sale.ts'
 import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
-import {renderSaleViewPage, renderSaleViewInHistoryPage} from './view/view.ts'
+import {renderSaleViewPage} from './view/view.ts'
 import type {Sql} from 'postgres'
 
 export async function dealWithCardcomOneTimeSale(
@@ -67,5 +63,5 @@ export async function showSaleInHistory(
     return {status: 404, body: 'Sale not found'}
   }
 
-  return finalHtml(renderSaleViewInHistoryPage(saleWithHistory.sale, saleWithHistory.history))
+  return finalHtml(renderSaleViewPage(saleWithHistory.sale, saleWithHistory.history))
 }

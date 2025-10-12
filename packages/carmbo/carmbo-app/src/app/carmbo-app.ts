@@ -119,7 +119,7 @@ export function makeApp({
     app.register(salesRoutes, {prefix: '/sales', sql})
   })
 
-  app.register(salesApiRoute, {prefix: '/api/sales', secret: auth0?.sessionSecret ?? 'secret'})
+  app.register(salesApiRoute, {prefix: '/api/sales', secret: auth0?.sessionSecret})
 
   app.get('/health', async () => ({status: 'ok'}))
 
