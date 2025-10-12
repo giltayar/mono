@@ -6,6 +6,8 @@ import {range} from '@giltayar/functional-commons'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {assertNever} from '@giltayar/functional-commons'
+import {normalizePhoneNumber} from '../../commons/phone.ts'
+import {normalizeEmail} from '../../commons/email.ts'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -113,6 +115,8 @@ export async function createStudent(
   smooveIntegration: SmooveIntegrationService | undefined,
   sql: Sql,
 ) {
+  const normalizedStudent = normalizeStudent(student)
+
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -126,11 +130,11 @@ export async function createStudent(
     const studentNumber = studentNumberResult[0].studentNumber
 
     const {smooveId} = (await smooveIntegration?.createSmooveContact({
-      email: student.emails[0],
-      firstName: student.names[0].firstName,
-      lastName: student.names[0].lastName,
-      telephone: student.phones?.[0],
-      birthday: student.birthday,
+      email: normalizedStudent.emails[0],
+      firstName: normalizedStudent.names[0].firstName,
+      lastName: normalizedStudent.names[0].lastName,
+      telephone: normalizedStudent.phones?.[0],
+      birthday: normalizedStudent.birthday,
     })) ?? {smooveId: 0}
 
     await sql`
@@ -138,7 +142,7 @@ export async function createStudent(
         (${studentNumber}, ${historyId}, ${dataId})
     `
 
-    await addStudentStuff(studentNumber, student, smooveId, dataId, sql)
+    await addStudentStuff(studentNumber, normalizedStudent, smooveId, dataId, sql)
 
     return studentNumber
   })
@@ -150,8 +154,10 @@ export async function updateStudent(
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ): Promise<number | undefined> {
+  const normalizedStudent = normalizeStudent(student)
+
   return await sql.begin(async (sql) => {
-    const smooveId = await getSmooveId(student.studentNumber, sql)
+    const smooveId = await getSmooveId(normalizedStudent.studentNumber, sql)
 
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -159,14 +165,14 @@ export async function updateStudent(
 
     await sql`
       INSERT INTO student_history VALUES
-        (${historyId}, ${dataId}, ${student.studentNumber}, ${now}, 'update', ${reason ?? null})
+        (${historyId}, ${dataId}, ${normalizedStudent.studentNumber}, ${now}, 'update', ${reason ?? null})
     `
     const updateResult = await sql`
         UPDATE student SET
-          student_number = ${student.studentNumber},
+          student_number = ${normalizedStudent.studentNumber},
           last_history_id = ${historyId},
           last_data_id = ${dataId}
-        WHERE student_number = ${student.studentNumber}
+        WHERE student_number = ${normalizedStudent.studentNumber}
         RETURNING 1
       `
 
@@ -174,17 +180,20 @@ export async function updateStudent(
       return undefined
     }
 
-    assert(updateResult.length === 1, `More than one student with ID ${student.studentNumber}`)
+    assert(
+      updateResult.length === 1,
+      `More than one student with ID ${normalizedStudent.studentNumber}`,
+    )
 
-    await addStudentStuff(student.studentNumber, student, smooveId, dataId, sql)
+    await addStudentStuff(normalizedStudent.studentNumber, normalizedStudent, smooveId, dataId, sql)
 
     if (smooveId > 0)
       await smooveIntegration.updateSmooveContact(smooveId, {
-        email: student.emails[0],
-        birthday: student.birthday,
-        firstName: student.names?.[0].firstName ?? '',
-        lastName: student.names?.[0].lastName ?? '',
-        telephone: student.phones?.[0] ?? '',
+        email: normalizedStudent.emails[0],
+        birthday: normalizedStudent.birthday,
+        firstName: normalizedStudent.names?.[0].firstName ?? '',
+        lastName: normalizedStudent.names?.[0].lastName ?? '',
+        telephone: normalizedStudent.phones?.[0] ?? '',
       })
 
     return student.studentNumber
@@ -484,5 +493,13 @@ export async function TEST_seedStudents(
       smooveIntegration,
       sql,
     )
+  }
+}
+
+function normalizeStudent<TStudent extends Student | NewStudent>(student: TStudent): TStudent {
+  return {
+    ...student,
+    emails: student.emails.map(normalizeEmail),
+    phones: student.phones?.map(normalizePhoneNumber),
   }
 }

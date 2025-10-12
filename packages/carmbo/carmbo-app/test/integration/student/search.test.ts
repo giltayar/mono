@@ -43,7 +43,7 @@ test('searching students', async ({page}) => {
   )
   await studentListModel.list().rows().locator.nth(84).scrollIntoViewIfNeeded()
   await expect(studentListModel.list().rows().row(84).phoneCell().locator).toHaveText(
-    '(834) 509-9781, (416) 827-6514, (917) 830-3087',
+    '8345099781, 4168276514, 9178303087',
   )
 
   await studentListModel.list().rows().locator.nth(99).scrollIntoViewIfNeeded()

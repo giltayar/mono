@@ -21,8 +21,8 @@ test('create student then update her', async ({page}) => {
   const newForm = newStudentModel.form()
   await newForm.names().firstNameInput(0).locator.fill('John')
   await newForm.names().lastNameInput(0).locator.fill('Doe')
-  await newForm.emails().emailInput(0).locator.fill('john.doe@example.com')
-  await newForm.phones().phoneInput(0).locator.fill('1234567890')
+  await newForm.emails().emailInput(0).locator.fill('John.Doe@example.com')
+  await newForm.phones().phoneInput(0).locator.fill('+972-54-6344457')
   await newForm.birthdayInput().locator.fill('2000-01-01')
   await newForm.facebookNames().facebookNameInput(0).locator.fill('johnfb')
 
@@ -40,7 +40,7 @@ test('create student then update her', async ({page}) => {
     firstName: 'John',
     lastName: 'Doe',
     email: 'john.doe@example.com',
-    telephone: '1234567890',
+    telephone: '0546344457',
     birthday: new Date('2000-01-01'),
   })
 
@@ -52,14 +52,14 @@ test('create student then update her', async ({page}) => {
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('John')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Doe')
   await expect(updateForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
-  await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('1234567890')
+  await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('0546344457')
   await expect(updateForm.birthdayInput().locator).toHaveValue('2000-01-01')
 
   // Update the student data
   await updateForm.names().firstNameInput(0).locator.fill('Jane')
   await updateForm.names().lastNameInput(0).locator.fill('Smith')
-  await updateForm.emails().emailInput(0).locator.fill('jane.smith@example.com')
-  await updateForm.phones().phoneInput(0).locator.fill('0987654321')
+  await updateForm.emails().emailInput(0).locator.fill('Jane.Smith@example.com')
+  await updateForm.phones().phoneInput(0).locator.fill('546344456')
   await updateForm.birthdayInput().locator.fill('2001-02-02')
 
   // Save the student and verify data
@@ -68,7 +68,7 @@ test('create student then update her', async ({page}) => {
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('Jane')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Smith')
   await expect(updateForm.emails().emailInput(0).locator).toHaveValue('jane.smith@example.com')
-  await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('0987654321')
+  await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('0546344456')
   await expect(updateForm.birthdayInput().locator).toHaveValue('2001-02-02')
 
   expect(
@@ -79,8 +79,8 @@ test('create student then update her', async ({page}) => {
     firstName: 'Jane',
     lastName: 'Smith',
     email: 'jane.smith@example.com',
-    telephone: '0987654321',
-    // birthday: new Date('2001-02-02'),
+    telephone: '0546344456',
+    birthday: new Date('2001-02-02'),
   })
 
   // Back to list
@@ -92,7 +92,7 @@ test('create student then update her', async ({page}) => {
   const firstRow = studentListModel.list().rows().row(0)
   await expect(firstRow.nameCell().locator).toHaveText('Jane Smith')
   await expect(firstRow.emailCell().locator).toHaveText('jane.smith@example.com')
-  await expect(firstRow.phoneCell().locator).toHaveText('0987654321')
+  await expect(firstRow.phoneCell().locator).toHaveText('0546344456')
 })
 
 test('discard button', async ({page}) => {
