@@ -68,8 +68,8 @@ export async function handleCardcomOneTimeSale(
   sql: Sql,
 ) {
   const student = await sql.begin(async (sql) => {
-    const doesSalesEventExist = await findSalesEvent(salesEventNumber, sql)
-    if (!doesSalesEventExist) {
+    const hasSalesEvent = await doesSalesEventExist(salesEventNumber, sql)
+    if (!hasSalesEvent) {
       throw makeError(`Sales event not found: ${salesEventNumber}`, {httpStatus: 400})
     }
 
@@ -104,7 +104,7 @@ export async function handleCardcomOneTimeSale(
   )
 }
 
-async function findSalesEvent(salesEventNumber: number, sql: Sql): Promise<boolean> {
+async function doesSalesEventExist(salesEventNumber: number, sql: Sql): Promise<boolean> {
   const result =
     await sql`SELECT 1 FROM sales_events WHERE sales_event_number = ${salesEventNumber} LIMIT 1`
 

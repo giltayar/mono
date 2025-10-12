@@ -3,6 +3,10 @@ import {z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import {CardcomSaleWebhookJsonSchema} from './model.ts'
 import {dealWithCardcomOneTimeSale} from './controller.ts'
+import {
+  dealWithControllerResult,
+  dealWithControllerResultAsync,
+} from '../../commons/routes-commons.ts'
 
 export function apiRoute(app: FastifyInstance, {secret}: {secret: string}) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
@@ -21,7 +25,9 @@ export function apiRoute(app: FastifyInstance, {secret}: {secret: string}) {
         return reply.status(403).send({error: 'Forbidden'})
       }
 
-      await dealWithCardcomOneTimeSale(request.body, request.query['sales-event'])
+      await dealWithControllerResultAsync(reply, () =>
+        dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
+      )
 
       return {}
     },
