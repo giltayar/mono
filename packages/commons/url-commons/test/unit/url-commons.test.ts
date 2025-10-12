@@ -40,6 +40,12 @@ describe('url-commons (unit)', function () {
       )
     })
 
+    it('should ignore undefined values', async () => {
+      assert.equal(
+        addQueryParamsToUrl(new URL('http://foo/b?a=b'), {x: undefined}).href,
+        'http://foo/b?a=b',
+      )
+    })
     it('should add multiple query params to url with some query params', async () => {
       assert.equal(
         addQueryParamsToUrl(new URL('http://foo/b?c=d'), {x: 'y', a: 'b'}).href,
