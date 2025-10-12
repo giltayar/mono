@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import {
   addQueryParamToUrl,
+  addQueryParamsToUrl,
   addPathParamToPathSegment,
   parsePathSegment,
   buildPathSegmentFromPathParams,
@@ -28,6 +29,40 @@ describe('url-commons (unit)', function () {
 
     it('should override multi-value query param with same name', async () => {
       assert(addQueryParamToUrl(new URL('http://foo/b?x=z&x=a'), 'x', 'y').href, 'http://foo/b?x=y')
+    })
+  })
+
+  describe('addQueryParamsToUrl', () => {
+    it('should add multiple query params to url with no query params', async () => {
+      assert.equal(
+        addQueryParamsToUrl(new URL('http://foo/b'), {x: 'y', a: 'b'}).href,
+        'http://foo/b?x=y&a=b',
+      )
+    })
+
+    it('should add multiple query params to url with some query params', async () => {
+      assert.equal(
+        addQueryParamsToUrl(new URL('http://foo/b?c=d'), {x: 'y', a: 'b'}).href,
+        'http://foo/b?c=d&x=y&a=b',
+      )
+    })
+
+    it('should override query params with same names', async () => {
+      assert.equal(
+        addQueryParamsToUrl(new URL('http://foo/b?x=z'), {x: 'y', a: 'b'}).href,
+        'http://foo/b?x=y&a=b',
+      )
+    })
+
+    it('should handle empty params object', async () => {
+      assert.equal(addQueryParamsToUrl(new URL('http://foo/b'), {}).href, 'http://foo/b')
+    })
+
+    it('should override multiple existing query params', async () => {
+      assert.equal(
+        addQueryParamsToUrl(new URL('http://foo/b?x=old&a=old'), {x: 'new', a: 'new'}).href,
+        'http://foo/b?x=new&a=new',
+      )
     })
   })
 

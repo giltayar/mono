@@ -8,6 +8,16 @@ export function addQueryParamToUrl(url: URL, queryParam: string, value: string):
   return ret
 }
 
+export function addQueryParamsToUrl(url: URL, params: Record<string, string>): URL {
+  const ret = new URL(url)
+
+  Object.entries(params).forEach(([key, value]) => {
+    ret.searchParams.set(key, value)
+  })
+
+  return ret
+}
+
 export function addPathParamToPathSegment(
   pathSegment: string,
   pathParam: string,
