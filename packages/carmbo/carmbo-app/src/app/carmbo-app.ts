@@ -7,6 +7,7 @@ import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
 import productRoutes from '../domain/product/route.ts'
 import salesEvents from '../domain/sales-event/route.ts'
+import salesRoutes from '../domain/sale/route.ts'
 import {apiRoute as salesApiRoute} from '../domain/sale/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
@@ -115,6 +116,7 @@ export function makeApp({
     app.register(studentRoutes, {prefix: '/students', sql})
     app.register(productRoutes, {prefix: '/products', sql})
     app.register(salesEvents, {prefix: '/sales-events', sql})
+    app.register(salesRoutes, {prefix: '/sales', sql})
   })
 
   app.register(salesApiRoute, {prefix: '/api/sales', secret: auth0?.sessionSecret ?? 'secret'})

@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS sale_info (
   sale_number INTEGER NOT NULL,
   sale_event_number INTEGER NOT NULL,
   student_number INTEGER NOT NULL,
+  timestamp TIMESTAMPTZ NOT NULL,
   final_sale_revenue NUMERIC(10, 2)
 );
 

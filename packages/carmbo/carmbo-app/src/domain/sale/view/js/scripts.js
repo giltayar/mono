@@ -1,0 +1,1 @@
+// Sale view scripts
