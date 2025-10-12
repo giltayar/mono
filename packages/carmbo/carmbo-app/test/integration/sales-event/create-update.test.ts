@@ -92,6 +92,10 @@ test('create sales event then update it', async ({page}) => {
   await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
   await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('2: def')
 
+  await expect(updateSalesEventModel.cardcomInformation().webhookUrlInput().locator).toHaveValue(
+    'http://localhost/api/sales/cardcom/one-time-sale?sales-event=1',
+  )
+
   // Update the sales event data
   await updateForm.nameInput().locator.fill('Updated Sale')
   await updateForm.fromDateInput().locator.fill('2025-02-01')

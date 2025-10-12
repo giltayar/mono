@@ -1,3 +1,4 @@
+import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import {html} from '../../../commons/html-templates.ts'
 import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'
@@ -23,9 +24,11 @@ export function SalesEventCreateView({salesEvent}: {salesEvent: SalesEvent}) {
 export function SalesEventUpdateView({
   salesEvent,
   history,
+  options: {appBaseUrl, apiSecret},
 }: {
   salesEvent: SalesEventWithHistoryInfo
   history: SalesEventHistory[]
+  options: {appBaseUrl: string; apiSecret: string | undefined}
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -64,6 +67,21 @@ export function SalesEventUpdateView({
         <${SalesEventCreateOrUpdateFormFields} salesEvent=${salesEvent} operation="write" />
       </div>
     </form>
+    <div class="form-group col-md-6 mt-3">
+      <h3 class="mb-3">Cardcom Information</h3>
+      <label style="width: 100%">
+        CardCom Webhook URL
+        <input
+          class="form-control"
+          type="url"
+          value=${addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', appBaseUrl), {
+            'sales-event': salesEvent.salesEventNumber.toString(),
+            secret: apiSecret,
+          }).href}
+          readonly
+        />
+      </label>
+    </div>
     <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
   `
 }

@@ -24,6 +24,11 @@ export function createUpdateSalesEventPageModel(page: Page) {
 
       ...salesEventFormPageModel(page),
     }),
+    cardcomInformation: () => ({
+      webhookUrlInput: (inputLocator = page.getByLabel('CardCom Webhook URL')) => ({
+        locator: inputLocator,
+      }),
+    }),
     history: () => createSalesEventHistoryPageModel(page),
   }
 }

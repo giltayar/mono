@@ -57,6 +57,7 @@ export async function showSalesEventUpdate(
   salesEventNumber: number,
   manipulations: SalesEventManipulations,
   sql: Sql,
+  options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
   const [products, salesEventWithHistory] = await Promise.all([
     listProductsForChoosing(sql),
@@ -76,6 +77,7 @@ export async function showSalesEventUpdate(
       salesEventWithHistory.salesEvent,
       salesEventWithHistory.history,
       manipulations,
+      options,
     ),
   )
 }

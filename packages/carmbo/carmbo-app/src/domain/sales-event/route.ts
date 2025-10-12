@@ -17,7 +17,10 @@ import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 
-export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
+export default function (
+  app: FastifyInstance,
+  {sql, appBaseUrl, apiSecret}: {sql: Sql; appBaseUrl: string; apiSecret: string | undefined},
+) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   // List sales events
@@ -77,6 +80,10 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           request.params.number,
           {addItem: request.headers['x-add-item']},
           sql,
+          {
+            appBaseUrl,
+            apiSecret,
+          },
         ),
       )
     },

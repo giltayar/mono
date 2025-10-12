@@ -42,6 +42,7 @@ export function makeApp({
   db: {database, host, port, username, password},
   services: {academyIntegration, whatsappIntegration, smooveIntegration},
   auth0,
+  appBaseUrl,
 }: {
   db: {database: string; host: string; port: number; username: string; password: string}
   services: {
@@ -54,10 +55,10 @@ export function makeApp({
         domain: string
         clientId: string
         clientSecret: string
-        appBaseUrl: string
         sessionSecret: string
       }
     | undefined
+  appBaseUrl: string
 }) {
   const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
@@ -89,7 +90,7 @@ export function makeApp({
   })
 
   if (auth0) {
-    app.register(Auth0, auth0)
+    app.register(Auth0, {...auth0, appBaseUrl})
   }
 
   app.register(fastifystatic, {
@@ -115,7 +116,12 @@ export function makeApp({
 
     app.register(studentRoutes, {prefix: '/students', sql})
     app.register(productRoutes, {prefix: '/products', sql})
-    app.register(salesEvents, {prefix: '/sales-events', sql})
+    app.register(salesEvents, {
+      prefix: '/sales-events',
+      sql,
+      appBaseUrl,
+      apiSecret: auth0?.sessionSecret,
+    })
     app.register(salesRoutes, {prefix: '/sales', sql})
   })
 

@@ -36,6 +36,7 @@ export function renderSalesEventUpdatePage(
   salesEvent: SalesEventWithHistoryInfo,
   history: SalesEventHistory[],
   manipulations: SalesEventManipulations,
+  options: {appBaseUrl: string; apiSecret: string | undefined},
 ) {
   return html`
     <${MainLayout} title="Sales Events" activeNavItem="sales-events">
@@ -43,6 +44,7 @@ export function renderSalesEventUpdatePage(
         <${SalesEventUpdateView}
           salesEvent=${manipulateSalesEvent(salesEvent, manipulations)}
           history=${history}
+          options=${options}
         />
       </${Layout}>
     </${MainLayout}>

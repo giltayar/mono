@@ -82,6 +82,7 @@ export function setup(testUrl: string): {
         smooveIntegration,
       },
       auth0: undefined,
+      appBaseUrl: 'http://localhost:????',
     }))
 
     await app.listen()

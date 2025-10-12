@@ -40,6 +40,8 @@ const env = EnvironmentVariablesSchema.parse(
       },
 )
 
+const appBaseUrl = env.APP_BASE_URL ? env.APP_BASE_URL : `http://${env.HOST}:${env.PORT}`
+
 const {app, sql} = await makeApp({
   db: {
     database: env.DB_DATABASE,
@@ -68,9 +70,9 @@ const {app, sql} = await makeApp({
         clientId: env.CARMBO_AUTH0_CLIENT_ID,
         clientSecret: env.CARMBO_AUTH0_CLIENT_SECRET,
         domain: 'carmelegger.eu.auth0.com',
-        appBaseUrl: env.APP_BASE_URL ? env.APP_BASE_URL : `http://${env.HOST}:${env.PORT}`,
         sessionSecret: env.CARMBO_AUTH0_SESSION_SECRET,
       },
+  appBaseUrl: appBaseUrl,
 })
 
 await seedIfNeeded()
