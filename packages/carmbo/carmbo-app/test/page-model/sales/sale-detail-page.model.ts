@@ -3,26 +3,22 @@ import type {Page} from '@playwright/test'
 export function createSaleDetailPageModel(page: Page) {
   return {
     urlRegex: /\/sales\/\d+$/,
-    saleNumberInput: (locator = page.locator('label:has-text("Sale Number") + input').first()) => ({
+    saleNumberInput: (locator = page.getByLabel('Sale Number')) => ({
       locator,
     }),
-    timestampInput: (locator = page.locator('label:has-text("Timestamp") + input').first()) => ({
+    timestampInput: (locator = page.getByLabel('Timestamp')) => ({
       locator,
     }),
-    salesEventInput: (locator = page.locator('label:has-text("Sales Event") + input').first()) => ({
+    salesEventInput: (locator = page.getByLabel('Sales Event')) => ({
       locator,
     }),
-    studentInput: (locator = page.locator('label:has-text("Student") + input').first()) => ({
+    studentInput: (locator = page.getByLabel('Student')) => ({
       locator,
     }),
-    finalSaleRevenueInput: (
-      locator = page.locator('label:has-text("Final Sale Revenue") + input').first(),
-    ) => ({
+    finalSaleRevenueInput: (locator = page.getByLabel('Final Sale Revenue')) => ({
       locator,
     }),
-    cardcomInvoiceNumberInput: (
-      locator = page.locator('label:has-text("Cardcom Invoice Number") + input').first(),
-    ) => ({
+    cardcomInvoiceNumberInput: (locator = page.getByLabel('Cardcom Invoice Number')) => ({
       locator,
     }),
     products: (locator = page.locator('.card')) => ({
