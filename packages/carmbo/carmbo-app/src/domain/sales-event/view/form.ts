@@ -11,7 +11,7 @@ export function SalesEventCreateOrUpdateFormFields({
   salesEvent: SalesEvent | OngoingSalesEvent
   operation: 'read' | 'write'
 }) {
-  const maybeRo = operation === 'read' ? 'readonly' : ''
+  const isReadOnly = operation === 'read'
   const products = requestContext.get('products')!
 
   return html`
@@ -28,7 +28,7 @@ export function SalesEventCreateOrUpdateFormFields({
             value="${salesEvent.name}"
             autocomplete="off"
             data-1p-ignore
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="name">Sales Event Name</label>
         </div>
@@ -41,7 +41,7 @@ export function SalesEventCreateOrUpdateFormFields({
             class="form-control"
             id="fromDate"
             value="${salesEvent.fromDate ? formatDateForInput(salesEvent.fromDate) : ''}"
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="fromDate">From Date</label>
         </div>
@@ -54,7 +54,7 @@ export function SalesEventCreateOrUpdateFormFields({
             class="form-control"
             id="toDate"
             value="${salesEvent.toDate ? formatDateForInput(salesEvent.toDate) : ''}"
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="toDate">To Date</label>
         </div>
@@ -67,7 +67,7 @@ export function SalesEventCreateOrUpdateFormFields({
             class="form-control"
             id="landingPageUrl"
             value="${salesEvent.landingPageUrl ?? ''}"
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="landingPageUrl">Landing Page URL</label>
         </div>

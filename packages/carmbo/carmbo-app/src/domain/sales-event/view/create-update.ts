@@ -64,7 +64,10 @@ export function SalesEventUpdateView({
         </section>
       </div>
       <div class="mt-3">
-        <${SalesEventCreateOrUpdateFormFields} salesEvent=${salesEvent} operation="write" />
+        <${SalesEventCreateOrUpdateFormFields}
+          salesEvent=${salesEvent}
+          operation=${salesEvent.historyOperation === 'delete' ? 'read' : 'write'}
+        />
       </div>
     </form>
     <div class="form-group col-md-6 mt-3">

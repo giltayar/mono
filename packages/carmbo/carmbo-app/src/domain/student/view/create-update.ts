@@ -57,7 +57,10 @@ export function StudentUpdateView({
         </section>
       </div>
       <div class="mt-3">
-        <${StudentCreateOrUpdateFormFields} student=${student} operation="write" />
+        <${StudentCreateOrUpdateFormFields}
+          student=${student}
+          operation=${student.historyOperation === 'delete' ? 'read' : 'write'}
+        />
       </div>
     </form>
     <${StudentHistoryList} student=${student} history=${history} />

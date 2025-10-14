@@ -48,6 +48,12 @@ test('deleting a sales event', async ({page}) => {
   await expect(updateSalesEventModel.history().items().item(0).locator).toContainText('archived')
   await expect(updateSalesEventModel.history().items().item(1).locator).toContainText('created')
 
+  // Verify form inputs are read-only after deletion
+  const form = updateSalesEventModel.form()
+  await expect(form.nameInput().locator).toHaveAttribute('readonly', 'true')
+  await expect(form.fromDateInput().locator).toHaveAttribute('readonly', 'true')
+  await expect(form.toDateInput().locator).toHaveAttribute('readonly', 'true')
+
   await page.goto(new URL('/sales-events', url()).href)
 
   // Verify only Sale Alpha is visible (Sale Beta should be archived/hidden)

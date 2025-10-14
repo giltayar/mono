@@ -9,7 +9,7 @@ export function StudentCreateOrUpdateFormFields({
   student: Student | OngoingStudent
   operation: 'read' | 'write'
 }) {
-  const maybeRo = operation === 'read' ? 'readonly' : ''
+  const isReadOnly = operation === 'read'
 
   return html`
     <div class="students-view_form-fields card">
@@ -29,7 +29,7 @@ export function StudentCreateOrUpdateFormFields({
                     id="firstName-${i}"
                     autocomplete="off"
                     data-1p-ignore
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="firstName-${i}">First Name</label>
                 </div>
@@ -45,7 +45,7 @@ export function StudentCreateOrUpdateFormFields({
                     id="lastName-${i}"
                     autocomplete="off"
                     data-1p-ignore
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="lastName-${i}">Last Name</label>
                 </div>
@@ -73,7 +73,7 @@ export function StudentCreateOrUpdateFormFields({
                     id="email-${i}"
                     autocomplete="off"
                     data-1p-ignore
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="email-${i}">Email</label>
                 </div>
@@ -102,7 +102,7 @@ export function StudentCreateOrUpdateFormFields({
                     pattern="^\\+?[\\d\\-\\.\\(\\) ]+$"
                     autocomplete="off"
                     data-1p-ignore
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="phone-${i}">Phone</label>
                 </div>
@@ -130,7 +130,7 @@ export function StudentCreateOrUpdateFormFields({
                     id="facebookName-${i}"
                     autocomplete="off"
                     data-1p-ignore
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="facebookName-${i}">Facebook Name</label>
                 </div>
@@ -156,7 +156,7 @@ export function StudentCreateOrUpdateFormFields({
             class="form-control"
             id="birthday"
             value="${student.birthday ? student.birthday.toISOString().split('T')[0] : ''}"
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="birthday">Birthday</label>
         </div>

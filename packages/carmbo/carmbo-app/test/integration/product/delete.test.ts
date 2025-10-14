@@ -46,6 +46,11 @@ test('deleting a product', async ({page}) => {
   await expect(updateProductModel.history().items().item(0).locator).toContainText('archived')
   await expect(updateProductModel.history().items().item(1).locator).toContainText('created')
 
+  // Verify form inputs are read-only after deletion
+  const form = updateProductModel.form()
+  await expect(form.nameInput().locator).toHaveAttribute('readonly', 'true')
+  await expect(form.productTypeSelect().locator).toHaveAttribute('readonly', 'true')
+
   await page.goto(new URL('/products', url()).href)
 
   // Verify only Product Alpha is visible (Product Beta should be archived/hidden)

@@ -14,7 +14,7 @@ export function ProductCreateOrUpdateFormFields({
   const courses = requestContext.get('courses')!
   const whatsappGroups = requestContext.get('whatsappGroups')!
   const smooveLists = requestContext.get('smooveLists')!
-  const maybeRo = operation === 'read' ? 'readonly' : ''
+  const isReadOnly = operation === 'read'
 
   return html`
     <div class="products-view_form-fields card">
@@ -30,13 +30,19 @@ export function ProductCreateOrUpdateFormFields({
             value="${product.name}"
             autocomplete="off"
             data-1p-ignore
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="name">Product Name</label>
         </div>
 
         <div class="mt-3 form-floating">
-          <select name="productType" class="form-select" id="productType" ${maybeRo} required>
+          <select
+            name="productType"
+            class="form-select"
+            id="productType"
+            readonly=${isReadOnly}
+            required
+          >
             <option value="recorded" selected=${product.productType === 'recorded'}>
               Recorded
             </option>
@@ -74,7 +80,7 @@ export function ProductCreateOrUpdateFormFields({
                     autocorrect="off"
                     autocomplete="off"
                     autocapitalize="off"
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="academyCourse-${i}">Academy Course ID</label>
                 </div>
@@ -120,7 +126,7 @@ export function ProductCreateOrUpdateFormFields({
                           whatsappGroups.find((g) => g.id === group.id)?.name,
                         )
                       : ''}
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="whatsappGroup-${i}">WhatsApp Group ID</label>
                 </div>
@@ -132,7 +138,7 @@ export function ProductCreateOrUpdateFormFields({
                     placeholder=" "
                     class="form-control"
                     id="whatsappGroupUrl-${i}"
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="whatsappGroupUrl-${i}">Messages Google Sheet URL</label>
                 </div>
@@ -163,7 +169,7 @@ export function ProductCreateOrUpdateFormFields({
                     required
                     class="form-control"
                     id="facebookGroup-${i}"
-                    ${maybeRo}
+                    readonly=${isReadOnly}
                   />
                   <label for="facebookGroup-${i}">Facebook Group ID</label>
                 </div>
@@ -204,7 +210,7 @@ export function ProductCreateOrUpdateFormFields({
                   smooveLists.find((g) => g.id === product.smooveListId)?.name,
                 )
               : ''}
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="smooveListId">Smoove List ID</label>
         </div>
@@ -232,7 +238,7 @@ export function ProductCreateOrUpdateFormFields({
                   smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
                 )
               : ''}
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="smooveCancellingListId">Smoove Cancelling List ID</label>
         </div>
@@ -260,7 +266,7 @@ export function ProductCreateOrUpdateFormFields({
                   smooveLists.find((g) => g.id === product.smooveCancelledListId)?.name,
                 )
               : ''}
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="smooveCancelledListId">Smoove Cancelled List ID</label>
         </div>
@@ -288,7 +294,7 @@ export function ProductCreateOrUpdateFormFields({
                   smooveLists.find((g) => g.id === product.smooveRemovedListId)?.name,
                 )
               : ''}
-            ${maybeRo}
+            readonly=${isReadOnly}
           />
           <label for="smooveRemovedListId">Smoove Removed List ID</label>
         </div>

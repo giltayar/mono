@@ -53,6 +53,13 @@ test('deleting a student', async ({page}) => {
   await expect(updateStudentModel.history().items().item(0).locator).toContainText('archived')
   await expect(updateStudentModel.history().items().item(1).locator).toContainText('created')
 
+  // Verify that form inputs are read-only after archiving
+  const updateForm = updateStudentModel.form()
+  await expect(updateForm.names().firstNameInput(0).locator).toHaveAttribute('readonly', 'true')
+  await expect(updateForm.names().lastNameInput(0).locator).toHaveAttribute('readonly', 'true')
+  await expect(updateForm.emails().emailInput(0).locator).toHaveAttribute('readonly', 'true')
+  await expect(updateForm.birthdayInput().locator).toHaveAttribute('readonly', 'true')
+
   await page.goto(url().href)
 
   // Verify only Alice is visible (Bob should be archived/hidden)

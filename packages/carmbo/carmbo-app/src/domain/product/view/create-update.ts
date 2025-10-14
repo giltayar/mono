@@ -62,7 +62,7 @@ export function ProductUpdateView({
       <div class="mt-3">
         <${ProductCreateOrUpdateFormFields}
           product=${product}
-          operation="write"
+          operation=${product.historyOperation === 'delete' ? 'read' : 'write'}
           courses=${courses}
         />
       </div>
