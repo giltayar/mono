@@ -26,6 +26,8 @@ export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undef
         return reply.status(403).send({error: 'Forbidden'})
       }
 
+      request.log.info({body: request.body}, 'cardcom-one-time-sale-webhook')
+
       return await dealWithControllerResultAsync(reply, () =>
         dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
       )
