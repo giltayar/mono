@@ -1,6 +1,9 @@
 import {test} from '@playwright/test'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import type {Sql} from 'postgres'
+// //@ts-expect-error no types
+// import shift from 'postgres-shift'
+// import {fileURLToPath} from 'node:url'
 import postgres from 'postgres'
 import {
   createSmooveIntegrationService,
@@ -43,6 +46,8 @@ export function setup(testUrl: string): {
       password: 'password',
       transform: {...postgres.camel},
     })
+
+    // await shift({sql, path: fileURLToPath(new URL('../../../sql', import.meta.url))})
   })
 
   test.beforeEach(async () => {

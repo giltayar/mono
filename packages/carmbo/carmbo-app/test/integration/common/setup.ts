@@ -9,6 +9,9 @@ import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academ
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+// //@ts-expect-error no types
+// import shift from 'postgres-shift'
+// import {fileURLToPath} from 'node:url'
 
 export function setup(testUrl: string): {
   url: () => URL
@@ -87,6 +90,8 @@ export function setup(testUrl: string): {
       auth0: undefined,
       appBaseUrl: 'http://localhost:????',
     }))
+
+    // await shift({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
 
     await app.listen()
     app.server.unref()

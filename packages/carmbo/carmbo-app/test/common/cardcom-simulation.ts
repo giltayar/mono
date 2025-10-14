@@ -17,6 +17,7 @@ export interface CardcomSaleOptions {
   email?: string
   phone?: string
   name?: string
+  customerId?: string
   baseUrl: string
   secret?: string
 }
@@ -27,6 +28,7 @@ export function generateCardcomWebhookData(
     email?: string
     phone?: string
     name?: string
+    customerId?: string
   } = {},
 ): CardcomSaleWebhookJson {
   const totalAmount = products.reduce((sum, p) => sum + p.price * p.quantity, 0)
@@ -44,11 +46,12 @@ export function generateCardcomWebhookData(
       : undefined,
     DealDate: dealDate,
     DealTime: dealTime,
-    internaldealnumber: chance.guid(),
+    internaldealnumber: chance.integer({min: 10000000, max: 99999999}).toString(),
     invoicenumber: chance.integer({min: 100000, max: 999999}).toString(),
     terminalnumber: chance.integer({min: 1000, max: 9999}).toString(),
     responsecode: '0',
     UserEmail: options.email ?? chance.email(),
+    RecurringAccountID: options.customerId,
     suminfull: totalAmount.toFixed(2),
     ProdTotalLines: (products.length - 1).toString(),
 
@@ -72,6 +75,7 @@ export async function simulateCardcomSale(options: CardcomSaleOptions): Promise<
     email: options.email,
     phone: options.phone,
     name: options.name,
+    customerId: options.customerId,
   })
 
   const url = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', options.baseUrl), {

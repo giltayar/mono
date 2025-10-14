@@ -49,6 +49,10 @@
 			"path": "packages/carmel-tools/academy-integration"
 		},
 		{
+			"name": "cardcom-integration",
+			"path": "packages/carmel-tools/cardcom-integration"
+		},
+		{
 			"name": "smoove-integration",
 			"path": "packages/carmel-tools/smoove-integration"
 		},

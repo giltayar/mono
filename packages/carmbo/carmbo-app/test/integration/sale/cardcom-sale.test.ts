@@ -152,3 +152,96 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await expect(product2.quantity().locator).toHaveText('2')
   await expect(product2.unitPrice().locator).toHaveText('₪50.00')
 })
+
+test('cardcom sale with same customer ID reuses existing student', async ({page}) => {
+  // Create a simple product
+  const productNumber = await createProduct(
+    {
+      name: 'Test Product',
+      productType: 'recorded',
+    },
+    undefined,
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    sql(),
+  )
+
+  const customerId = '12345'
+  const webhookUrl = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', url()), {
+    secret: 'secret',
+    'sales-event': salesEventNumber.toString(),
+  })
+
+  // First sale with email x and phone y
+  const webhookDataA = generateCardcomWebhookData(
+    [{productId: productNumber, quantity: 1, price: 100}],
+    {
+      email: 'customer-a@example.com',
+      name: 'Alice Smith',
+      phone: '0501111111',
+      customerId,
+    },
+  )
+
+  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataA as any)
+
+  // Verify first student was created
+  await page.goto(new URL('/students', url()).href)
+  const studentListModel = createStudentListPageModel(page)
+  let studentRows = studentListModel.list().rows()
+  await expect(studentRows.locator).toHaveCount(1)
+
+  const firstStudent = studentRows.row(0)
+  await expect(firstStudent.nameCell().locator).toHaveText('Alice Smith')
+  await expect(firstStudent.emailCell().locator).toHaveText('customer-a@example.com')
+  await expect(firstStudent.phoneCell().locator).toHaveText('0501111111')
+
+  // Get the student number from the first student
+  const studentNumberText = await firstStudent.idLink().locator.textContent()
+  const studentNumber = studentNumberText?.trim()
+
+  // Second sale with different email and phone but same customer ID
+  const webhookDataB = generateCardcomWebhookData(
+    [{productId: productNumber, quantity: 1, price: 100}],
+    {
+      email: 'customer-b@example.com',
+      name: 'Bob Jones',
+      phone: '0502222222',
+      customerId,
+    },
+  )
+
+  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataB as any)
+
+  // Verify no new student was created - still just 1 student
+  await page.reload()
+  studentRows = studentListModel.list().rows()
+  await expect(studentRows.locator).toHaveCount(1)
+
+  // Verify it's still the same student from sale A
+  const onlyStudent = studentRows.row(0)
+  await expect(onlyStudent.idLink().locator).toHaveText(studentNumber!)
+  await expect(onlyStudent.nameCell().locator).toHaveText('Alice Smith')
+  await expect(onlyStudent.emailCell().locator).toHaveText('customer-a@example.com')
+  await expect(onlyStudent.phoneCell().locator).toHaveText('0501111111')
+
+  // Verify both sales exist and are linked to the same student
+  await page.goto(new URL('/sales', url()).href)
+  const saleListModel = createSaleListPageModel(page)
+  const saleRows = saleListModel.list().rows()
+  await expect(saleRows.locator).toHaveCount(2)
+
+  // Both sales should show the same student name (Alice Smith from the original student)
+  await expect(saleRows.row(0).studentCell().locator).toHaveText('Alice Smith')
+  await expect(saleRows.row(1).studentCell().locator).toHaveText('Alice Smith')
+})

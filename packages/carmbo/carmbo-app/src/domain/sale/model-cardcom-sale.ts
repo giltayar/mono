@@ -10,6 +10,7 @@ import {normalizePhoneNumber} from '../../commons/phone.ts'
 export const CardcomSaleWebhookJsonSchema = z.looseObject({
   ApprovelNumber: z.string(),
   CardOwnerName: z.string(),
+  intTo: z.string().optional(),
   CardOwnerPhone: z.string(),
   CouponNumber: z.string().optional(),
   DealDate: z.string(),
@@ -19,6 +20,7 @@ export const CardcomSaleWebhookJsonSchema = z.looseObject({
   terminalnumber: z.string(),
   responsecode: z.string(),
   UserEmail: z.email(),
+  RecurringAccountID: z.string().optional(),
 
   suminfull: z.string(),
 
@@ -74,6 +76,9 @@ export async function handleCardcomOneTimeSale(
     }
 
     const student = await findStudent(
+      cardcomSaleWebhookJson.RecurringAccountID
+        ? parseInt(cardcomSaleWebhookJson.RecurringAccountID)
+        : undefined,
       cardcomSaleWebhookJson.UserEmail,
       cardcomSaleWebhookJson.CardOwnerPhone,
       sql,
@@ -120,32 +125,24 @@ async function doesSalesEventExist(salesEventNumber: number, sql: Sql): Promise<
   return result.length > 0
 }
 
+type StudentInfoFound = {
+  studentNumber: number
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+}
+
 async function findStudent(
+  cardcomCustomerId: number | undefined,
   email: string,
   phone: string,
   sql: Sql,
-): Promise<
-  | {
-      studentNumber: number
-      email: string
-      firstName: string
-      lastName: string
-      phone: string
-    }
-  | undefined
-> {
+): Promise<StudentInfoFound | undefined> {
   const finalEmail = normalizeEmail(email)
   const finalPhone = normalizePhoneNumber(phone)
 
-  const result = await sql<
-    {
-      studentNumber: number
-      email: string
-      firstName: string
-      lastName: string
-      phone: string
-    }[]
-  >`
+  const resultByEmailAndPhonePromise = sql<StudentInfoFound[]>`
     SELECT DISTINCT
       s.student_number,
       se.email,
@@ -164,11 +161,37 @@ async function findStudent(
     LIMIT 1
   `
 
-  if (result.length === 0) {
+  const resultByCardcomCustomerId = cardcomCustomerId
+    ? await sql<StudentInfoFound[]>`
+    SELECT
+      DISTINCT ON (s.student_number)
+      s.student_number,
+      se.email,
+      sn.first_name,
+      sn.last_name,
+      sp.phone
+    FROM sale_info_cardcom sic
+    JOIN sale_info si ON si.sale_number = sic.sale_number
+    JOIN student s ON s.student_number = si.student_number
+    JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
+    JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
+    JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
+    WHERE sic.customer_id = ${cardcomCustomerId}
+    ORDER BY s.student_number
+  `
+    : undefined
+
+  if (resultByCardcomCustomerId && resultByCardcomCustomerId.length > 0) {
+    return resultByCardcomCustomerId[0]
+  }
+
+  const resultByEmailAndPhone = await resultByEmailAndPhonePromise
+
+  if (resultByEmailAndPhone.length === 0) {
     return undefined
   }
 
-  return result[0]
+  return resultByEmailAndPhone[0]
 }
 
 async function createStudentFromCardcomSale(
@@ -277,10 +300,18 @@ async function createSale(
     `)
 
   ops = ops.concat(sql`
-      INSERT INTO sale_info_cardcom VALUES
-        (${saleNumber}, ${JSON.stringify(cardcomSaleWebhookJson)}, ${cardcomSaleWebhookJson.invoicenumber},
-         ${cardcomSaleWebhookJson.terminalnumber}, ${cardcomSaleWebhookJson.ApprovelNumber},
-         ${saleTimestamp}, ${cardcomSaleWebhookJson.UserEmail}, ${cardcomSaleWebhookJson.CouponNumber ?? null})
+      INSERT INTO sale_info_cardcom VALUES (
+        ${saleNumber},
+        ${JSON.stringify(cardcomSaleWebhookJson)},
+        ${cardcomSaleWebhookJson.invoicenumber},
+        ${cardcomSaleWebhookJson.terminalnumber},
+        ${cardcomSaleWebhookJson.ApprovelNumber},
+        ${saleTimestamp},
+        ${cardcomSaleWebhookJson.UserEmail},
+        ${cardcomSaleWebhookJson.CouponNumber ?? null},
+        ${parseInt(cardcomSaleWebhookJson.internaldealnumber)},
+        ${cardcomSaleWebhookJson.RecurringAccountID ? parseInt(cardcomSaleWebhookJson.RecurringAccountID) : null}
+      )
     `)
 
   const products = extractProductsFromCardcom(cardcomSaleWebhookJson)
@@ -334,7 +365,8 @@ function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJs
   return products
 }
 function generateNameFromCardcomSale(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
-  const nameParts = cardcomSaleWebhookJson.CardOwnerName.trim().split(/\s+/)
+  const cardcomSaleName = cardcomSaleWebhookJson.intTo || cardcomSaleWebhookJson.CardOwnerName
+  const nameParts = cardcomSaleName.trim().split(/\s+/)
 
   const firstName = nameParts[0]
   const lastName = nameParts.slice(1).join(' ')

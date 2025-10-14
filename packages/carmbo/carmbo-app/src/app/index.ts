@@ -75,6 +75,8 @@ const {app, sql} = await makeApp({
   appBaseUrl: appBaseUrl,
 })
 
+// await shift({sql, path: fileURLToPath(new URL('../../sql', import.meta.url))})
+
 await seedIfNeeded()
 
 await app.listen({port: env.PORT, host: env.HOST})
