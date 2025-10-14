@@ -19,6 +19,7 @@ export const StudentSchema = z.object({
   emails: z.array(z.email()).min(1),
   phones: z.array(z.string().min(1)).optional(),
   facebookNames: z.array(z.string()).optional(),
+  cardcomCustomerIds: z.array(z.number().int()).optional(),
 })
 
 export const NewStudentSchema = StudentSchema.omit({studentNumber: true})
@@ -327,7 +328,8 @@ SELECT
   COALESCE(names, json_build_array()) AS names,
   COALESCE(facebook_names, json_build_array()) AS facebook_names,
   COALESCE(emails, json_build_array()) AS emails,
-  COALESCE(phones, json_build_array()) AS phones
+  COALESCE(phones, json_build_array()) AS phones,
+  COALESCE(cardcom_customer_ids, json_build_array()) AS cardcom_customer_ids
 FROM
   parameters
   LEFT JOIN student_history ON student_history.id = current_history_id
@@ -380,6 +382,20 @@ FROM
     WHERE
       student_phone.data_id = current_data_id
   ) phones ON true
+  LEFT JOIN LATERAL (
+    SELECT
+      json_agg(
+        DISTINCT customer_id
+        ORDER BY
+          customer_id
+      ) AS cardcom_customer_ids
+    FROM
+      sale_info si
+      JOIN sale_info_cardcom sic ON sic.sale_number = si.sale_number
+    WHERE
+      si.student_number = ${studentNumber}
+      AND sic.customer_id IS NOT NULL
+  ) cardcom_customer_ids ON true
        `
 }
 

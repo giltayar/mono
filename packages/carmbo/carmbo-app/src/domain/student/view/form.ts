@@ -160,6 +160,25 @@ export function StudentCreateOrUpdateFormFields({
           />
           <label for="birthday">Birthday</label>
         </div>
+
+        ${'cardcomCustomerIds' in student &&
+        student.cardcomCustomerIds &&
+        student.cardcomCustomerIds.length > 0
+          ? html`
+              <div class="mt-3 form-floating">
+                <input
+                  name="cardcomCustomerIds"
+                  type="text"
+                  placeholder=" "
+                  class="form-control"
+                  id="cardcomCustomerIds"
+                  value="${student.cardcomCustomerIds.join(', ')}"
+                  readonly
+                />
+                <label for="cardcomCustomerIds">Cardcom Customer IDs</label>
+              </div>
+            `
+          : ''}
       </div>
     </div>
   `

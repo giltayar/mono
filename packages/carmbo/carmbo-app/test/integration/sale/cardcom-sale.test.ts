@@ -6,6 +6,7 @@ import {generateCardcomWebhookData} from '../../common/cardcom-simulation.ts'
 import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createSaleDetailPageModel} from '../../page-model/sales/sale-detail-page.model.ts'
+import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {fetchAsTextWithJsonBody} from '@giltayar/http-commons'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 
@@ -91,6 +92,14 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await expect(firstStudentRow.nameCell().locator).toHaveText('John Doe')
   await expect(firstStudentRow.emailCell().locator).toHaveText(customerEmail)
   await expect(firstStudentRow.phoneCell().locator).toHaveText(customerPhone)
+
+  // Navigate to student detail page to verify no Cardcom customer ID field (since none was provided)
+  await firstStudentRow.idLink().locator.click()
+  await page.waitForURL(/\/students\/\d+$/)
+
+  const updateStudentModel = createUpdateStudentPageModel(page)
+  // The Cardcom Customer IDs field should not be visible since no customer ID was provided
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).not.toBeVisible()
 
   await page.goto(new URL('/sales', url()).href)
 
@@ -210,6 +219,17 @@ test('cardcom sale with same customer ID reuses existing student', async ({page}
   const studentNumberText = await firstStudent.idLink().locator.textContent()
   const studentNumber = studentNumberText?.trim()
 
+  // Navigate to student detail page to verify Cardcom customer ID appears
+  await firstStudent.idLink().locator.click()
+  await page.waitForURL(/\/students\/\d+$/)
+
+  const updateStudentModel = createUpdateStudentPageModel(page)
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toBeVisible()
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue('12345')
+
+  // Go back to students list
+  await page.goto(new URL('/students', url()).href)
+
   // Second sale with different email and phone but same customer ID
   const webhookDataB = generateCardcomWebhookData(
     [{productId: productNumber, quantity: 1, price: 100}],
@@ -244,4 +264,118 @@ test('cardcom sale with same customer ID reuses existing student', async ({page}
   // Both sales should show the same student name (Alice Smith from the original student)
   await expect(saleRows.row(0).studentCell().locator).toHaveText('Alice Smith')
   await expect(saleRows.row(1).studentCell().locator).toHaveText('Alice Smith')
+
+  // Navigate back to student detail page to verify customer ID still shows correctly
+  await page.goto(new URL(`/students/${studentNumber}`, url()).href)
+  await page.waitForURL(/\/students\/\d+$/)
+
+  // The customer ID should still be "12345" (not duplicated)
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toBeVisible()
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue('12345')
+})
+
+test('student with multiple sales shows all different cardcom customer IDs', async ({page}) => {
+  // Create a simple product
+  const productNumber = await createProduct(
+    {
+      name: 'Test Product',
+      productType: 'recorded',
+    },
+    undefined,
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    sql(),
+  )
+
+  const webhookUrl = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', url()), {
+    secret: 'secret',
+    'sales-event': salesEventNumber.toString(),
+  })
+
+  const customerEmail = 'repeat-customer@example.com'
+  const customerName = 'Jane Doe'
+  const customerPhone = '0503333333'
+
+  // First sale with customer ID "11111"
+  const webhookDataA = generateCardcomWebhookData(
+    [{productId: productNumber, quantity: 1, price: 100}],
+    {
+      email: customerEmail,
+      name: customerName,
+      phone: customerPhone,
+      customerId: '11111',
+    },
+  )
+
+  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataA as any)
+
+  // Verify first student was created
+  await page.goto(new URL('/students', url()).href)
+  const studentListModel = createStudentListPageModel(page)
+  let studentRows = studentListModel.list().rows()
+  await expect(studentRows.locator).toHaveCount(1)
+
+  const firstStudent = studentRows.row(0)
+  await expect(firstStudent.nameCell().locator).toHaveText('Jane Doe')
+  await expect(firstStudent.emailCell().locator).toHaveText(customerEmail)
+
+  // Get the student number
+  const studentNumberText = await firstStudent.idLink().locator.textContent()
+  const studentNumber = studentNumberText?.trim()
+
+  // Navigate to student detail page to verify first customer ID
+  await firstStudent.idLink().locator.click()
+  await page.waitForURL(/\/students\/\d+$/)
+
+  const updateStudentModel = createUpdateStudentPageModel(page)
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toBeVisible()
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue('11111')
+
+  // Second sale with same email/phone but different customer ID "22222"
+  const webhookDataB = generateCardcomWebhookData(
+    [{productId: productNumber, quantity: 1, price: 150}],
+    {
+      email: customerEmail,
+      name: customerName,
+      phone: customerPhone,
+      customerId: '22222',
+    },
+  )
+
+  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataB as any)
+
+  // Verify still only 1 student (same student, different payment method)
+  await page.goto(new URL('/students', url()).href)
+  studentRows = studentListModel.list().rows()
+  await expect(studentRows.locator).toHaveCount(1)
+
+  // Verify both sales exist
+  await page.goto(new URL('/sales', url()).href)
+  const saleListModel = createSaleListPageModel(page)
+  const saleRows = saleListModel.list().rows()
+  await expect(saleRows.locator).toHaveCount(2)
+
+  // Both sales should be linked to the same student
+  await expect(saleRows.row(0).studentCell().locator).toHaveText('Jane Doe')
+  await expect(saleRows.row(1).studentCell().locator).toHaveText('Jane Doe')
+
+  // Navigate to student detail page to verify both customer IDs appear
+  await page.goto(new URL(`/students/${studentNumber}`, url()).href)
+  await page.waitForURL(/\/students\/\d+$/)
+
+  // Both customer IDs should appear, comma-separated (order: 11111, 22222 due to ORDER BY)
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toBeVisible()
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue(
+    '11111, 22222',
+  )
 })
