@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "",
   "type": "module",
   "exports": {
@@ -71,7 +71,6 @@
     "htmx.org": "^2.0.7",
     "p-retry": "^7.0.0",
     "postgres": "^3.4.7",
-    "postgres-shift": "^0.1.0",
     "qs": "^6.14.0",
     "vhtml": "^2.2.0",
     "yargs": "^18.0.0",

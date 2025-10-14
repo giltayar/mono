@@ -12,8 +12,6 @@ services:
       - '5432:5432'
     volumes:
       - /tmp/carmbo-app/.db-data:/var/lib/postgresql/data
-      # Mount SQL scripts to be executed on container startup (ordered by filename)
-      - ./src/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U user -d carmbo']
       interval: 10s
@@ -38,6 +36,3 @@ services:
   #     - '3000:3000'
   #   healthcheck:
   #     test: 'curl localhost:3000'
-volumes:
-  postgres_data:
-    driver: local

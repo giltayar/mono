@@ -68,9 +68,6 @@ importers:
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
-      postgres-shift:
-        specifier: ^0.1.0
-        version: 0.1.0
       qs:
         specifier: ^6.14.0
         version: 6.14.0
@@ -1415,9 +1412,6 @@ packages:
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
-
-  postgres-shift@0.1.0:
-    resolution: {integrity: sha512-/375iG0Kveh1Spk3kFtaTdGT9FUxtXYDDabGw/9/Jkk3f93dYM2R8ZgQzbknCG+ZpfoR114gZ71oR+lRr6XY3A==}
 
   postgres@3.4.7:
     resolution: {integrity: sha512-Jtc2612XINuBjIl/QTWsV5UvE8UHuNblcO3vVADSrKsrc6RqGX6lOW1cEo3CM2v0XG4Nat8nI+YM7/f26VxXLw==}
@@ -3282,8 +3276,6 @@ snapshots:
       fsevents: 2.3.2
 
   possible-typed-array-names@1.1.0: {}
-
-  postgres-shift@0.1.0: {}
 
   postgres@3.4.7: {}
 

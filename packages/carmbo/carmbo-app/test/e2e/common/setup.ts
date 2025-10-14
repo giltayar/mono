@@ -1,14 +1,13 @@
 import {test} from '@playwright/test'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import type {Sql} from 'postgres'
-// //@ts-expect-error no types
-// import shift from 'postgres-shift'
-// import {fileURLToPath} from 'node:url'
 import postgres from 'postgres'
 import {
   createSmooveIntegrationService,
   type SmooveIntegrationService,
 } from '@giltayar/carmel-tools-smoove-integration/service'
+import {migrate} from '../../../src/sql/migration.ts'
+import {fileURLToPath} from 'node:url'
 
 export function setup(testUrl: string): {
   url: () => URL
@@ -47,7 +46,7 @@ export function setup(testUrl: string): {
       transform: {...postgres.camel},
     })
 
-    // await shift({sql, path: fileURLToPath(new URL('../../../sql', import.meta.url))})
+    await migrate({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
   })
 
   test.beforeEach(async () => {
