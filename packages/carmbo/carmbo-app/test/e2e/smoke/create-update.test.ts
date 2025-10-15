@@ -66,7 +66,7 @@ test('create student then update her (e2e)', async ({page}) => {
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
 
-  expect
+  await expect
     .poll(() =>
       smooveIntegration.fetchSmooveContact('jane.smith@example.com', {
         by: 'email',

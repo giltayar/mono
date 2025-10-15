@@ -50,17 +50,33 @@ export function SalesEventUpdateView({
       />
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
-          <button
-            class="btn btn-danger"
-            type="Submit"
-            value="delete"
-            hx-delete=""
-            hx-params="delete-operation"
-          >
-            ${salesEvent.historyOperation === 'delete' ? 'Restore' : 'Archive'}
-          </button>
-          <button class="btn btn-primary" type="Submit" value="save">Update</button>
+          ${salesEvent.historyOperation === 'delete'
+            ? html`
+                <button
+                  class="btn btn-danger"
+                  type="Submit"
+                  value="delete"
+                  hx-delete=""
+                  hx-params="delete-operation"
+                >
+                  Restore
+                </button>
+              `
+            : html`
+                <button class="btn btn-secondary discard" type="Submit" value="discard">
+                  Discard
+                </button>
+                <button
+                  class="btn btn-danger"
+                  type="Submit"
+                  value="delete"
+                  hx-delete=""
+                  hx-params="delete-operation"
+                >
+                  Archive
+                </button>
+                <button class="btn btn-primary" type="Submit" value="save">Update</button>
+              `}
         </section>
       </div>
       <div class="mt-3">

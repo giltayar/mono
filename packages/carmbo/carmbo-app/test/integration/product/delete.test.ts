@@ -51,6 +51,16 @@ test('deleting a product', async ({page}) => {
   await expect(form.nameInput().locator).toHaveAttribute('readonly', 'true')
   await expect(form.productTypeSelect().locator).toHaveAttribute('readonly', 'true')
 
+  // Verify that Update and Discard buttons are NOT visible
+  await expect(form.updateButton().locator).not.toBeVisible()
+  await expect(form.discardButton().locator).not.toBeVisible()
+
+  // Verify that Archive button is NOT visible (it should be replaced by Restore)
+  await expect(form.deleteButton().locator).not.toBeVisible()
+
+  // Verify that Restore button IS visible
+  await expect(form.restoreButton().locator).toBeVisible()
+
   await page.goto(new URL('/products', url()).href)
 
   // Verify only Product Alpha is visible (Product Beta should be archived/hidden)

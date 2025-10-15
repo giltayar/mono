@@ -54,6 +54,16 @@ test('deleting a sales event', async ({page}) => {
   await expect(form.fromDateInput().locator).toHaveAttribute('readonly', 'true')
   await expect(form.toDateInput().locator).toHaveAttribute('readonly', 'true')
 
+  // Verify that Update and Discard buttons are NOT visible
+  await expect(form.updateButton().locator).not.toBeVisible()
+  await expect(form.discardButton().locator).not.toBeVisible()
+
+  // Verify that Archive button is NOT visible (it should be replaced by Restore)
+  await expect(form.deleteButton().locator).not.toBeVisible()
+
+  // Verify that Restore button IS visible
+  await expect(form.restoreButton().locator).toBeVisible()
+
   await page.goto(new URL('/sales-events', url()).href)
 
   // Verify only Sale Alpha is visible (Sale Beta should be archived/hidden)

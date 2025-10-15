@@ -60,6 +60,16 @@ test('deleting a student', async ({page}) => {
   await expect(updateForm.emails().emailInput(0).locator).toHaveAttribute('readonly', 'true')
   await expect(updateForm.birthdayInput().locator).toHaveAttribute('readonly', 'true')
 
+  // Verify that Update and Discard buttons are NOT visible
+  await expect(updateForm.updateButton().locator).not.toBeVisible()
+  await expect(updateForm.discardButton().locator).not.toBeVisible()
+
+  // Verify that Archive button is NOT visible (it should be replaced by Restore)
+  await expect(updateForm.deleteButton().locator).not.toBeVisible()
+
+  // Verify that Restore button IS visible
+  await expect(updateForm.restoreButton().locator).toBeVisible()
+
   await page.goto(url().href)
 
   // Verify only Alice is visible (Bob should be archived/hidden)
