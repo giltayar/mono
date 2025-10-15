@@ -16,9 +16,10 @@ import {
   renderStudentViewInHistoryPage,
 } from './view/view.ts'
 import {renderStudentsPage} from './view/list.ts'
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import type {StudentManipulations} from './view/student-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
+import {exceptionToBanner, type Banner} from '../../layout/banner.ts'
 
 export async function showStudents(
   {
@@ -34,13 +35,24 @@ export async function showStudents(
   return finalHtml(renderStudentsPage(flash, students, {withArchived, query: query ?? '', page}))
 }
 
-export function showStudentCreate(): ControllerResult {
-  return finalHtml(renderStudentsCreatePage(undefined, undefined))
+export function showStudentCreate(
+  student: NewStudent | undefined,
+  {error}: {error?: any} = {},
+): ControllerResult {
+  const banner: Banner | undefined = error
+    ? {
+        message: `Creating student error: ${'message' in error ? error.message : 'Unknown error'}`,
+        type: 'error',
+        disappearing: false,
+      }
+    : undefined
+
+  return finalHtml(renderStudentsCreatePage(student, {banner}))
 }
 
 export async function showStudentUpdate(
   studentNumber: number,
-  manipulations: StudentManipulations,
+  studentWithError: {student: Student | undefined; error: any; operation: string} | undefined,
   sql: Sql,
 ): Promise<ControllerResult> {
   const studentWithHistory = await queryStudentByNumber(studentNumber, sql)
@@ -48,14 +60,24 @@ export async function showStudentUpdate(
   if (!studentWithHistory) {
     return {status: 404, body: 'Student not found'}
   }
+
+  const banner = exceptionToBanner(
+    `${studentWithError?.operation} student error: `,
+    studentWithError?.error,
+  )
+  studentWithHistory.student = {
+    ...studentWithHistory.student,
+    ...studentWithError?.student,
+  }
+
   return finalHtml(
-    renderStudentUpdatePage(studentWithHistory.student, studentWithHistory.history, manipulations),
+    renderStudentUpdatePage(studentWithHistory.student, studentWithHistory.history, {banner}),
   )
 }
 
 export function showOngoingStudent(
   student: OngoingStudent,
-  manipulations: StudentManipulations,
+  {manipulations}: {manipulations: StudentManipulations},
 ): ControllerResult {
   return finalHtml(renderStudentFormFields(student, manipulations, 'write'))
 }
@@ -75,23 +97,31 @@ export async function showStudentInHistory(
 }
 
 export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  try {
+    const smooveIntegration = requestContext.get('smooveIntegration')!
 
-  const studentNumber = await model_createStudent(student, undefined, smooveIntegration, sql)
+    const studentNumber = await model_createStudent(student, undefined, smooveIntegration, sql)
 
-  return {htmxRedirect: `/students/${studentNumber}`}
+    return {htmxRedirect: `/students/${studentNumber}`}
+  } catch (error) {
+    return showStudentCreate(student, {error})
+  }
 }
 
 export async function updateStudent(student: Student, sql: Sql): Promise<ControllerResult> {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  try {
+    const smooveIntegration = requestContext.get('smooveIntegration')!
 
-  const studentNumber = await model_updateStudent(student, undefined, smooveIntegration, sql)
+    const studentNumber = await model_updateStudent(student, undefined, smooveIntegration, sql)
 
-  if (!studentNumber) {
-    return {status: 404, body: 'Student not found'}
+    if (!studentNumber) {
+      return {status: 404, body: 'Student not found'}
+    }
+
+    return {htmxRedirect: `/students/${studentNumber}`}
+  } catch (error) {
+    return showStudentUpdate(student.studentNumber, {student, error, operation: 'Updating'}, sql)
   }
-
-  return {htmxRedirect: `/students/${studentNumber}`}
 }
 
 export async function deleteStudent(
@@ -99,19 +129,34 @@ export async function deleteStudent(
   deleteOperation: 'delete' | 'restore',
   sql: Sql,
 ): Promise<ControllerResult> {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  try {
+    const smooveIntegration = requestContext.get('smooveIntegration')!
 
-  const operationId = await model_deleteStudent(
-    studentNumber,
-    undefined,
-    deleteOperation,
-    smooveIntegration,
-    sql,
-  )
+    const operationId = await model_deleteStudent(
+      studentNumber,
+      undefined,
+      deleteOperation,
+      smooveIntegration,
+      sql,
+    )
 
-  if (!operationId) {
-    return {status: 404, body: 'Student not found'}
+    if (!operationId) {
+      return {status: 404, body: 'Student not found'}
+    }
+
+    return {htmxRedirect: `/students/${studentNumber}`}
+  } catch (error) {
+    return retarget(
+      await showStudentUpdate(
+        studentNumber,
+        {
+          student: undefined,
+          error,
+          operation: deleteOperation === 'delete' ? 'Archiving' : 'Restoring',
+        },
+        sql,
+      ),
+      'body',
+    )
   }
-
-  return {htmxRedirect: `/students/${studentNumber}`}
 }

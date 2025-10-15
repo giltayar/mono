@@ -17,12 +17,13 @@ import {
   renderProductViewInHistoryPage,
 } from './view/view.ts'
 import {renderProductsPage} from './view/list.ts'
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import {finalHtml, type ControllerResult, retarget} from '../../commons/controller-result.ts'
 import type {ProductManipulations} from './view/product-manipulations.ts'
 import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 import {requestContext} from '@fastify/request-context'
 import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/service'
+import {exceptionToBanner} from '../../layout/banner.ts'
 
 export async function showProducts(
   {
@@ -38,7 +39,10 @@ export async function showProducts(
   return finalHtml(renderProductsPage(flash, products, {withArchived, query: query ?? '', page}))
 }
 
-export async function showProductCreate(): Promise<ControllerResult> {
+export async function showProductCreate(
+  product: NewProduct | undefined,
+  {error}: {error?: any},
+): Promise<ControllerResult> {
   const [courses, whatsappGroups, smooveLists] = await Promise.all([
     listCourses(),
     listWhatsAppGroups(),
@@ -48,12 +52,14 @@ export async function showProductCreate(): Promise<ControllerResult> {
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
 
-  return finalHtml(renderProductsCreatePage(undefined, undefined))
+  const banner = exceptionToBanner('Creating product error: ', error)
+
+  return finalHtml(renderProductsCreatePage(product, {banner}))
 }
 
 export async function showProductUpdate(
   productNumber: number,
-  manipulations: ProductManipulations,
+  productWithError: {product: Product | undefined; error: any; operation: string} | undefined,
   sql: Sql,
 ): Promise<ControllerResult> {
   const [courses, whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
@@ -69,14 +75,24 @@ export async function showProductUpdate(
   if (!productWithHistory) {
     return {status: 404, body: 'Product not found'}
   }
+
+  const banner = exceptionToBanner(
+    `${productWithError?.operation} product error: `,
+    productWithError?.error,
+  )
+  productWithHistory.product = {
+    ...productWithHistory.product,
+    ...productWithError?.product,
+  }
+
   return finalHtml(
-    renderProductUpdatePage(productWithHistory.product, productWithHistory.history, manipulations),
+    renderProductUpdatePage(productWithHistory.product, productWithHistory.history, {banner}),
   )
 }
 
 export async function showOngoingProduct(
   product: OngoingProduct,
-  manipulations: ProductManipulations,
+  {manipulations}: {manipulations: ProductManipulations},
 ): Promise<ControllerResult> {
   const [courses, whatsappGroups, smooveLists] = await Promise.all([
     listCourses(),
@@ -113,19 +129,27 @@ export async function showProductInHistory(
 }
 
 export async function createProduct(product: NewProduct, sql: Sql): Promise<ControllerResult> {
-  const productNumber = await model_createProduct(product, undefined, sql)
+  try {
+    const productNumber = await model_createProduct(product, undefined, sql)
 
-  return {htmxRedirect: `/products/${productNumber}`}
+    return {htmxRedirect: `/products/${productNumber}`}
+  } catch (error) {
+    return showProductCreate(product, {error})
+  }
 }
 
 export async function updateProduct(product: Product, sql: Sql): Promise<ControllerResult> {
-  const productNumber = await model_updateProduct(product, undefined, sql)
+  try {
+    const productNumber = await model_updateProduct(product, undefined, sql)
 
-  if (!productNumber) {
-    return {status: 404, body: 'Product not found'}
+    if (!productNumber) {
+      return {status: 404, body: 'Product not found'}
+    }
+
+    return {htmxRedirect: `/products/${productNumber}`}
+  } catch (error) {
+    return showProductUpdate(product.productNumber, {product, error, operation: 'Updating'}, sql)
   }
-
-  return {htmxRedirect: `/products/${productNumber}`}
 }
 
 export async function deleteProduct(
@@ -133,13 +157,21 @@ export async function deleteProduct(
   deleteOperation: 'delete' | 'restore',
   sql: Sql,
 ): Promise<ControllerResult> {
-  const operationId = await model_deleteProduct(productNumber, undefined, deleteOperation, sql)
+  try {
+    const operationId = await model_deleteProduct(productNumber, undefined, deleteOperation, sql)
 
-  if (!operationId) {
-    return {status: 404, body: 'Product not found'}
+    if (!operationId) {
+      return {status: 404, body: 'Product not found'}
+    }
+
+    return {htmxRedirect: `/products/${productNumber}`}
+  } catch (error) {
+    const operation = deleteOperation === 'delete' ? 'Archiving' : 'Restoring'
+    return retarget(
+      await showProductUpdate(productNumber, {product: undefined, error, operation}, sql),
+      'body',
+    )
   }
-
-  return {htmxRedirect: `/products/${productNumber}`}
 }
 
 const cachedCourses: {

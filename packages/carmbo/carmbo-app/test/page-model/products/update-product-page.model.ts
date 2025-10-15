@@ -1,9 +1,11 @@
 import type {Page} from '@playwright/test'
 import {productFormPageModel} from './product-form.model.ts'
 import {createProductHistoryPageModel} from './product-history.model.ts'
+import {createAllPagesPageModel} from '../common/all-pages.model.ts'
 
 export function createUpdateProductPageModel(page: Page) {
   return {
+    ...createAllPagesPageModel(page),
     urlRegex: /\/products\/\d+$/,
     pageTitle: (locator = page.getByRole('heading', {name: /Update Product \d+/})) => ({locator}),
     form: () => ({

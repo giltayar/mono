@@ -3,7 +3,7 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createNewStudentPageModel} from '../../page-model/students/new-student-page.model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {setup} from '../common/setup.ts'
-const {url, smooveIntegration} = setup(import.meta.url)
+const {url, smooveIntegration, TEST_hooks} = setup(import.meta.url)
 
 test('create student then update her', async ({page}) => {
   await page.goto(url().href)
@@ -180,4 +180,53 @@ test('birthday field is optional', async ({page}) => {
   await updateStudentModel.form().updateButton().locator.click()
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
+})
+
+test('creation/update error shows alert', async ({page}) => {
+  await page.goto(url().href)
+
+  const studentListModel = createStudentListPageModel(page)
+  const newStudentModel = createNewStudentPageModel(page)
+  const updateStudentModel = createUpdateStudentPageModel(page)
+
+  await studentListModel.createNewStudentButton().locator.click()
+
+  await page.waitForURL(newStudentModel.urlRegex)
+
+  await expect(newStudentModel.pageTitle().locator).toHaveText('New Student')
+  // Fill the new student form
+  const newForm = newStudentModel.form()
+  await newForm.names().firstNameInput(0).locator.fill('John')
+  await newForm.names().lastNameInput(0).locator.fill('Doe')
+  await newForm.emails().emailInput(0).locator.fill('John.Doe@example.com')
+  await newForm.phones().phoneInput(0).locator.fill('+972-54-6344457')
+  await newForm.birthdayInput().locator.fill('2000-01-01')
+  await newForm.facebookNames().facebookNameInput(0).locator.fill('johnfb')
+
+  TEST_hooks['createStudent'] = () => {
+    throw new Error('ouch!')
+  }
+
+  await newForm.createButton().locator.click()
+
+  await expect(newStudentModel.header().errorBanner().locator).toHaveText(
+    'Creating student error: ouch!',
+  )
+  delete TEST_hooks['createStudent']
+
+  await newForm.createButton().locator.click()
+
+  await page.waitForURL(updateStudentModel.urlRegex)
+
+  await updateStudentModel.form().names().firstNameInput(0).locator.fill('Jane')
+
+  TEST_hooks['updateStudent'] = () => {
+    throw new Error('double ouch!')
+  }
+
+  await updateStudentModel.form().updateButton().locator.click()
+
+  await expect(updateStudentModel.header().errorBanner().locator).toHaveText(
+    'Updating student error: double ouch!',
+  )
 })

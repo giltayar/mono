@@ -9,11 +9,10 @@ export function dealWithControllerResult<TReply extends FastifyReply>(
     return reply.type('text/html').send(result)
   } else if ('htmxRedirect' in result) {
     return reply.header('HX-Redirect', result.htmxRedirect).send()
+  } else if ('htmxTarget' in result) {
+    return reply.header('HX-Retarget', result.htmxTarget).type('text/html').send(result.body)
   } else {
-    return reply
-      .status(result.status ?? 200)
-      .type('text/html')
-      .send(result.body)
+    return reply.status(result.status).type('text/html').send(result.body)
   }
 }
 
@@ -33,10 +32,9 @@ export async function dealWithControllerResultAsync<TReply extends FastifyReply>
     return reply.type('text/html').send(result)
   } else if ('htmxRedirect' in result) {
     return reply.header('HX-Redirect', result.htmxRedirect).send()
+  } else if ('htmxTarget' in result) {
+    return reply.header('HX-Retarget', result.htmxTarget).type('text/html').send(result.body)
   } else {
-    return reply
-      .status(result.status ?? 200)
-      .type('text/html')
-      .send(result.body)
+    return reply.status(result.status).type('text/html').send(result.body)
   }
 }

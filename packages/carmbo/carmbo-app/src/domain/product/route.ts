@@ -50,7 +50,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
   // Create new product
   app.get('/new', async (_request, reply) =>
-    dealWithControllerResult(reply, await showProductCreate()),
+    dealWithControllerResult(reply, await showProductCreate(undefined, {})),
   )
 
   app
@@ -58,7 +58,9 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     .post('/new', {schema: {body: OngoingProductSchema}}, async (request, reply) =>
       dealWithControllerResult(
         reply,
-        await showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
+        await showOngoingProduct(request.body, {
+          manipulations: {addItem: request.headers['x-add-item']},
+        }),
       ),
     )
 
@@ -77,11 +79,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       async (request, reply) => {
         return dealWithControllerResult(
           reply,
-          await showProductUpdate(
-            request.params.number,
-            {addItem: request.headers['x-add-item']},
-            sql,
-          ),
+          await showProductUpdate(request.params.number, undefined, sql),
         )
       },
     )
@@ -94,7 +92,9 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       async (request, reply) => {
         return dealWithControllerResult(
           reply,
-          await showOngoingProduct(request.body, {addItem: request.headers['x-add-item']}),
+          await showOngoingProduct(request.body, {
+            manipulations: {addItem: request.headers['x-add-item']},
+          }),
         )
       },
     )

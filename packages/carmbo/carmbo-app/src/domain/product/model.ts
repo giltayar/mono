@@ -3,6 +3,7 @@ import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/o
 import {assert} from 'node:console'
 import {z} from 'zod'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
+import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
 
 export const ProductTypeSchema = z.enum(['recorded', 'challenge', 'club', 'bundle'])
 export type ProductType = z.infer<typeof ProductTypeSchema>
@@ -86,6 +87,7 @@ export async function listProducts(
 }
 
 export async function createProduct(product: NewProduct, reason: string | undefined, sql: Sql) {
+  await TEST_executeHook('createProduct')
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -114,6 +116,7 @@ export async function updateProduct(
   reason: string | undefined,
   sql: Sql,
 ): Promise<number | undefined> {
+  await TEST_executeHook('updateProduct')
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -150,6 +153,7 @@ export async function deleteProduct(
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
   sql: Sql,
 ): Promise<string | undefined> {
+  await TEST_executeHook(`${deleteOperation}Product`)
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()

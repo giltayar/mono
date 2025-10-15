@@ -1,9 +1,11 @@
 import type {Page} from '@playwright/test'
 import {studentFormPageModel} from './student-form.model.ts'
 import {createStudentHistoryPageModel} from './student-history.model.ts'
+import {createAllPagesPageModel} from '../common/all-pages.model.ts'
 
 export function createUpdateStudentPageModel(page: Page) {
   return {
+    ...createAllPagesPageModel(page),
     urlRegex: /\/students\/\d+$/,
     pageTitle: (locator = page.getByRole('heading', {name: /Update Student \d+/})) => ({locator}),
     form: () => ({

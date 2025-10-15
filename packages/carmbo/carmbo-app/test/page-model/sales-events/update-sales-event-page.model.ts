@@ -1,9 +1,11 @@
 import type {Page} from '@playwright/test'
 import {salesEventFormPageModel} from './sales-event-form.model.ts'
 import {createSalesEventHistoryPageModel} from './sales-event-history.model.ts'
+import {createAllPagesPageModel} from '../common/all-pages.model.ts'
 
 export function createUpdateSalesEventPageModel(page: Page) {
   return {
+    ...createAllPagesPageModel(page),
     urlRegex: /\/sales-events\/\d+$/,
     pageTitle: (locator = page.getByRole('heading', {name: /Update Sales Event \d+/})) => ({
       locator,

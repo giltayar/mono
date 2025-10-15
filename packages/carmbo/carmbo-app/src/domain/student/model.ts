@@ -8,6 +8,7 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import {assertNever} from '@giltayar/functional-commons'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
 import {normalizeEmail} from '../../commons/email.ts'
+import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -116,6 +117,8 @@ export async function createStudent(
   smooveIntegration: SmooveIntegrationService | undefined,
   sql: Sql,
 ) {
+  await TEST_executeHook('createStudent')
+
   const normalizedStudent = normalizeStudent(student)
 
   return await sql.begin(async (sql) => {
@@ -155,6 +158,8 @@ export async function updateStudent(
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ): Promise<number | undefined> {
+  await TEST_executeHook('updateStudent')
+
   const normalizedStudent = normalizeStudent(student)
 
   return await sql.begin(async (sql) => {
@@ -219,6 +224,8 @@ export async function deleteStudent(
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
 ): Promise<string | undefined> {
+  await TEST_executeHook(`${deleteOperation}Student`)
+
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()

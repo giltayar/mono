@@ -18,8 +18,10 @@ import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
+  const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
   // List students
-  app.withTypeProvider<ZodTypeProvider>().get(
+  appWithTypes.get(
     '/',
     {
       schema: {
@@ -49,73 +51,61 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   // Create new student
-  app.get('/new', async (_request, reply) => dealWithControllerResult(reply, showStudentCreate()))
+  app.get('/new', async (_request, reply) =>
+    dealWithControllerResult(reply, showStudentCreate(undefined)),
+  )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .post('/new', {schema: {body: OngoingStudentSchema}}, async (request, reply) =>
-      dealWithControllerResult(
-        reply,
-        showOngoingStudent(request.body, {addItem: request.headers['x-add-item']}),
-      ),
-    )
+  appWithTypes.post('/new', {schema: {body: OngoingStudentSchema}}, async (request, reply) =>
+    dealWithControllerResult(
+      reply,
+      showOngoingStudent(request.body, {manipulations: {addItem: request.headers['x-add-item']}}),
+    ),
+  )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .post('/', {schema: {body: NewStudentSchema}}, async (request, reply) => {
-      return dealWithControllerResult(reply, await createStudent(request.body, sql))
-    })
+  appWithTypes.post('/', {schema: {body: NewStudentSchema}}, async (request, reply) => {
+    return dealWithControllerResult(reply, await createStudent(request.body, sql))
+  })
 
   // Edit existing student
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .get(
-      '/:number',
-      {schema: {params: z.object({number: z.coerce.number().int()})}},
-      async (request, reply) => {
-        return dealWithControllerResult(
-          reply,
-          await showStudentUpdate(
-            request.params.number,
-            {addItem: request.headers['x-add-item']},
-            sql,
-          ),
-        )
-      },
-    )
+  appWithTypes.get(
+    '/:number',
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        await showStudentUpdate(request.params.number, undefined, sql),
+      )
+    },
+  )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .post(
-      '/:number',
-      {schema: {body: OngoingStudentSchema, params: z.object({number: z.coerce.number().int()})}},
-      async (request, reply) => {
-        return dealWithControllerResult(
-          reply,
-          showOngoingStudent(request.body, {addItem: request.headers['x-add-item']}),
-        )
-      },
-    )
+  appWithTypes.post(
+    '/:number',
+    {schema: {body: OngoingStudentSchema, params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        showOngoingStudent(request.body, {manipulations: {addItem: request.headers['x-add-item']}}),
+      )
+    },
+  )
 
-  app
-    .withTypeProvider<ZodTypeProvider>()
-    .put(
-      '/:number',
-      {schema: {body: StudentSchema, params: z.object({number: z.coerce.number().int()})}},
-      async (request, reply) => {
-        const studentNumber = request.params.number
+  appWithTypes.put(
+    '/:number',
+    {schema: {body: StudentSchema, params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      const studentNumber = request.params.number
 
-        assert(
-          studentNumber === request.body.studentNumber,
-          'student number in URL must match ID in body',
-        )
+      assert(
+        studentNumber === request.body.studentNumber,
+        'student number in URL must match ID in body',
+      )
 
-        return dealWithControllerResult(reply, await updateStudent(request.body, sql))
-      },
-    )
+      return dealWithControllerResult(reply, await updateStudent(request.body, sql))
+    },
+  )
 
   // View student in history
-  app.withTypeProvider<ZodTypeProvider>().get(
+  appWithTypes.get(
     '/:number/by-history/:operationId',
     {
       schema: {
@@ -131,7 +121,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   // Delete (Archive) student
-  app.withTypeProvider<ZodTypeProvider>().delete(
+  appWithTypes.delete(
     '/:number',
     {
       schema: {

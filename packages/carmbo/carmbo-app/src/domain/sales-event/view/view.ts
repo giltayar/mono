@@ -1,20 +1,24 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
-import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model.ts'
+import type {
+  NewSalesEvent,
+  SalesEvent,
+  SalesEventHistory,
+  SalesEventWithHistoryInfo,
+} from '../model.ts'
 import type {OngoingSalesEvent} from './model.ts'
 import {manipulateSalesEvent, type SalesEventManipulations} from './sales-event-manipulations.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'
 import {SalesEventCreateView, SalesEventHistoryView, SalesEventUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
+import type {Banner} from '../../../layout/banner.ts'
 
 export function renderSalesEventsCreatePage(
-  salesEvent: OngoingSalesEvent | undefined,
-  manipulations: SalesEventManipulations | undefined,
+  salesEvent: NewSalesEvent | OngoingSalesEvent | undefined,
+  {banner}: {banner?: Banner} = {},
 ) {
   const finalSalesEvent: OngoingSalesEvent = salesEvent
-    ? manipulations
-      ? manipulateSalesEvent(salesEvent, manipulations)
-      : salesEvent
+    ? salesEvent
     : {
         name: '',
         fromDate: undefined,
@@ -24,7 +28,7 @@ export function renderSalesEventsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Sales Events" activeNavItem="sales-events">
+    <${MainLayout} title="Sales Events" activeNavItem="sales-events" banner=${banner}>
       <${Layout}>
         <${SalesEventCreateView} salesEvent=${finalSalesEvent} />
       </${Layout}>
@@ -35,14 +39,14 @@ export function renderSalesEventsCreatePage(
 export function renderSalesEventUpdatePage(
   salesEvent: SalesEventWithHistoryInfo,
   history: SalesEventHistory[],
-  manipulations: SalesEventManipulations,
+  {banner}: {banner?: Banner | undefined} = {},
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ) {
   return html`
-    <${MainLayout} title="Sales Events" activeNavItem="sales-events">
+    <${MainLayout} title="Sales Events" activeNavItem="sales-events" banner=${banner}>
       <${Layout}>
         <${SalesEventUpdateView}
-          salesEvent=${manipulateSalesEvent(salesEvent, manipulations)}
+          salesEvent=${salesEvent}
           history=${history}
           options=${options}
         />

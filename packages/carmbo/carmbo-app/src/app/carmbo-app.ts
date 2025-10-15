@@ -23,6 +23,7 @@ import type {
   SmooveList,
   SmooveIntegrationService,
 } from '@giltayar/carmel-tools-smoove-integration/service'
+import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -35,6 +36,7 @@ declare module '@fastify/request-context' {
     whatsappGroups: WhatsAppGroup[] | undefined
     smooveLists: SmooveList[] | undefined
     products: {id: number; name: string}[] | undefined
+    TEST_hooks: Record<string, TEST_HookFunction> | undefined
   }
 }
 
@@ -43,6 +45,7 @@ export function makeApp({
   services: {academyIntegration, whatsappIntegration, smooveIntegration},
   auth0,
   appBaseUrl,
+  TEST_hooks,
 }: {
   db: {database: string; host: string; port: number; username: string; password: string}
   services: {
@@ -59,6 +62,7 @@ export function makeApp({
       }
     | undefined
   appBaseUrl: string
+  TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
   const app = fastify({logger: process.env.NODE_ENV !== 'test'})
   const sql = postgres({
@@ -86,6 +90,7 @@ export function makeApp({
       whatsappGroups: undefined,
       smooveLists: undefined,
       products: undefined,
+      TEST_hooks,
     }),
   })
 

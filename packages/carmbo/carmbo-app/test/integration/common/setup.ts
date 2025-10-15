@@ -11,13 +11,16 @@ import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {migrate} from '../../../src/sql/migration.ts'
 import {fileURLToPath} from 'node:url'
+import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
 
 export function setup(testUrl: string): {
   url: () => URL
   sql: () => Sql
   smooveIntegration: () => SmooveIntegrationService
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
+  TEST_hooks: Record<string, TEST_HookFunction>
 } {
+  const TEST_hooks: Record<string, TEST_HookFunction> = {}
   let findAddress
   let teardown: (() => Promise<void>) | undefined
   let app: FastifyInstance
@@ -88,6 +91,7 @@ export function setup(testUrl: string): {
       },
       auth0: undefined,
       appBaseUrl: 'http://localhost:????',
+      TEST_hooks,
     }))
 
     await migrate({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
@@ -101,6 +105,7 @@ export function setup(testUrl: string): {
   })
 
   test.beforeEach(async () => {
+    resetHooks()
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product RESTART IDENTITY CASCADE`
@@ -122,6 +127,7 @@ export function setup(testUrl: string): {
     sql: () => sql,
     smooveIntegration: () => smooveIntegration,
     academyIntegration: () => academyIntegration,
+    TEST_hooks,
   }
 }
 

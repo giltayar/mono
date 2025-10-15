@@ -1,13 +1,14 @@
+import type {Banner} from './banner.ts'
 import {html} from '../commons/html-templates.ts'
 
 export function MainLayout({
   title,
-  flash,
+  banner,
   children,
   activeNavItem,
 }: {
   title: string
-  flash?: string
+  banner?: Banner
   children: string[]
   activeNavItem: 'students' | 'products' | 'sales-events' | 'sales'
 }) {
@@ -28,9 +29,8 @@ export function MainLayout({
         <body>
           <div class="layouts-main-view">
             <header class="container"><${NavBar} activeNavItem=${activeNavItem} /></header>
-            <main class="container">
-              ${flash ? `<section class="flash" >${flash}</section>` : ''} ${children}
-            </main>
+            <main class="container">${children}</main>
+            ${banner ? html`<${Banner} banner=${banner}></${Banner}>` : undefined}
           </div>
         </body>
       </html>
@@ -96,4 +96,10 @@ function NavBar({
       </div>
     </nav>
   `
+}
+
+function Banner({banner}: {banner: Banner}) {
+  return html`<div class="main-view_banner" role="${banner.type === 'error' ? 'alert' : 'status'}">
+    ${banner.message}
+  </div>`
 }

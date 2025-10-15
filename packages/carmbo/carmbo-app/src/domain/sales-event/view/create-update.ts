@@ -7,7 +7,7 @@ import {SalesEventHistoryList, historyOperationToText} from './history.ts'
 export function SalesEventCreateView({salesEvent}: {salesEvent: SalesEvent}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">New Sales Event</h2>
-    <form hx-post="/sales-events/" hx-target="html" class="col-md-6 mt-3">
+    <form hx-post="/sales-events/" hx-target="body" class="col-md-6 mt-3">
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
           <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>

@@ -4,7 +4,7 @@ import {createNewStudentPageModel} from '../../page-model/students/new-student-p
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {setup} from '../common/setup.ts'
 
-const {url} = setup(import.meta.url)
+const {url, TEST_hooks} = setup(import.meta.url)
 
 test('deleting a student', async ({page}) => {
   await page.goto(url().href)
@@ -45,7 +45,20 @@ test('deleting a student', async ({page}) => {
   await newForm2.createButton().locator.click()
   await page.waitForURL(updateStudentModel.urlRegex)
 
-  // Delete the second student (Bob)
+  // Fail Delete the second student (Bob)
+  TEST_hooks['deleteStudent'] = () => {
+    throw new Error('ouch!')
+  }
+
+  await updateStudentModel.form().deleteButton().locator.click()
+
+  await expect(updateStudentModel.header().errorBanner().locator).toHaveText(
+    'Archiving student error: ouch!',
+  )
+
+  delete TEST_hooks['deleteStudent']
+
+  // Delete for real
   await updateStudentModel.form().deleteButton().locator.click()
 
   await expect(updateStudentModel.pageTitle().locator).toContainText('(archived)')
@@ -128,6 +141,18 @@ test('restoring a student', async ({page}) => {
 
   await expect(updateStudentModel.form().deleteButton().locator).not.toBeVisible()
 
+  // Fail Restore the second student (Bob)
+  TEST_hooks['restoreStudent'] = () => {
+    throw new Error('ouch!')
+  }
+
+  await updateStudentModel.form().restoreButton().locator.click()
+
+  await expect(updateStudentModel.header().errorBanner().locator).toHaveText(
+    'Restoring student error: ouch!',
+  )
+
+  delete TEST_hooks['restoreStudent']
   await updateStudentModel.form().restoreButton().locator.click()
 
   await expect(updateStudentModel.history().items().locator).toHaveCount(3)

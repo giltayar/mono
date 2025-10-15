@@ -6,15 +6,14 @@ import {manipulateProduct, type ProductManipulations} from './product-manipulati
 import {ProductCreateOrUpdateFormFields} from './form.ts'
 import {ProductCreateView, ProductHistoryView, ProductUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
+import type {Banner} from '../../../layout/banner.ts'
 
 export function renderProductsCreatePage(
   product: OngoingProduct | undefined,
-  manipulations: ProductManipulations | undefined,
+  {banner}: {banner?: Banner | undefined} = {},
 ) {
   const finalProduct: OngoingProduct = product
-    ? manipulations
-      ? manipulateProduct(product, manipulations)
-      : product
+    ? product
     : {
         name: '',
         productType: 'recorded',
@@ -28,7 +27,7 @@ export function renderProductsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Products" activeNavItem="products">
+    <${MainLayout} title="Products" activeNavItem="products" banner=${banner}>
       <${Layout}>
         <${ProductCreateView} product=${finalProduct} />
       </${Layout}>
@@ -39,12 +38,12 @@ export function renderProductsCreatePage(
 export function renderProductUpdatePage(
   product: ProductWithHistoryInfo,
   history: ProductHistory[],
-  manipulations: ProductManipulations,
+  {banner}: {banner?: Banner | undefined} = {},
 ) {
   return html`
-    <${MainLayout} title="Products" activeNavItem="products">
+    <${MainLayout} title="Products" activeNavItem="products" banner=${banner}>
       <${Layout}>
-        <${ProductUpdateView} product=${manipulateProduct(product, manipulations)} history=${history} />
+        <${ProductUpdateView} product=${product} history=${history} />
       </${Layout}>
     </${MainLayout}>
   `

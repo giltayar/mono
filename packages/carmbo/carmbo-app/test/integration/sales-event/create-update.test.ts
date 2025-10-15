@@ -5,7 +5,7 @@ import {createNewSalesEventPageModel} from '../../page-model/sales-events/new-sa
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 
-const {url, sql} = setup(import.meta.url)
+const {url, sql, TEST_hooks} = setup(import.meta.url)
 
 test.beforeEach(async () => {
   await createProduct(
@@ -143,4 +143,55 @@ test('discard button', async ({page}) => {
   await newForm.discardButton().locator.click()
 
   await expect(newForm.nameInput().locator).toHaveValue('')
+})
+
+test('creation/update error shows alert', async ({page}) => {
+  await page.goto(new URL('/sales-events', url()).href)
+
+  const salesEventListModel = createSalesEventListPageModel(page)
+  const newSalesEventModel = createNewSalesEventPageModel(page)
+  const updateSalesEventModel = createUpdateSalesEventPageModel(page)
+
+  await salesEventListModel.createNewSalesEventButton().locator.click()
+
+  await page.waitForURL(newSalesEventModel.urlRegex)
+
+  await expect(newSalesEventModel.pageTitle().locator).toHaveText('New Sales Event')
+  // Fill the new sales event form
+  const newForm = newSalesEventModel.form()
+  await newForm.nameInput().locator.fill('Test Event')
+  await newForm.fromDateInput().locator.fill('2025-01-01')
+  await newForm.toDateInput().locator.fill('2025-01-31')
+  await newForm.landingPageUrlInput().locator.fill('https://example.com/test-event')
+  await newForm.productsForSale().addButton().locator.click()
+  await newForm.productsForSale().productInput(0).locator.fill('1')
+  await newForm.productsForSale().addButton().locator.click()
+  await newForm.productsForSale().productInput(1).locator.fill('2')
+
+  TEST_hooks['createSalesEvent'] = () => {
+    throw new Error('ouch!')
+  }
+
+  await newForm.createButton().locator.click()
+
+  await expect(newSalesEventModel.header().errorBanner().locator).toHaveText(
+    'Creating sales event error: ouch!',
+  )
+  delete TEST_hooks['createSalesEvent']
+
+  await newForm.createButton().locator.click()
+
+  await page.waitForURL(updateSalesEventModel.urlRegex)
+
+  await updateSalesEventModel.form().nameInput().locator.fill('Updated Event')
+
+  TEST_hooks['updateSalesEvent'] = () => {
+    throw new Error('double ouch!')
+  }
+
+  await updateSalesEventModel.form().updateButton().locator.click()
+
+  await expect(updateSalesEventModel.header().errorBanner().locator).toHaveText(
+    'Updating sales event error: double ouch!',
+  )
 })

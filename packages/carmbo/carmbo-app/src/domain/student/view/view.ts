@@ -1,20 +1,19 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
-import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
+import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import type {OngoingStudent} from './model.ts'
 import {manipulateStudent, type StudentManipulations} from './student-manipulations.ts'
 import {StudentCreateOrUpdateFormFields} from './form.ts'
 import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
+import type {Banner} from '../../../layout/banner.ts'
 
 export function renderStudentsCreatePage(
-  student: OngoingStudent | undefined,
-  manipulations: StudentManipulations | undefined,
+  student: NewStudent | OngoingStudent | undefined,
+  {banner}: {banner?: Banner} = {},
 ) {
   const finalStudent: OngoingStudent = student
-    ? manipulations
-      ? manipulateStudent(student, manipulations)
-      : student
+    ? student
     : {
         names: [{firstName: '', lastName: ''}],
         emails: [''],
@@ -24,7 +23,7 @@ export function renderStudentsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Students" activeNavItem="students">
+    <${MainLayout} title="Students" activeNavItem="students" banner=${banner}>
       <${Layout}>
         <${StudentCreateView} student=${finalStudent} />
       </${Layout}>
@@ -35,12 +34,12 @@ export function renderStudentsCreatePage(
 export function renderStudentUpdatePage(
   student: StudentWithHistoryInfo,
   history: StudentHistory[],
-  manipulations: StudentManipulations,
+  {banner}: {banner?: Banner | undefined} = {},
 ) {
   return html`
-    <${MainLayout} title="Students" activeNavItem="students">
+    <${MainLayout} title="Students" activeNavItem="students" banner=${banner}>
       <${Layout}>
-        <${StudentUpdateView} student=${manipulateStudent(student, manipulations)} history=${history} />
+        <${StudentUpdateView} student=${student} history=${history} />
       </${Layout}>
     </${MainLayout}>
   `

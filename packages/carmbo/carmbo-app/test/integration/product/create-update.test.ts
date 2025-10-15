@@ -4,7 +4,7 @@ import {createProductListPageModel} from '../../page-model/products/product-list
 import {createNewProductPageModel} from '../../page-model/products/new-product-page.model.ts'
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 
-const {url} = setup(import.meta.url)
+const {url, TEST_hooks} = setup(import.meta.url)
 
 test('create product then update it', async ({page}) => {
   await page.goto(new URL('/products', url()).href)
@@ -229,4 +229,49 @@ test('optional fields can be empty', async ({page}) => {
   await updateProductModel.form().updateButton().locator.click()
 
   await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue('12345')
+})
+
+test('creation/update error shows alert', async ({page}) => {
+  await page.goto(new URL('/products', url()).href)
+
+  const productListModel = createProductListPageModel(page)
+  const newProductModel = createNewProductPageModel(page)
+  const updateProductModel = createUpdateProductPageModel(page)
+
+  await productListModel.createNewProductButton().locator.click()
+
+  await page.waitForURL(newProductModel.urlRegex)
+
+  await expect(newProductModel.pageTitle().locator).toHaveText('New Product')
+  // Fill the new product form
+  const newForm = newProductModel.form()
+  await newForm.nameInput().locator.fill('Test Product')
+  await newForm.productTypeSelect().locator.selectOption('recorded')
+
+  TEST_hooks['createProduct'] = () => {
+    throw new Error('ouch!')
+  }
+
+  await newForm.createButton().locator.click()
+
+  await expect(newProductModel.header().errorBanner().locator).toHaveText(
+    'Creating product error: ouch!',
+  )
+  delete TEST_hooks['createProduct']
+
+  await newForm.createButton().locator.click()
+
+  await page.waitForURL(updateProductModel.urlRegex)
+
+  await updateProductModel.form().nameInput().locator.fill('Updated Product')
+
+  TEST_hooks['updateProduct'] = () => {
+    throw new Error('double ouch!')
+  }
+
+  await updateProductModel.form().updateButton().locator.click()
+
+  await expect(updateProductModel.header().errorBanner().locator).toHaveText(
+    'Updating product error: double ouch!',
+  )
 })

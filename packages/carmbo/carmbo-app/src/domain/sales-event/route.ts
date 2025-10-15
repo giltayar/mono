@@ -10,7 +10,6 @@ import {
 } from './controller.ts'
 import {NewSalesEventSchema, SalesEventSchema} from './model.ts'
 import {OngoingSalesEventSchema} from './view/model.ts'
-import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
@@ -55,13 +54,17 @@ export default function (
 
   // Create new sales event
   app.get('/new', async (_request, reply) =>
-    dealWithControllerResult(reply, await showSalesEventCreate(sql)),
+    dealWithControllerResult(reply, await showSalesEventCreate(undefined, {}, sql)),
   )
 
   appWithTypes.post('/new', {schema: {body: OngoingSalesEventSchema}}, async (request, reply) =>
     dealWithControllerResult(
       reply,
-      await showOngoingSalesEvent(request.body, {addItem: request.headers['x-add-item']}, sql),
+      await showOngoingSalesEvent(
+        request.body,
+        {manipulations: {addItem: request.headers['x-add-item']}},
+        sql,
+      ),
     ),
   )
 
@@ -72,19 +75,21 @@ export default function (
   // Edit existing sales event
   appWithTypes.get(
     '/:number',
-    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    {
+      schema: {
+        params: z.object({number: z.coerce.number()}),
+        querystring: z.object({add: z.enum(['item']).optional()}),
+      },
+    },
     async (request, reply) => {
+      const salesEventNumber = request.params.number
+
       return dealWithControllerResult(
         reply,
-        await showSalesEventUpdate(
-          request.params.number,
-          {addItem: request.headers['x-add-item']},
-          sql,
-          {
-            appBaseUrl,
-            apiSecret,
-          },
-        ),
+        await showSalesEventUpdate(salesEventNumber, undefined, sql, {
+          appBaseUrl,
+          apiSecret,
+        }),
       )
     },
   )
@@ -93,31 +98,34 @@ export default function (
     '/:number',
     {
       schema: {
+        params: z.object({number: z.coerce.number()}),
         body: OngoingSalesEventSchema,
-        params: z.object({number: z.coerce.number().int()}),
       },
     },
-    async (request, reply) => {
-      return dealWithControllerResult(
+    async (request, reply) =>
+      dealWithControllerResult(
         reply,
-        await showOngoingSalesEvent(request.body, {addItem: request.headers['x-add-item']}, sql),
-      )
-    },
+        await showOngoingSalesEvent(
+          request.body,
+          {manipulations: {addItem: request.headers['x-add-item']}},
+          sql,
+        ),
+      ),
   )
 
   appWithTypes.put(
     '/:number',
-    {schema: {body: SalesEventSchema, params: z.object({number: z.coerce.number().int()})}},
-    async (request, reply) => {
-      const salesEventNumber = request.params.number
-
-      assert(
-        salesEventNumber === request.body.salesEventNumber,
-        'sales event number in URL must match ID in body',
-      )
-
-      return dealWithControllerResult(reply, await updateSalesEvent(request.body, sql))
+    {
+      schema: {
+        params: z.object({number: z.coerce.number()}),
+        body: SalesEventSchema,
+      },
     },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await updateSalesEvent(request.body, sql, {appBaseUrl, apiSecret}),
+      ),
   )
 
   // View sales event in history
@@ -141,14 +149,17 @@ export default function (
     '/:number',
     {
       schema: {
-        params: z.object({number: z.coerce.number().int()}),
+        params: z.object({number: z.coerce.number()}),
         querystring: z.object({'delete-operation': z.enum(['delete', 'restore'])}),
       },
     },
     async (request, reply) =>
       dealWithControllerResult(
         reply,
-        await deleteSalesEvent(request.params.number, request.query['delete-operation'], sql),
+        await deleteSalesEvent(request.params.number, request.query['delete-operation'], sql, {
+          appBaseUrl,
+          apiSecret,
+        }),
       ),
   )
 }

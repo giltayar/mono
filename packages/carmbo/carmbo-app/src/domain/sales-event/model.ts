@@ -3,6 +3,7 @@ import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/o
 import {assert} from 'node:console'
 import {z} from 'zod'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
+import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
 
 export const SalesEventSchema = z.object({
   salesEventNumber: z.coerce.number().int().positive(),
@@ -90,6 +91,8 @@ export async function createSalesEvent(
   reason: string | undefined,
   sql: Sql,
 ) {
+  await TEST_executeHook('createSalesEvent')
+
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -118,6 +121,8 @@ export async function updateSalesEvent(
   reason: string | undefined,
   sql: Sql,
 ): Promise<number | undefined> {
+  await TEST_executeHook('updateSalesEvent')
+
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -157,6 +162,8 @@ export async function deleteSalesEvent(
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
   sql: Sql,
 ): Promise<string | undefined> {
+  await TEST_executeHook(`${deleteOperation}SalesEvent`)
+
   return await sql.begin(async (sql) => {
     const now = new Date()
     const historyId = crypto.randomUUID()

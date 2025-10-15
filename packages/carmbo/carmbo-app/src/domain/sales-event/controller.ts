@@ -18,9 +18,10 @@ import {
   renderSalesEventViewInHistoryPage,
 } from './view/view.ts'
 import {renderSalesEventsPage} from './view/list.ts'
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import type {SalesEventManipulations} from './view/sales-event-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
+import {exceptionToBanner, type Banner} from '../../layout/banner.ts'
 
 export async function showSalesEvents(
   {
@@ -46,16 +47,30 @@ export async function showSalesEvents(
   )
 }
 
-export async function showSalesEventCreate(sql: Sql): Promise<ControllerResult> {
+export async function showSalesEventCreate(
+  salesEvent: NewSalesEvent | undefined,
+  {error}: {error?: any} = {},
+  sql: Sql,
+): Promise<ControllerResult> {
   const products = await listProductsForChoosing(sql)
   requestContext.set('products', products)
 
-  return finalHtml(renderSalesEventsCreatePage(undefined, undefined))
+  const banner: Banner | undefined = error
+    ? {
+        message: `Creating sales event error: ${'message' in error ? error.message : 'Unknown error'}`,
+        type: 'error',
+        disappearing: false,
+      }
+    : undefined
+
+  return finalHtml(renderSalesEventsCreatePage(salesEvent, {banner}))
 }
 
 export async function showSalesEventUpdate(
   salesEventNumber: number,
-  manipulations: SalesEventManipulations,
+  salesEventWithError:
+    | {salesEvent: SalesEvent | undefined; error: any; operation: string}
+    | undefined,
   sql: Sql,
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
@@ -69,14 +84,20 @@ export async function showSalesEventUpdate(
     return {status: 404, body: 'Sales event not found'}
   }
 
-  if (!salesEventWithHistory) {
-    return {status: 404, body: 'Sales event not found'}
+  const banner = exceptionToBanner(
+    `${salesEventWithError?.operation} sales event error: `,
+    salesEventWithError?.error,
+  )
+  salesEventWithHistory.salesEvent = {
+    ...salesEventWithHistory.salesEvent,
+    ...salesEventWithError?.salesEvent,
   }
+
   return finalHtml(
     renderSalesEventUpdatePage(
       salesEventWithHistory.salesEvent,
       salesEventWithHistory.history,
-      manipulations,
+      {banner},
       options,
     ),
   )
@@ -84,7 +105,7 @@ export async function showSalesEventUpdate(
 
 export async function showOngoingSalesEvent(
   salesEvent: OngoingSalesEvent,
-  manipulations: SalesEventManipulations,
+  {manipulations}: {manipulations: SalesEventManipulations},
   sql: Sql,
 ): Promise<ControllerResult> {
   const products = await listProductsForChoosing(sql)
@@ -115,41 +136,72 @@ export async function createSalesEvent(
   salesEvent: NewSalesEvent,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const salesEventNumber = await model_createSalesEvent(salesEvent, undefined, sql)
+  try {
+    const salesEventNumber = await model_createSalesEvent(salesEvent, undefined, sql)
 
-  return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+    return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+  } catch (error) {
+    return showSalesEventCreate(salesEvent, {error}, sql)
+  }
 }
 
 export async function deleteSalesEvent(
   salesEventNumber: number,
   deleteOperation: 'delete' | 'restore',
   sql: Sql,
+  options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
-  const operationId = await model_deleteSalesEvent(
-    salesEventNumber,
-    undefined,
-    deleteOperation,
-    sql,
-  )
+  try {
+    const operationId = await model_deleteSalesEvent(
+      salesEventNumber,
+      undefined,
+      deleteOperation,
+      sql,
+    )
 
-  if (!operationId) {
-    return {status: 404, body: 'Sales event not found'}
+    if (!operationId) {
+      return {status: 404, body: 'Sales event not found'}
+    }
+
+    return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+  } catch (error) {
+    return retarget(
+      await showSalesEventUpdate(
+        salesEventNumber,
+        {
+          salesEvent: undefined,
+          error,
+          operation: deleteOperation === 'delete' ? 'Archiving' : 'Restoring',
+        },
+        sql,
+        options,
+      ),
+      'body',
+    )
   }
-
-  return {htmxRedirect: `/sales-events/${salesEventNumber}`}
 }
 
 export async function updateSalesEvent(
   salesEvent: SalesEvent,
   sql: Sql,
+  options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
-  const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, sql)
+  try {
+    const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, sql)
 
-  if (!salesEventNumber) {
-    return {status: 404, body: 'Sales event not found'}
+    if (!salesEventNumber) {
+      return {status: 404, body: 'Sales event not found'}
+    }
+
+    return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+  } catch (error) {
+    return showSalesEventUpdate(
+      salesEvent.salesEventNumber,
+      {salesEvent, error, operation: 'Updating'},
+      sql,
+      options,
+    )
   }
-
-  return {htmxRedirect: `/sales-events/${salesEventNumber}`}
 }
 
 const cachedProductsForChoosing: {

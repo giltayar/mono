@@ -6,7 +6,7 @@ import {StudentHistoryList, historyOperationToText} from './history.ts'
 export function StudentCreateView({student}: {student: Student}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">New Student</h2>
-    <form hx-post="/students/" hx-target="html" class="col-md-6 mt-3">
+    <form hx-post="/students/" hx-target="body" class="col-md-6 mt-3">
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
           <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
