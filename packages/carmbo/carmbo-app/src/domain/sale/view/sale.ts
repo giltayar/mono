@@ -1,133 +1,67 @@
 import {html} from '../../../commons/html-templates.ts'
 import type {SaleHistory, SaleWithHistoryInfo} from '../model.ts'
+import {SalesFormFields} from './form.ts'
 import {SaleHistoryList} from './history.ts'
 
-export function SaleView({sale, history}: {sale: SaleWithHistoryInfo; history: SaleHistory[]}) {
+export function SaleUpdateView({
+  sale,
+  history,
+}: {
+  sale: SaleWithHistoryInfo
+  history: SaleHistory[]
+}) {
   return html`
-    <h2 class="border-bottom col-md-6 mt-3">Sale ${sale.saleNumber}</h2>
-    <form class="col-md-6 mt-3">
+    <h2 class="border-bottom col-md-6 mt-3">
+      Update Sale ${sale.saleNumber}
+      ${sale.historyOperation === 'delete'
+        ? html` <small class="text-body-secondary">(archived)</small>`
+        : ''}
+    </h2>
+    <form hx-put="/sales/${sale.saleNumber}" hx-target="form" class="col-md-6 mt-3">
+      <input name="saleNumber" type="hidden" value=${sale.saleNumber} />
+      <input
+        name="delete-operation"
+        type="hidden"
+        value=${sale.historyOperation === 'delete' ? 'restore' : 'delete'}
+      />
+      <div class="ms-auto" style="width: fit-content">
+        <section class="btn-group" aria-label="Form actions">
+          ${sale.historyOperation === 'delete'
+            ? html`
+                <button
+                  class="btn btn-danger"
+                  type="Submit"
+                  value="delete"
+                  hx-delete=""
+                  hx-params="delete-operation"
+                >
+                  Restore
+                </button>
+              `
+            : html`
+                <button class="btn btn-secondary discard" type="Submit" value="discard">
+                  Discard
+                </button>
+                <button
+                  class="btn btn-danger"
+                  type="Submit"
+                  value="delete"
+                  hx-delete=""
+                  hx-params="delete-operation"
+                >
+                  Archive
+                </button>
+                <button class="btn btn-primary" type="Submit" value="save">Update</button>
+              `}
+        </section>
+      </div>
       <div class="mt-3">
-        <div class="mb-3">
-          <label class="form-label"
-            >Sale Number
-            <input type="text" class="form-control" value=${sale.saleNumber} readonly />
-          </label>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label"
-            >Timestamp
-            <input
-              type="text"
-              class="form-control"
-              value=${formatDateTime(sale.timestamp)}
-              readonly
-            />
-          </label>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label"
-            >Sales Event
-            <input
-              type="text"
-              class="form-control"
-              value=${`${sale.saleEventNumber}: ${sale.salesEventName}`}
-              readonly
-              title="Sales Event Number"
-            />
-          </label>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label"
-            >Student
-            <input
-              type="text"
-              class="form-control"
-              value=${`${sale.studentNumber}: ${sale.studentName}`}
-              readonly
-              title="Student Number"
-            />
-          </label>
-        </div>
-
-        ${sale.finalSaleRevenue
-          ? html`
-              <div class="mb-3">
-                <label class="form-label"
-                  >Final Sale Revenue
-                  <input
-                    type="text"
-                    class="form-control"
-                    value=${'₪' + sale.finalSaleRevenue.toFixed(2)}
-                    readonly
-                  />
-                </label>
-              </div>
-            `
-          : ''}
-        ${sale.cardcomInvoiceNumber
-          ? html`
-              <div class="mb-3">
-                <label class="form-label"
-                  >Cardcom Invoice Number
-                  <input
-                    type="text"
-                    class="form-control"
-                    value=${sale.cardcomInvoiceNumber}
-                    readonly
-                  />
-                </label>
-              </div>
-            `
-          : ''}
-        ${sale.products && sale.products.length > 0
-          ? html`
-              <div class="mb-3">
-                <label class="form-label"
-                  >Products
-                  ${sale.products.map(
-                    (product, index) => html`
-                      <div class="card mb-2">
-                        <div class="card-body">
-                          <h6 class="card-subtitle mb-2 text-muted">
-                            Product ${index + 1}: ${product.productName}
-                          </h6>
-                          <div class="row">
-                            <div class="col-md-4">
-                              <small class="text-muted">Product</small>
-                              <div>${product.productNumber}: ${product.productName}</div>
-                            </div>
-                            <div class="col-md-4">
-                              <small class="text-muted">Quantity:</small>
-                              <div>${product.quantity}</div>
-                            </div>
-                            <div class="col-md-4">
-                              <small class="text-muted">Unit Price:</small>
-                              <div>₪${product.unitPrice.toFixed(2)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    `,
-                  )}
-                </label>
-              </div>
-            `
-          : ''}
+        <${SalesFormFields}
+          sale=${sale}
+          operation=${sale.historyOperation === 'delete' ? 'read' : 'write'}
+        />
       </div>
     </form>
     <${SaleHistoryList} sale=${sale} history=${history} />
   `
-}
-
-function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat('en-IL', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
 }

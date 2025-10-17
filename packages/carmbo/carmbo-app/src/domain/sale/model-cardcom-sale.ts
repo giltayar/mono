@@ -150,9 +150,9 @@ async function findStudent(
       sn.last_name,
       sp.phone
     FROM student s
-    INNER JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
-    INNER JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
-    INNER JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
+    JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
+    JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
+    JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
     WHERE s.last_data_id IN (
       SELECT se2.data_id FROM student_email se2 WHERE se2.email = ${finalEmail}
       UNION
@@ -164,20 +164,21 @@ async function findStudent(
   const resultByCardcomCustomerId = cardcomCustomerId
     ? await sql<StudentInfoFound[]>`
     SELECT
-      DISTINCT ON (s.student_number)
-      s.student_number,
+      DISTINCT ON (sd.student_number)
+      sd.student_number,
       se.email,
       sn.first_name,
       sn.last_name,
       sp.phone
-    FROM sale_info_cardcom sic
-    JOIN sale_info si ON si.sale_number = sic.sale_number
-    JOIN student s ON s.student_number = si.student_number
-    JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
-    JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
-    JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
-    WHERE sic.customer_id = ${cardcomCustomerId}
-    ORDER BY s.student_number
+    FROM sale_data_cardcom sdc
+    JOIN sale s on s.data_cardcom_id = sdc.data_cardcom_id
+    JOIN sale_data sd on sd.data_id = s.last_data_id
+    JOIN student st ON st.student_number = sd.student_number
+    JOIN student_email se ON se.data_id = st.last_data_id AND se.item_order = 0
+    JOIN student_name sn ON sn.data_id = st.last_data_id AND sn.item_order = 0
+    JOIN student_phone sp ON sp.data_id = st.last_data_id AND sp.item_order = 0
+    WHERE sdc.customer_id = ${cardcomCustomerId}
+    ORDER BY sd.student_number
   `
     : undefined
 
@@ -265,18 +266,21 @@ async function createStudentFromCardcomSale(
 
 async function createSale(
   studentNumber: number,
-  saleEventNumber: number,
+  salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
   sql: Sql,
 ): Promise<number> {
   const historyId = crypto.randomUUID()
   const dataId = crypto.randomUUID()
+  const dataProductId = crypto.randomUUID()
+  const dataCardcomId = crypto.randomUUID()
+  const products = extractProductsFromCardcom(cardcomSaleWebhookJson)
 
   // Create sale history record and get sale number
   const saleNumberResult = await sql<{saleNumber: string}[]>`
       INSERT INTO sale_history VALUES
-        (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
+        (${historyId}, ${dataId}, ${dataProductId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
       RETURNING sale_number
     `
   const saleNumber = parseInt(saleNumberResult[0].saleNumber)
@@ -287,21 +291,51 @@ async function createSale(
 
   const finalSaleRevenue = cardcomSaleWebhookJson.suminfull
 
+  const studentNameResult = await sql<{studentName: string}[]>`
+      SELECT first_name || ' ' || last_name as student_name
+      FROM student_name
+      JOIN student ON student.student_number = ${studentNumber ?? 0}
+      WHERE student_name.data_id = student.last_data_id
+    `
+  const salesEventNameResult = await sql<{salesEventName: string}[]>`
+      SELECT name as sales_event_name
+      FROM sales_event_data
+      JOIN sales_event ON sales_event.sales_event_number = ${salesEventNumber ?? 0}
+      WHERE sales_event_data.data_id = sales_event.last_data_id
+    `
+  const productNamesResult = await sql<{productName: string}[]>`
+      SELECT name as product_name
+      FROM product_data
+      JOIN product ON product.product_number IN ${sql(products.map((p) => p.productId ?? 0) ?? [])}
+      WHERE product_data.data_id = product.last_data_id
+    `
+  const studentName = studentNameResult[0]?.studentName
+  const salesEventName = salesEventNameResult[0]?.salesEventName
+
   let ops = [] as Promise<unknown>[]
 
   ops = ops.concat(sql`
       INSERT INTO sale VALUES
-        (${saleNumber}, ${historyId}, ${dataId})
+        (${saleNumber}, ${historyId}, ${dataId}, ${dataProductId}, ${dataCardcomId})
     `)
 
   ops = ops.concat(sql`
-      INSERT INTO sale_info VALUES
-        (${saleNumber}, ${saleEventNumber}, ${studentNumber}, ${now}, ${finalSaleRevenue})
+      INSERT INTO sale_data VALUES
+        (${dataId}, ${salesEventNumber}, ${studentNumber}, ${now}, ${finalSaleRevenue})
+    `)
+
+  const searchableText = `${saleNumber} ${studentName ?? ''} ${salesEventName ?? ''} ${productNamesResult
+    .map((p) => p.productName)
+    .join(' ')}`
+
+  ops = ops.concat(sql`
+      INSERT INTO sale_data_search VALUES
+        (${dataId}, ${searchableText})
     `)
 
   ops = ops.concat(sql`
-      INSERT INTO sale_info_cardcom VALUES (
-        ${saleNumber},
+      INSERT INTO sale_data_cardcom VALUES (
+        ${dataCardcomId},
         ${JSON.stringify(cardcomSaleWebhookJson)},
         ${cardcomSaleWebhookJson.invoicenumber},
         ${cardcomSaleWebhookJson.terminalnumber},
@@ -314,24 +348,15 @@ async function createSale(
       )
     `)
 
-  const products = extractProductsFromCardcom(cardcomSaleWebhookJson)
   ops = ops.concat(
     products.map(
       (product, index) => sql`
-        INSERT INTO sale_info_product VALUES
-          (${saleNumber}, ${index}, ${product.productId}, ${product.quantity}, ${product.price})
+        INSERT INTO sale_data_product VALUES
+          (${dataProductId}, ${index}, ${product.productId}, ${product.quantity}, ${product.price})
       `,
     ),
   )
-
-  const searchableText =
-    `${saleNumber} ${cardcomSaleWebhookJson.CardOwnerName} ${normalizeEmail(cardcomSaleWebhookJson.UserEmail)} ${cardcomSaleWebhookJson.invoicenumber}`.trim()
-  ops = ops.concat(sql`
-      INSERT INTO sale_info_search VALUES
-        (${saleNumber}, ${searchableText})
-    `)
-
-  await Promise.all(ops)
+  await Promise.all(ops).catch(console.error)
 
   return saleNumber
 }
@@ -385,10 +410,11 @@ async function connectStudentWithAcademyCourses(
     SELECT DISTINCT
       pac.workshop_id as course_id
 
-    FROM sale_info_product sip
+    FROM sale_data_product sip
+    INNER JOIN sale s ON s.last_data_product_id = sip.data_product_id
     INNER JOIN product p ON p.product_number = sip.product_number
     INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
-    WHERE sip.sale_number = ${saleNumber}
+    WHERE s.sale_number = ${saleNumber}
     ORDER BY pac.workshop_id
   `
 
@@ -422,10 +448,11 @@ async function subscribeStudentToSmooveLists(
       pis.cancelling_list_id as cancellingListId,
       pis.cancelled_list_id as cancelledListId,
       pis.removed_list_id as removedListId
-    FROM sale_info_product sip
-    INNER JOIN product p ON p.product_number = sip.product_number
-    INNER JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
-    WHERE sip.sale_number = ${saleNumber};
+    FROM sale_data_product sip
+    JOIN sale s ON s.last_data_product_id = sip.data_product_id
+    JOIN product p ON p.product_number = sip.product_number
+    JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber};
   `
 
   const smooveContactIdResult = await sql<{smooveContactId: string}[]>`

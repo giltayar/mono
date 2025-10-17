@@ -92,7 +92,7 @@ function SalesView({
                 </td>
                 <td>${formatDate(sale.timestamp)}</td>
                 <td>
-                  <a href="/sales-events/${sale.saleEventNumber}">${sale.saleEventName}</a>
+                  <a href="/sales-events/${sale.salesEventNumber}">${sale.saleEventName}</a>
                 </td>
                 <td>
                   <a href="/students/${sale.studentNumber}">${sale.studentName}</a>
@@ -104,6 +104,13 @@ function SalesView({
           )}
         </tbody>
       </table>
+      <section class="add-new">
+        <a role="button" class="btn float-end" href="/sales/new" aria-label="new sale">
+          <svg class="feather feather-large" viewbox="0 0 24 24">
+            <use href="/src/layout/style/plus-circle.svg" />
+          </svg>
+        </a>
+      </section>
     </div>
   `
 }

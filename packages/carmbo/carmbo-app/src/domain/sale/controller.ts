@@ -1,11 +1,80 @@
 import {requestContext} from '@fastify/request-context'
-import {listSales, querySaleByNumber, querySaleByHistoryId} from './model.ts'
+import {
+  listSales,
+  querySaleByNumber,
+  querySaleByHistoryId,
+  searchSalesEvents,
+  searchStudents,
+  searchProducts,
+  createSale as model_createSale,
+  updateSale as model_updateSale,
+  deleteSale as model_deleteSale,
+  type NewSale,
+  type Sale,
+} from './model.ts'
 import {type CardcomSaleWebhookJson} from './model-cardcom-sale.ts'
 import {handleCardcomOneTimeSale} from './model-cardcom-sale.ts'
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
-import {renderSaleViewPage} from './view/view.ts'
+import {renderSaleCreatePage, renderSaleFormFields, renderSaleViewPage} from './view/view.ts'
 import type {Sql} from 'postgres'
+import {
+  renderSalesEventListPage,
+  renderStudentListPage,
+  renderProductListPage,
+} from './view/list-searches.ts'
+import {exceptionToBanner} from '../../layout/banner.ts'
+
+export async function showSaleCreate(
+  sale: NewSale | undefined,
+  {error}: {error?: any} = {},
+): Promise<ControllerResult> {
+  const banner = exceptionToBanner('Creating sale error: ', error)
+
+  return finalHtml(await renderSaleCreatePage(sale, {banner}))
+}
+
+export async function showOngoingSaleCreate(sale?: NewSale): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+
+  return finalHtml(await renderSaleFormFields(sale, sql))
+}
+
+export async function showSalesEventList(q: string | undefined): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+
+  const salesEvents = q ? await searchSalesEvents(q, sql) : []
+
+  return finalHtml(renderSalesEventListPage(salesEvents))
+}
+
+export async function showStudentList(q: string | undefined): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+
+  const students = q ? await searchStudents(q, sql) : []
+
+  return finalHtml(renderStudentListPage(students))
+}
+
+export async function showProductList(q: string | undefined): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+
+  const products = q ? await searchProducts(q, sql) : []
+
+  return finalHtml(renderProductListPage(products))
+}
+
+export async function createSale(sale: NewSale, sql: Sql): Promise<ControllerResult> {
+  try {
+    const saleNumber = await model_createSale(sale, undefined, sql)
+
+    return {htmxRedirect: `/sales/${saleNumber}`}
+  } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'create-sale')
+    return showSaleCreate(sale, {error})
+  }
+}
 
 export async function dealWithCardcomOneTimeSale(
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
@@ -52,6 +121,29 @@ export async function showSale(saleNumber: number, sql: Sql): Promise<Controller
   return finalHtml(renderSaleViewPage(saleWithHistory.sale, saleWithHistory.history))
 }
 
+export async function showSaleUpdate(
+  saleNumber: number,
+  saleWithError: {sale: Sale | undefined; error: any; operation: string} | undefined,
+  sql: Sql,
+): Promise<ControllerResult> {
+  const saleWithHistory = await querySaleByNumber(saleNumber, sql)
+
+  if (!saleWithHistory) {
+    return {status: 404, body: 'Sale not found'}
+  }
+
+  const banner = exceptionToBanner(`${saleWithError?.operation} sale error: `, saleWithError?.error)
+
+  if (saleWithError?.sale) {
+    saleWithHistory.sale = {
+      ...saleWithHistory.sale,
+      ...saleWithError.sale,
+    }
+  }
+
+  return finalHtml(renderSaleViewPage(saleWithHistory.sale, saleWithHistory.history, {banner}))
+}
+
 export async function showSaleInHistory(
   saleNumber: number,
   operationId: string,
@@ -64,4 +156,49 @@ export async function showSaleInHistory(
   }
 
   return finalHtml(renderSaleViewPage(saleWithHistory.sale, saleWithHistory.history))
+}
+
+export async function updateSale(sale: Sale, sql: Sql): Promise<ControllerResult> {
+  try {
+    const saleNumber = await model_updateSale(sale, undefined, sql)
+
+    if (!saleNumber) {
+      return {status: 404, body: 'Sale not found'}
+    }
+
+    return {htmxRedirect: `/sales/${saleNumber}`}
+  } catch (error) {
+    return showSaleUpdate(sale.saleNumber, {sale, error, operation: 'Updating'}, sql)
+  }
+}
+
+export async function deleteSale(
+  saleNumber: number,
+  deleteOperation: 'delete' | 'restore',
+  sql: Sql,
+): Promise<ControllerResult> {
+  try {
+    const operationId = await model_deleteSale(saleNumber, undefined, deleteOperation, sql)
+
+    if (!operationId) {
+      return {status: 404, body: 'Sale not found'}
+    }
+
+    return {htmxRedirect: `/sales/${saleNumber}`}
+  } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'delete-sale')
+    return retarget(
+      await showSaleUpdate(
+        saleNumber,
+        {
+          sale: undefined,
+          error,
+          operation: deleteOperation === 'delete' ? 'Archiving' : 'Restoring',
+        },
+        sql,
+      ),
+      'body',
+    )
+  }
 }

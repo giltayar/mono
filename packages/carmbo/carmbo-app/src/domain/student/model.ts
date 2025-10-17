@@ -392,16 +392,17 @@ FROM
   LEFT JOIN LATERAL (
     SELECT
       json_agg(
-        DISTINCT customer_id
+        DISTINCT sdc.customer_id
         ORDER BY
-          customer_id
+          sdc.customer_id
       ) AS cardcom_customer_ids
     FROM
-      sale_info si
-      JOIN sale_info_cardcom sic ON sic.sale_number = si.sale_number
+      sale_data sd
+    JOIN sale s ON s.last_data_id = sd.data_id
+    JOIN sale_data_cardcom sdc ON sdc.data_cardcom_id = s.data_cardcom_id
     WHERE
-      si.student_number = ${studentNumber}
-      AND sic.customer_id IS NOT NULL
+      sd.student_number = ${studentNumber}
+      AND sdc.customer_id IS NOT NULL
   ) cardcom_customer_ids ON true
        `
 }

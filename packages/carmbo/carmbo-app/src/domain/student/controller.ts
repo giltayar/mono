@@ -19,7 +19,7 @@ import {renderStudentsPage} from './view/list.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import type {StudentManipulations} from './view/student-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner, type Banner} from '../../layout/banner.ts'
+import {exceptionToBanner} from '../../layout/banner.ts'
 
 export async function showStudents(
   {
@@ -39,13 +39,7 @@ export function showStudentCreate(
   student: NewStudent | undefined,
   {error}: {error?: any} = {},
 ): ControllerResult {
-  const banner: Banner | undefined = error
-    ? {
-        message: `Creating student error: ${'message' in error ? error.message : 'Unknown error'}`,
-        type: 'error',
-        disappearing: false,
-      }
-    : undefined
+  const banner = exceptionToBanner('Creating student error: ', error)
 
   return finalHtml(renderStudentsCreatePage(student, {banner}))
 }

@@ -7,7 +7,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS sale (
   sale_number SERIAL PRIMARY KEY,
   last_history_id UUID,
-  last_data_id UUID -- denormalized for performance
+  last_data_id UUID
 );
 
 CREATE TABLE IF NOT EXISTS sale_history (

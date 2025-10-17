@@ -114,10 +114,11 @@ export function setup(testUrl: string): {
     await sql`TRUNCATE TABLE sales_event_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_history RESTART IDENTITY CASCADE`
-    await sql`TRUNCATE TABLE sale_info RESTART IDENTITY CASCADE`
-    await sql`TRUNCATE TABLE sale_info_product RESTART IDENTITY CASCADE`
-    await sql`TRUNCATE TABLE sale_info_cardcom RESTART IDENTITY CASCADE`
-    await sql`TRUNCATE TABLE sale_info_search RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_data RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_data_product RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_data_search RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_data_manual RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE sale_data_cardcom RESTART IDENTITY CASCADE`
   })
 
   test.afterAll(async () => teardown?.())

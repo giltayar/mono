@@ -3,50 +3,39 @@ import type {Page} from '@playwright/test'
 export function createSaleDetailPageModel(page: Page) {
   return {
     urlRegex: /\/sales\/\d+$/,
-    saleNumberInput: (locator = page.getByLabel('Sale Number')) => ({
-      locator,
-    }),
-    timestampInput: (locator = page.getByLabel('Timestamp')) => ({
-      locator,
-    }),
-    salesEventInput: (locator = page.getByLabel('Sales Event')) => ({
-      locator,
-    }),
-    studentInput: (locator = page.getByLabel('Student')) => ({
-      locator,
-    }),
-    finalSaleRevenueInput: (locator = page.getByLabel('Final Sale Revenue')) => ({
-      locator,
-    }),
-    cardcomInvoiceNumberInput: (locator = page.getByLabel('Cardcom Invoice Number')) => ({
-      locator,
-    }),
-    products: (locator = page.locator('.card')) => ({
-      locator,
-      count: () => locator.count(),
-      product: (index: number, productLocator = locator.nth(index)) => ({
-        locator: productLocator,
-        title: (titleLocator = productLocator.locator('.card-subtitle')) => ({
-          locator: titleLocator,
-        }),
-        productNumber: (
-          numberLocator = productLocator.locator('.col-md-4').nth(0).locator('div').last(),
-        ) => ({
-          locator: numberLocator,
-        }),
-        quantity: (
-          quantityLocator = productLocator.locator('.col-md-4').nth(1).locator('div').last(),
-        ) => ({
-          locator: quantityLocator,
-        }),
-        unitPrice: (
-          priceLocator = productLocator.locator('.col-md-4').nth(2).locator('div').last(),
-        ) => ({
-          locator: priceLocator,
+    form: (formLocator = page.locator('form')) => ({
+      locator: formLocator,
+      studentInput: (locator = formLocator.getByLabel('Student')) => ({
+        locator,
+      }),
+      salesEventInput: (locator = formLocator.getByLabel('Sales Event')) => ({
+        locator,
+      }),
+      finalSaleRevenueInput: (locator = formLocator.getByLabel('Final Sale Revenue')) => ({
+        locator,
+      }),
+      cardcomInvoiceNumberInput: (locator = formLocator.getByLabel('Cardcom Invoice Number')) => ({
+        locator,
+      }),
+      products: (
+        locator = formLocator.getByRole('group', {name: 'Products'}).getByRole('group'),
+      ) => ({
+        locator,
+        product: (index: number, productLocator = locator.nth(index)) => ({
+          locator: productLocator,
+          title: (titleLocator = productLocator.locator('legend')) => ({
+            locator: titleLocator,
+          }),
+          quantity: (quantityLocator = productLocator.getByLabel('Quantity')) => ({
+            locator: quantityLocator,
+          }),
+          unitPrice: (priceLocator = productLocator.getByLabel('Unit Price')) => ({
+            locator: priceLocator,
+          }),
         }),
       }),
     }),
   }
 }
 
-export type SaleDetailPageModel = ReturnType<typeof createSaleDetailPageModel>
+export type SaleDetailformLocatorModel = ReturnType<typeof createSaleDetailPageModel>

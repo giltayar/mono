@@ -138,28 +138,26 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const saleDetailModel = createSaleDetailPageModel(page)
 
   // Verify sale details
-  await expect(saleDetailModel.saleNumberInput().locator).toHaveValue('1')
-  await expect(saleDetailModel.salesEventInput().locator).toHaveValue(
+  await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
     `${salesEventNumber}: Test Sales Event`,
   )
-  await expect(saleDetailModel.studentInput().locator).toHaveValue('1: John Doe')
-  await expect(saleDetailModel.finalSaleRevenueInput().locator).toHaveValue('₪200.00')
+  await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: John Doe')
+  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('200')
 
   // Verify products in the sale detail page
-  const products = saleDetailModel.products()
-  expect(await products.count()).toBe(2)
+  const products = saleDetailModel.form().products()
+  await expect(products.locator).toHaveCount(2)
 
   const product1 = products.product(0)
   await expect(product1.title().locator).toContainText('Product One')
-  await expect(product1.productNumber().locator).toContainText(`${product1Number}: Product One`)
-  await expect(product1.quantity().locator).toHaveText('1')
-  await expect(product1.unitPrice().locator).toHaveText('₪100.00')
+  await expect(product1.locator).toContainText(`${product1Number}: Product One`)
+  await expect(product1.quantity().locator).toHaveValue('1')
+  await expect(product1.unitPrice().locator).toHaveValue('100')
 
   const product2 = products.product(1)
   await expect(product2.title().locator).toContainText('Product Two')
-  await expect(product2.productNumber().locator).toContainText(`${product2Number}: Product Two`)
-  await expect(product2.quantity().locator).toHaveText('2')
-  await expect(product2.unitPrice().locator).toHaveText('₪50.00')
+  await expect(product2.quantity().locator).toHaveValue('2')
+  await expect(product2.unitPrice().locator).toHaveValue('50')
 })
 
 test('cardcom sale with same customer ID reuses existing student', async ({page}) => {

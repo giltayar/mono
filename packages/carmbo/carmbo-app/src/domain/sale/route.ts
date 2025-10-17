@@ -3,11 +3,26 @@ import {z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import {CardcomSaleWebhookJsonSchema} from './model-cardcom-sale.ts'
-import {dealWithCardcomOneTimeSale, showSales, showSale, showSaleInHistory} from './controller.ts'
+import {
+  dealWithCardcomOneTimeSale,
+  showSales,
+  showSale,
+  showSaleInHistory,
+  showSaleCreate,
+  showOngoingSaleCreate,
+  showSalesEventList,
+  showStudentList,
+  showProductList,
+  createSale,
+  updateSale,
+  deleteSale,
+} from './controller.ts'
 import {
   dealWithControllerResult,
   dealWithControllerResultAsync,
 } from '../../commons/routes-commons.ts'
+import {NewSaleSchema, SaleSchema} from './model.ts'
+import assert from 'node:assert'
 
 export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undefined}) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
@@ -68,12 +83,61 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       ),
   )
 
+  // Create new sale
+  appWithTypes.get('/new', async (_request, reply) =>
+    dealWithControllerResult(reply, await showSaleCreate(undefined)),
+  )
+  appWithTypes.post('/new', {schema: {body: NewSaleSchema}}, async (request, reply) =>
+    dealWithControllerResult(reply, await showOngoingSaleCreate(request.body)),
+  )
+
+  appWithTypes.post('/', {schema: {body: NewSaleSchema}}, async (request, reply) => {
+    return dealWithControllerResult(reply, await createSale(request.body, sql))
+  })
+
+  appWithTypes.get(
+    '/query/sales-event-list',
+    {schema: {querystring: z.object({q: z.string().optional()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showSalesEventList(request.query.q))
+    },
+  )
+
+  appWithTypes.get(
+    '/query/student-list',
+    {schema: {querystring: z.object({q: z.string().optional()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showStudentList(request.query.q))
+    },
+  )
+
+  appWithTypes.get(
+    '/query/product-list',
+    {schema: {querystring: z.object({q: z.string().optional()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showProductList(request.query.q))
+    },
+  )
+
   // View sale
   appWithTypes.get(
     '/:number',
     {schema: {params: z.object({number: z.coerce.number().int()})}},
     async (request, reply) => {
       return dealWithControllerResult(reply, await showSale(request.params.number, sql))
+    },
+  )
+
+  // Update sale
+  appWithTypes.put(
+    '/:number',
+    {schema: {body: SaleSchema, params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      const saleNumber = request.params.number
+
+      assert(saleNumber === request.body.saleNumber, 'sale number in URL must match ID in body')
+
+      return dealWithControllerResult(reply, await updateSale(request.body, sql))
     },
   )
 
@@ -91,5 +155,21 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
         await showSaleInHistory(request.params.number, request.params.historyId, sql),
       )
     },
+  )
+
+  // Delete (Archive) sale
+  appWithTypes.delete(
+    '/:number',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int()}),
+        querystring: z.object({'delete-operation': z.enum(['delete', 'restore'])}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await deleteSale(request.params.number, request.query['delete-operation'], sql),
+      ),
   )
 }
