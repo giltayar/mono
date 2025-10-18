@@ -12,6 +12,7 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import {migrate} from '../../../src/sql/migration.ts'
 import {fileURLToPath} from 'node:url'
 import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
+import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 
 export function setup(testUrl: string): {
   url: () => URL
@@ -88,6 +89,7 @@ export function setup(testUrl: string): {
           },
         }),
         smooveIntegration,
+        cardcomIntegration: createFakeCardcomIntegrationService({accounts: {}}),
       },
       auth0: undefined,
       appBaseUrl: 'http://localhost:????',

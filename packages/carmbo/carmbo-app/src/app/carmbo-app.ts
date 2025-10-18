@@ -24,12 +24,14 @@ import type {
   SmooveIntegrationService,
 } from '@giltayar/carmel-tools-smoove-integration/service'
 import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
+import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
     smooveIntegration: SmooveIntegrationService
+    cardcomIntegration: CardcomIntegrationService
     logger: FastifyBaseLogger
     sql: Sql
     courses: AcademyCourse[] | undefined
@@ -42,7 +44,7 @@ declare module '@fastify/request-context' {
 
 export function makeApp({
   db: {database, host, port, username, password},
-  services: {academyIntegration, whatsappIntegration, smooveIntegration},
+  services: {academyIntegration, whatsappIntegration, smooveIntegration, cardcomIntegration},
   auth0,
   appBaseUrl,
   TEST_hooks,
@@ -52,6 +54,7 @@ export function makeApp({
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
     smooveIntegration: SmooveIntegrationService
+    cardcomIntegration: CardcomIntegrationService
   }
   auth0:
     | {
@@ -85,6 +88,7 @@ export function makeApp({
       academyIntegration,
       whatsappIntegration,
       smooveIntegration,
+      cardcomIntegration,
       courses: undefined,
       logger: request.log,
       whatsappGroups: undefined,

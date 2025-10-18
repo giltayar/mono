@@ -6,6 +6,7 @@ import retry from 'p-retry'
 import z from 'zod'
 import {normalizeEmail} from '../../commons/email.ts'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
+import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 
 export const CardcomSaleWebhookJsonSchema = z.looseObject({
   ApprovelNumber: z.string(),
@@ -67,6 +68,7 @@ export async function handleCardcomOneTimeSale(
   now: Date,
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
+  cardcomIntegration: CardcomIntegrationService,
   sql: Sql,
 ) {
   const student = await sql.begin(async (sql) => {
@@ -87,10 +89,15 @@ export async function handleCardcomOneTimeSale(
       student ??
       (await createStudentFromCardcomSale(cardcomSaleWebhookJson, now, smooveIntegration, sql))
 
+    const {url} = await cardcomIntegration.createTaxInvoiceDocumentUrl(
+      cardcomSaleWebhookJson.invoicenumber,
+    )
+
     const saleNumber = await createSale(
       finalStudent.studentNumber,
       salesEventNumber,
       cardcomSaleWebhookJson,
+      url,
       now,
       sql,
     )
@@ -268,6 +275,7 @@ async function createSale(
   studentNumber: number,
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+  invoiceDocumentUrl: string,
   now: Date,
   sql: Sql,
 ): Promise<number> {
@@ -345,6 +353,7 @@ async function createSale(
         ${cardcomSaleWebhookJson.CouponNumber ?? null},
         ${parseInt(cardcomSaleWebhookJson.internaldealnumber)},
         ${cardcomSaleWebhookJson.RecurringAccountID ? parseInt(cardcomSaleWebhookJson.RecurringAccountID) : null}
+        ${invoiceDocumentUrl}
       )
     `)
 

@@ -1,12 +1,15 @@
 import {html} from '../../../commons/html-templates.ts'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {NewSale, Sale} from '../model.ts'
+import {InvoiceDocumentUrlLink} from './tax-invoice-document-url.ts'
 
 export function SalesFormFields({
   sale,
+  saleNumber,
   operation,
 }: {
   sale: Sale | NewSale
+  saleNumber: number | undefined
   operation: 'read' | 'write'
 }) {
   const isReadOnly = operation === 'read' || !('manualSaleType' in sale)
@@ -81,7 +84,18 @@ export function SalesFormFields({
             name="cardcomInvoiceNumber"
             value=${sale.cardcomInvoiceNumber}
             readonly=${isReadOnly}
-          />
+          />${sale.cardcomInvoiceDocumentUrl
+            ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
+            : sale.cardcomInvoiceNumber && saleNumber
+              ? html`<button
+                  class="button btn-sm"
+                  hx-prompt="Description"
+                  hx-target="this"
+                  hx-post=${`/sales/${saleNumber}/create-tax-invoice-document`}
+                >
+                  Create Tax Invoice Document
+                </button>`
+              : undefined}
         </div>
         ${sale.products && sale.products.length > 0
           ? html`

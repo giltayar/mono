@@ -1,4 +1,4 @@
-import type {Banner} from './banner.ts'
+import {BannerComponent, type Banner} from './banner.ts'
 import {html} from '../commons/html-templates.ts'
 
 export function MainLayout({
@@ -30,7 +30,11 @@ export function MainLayout({
           <div class="layouts-main-view">
             <header class="container"><${NavBar} activeNavItem=${activeNavItem} /></header>
             <main class="container">${children}</main>
-            ${banner ? html`<${Banner} banner=${banner}></${Banner}>` : undefined}
+            <div id="banner-container">
+              ${banner
+                ? html`<${BannerComponent} banner=${banner}></${BannerComponent}>`
+                : undefined}
+            </div>
           </div>
         </body>
       </html>
@@ -96,10 +100,4 @@ function NavBar({
       </div>
     </nav>
   `
-}
-
-function Banner({banner}: {banner: Banner}) {
-  return html`<div class="main-view_banner" role="${banner.type === 'error' ? 'alert' : 'status'}">
-    ${banner.message}
-  </div>`
 }

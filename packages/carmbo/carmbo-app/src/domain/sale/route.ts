@@ -16,6 +16,7 @@ import {
   createSale,
   updateSale,
   deleteSale,
+  createTaxInvoiceDocument,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -138,6 +139,23 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       assert(saleNumber === request.body.saleNumber, 'sale number in URL must match ID in body')
 
       return dealWithControllerResult(reply, await updateSale(request.body, sql))
+    },
+  )
+
+  appWithTypes.post(
+    '/:number/create-tax-invoice-document',
+    {schema: {params: z.object({number: z.coerce.number()})}},
+    async (request, reply) => {
+      const saleNumber = request.params.number
+      const description = request.headers['HX-Prompt']
+
+      if (Array.isArray(description)) {
+        throw new Error('bad HX-Prompt')
+      }
+
+      return dealWithControllerResultAsync(reply, () =>
+        createTaxInvoiceDocument(saleNumber, description ?? ''),
+      )
     },
   )
 

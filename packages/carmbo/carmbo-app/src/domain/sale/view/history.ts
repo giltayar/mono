@@ -1,6 +1,7 @@
 import {html} from '../../../commons/html-templates.ts'
 import type {SaleHistory, SaleWithHistoryInfo} from '../model.ts'
 import type {HistoryOperation} from '../../../commons/operation-type.ts'
+import {saleHistoryOperationToText} from './history-operation-to-text.ts'
 
 export function SaleHistoryList({
   sale,
@@ -16,13 +17,13 @@ export function SaleHistoryList({
         const date = new Date(entry.timestamp)
         return html`<li class="list-group-item d-flex" style="text-transform: capitalize;">
           ${entry.historyId === sale.id
-            ? html`<strong class="d-block">${historyOperationToText(entry.operation)}</strong>`
+            ? html`<strong class="d-block">${saleHistoryOperationToText(entry.operation)}</strong>`
             : html` <a
                 class="d-block"
                 href=${`/sales/${sale.saleNumber}` +
                 (i > 0 ? `/by-history/${entry.historyId}` : '')}
               >
-                ${historyOperationToText(entry.operation)}</a
+                ${saleHistoryOperationToText(entry.operation)}</a
               >`}
           <span class="d-block ms-auto" title="${date.toLocaleTimeString('he-IL')}"
             >${date.toLocaleDateString('he-IL')}</span

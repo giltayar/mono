@@ -9,6 +9,7 @@ import {
   createSale as model_createSale,
   updateSale as model_updateSale,
   deleteSale as model_deleteSale,
+  createTaxInvoiceDocument as model_createTaxInvoiceDocument,
   type NewSale,
   type Sale,
 } from './model.ts'
@@ -23,7 +24,8 @@ import {
   renderStudentListPage,
   renderProductListPage,
 } from './view/list-searches.ts'
-import {exceptionToBanner} from '../../layout/banner.ts'
+import {renderInvoiceDocumentUrlLink} from './view/tax-invoice-document-url.ts'
+import {exceptionToBanner, exceptionToBannerHtml} from '../../layout/banner.ts'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -84,6 +86,7 @@ export async function dealWithCardcomOneTimeSale(
   const sql = requestContext.get('sql')!
   const academyIntegration = requestContext.get('academyIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')!
+  const cardcomIntegration = requestContext.get('cardcomIntegration')!
 
   await handleCardcomOneTimeSale(
     salesEventNumber,
@@ -91,6 +94,7 @@ export async function dealWithCardcomOneTimeSale(
     now,
     academyIntegration,
     smooveIntegration,
+    cardcomIntegration,
     sql,
   )
 
@@ -199,6 +203,34 @@ export async function deleteSale(
         sql,
       ),
       'body',
+    )
+  }
+}
+
+export async function createTaxInvoiceDocument(
+  saleNumber: number,
+  description: string,
+): Promise<ControllerResult> {
+  try {
+    const sql = requestContext.get('sql')!
+    const cardcomIntegration = requestContext.get('cardcomIntegration')!
+
+    const {url} = await model_createTaxInvoiceDocument(
+      saleNumber,
+      description,
+      new Date(),
+      sql,
+      cardcomIntegration,
+    )
+
+    return renderInvoiceDocumentUrlLink(url)
+  } catch (err) {
+    const logger = requestContext.get('logger')!
+    logger.error({err}, 'create-tax-invoice-document')
+
+    return retarget(
+      exceptionToBannerHtml('Error creating tax invoice document: ', err),
+      '#banner-container',
     )
   }
 }

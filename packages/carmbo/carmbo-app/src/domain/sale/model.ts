@@ -1,10 +1,12 @@
 import type {Sql} from 'postgres'
 import z from 'zod'
-import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
+import {type HistoryOperation} from '../../commons/operation-type.ts'
 import type {PendingQuery, Row} from 'postgres'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import assert from 'node:assert'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
+import {makeError} from '@giltayar/functional-commons'
+import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 
 export const SaleSchema = z.object({
   saleNumber: z.coerce.number().int().positive(),
@@ -25,6 +27,7 @@ export const SaleSchema = z.object({
     )
     .optional(),
   cardcomInvoiceNumber: z.string().optional(),
+  cardcomInvoiceDocumentUrl: z.url().optional(),
   manualSaleType: z.enum(['manual']).optional(),
 })
 
@@ -45,12 +48,23 @@ export const NewSaleSchema = z.object({
     )
     .optional(),
   cardcomInvoiceNumber: z.string().optional(),
+  cardcomInvoiceDocumentUrl: z.url().optional(),
   manualSaleType: z.enum(['manual']).optional(),
 })
 
+export const SaleHistoryOperationSchema = z.enum([
+  'create',
+  'update',
+  'delete',
+  'restore',
+  'create-tax-invoice-document',
+])
+
+export type SaleHistoryOperation = z.infer<typeof SaleHistoryOperationSchema>
+
 export const SaleWithHistoryInfoSchema = SaleSchema.extend({
   id: z.uuid(),
-  historyOperation: HistoryOperationEnumSchema,
+  historyOperation: SaleHistoryOperationSchema,
 })
 
 export type Sale = z.infer<typeof SaleSchema>
@@ -70,7 +84,7 @@ export interface SaleForGrid {
 
 export interface SaleHistory {
   historyId: string
-  operation: HistoryOperation
+  operation: SaleHistoryOperation
   timestamp: Date
 }
 
@@ -339,7 +353,7 @@ function saleSelect(saleNumber: number, sql: Sql) {
     LEFT JOIN student ON student.student_number = sale_data.student_number
     LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
-    LEFT JOIN sale_data_manual ON sale_data_manual.data_id = sh.data_id
+    LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sh.data_manual_id
     LEFT JOIN LATERAL (
       SELECT
         json_agg(
@@ -394,10 +408,11 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
     const dataProductId = crypto.randomUUID()
+    const dataManualId = crypto.randomUUID()
 
     const saleNumberResult = await sql<{saleNumber: number}[]>`
       INSERT INTO sale_history VALUES
-        (${historyId}, ${dataId}, ${dataProductId}, DEFAULT, ${now}, 'create', ${reason ?? null})
+        (${historyId}, ${dataId}, ${dataProductId}, DEFAULT, ${now}, 'create', ${reason ?? null}, ${dataManualId})
       RETURNING sale_number
     `
 
@@ -451,7 +466,7 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
     )
     if (sale.cardcomInvoiceNumber) {
       ops = ops.concat(sql`
-          INSERT INTO sale_data_manual VALUES (${dataId}, ${sale.cardcomInvoiceNumber})
+          INSERT INTO sale_data_manual VALUES (${dataManualId}, ${sale.cardcomInvoiceNumber})
       `)
     }
 
@@ -498,10 +513,11 @@ export async function updateSale(
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
     const dataProductId = crypto.randomUUID()
+    const dataManualId = crypto.randomUUID()
 
     await sql`
       INSERT INTO sale_history VALUES
-        (${historyId}, ${dataId}, ${dataProductId}, ${sale.saleNumber}, ${now}, 'update', ${reason ?? null})
+        (${historyId}, ${dataId}, ${dataProductId}, ${sale.saleNumber}, ${now}, 'update', ${reason ?? null}, ${dataManualId})
     `
 
     const updateResult = await sql`
@@ -561,7 +577,7 @@ export async function updateSale(
 
     if (sale.cardcomInvoiceNumber)
       ops = ops.concat(sql`
-        INSERT INTO sale_data_manual VALUES (${dataId}, ${sale.cardcomInvoiceNumber})
+        INSERT INTO sale_data_manual VALUES (${dataManualId}, ${sale.cardcomInvoiceNumber})
       `)
 
     ops = ops.concat(
@@ -625,4 +641,143 @@ export async function deleteSale(
 
     return historyId
   })
+}
+
+export async function createTaxInvoiceDocument(
+  saleNumber: number,
+  description: string,
+  now: Date,
+  sql: Sql,
+  cardcomIntegration: CardcomIntegrationService,
+) {
+  return await sql.begin(async (sql) => {
+    const historyId = crypto.randomUUID()
+    const dataManualId = crypto.randomUUID()
+    const sale = await querySaleForCreatingTaxInvoiceDocument(saleNumber, sql)
+
+    if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
+
+    const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
+      await cardcomIntegration.createTaxInvoice(
+        {
+          cardcomCustomerId: sale.studentCardcomCustomerId,
+          customerEmail: sale.studentEmail,
+          customerName: sale.studentFirstName + ' ' + sale.studentLastName,
+          productsSold:
+            sale.products?.map((p) => ({
+              productId: p.productNumber,
+              productName: p.productName,
+              quantity: p.quantity,
+              unitPriceInCents: p.unitPrice * 100,
+            })) ?? [],
+          transactionDate: sale.timestamp ?? now,
+          transactionDescription: description,
+        },
+        {sendInvoiceByMail: true},
+      )
+
+    const dataIdResult = await sql<object[]>`
+      INSERT INTO sale_history (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id)
+      SELECT
+        ${historyId},
+        sale.last_data_id as last_data_id,
+        sale.last_data_product_id as last_data_product_id,
+        sale.sale_number,
+        ${now},
+        'create-tax-invoice-document',
+        'manual creation of tax document',
+        ${dataManualId}
+      FROM sale_history
+      INNER JOIN sale ON sale.sale_number = ${saleNumber}
+      WHERE id = sale.last_history_id
+      RETURNING 1
+    `
+
+    if (dataIdResult.length !== 1) {
+      throw new Error(`Zero or more than one sale with ID ${saleNumber}`)
+    }
+
+    await sql`
+      INSERT INTO sale_data_manual ${sql({
+        dataManualId,
+        cardcomInvoiceNumber,
+        invoiceDocumentUrl: cardcomDocumentLink,
+        cardcomCustomerId,
+      })}
+    `
+
+    await sql`
+      UPDATE sale SET
+        last_history_id = ${historyId},
+        data_manual_id = ${dataManualId}
+      WHERE sale_number = ${saleNumber}
+    `
+
+    return {url: cardcomDocumentLink}
+  })
+}
+
+async function querySaleForCreatingTaxInvoiceDocument(saleNumber: number, sql: Sql) {
+  const result = await sql<
+    {
+      studentCardcomCustomerId: number
+      studentEmail: string
+      studentFirstName: string
+      studentLastName: string
+      products: Array<{
+        productNumber: string
+        productName: string
+        quantity: number
+        unitPrice: number
+      }>
+      timestamp: Date | null
+    }[]
+  >`
+    SELECT
+      COALESCE(
+        sale_data_cardcom.customer_id,
+        sale_data_manual.cardcom_customer_id
+      )::integer AS student_cardcom_customer_id,
+      student_email.email AS student_email,
+      student_name.first_name AS student_first_name,
+      student_name.last_name AS student_last_name,
+      sale_data.timestamp AS timestamp,
+      COALESCE(products, json_build_array()) AS products
+    FROM
+      sale
+      JOIN sale_data ON sale_data.data_id = sale.last_data_id
+      LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+      LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale.last_data_manual_id
+      JOIN student ON student.student_number = sale_data.student_number
+      JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
+      JOIN student_email ON student_email.data_id = student.last_data_id AND student_email.item_order = 0
+      LEFT JOIN LATERAL (
+        SELECT
+          json_agg(
+            json_build_object(
+              'productNumber', sale_data_product.product_number::text,
+              'productName', product_data.name,
+              'quantity', sale_data_product.quantity,
+              'unitPrice', sale_data_product.unit_price
+            )
+            ORDER BY
+              item_order
+          ) AS products
+        FROM
+          sale_data_product
+          INNER JOIN product ON product.product_number = sale_data_product.product_number
+          INNER JOIN product_data ON product_data.data_id = product.last_data_id
+        WHERE
+          sale_data_product.data_product_id = sale.last_data_product_id
+      ) products ON true
+    WHERE
+      sale.sale_number = ${saleNumber}
+  `
+  if (result.length === 0) return undefined
+
+  if (result.length > 1) {
+    throw new Error(`found more than one ${saleNumber} sale`)
+  }
+
+  return result[0]
 }

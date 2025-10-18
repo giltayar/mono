@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@giltayar/carmel-tools-cardcom-integration': link:../../carmel-tools/cardcom-integration
+
 importers:
 
   .:
@@ -23,6 +26,9 @@ importers:
       '@giltayar/carmel-tools-academy-integration':
         specifier: ^4.0.0
         version: 4.0.0
+      '@giltayar/carmel-tools-cardcom-integration':
+        specifier: link:../../carmel-tools/cardcom-integration
+        version: link:../../carmel-tools/cardcom-integration
       '@giltayar/carmel-tools-smoove-integration':
         specifier: ^4.1.4
         version: 4.1.4

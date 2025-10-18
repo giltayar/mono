@@ -9,3 +9,6 @@ minimumReleaseAgeExclude:
 
 neverBuiltDependencies:
   - es5-ext
+
+overrides:
+  '@giltayar/carmel-tools-cardcom-integration': link:../../carmel-tools/cardcom-integration

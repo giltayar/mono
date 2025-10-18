@@ -11,6 +11,7 @@ import {TEST_seedSalesEvents} from '../domain/sales-event/model.ts'
 import {throw_} from '@giltayar/functional-commons'
 import {migrate} from '../sql/migration.ts'
 import {fileURLToPath} from 'node:url'
+import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_DATABASE: z.string().default('carmbo'),
@@ -30,6 +31,9 @@ export const EnvironmentVariablesSchema = z.object({
   CARMBO_AUTH0_CLIENT_ID: z.string(),
   CARMBO_AUTH0_CLIENT_SECRET: z.string(),
   CARMBO_AUTH0_SESSION_SECRET: z.string(),
+  CARDCOM_API_KEY: z.string(),
+  CARDCOM_API_KEY_PASSWORD: z.string(),
+  CARDCOM_TERMINAL_NUMBER: z.coerce.number().default(150067),
 })
 
 const env = EnvironmentVariablesSchema.parse(
@@ -64,6 +68,11 @@ const {app, sql} = await makeApp({
     smooveIntegration: createSmooveIntegrationService({
       apiKey: env.SMOOVE_API_KEY,
       apiUrl: env.SMOOVE_API_URL,
+    }),
+    cardcomIntegration: createCardcomIntegrationService({
+      apiKey: env.CARDCOM_API_KEY,
+      apiKeyPassword: env.CARDCOM_API_KEY_PASSWORD,
+      terminalNumber: env.CARDCOM_TERMINAL_NUMBER.toString(),
     }),
   },
   auth0: env.FORCE_NO_AUTH
