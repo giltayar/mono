@@ -153,6 +153,7 @@ export async function fetchRecurringPaymentBadPayments(
 export interface TaxInvoiceInformation {
   customerName: string
   customerEmail: string
+  customerPhone: string | undefined
   cardcomCustomerId: number | undefined
   productsSold: {
     productId: string
@@ -160,8 +161,8 @@ export interface TaxInvoiceInformation {
     quantity: number
     unitPriceInCents: number
   }[]
+  transactionRevenueInCents: number
   transactionDate: Date
-  transactionDescription: string | undefined
 }
 
 // More information here: https://cardcomapi.zendesk.com/hc/he/articles/25360043043602-%D7%99%D7%A6%D7%99%D7%A8%D7%AA-%D7%97%D7%A9%D7%91%D7%95%D7%A0%D7%99%D7%95%D7%AA-Create-Tax-invoice
@@ -183,6 +184,7 @@ export async function createTaxInvoiceDocument(
       CustName: invoiceInformation.customerName,
       Email: invoiceInformation.customerEmail,
       SendByEmail: options.sendInvoiceByMail,
+      ...(invoiceInformation.customerPhone ? {CustMobilePH: invoiceInformation.customerPhone} : {}),
       ...(invoiceInformation.cardcomCustomerId
         ? {AccountID: invoiceInformation.cardcomCustomerId}
         : {}),
@@ -193,11 +195,25 @@ export async function createTaxInvoiceDocument(
       Quantity: ps.quantity,
       Price: ps.unitPriceInCents / 100,
     })),
-    CustomLines: {
-      TranDate: invoiceInformation.transactionDate.toISOString(),
-      Description: invoiceInformation.transactionDescription ?? '',
-    },
-  })) as {InvoiceNumber: number; InvoiceLink: string; AccountID: string}
+    CustomLines: [
+      {
+        TranDate: invoiceInformation.transactionDate.toISOString(),
+        Sum: invoiceInformation.transactionRevenueInCents / 100,
+      },
+    ],
+  })) as {
+    ResponseCode: number
+    InvoiceNumber: number
+    InvoiceLink: string
+    AccountID: string
+    Description: string
+  }
+
+  if (result.ResponseCode !== 0) {
+    throw new Error(
+      `Failed to create tax invoice document: ${result.ResponseCode}: ${result.Description}`,
+    )
+  }
 
   return {
     cardcomInvoiceNumber: result.InvoiceNumber,

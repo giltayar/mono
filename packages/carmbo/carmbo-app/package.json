@@ -23,7 +23,7 @@
     "start": "run-p 'start:*'",
     "stop": "run-p 'stop:*'",
     "start:docker-compose": "docker compose up -d",
-    "start:app": "node $INSPECT_APP --watch ./src/app/index.ts | pino-pretty",
+    "start:app": "node $INSPECT_APP --watch ./src/app/index${FAKE}.ts | pino-pretty",
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf /tmp/carmbo-app/.db-data",
     "build": "mkdir -p dist && rm -rf dist/* && FORCE_COLOR=1 run-p 'build:*'",

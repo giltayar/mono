@@ -3,64 +3,10 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import {makeError} from '@giltayar/functional-commons'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
-import z from 'zod'
 import {normalizeEmail} from '../../commons/email.ts'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
-
-export const CardcomSaleWebhookJsonSchema = z.looseObject({
-  ApprovelNumber: z.string(),
-  CardOwnerName: z.string(),
-  intTo: z.string().optional(),
-  CardOwnerPhone: z.string(),
-  CouponNumber: z.string().optional(),
-  DealDate: z.string(),
-  DealTime: z.string(),
-  internaldealnumber: z.string(),
-  invoicenumber: z.string(),
-  terminalnumber: z.string(),
-  responsecode: z.string(),
-  UserEmail: z.email(),
-  RecurringAccountID: z.string().optional(),
-
-  suminfull: z.string(),
-
-  ProdTotalLines: z.string(),
-
-  ProdPrice: z.string(),
-  ProdQuantity: z.string(),
-  ProductID: z.string(),
-
-  ProdPrice1: z.string().optional(),
-  ProdQuantity1: z.string().optional(),
-  ProductID1: z.string().optional(),
-
-  ProdPrice2: z.string().optional(),
-  ProdQuantity2: z.string().optional(),
-  ProductID2: z.string().optional(),
-
-  ProdPrice3: z.string().optional(),
-  ProdQuantity3: z.string().optional(),
-  ProductID3: z.string().optional(),
-
-  ProdPrice4: z.string().optional(),
-  ProdQuantity4: z.string().optional(),
-  ProductID4: z.string().optional(),
-
-  ProdPrice5: z.string().optional(),
-  ProdQuantity5: z.string().optional(),
-  ProductID5: z.string().optional(),
-
-  ProdPrice6: z.string().optional(),
-  ProdQuantity6: z.string().optional(),
-  ProductID6: z.string().optional(),
-
-  ProdPrice7: z.string().optional(),
-  ProdQuantity7: z.string().optional(),
-  ProductID7: z.string().optional(),
-})
-
-export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema>
+import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 
 export async function handleCardcomOneTimeSale(
   salesEventNumber: number,
@@ -110,7 +56,7 @@ export async function handleCardcomOneTimeSale(
     {
       email: student.student.email,
       name: student.student.firstName + ' ' + student.student.lastName,
-      phone: student.student.phone,
+      phone: student.student.phone ?? '',
     },
     academyIntegration,
     sql,
@@ -143,11 +89,11 @@ type StudentInfoFound = {
 async function findStudent(
   cardcomCustomerId: number | undefined,
   email: string,
-  phone: string,
+  phone: string | undefined,
   sql: Sql,
 ): Promise<StudentInfoFound | undefined> {
   const finalEmail = normalizeEmail(email)
-  const finalPhone = normalizePhoneNumber(phone)
+  const finalPhone = phone ? normalizePhoneNumber(phone) : undefined
 
   const resultByEmailAndPhonePromise = sql<StudentInfoFound[]>`
     SELECT DISTINCT
@@ -163,7 +109,7 @@ async function findStudent(
     WHERE s.last_data_id IN (
       SELECT se2.data_id FROM student_email se2 WHERE se2.email = ${finalEmail}
       UNION
-      SELECT sp2.data_id FROM student_phone sp2 WHERE sp2.phone = ${finalPhone}
+      SELECT sp2.data_id FROM student_phone sp2 WHERE sp2.phone = ${finalPhone ?? null}
     )
     LIMIT 1
   `
@@ -212,10 +158,12 @@ async function createStudentFromCardcomSale(
   email: string
   firstName: string
   lastName: string
-  phone: string
+  phone: string | undefined
 }> {
   const email = normalizeEmail(cardcomSaleWebhookJson.UserEmail)
-  const phone = normalizePhoneNumber(cardcomSaleWebhookJson.CardOwnerPhone)
+  const phone = cardcomSaleWebhookJson.CardOwnerPhone
+    ? normalizePhoneNumber(cardcomSaleWebhookJson.CardOwnerPhone)
+    : undefined
 
   const historyId = crypto.randomUUID()
   const dataId = crypto.randomUUID()
@@ -253,7 +201,8 @@ async function createStudentFromCardcomSale(
         (${dataId}, 0, ${email})
     `)
 
-  ops = ops.concat(sql`
+  if (phone)
+    ops = ops.concat(sql`
       INSERT INTO student_phone VALUES
         (${dataId}, 0, ${phone})
     `)
@@ -352,7 +301,7 @@ async function createSale(
         ${cardcomSaleWebhookJson.UserEmail},
         ${cardcomSaleWebhookJson.CouponNumber ?? null},
         ${parseInt(cardcomSaleWebhookJson.internaldealnumber)},
-        ${cardcomSaleWebhookJson.RecurringAccountID ? parseInt(cardcomSaleWebhookJson.RecurringAccountID) : null}
+        ${cardcomSaleWebhookJson.RecurringAccountID ? parseInt(cardcomSaleWebhookJson.RecurringAccountID) : null},
         ${invoiceDocumentUrl}
       )
     `)
@@ -489,4 +438,171 @@ async function subscribeStudentToSmooveLists(
       ],
     })
   }
+}
+
+export async function connectSale(
+  saleNumber: number,
+  now: Date,
+  sql: Sql,
+  cardcomIntegration: CardcomIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService,
+) {
+  return await sql.begin(async (sql) => {
+    const historyId = crypto.randomUUID()
+    const dataManualId = crypto.randomUUID()
+    const sale = await querySaleForConnectingSale(saleNumber, sql)
+
+    if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
+
+    await Promise.all([
+      subscribeStudentToSmooveLists(
+        parseInt(sale.studentNumber),
+        saleNumber,
+        smooveIntegration,
+        sql,
+      ),
+      connectStudentWithAcademyCourses(
+        saleNumber,
+        {
+          email: sale.studentEmail,
+          name: sale.studentFirstName + ' ' + sale.studentLastName,
+          phone: sale.studentPhone ?? '',
+        },
+        academyIntegration,
+        sql,
+      ),
+    ])
+
+    const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
+      await cardcomIntegration.createTaxInvoiceDocument(
+        {
+          cardcomCustomerId: sale.studentCardcomCustomerId,
+          customerEmail: sale.studentEmail,
+          customerName: sale.studentFirstName + ' ' + sale.studentLastName,
+          customerPhone: sale.studentPhone ?? undefined,
+          productsSold:
+            sale.products?.map((p) => ({
+              productId: p.productNumber,
+              productName: p.productName,
+              quantity: p.quantity,
+              unitPriceInCents: p.unitPrice * 100,
+            })) ?? [],
+          transactionDate: sale.timestamp ?? now,
+          transactionRevenueInCents: parseFloat(sale.finalSaleRevenue ?? '0') * 100,
+        },
+        {sendInvoiceByMail: true},
+      )
+
+    const dataIdResult = await sql<object[]>`
+      INSERT INTO sale_history (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id)
+      SELECT
+        ${historyId},
+        sale.last_data_id as last_data_id,
+        sale.last_data_product_id as last_data_product_id,
+        sale.sale_number,
+        ${now},
+        'connect-manual-sale',
+        'manual connection of sale',
+        ${dataManualId}
+      FROM sale_history
+      INNER JOIN sale ON sale.sale_number = ${saleNumber}
+      WHERE id = sale.last_history_id
+      RETURNING 1
+    `
+
+    if (dataIdResult.length !== 1) {
+      throw new Error(`Zero or more than one sale with ID ${saleNumber}`)
+    }
+
+    await sql`
+      INSERT INTO sale_data_manual ${sql({
+        dataManualId,
+        cardcomInvoiceNumber,
+        invoiceDocumentUrl: cardcomDocumentLink,
+        cardcomCustomerId,
+      })}
+    `
+
+    await sql`
+      UPDATE sale SET
+        last_history_id = ${historyId},
+        last_data_manual_id = ${dataManualId}
+      WHERE sale_number = ${saleNumber}
+    `
+
+    return {url: cardcomDocumentLink}
+  })
+}
+
+async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
+  const result = await sql<
+    {
+      studentCardcomCustomerId: number
+      studentNumber: string
+      studentEmail: string
+      studentPhone: string | null
+      studentFirstName: string
+      studentLastName: string
+      products: Array<{
+        productNumber: string
+        productName: string
+        quantity: number
+        unitPrice: number
+      }>
+      timestamp: Date | null
+      finalSaleRevenue: string | null
+    }[]
+  >`
+    SELECT
+      COALESCE(
+        sale_data_cardcom.customer_id,
+        sale_data_manual.cardcom_customer_id
+      )::integer AS student_cardcom_customer_id,
+      student.student_number AS student_number,
+      student_email.email AS student_email,
+      student_phone.phone AS student_phone,
+      student_name.first_name AS student_first_name,
+      student_name.last_name AS student_last_name,
+      sale_data.timestamp AS timestamp,
+      sale_data.final_sale_revenue AS final_sale_revenue,
+      COALESCE(products, json_build_array()) AS products
+    FROM
+      sale
+      JOIN sale_data ON sale_data.data_id = sale.last_data_id
+      LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+      LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale.last_data_manual_id
+      JOIN student ON student.student_number = sale_data.student_number
+      JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
+      JOIN student_email ON student_email.data_id = student.last_data_id AND student_email.item_order = 0
+      JOIN student_phone ON student_phone.data_id = student.last_data_id AND student_phone.item_order = 0
+      LEFT JOIN LATERAL (
+        SELECT
+          json_agg(
+            json_build_object(
+              'productNumber', sale_data_product.product_number::text,
+              'productName', product_data.name,
+              'quantity', sale_data_product.quantity,
+              'unitPrice', sale_data_product.unit_price
+            )
+            ORDER BY
+              item_order
+          ) AS products
+        FROM
+          sale_data_product
+          INNER JOIN product ON product.product_number = sale_data_product.product_number
+          INNER JOIN product_data ON product_data.data_id = product.last_data_id
+        WHERE
+          sale_data_product.data_product_id = sale.last_data_product_id
+      ) products ON true
+    WHERE
+      sale.sale_number = ${saleNumber}
+  `
+  if (result.length === 0) return undefined
+
+  if (result.length > 1) {
+    throw new Error(`found more than one ${saleNumber} sale`)
+  }
+
+  return result[0]
 }

@@ -2,15 +2,11 @@ import {test, expect} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
-import {generateCardcomWebhookData} from '../../common/cardcom-simulation.ts'
 import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createSaleDetailPageModel} from '../../page-model/sales/sale-detail-page.model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
-import {fetchAsTextWithJsonBody} from '@giltayar/http-commons'
-import {addQueryParamsToUrl} from '@giltayar/url-commons'
-
-const {url, sql, smooveIntegration, academyIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
 test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const academyCourseId = 1
@@ -62,24 +58,36 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const customerName = 'John Doe'
   const customerPhone = '0501234567'
 
-  const webhookData = generateCardcomWebhookData(
-    [
-      {productId: product1Number, quantity: 1, price: 100},
-      {productId: product2Number, quantity: 2, price: 50},
-    ],
+  await cardcomIntegration()._test_simulateCardcomSale(
+    salesEventNumber,
     {
-      email: customerEmail,
-      name: customerName,
-      phone: customerPhone,
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+        {
+          productId: product2Number.toString(),
+          quantity: 2,
+          unitPriceInCents: 50 * 100,
+          productName: 'Product Two',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: undefined,
+      transactionDate: new Date(),
+      transactionDescription: '',
+      transactionRevenueInCents: 21 * 100,
+    },
+    {
+      secret: 'secret',
+      baseUrl: url().href,
     },
   )
-
-  const webhookUrl = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', url()), {
-    secret: 'secret',
-    'sales-event': salesEventNumber.toString(),
-  })
-
-  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookData as any)
 
   await page.goto(new URL('/students', url()).href)
 
@@ -111,7 +119,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const firstSaleRow = saleRows.row(0)
   await expect(firstSaleRow.eventCell().locator).toHaveText('Test Sales Event')
   await expect(firstSaleRow.studentCell().locator).toHaveText('John Doe')
-  await expect(firstSaleRow.revenueCell().locator).toContainText('200')
+  await expect(firstSaleRow.revenueCell().locator).toContainText('21')
   await expect(firstSaleRow.productsCell().locator).toContainText('Product One')
   await expect(firstSaleRow.productsCell().locator).toContainText('Product Two')
 
@@ -142,7 +150,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     `${salesEventNumber}: Test Sales Event`,
   )
   await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: John Doe')
-  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('200')
+  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('21')
 
   // Verify products in the sale detail page
   const products = saleDetailModel.form().products()
@@ -184,23 +192,32 @@ test('cardcom sale with same customer ID reuses existing student', async ({page}
   )
 
   const customerId = '12345'
-  const webhookUrl = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', url()), {
-    secret: 'secret',
-    'sales-event': salesEventNumber.toString(),
-  })
 
   // First sale with email x and phone y
-  const webhookDataA = generateCardcomWebhookData(
-    [{productId: productNumber, quantity: 1, price: 100}],
+  await cardcomIntegration()._test_simulateCardcomSale(
+    salesEventNumber,
     {
-      email: 'customer-a@example.com',
-      name: 'Alice Smith',
-      phone: '0501111111',
-      customerId,
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Test Product',
+        },
+      ],
+      customerEmail: 'customer-a@example.com',
+      customerName: 'Alice Smith',
+      customerPhone: '0501111111',
+      cardcomCustomerId: parseInt(customerId),
+      transactionDate: new Date(),
+      transactionDescription: '',
+      transactionRevenueInCents: 100 * 100,
+    },
+    {
+      secret: 'secret',
+      baseUrl: url().href,
     },
   )
-
-  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataA as any)
 
   // Verify first student was created
   await page.goto(new URL('/students', url()).href)
@@ -229,17 +246,30 @@ test('cardcom sale with same customer ID reuses existing student', async ({page}
   await page.goto(new URL('/students', url()).href)
 
   // Second sale with different email and phone but same customer ID
-  const webhookDataB = generateCardcomWebhookData(
-    [{productId: productNumber, quantity: 1, price: 100}],
+  await cardcomIntegration()._test_simulateCardcomSale(
+    salesEventNumber,
     {
-      email: 'customer-b@example.com',
-      name: 'Bob Jones',
-      phone: '0502222222',
-      customerId,
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Test Product',
+        },
+      ],
+      customerEmail: 'customer-b@example.com',
+      customerName: 'Bob Jones',
+      customerPhone: '0502222222',
+      cardcomCustomerId: parseInt(customerId),
+      transactionDate: new Date(),
+      transactionDescription: '',
+      transactionRevenueInCents: 100 * 100,
+    },
+    {
+      secret: 'secret',
+      baseUrl: url().href,
     },
   )
-
-  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataB as any)
 
   // Verify no new student was created - still just 1 student
   await page.reload()
@@ -295,27 +325,35 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
     sql(),
   )
 
-  const webhookUrl = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', url()), {
-    secret: 'secret',
-    'sales-event': salesEventNumber.toString(),
-  })
-
   const customerEmail = 'repeat-customer@example.com'
   const customerName = 'Jane Doe'
-  const customerPhone = '0503333333'
+  const _customerPhone = '0503333333'
 
   // First sale with customer ID "11111"
-  const webhookDataA = generateCardcomWebhookData(
-    [{productId: productNumber, quantity: 1, price: 100}],
+  await cardcomIntegration()._test_simulateCardcomSale(
+    salesEventNumber,
     {
-      email: customerEmail,
-      name: customerName,
-      phone: customerPhone,
-      customerId: '11111',
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Test Product',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone: '0503333333',
+      cardcomCustomerId: 11111,
+      transactionDate: new Date(),
+      transactionDescription: '',
+      transactionRevenueInCents: 100 * 100,
+    },
+    {
+      secret: 'secret',
+      baseUrl: url().href,
     },
   )
-
-  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataA as any)
 
   // Verify first student was created
   await page.goto(new URL('/students', url()).href)
@@ -340,17 +378,30 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
   await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue('11111')
 
   // Second sale with same email/phone but different customer ID "22222"
-  const webhookDataB = generateCardcomWebhookData(
-    [{productId: productNumber, quantity: 1, price: 150}],
+  await cardcomIntegration()._test_simulateCardcomSale(
+    salesEventNumber,
     {
-      email: customerEmail,
-      name: customerName,
-      phone: customerPhone,
-      customerId: '22222',
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 150 * 100,
+          productName: 'Test Product',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone: '0503333334',
+      cardcomCustomerId: 22222,
+      transactionDate: new Date(),
+      transactionDescription: '',
+      transactionRevenueInCents: 100 * 100,
+    },
+    {
+      secret: 'secret',
+      baseUrl: url().href,
     },
   )
-
-  await fetchAsTextWithJsonBody(webhookUrl.toString(), webhookDataB as any)
 
   // Verify still only 1 student (same student, different payment method)
   await page.goto(new URL('/students', url()).href)

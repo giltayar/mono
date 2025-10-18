@@ -72,8 +72,14 @@ test('create sale then update it', async ({page}) => {
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
   await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
-  await newForm.finalSaleRevenueInput().locator.fill('250')
   await newForm.cardcomInvoiceNumberInput().locator.fill('12345')
+
+  await expect(newForm.finalSaleRevenueInput().locator).toHaveAttribute('readonly')
+
+  await newForm.products().product(0).quantity().locator.fill('2')
+  await newForm.products().product(0).unitPrice().locator.fill('1')
+  await newForm.products().product(1).quantity().locator.fill('1')
+  await newForm.products().product(1).unitPrice().locator.fill('3')
 
   // Save the sale
   await newForm.createButton().locator.click()
@@ -90,17 +96,19 @@ test('create sale then update it', async ({page}) => {
     `${salesEventNumber}: Test Sales Event`,
   )
   await expect(updateForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
-  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('250')
+  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('5')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('12345')
 
   // Update the sale data
-  await updateForm.finalSaleRevenueInput().locator.fill('300')
   await updateForm.cardcomInvoiceNumberInput().locator.fill('54321')
+
+  await updateForm.products().product(0).quantity().locator.fill('3')
+  await updateForm.products().product(0).unitPrice().locator.fill('100')
 
   // Save the sale and verify data
   await updateForm.updateButton().locator.click()
 
-  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('300')
+  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('303')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('54321')
 
   // Back to list
@@ -112,7 +120,7 @@ test('create sale then update it', async ({page}) => {
   const firstRow = saleListModel.list().rows().row(0)
   await expect(firstRow.eventCell().locator).toHaveText('Test Sales Event')
   await expect(firstRow.studentCell().locator).toHaveText('John Doe')
-  await expect(firstRow.revenueCell().locator).toHaveText('₪300.00')
+  await expect(firstRow.revenueCell().locator).toHaveText('₪303.00')
 })
 
 test('discard button', async ({page}) => {
@@ -163,7 +171,6 @@ test('discard button', async ({page}) => {
   await newForm.salesEventInput().locator.blur()
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
-  await newForm.finalSaleRevenueInput().locator.fill('100')
 
   await newForm.discardButton().locator.click()
 
@@ -184,12 +191,6 @@ test('discard button', async ({page}) => {
     `${salesEventNumber}: Test Sales Event`,
   )
   await expect(updateForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
-
-  await updateForm.finalSaleRevenueInput().locator.fill('200')
-
-  await updateForm.discardButton().locator.click()
-
-  await expect(updateForm.finalSaleRevenueInput().locator).not.toHaveValue('200')
 })
 
 test('optional fields', async ({page}) => {
@@ -248,13 +249,6 @@ test('optional fields', async ({page}) => {
 
   await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('0')
   await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
-
-  await updateSaleModel.form().finalSaleRevenueInput().locator.fill('150')
-
-  await updateSaleModel.form().updateButton().locator.click()
-
-  await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('150')
-  await expect(updateSaleModel.history().items().locator).toHaveCount(2)
 })
 
 test('creation/update error shows alert', async ({page}) => {
@@ -307,7 +301,9 @@ test('creation/update error shows alert', async ({page}) => {
   await newForm.salesEventInput().locator.blur()
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
-  await newForm.finalSaleRevenueInput().locator.fill('100')
+
+  await newForm.products().product(0).quantity().locator.fill('2')
+  await newForm.products().product(0).unitPrice().locator.fill('50')
 
   TEST_hooks['createSale'] = () => {
     throw new Error('ouch!')
@@ -322,7 +318,7 @@ test('creation/update error shows alert', async ({page}) => {
 
   await page.waitForURL(updateSaleModel.urlRegex)
 
-  await updateSaleModel.form().finalSaleRevenueInput().locator.fill('200')
+  await newForm.products().product(0).quantity().locator.fill('3')
 
   TEST_hooks['updateSale'] = () => {
     throw new Error('double ouch!')

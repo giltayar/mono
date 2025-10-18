@@ -5,8 +5,6 @@ import type {PendingQuery, Row} from 'postgres'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import assert from 'node:assert'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
-import {makeError} from '@giltayar/functional-commons'
-import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 
 export const SaleSchema = z.object({
   saleNumber: z.coerce.number().int().positive(),
@@ -15,14 +13,14 @@ export const SaleSchema = z.object({
   salesEventName: z.string().optional(),
   studentNumber: z.coerce.number().int().positive(),
   studentName: z.string().optional(),
-  finalSaleRevenue: z.coerce.number().positive().optional(),
+  finalSaleRevenue: z.coerce.number().nonnegative().optional(),
   products: z
     .array(
       z.object({
         productNumber: z.coerce.number().int().positive(),
         productName: z.string().optional(),
         quantity: z.coerce.number().int().nonnegative(),
-        unitPrice: z.coerce.number().positive(),
+        unitPrice: z.coerce.number().nonnegative(),
       }),
     )
     .optional(),
@@ -40,10 +38,10 @@ export const NewSaleSchema = z.object({
   products: z
     .array(
       z.object({
-        productNumber: z.coerce.number().int().optional(),
+        productNumber: z.coerce.number().int(),
         productName: z.string().optional(),
-        quantity: z.coerce.number().int().optional(),
-        unitPrice: z.coerce.number().optional(),
+        quantity: z.coerce.number().int(),
+        unitPrice: z.coerce.number(),
       }),
     )
     .optional(),
@@ -57,7 +55,7 @@ export const SaleHistoryOperationSchema = z.enum([
   'update',
   'delete',
   'restore',
-  'create-tax-invoice-document',
+  'connect-manual-sale',
 ])
 
 export type SaleHistoryOperation = z.infer<typeof SaleHistoryOperationSchema>
@@ -317,14 +315,21 @@ export async function fillInSale(sale: NewSale, sql: Sql): Promise<NewSale> {
       ) products_agg ON true
   `
 
+  if (!fillResult[0]) {
+    return sale
+  }
+
+  const products = mergeSaleProducts(sale.products ?? [], fillResult[0].products ?? [])
+
   return {
     ...sale,
+    finalSaleRevenue: computeFinalSaleRevenue(products),
     manualSaleType: 'manual',
-    salesEventName: fillResult[0]?.salesEventName ?? '',
-    studentName: fillResult[0]?.studentFirstName
-      ? [fillResult[0]?.studentFirstName, fillResult[0]?.studentLastName].join(' ')
+    salesEventName: fillResult[0].salesEventName ?? '',
+    studentName: fillResult[0].studentFirstName
+      ? [fillResult[0].studentFirstName, fillResult[0].studentLastName].join(' ')
       : '',
-    products: fillResult[0]?.products ?? [],
+    products,
   }
 }
 
@@ -341,6 +346,7 @@ function saleSelect(saleNumber: number, sql: Sql) {
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
       sale_data.final_sale_revenue AS final_sale_revenue,
       COALESCE(sale_data_cardcom.invoice_number, sale_data_manual.cardcom_invoice_number) AS cardcom_invoice_number,
+      COALESCE(sale_data_cardcom.invoice_document_url, sale_data_manual.invoice_document_url) AS cardcom_invoice_document_url,
       CASE WHEN sale_data_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
       COALESCE(products, json_build_array()) AS products
     FROM
@@ -393,6 +399,8 @@ function saleHistorySelect(saleNumber: number, sql: Sql) {
 
 export async function createSale(sale: NewSale, reason: string | undefined, sql: Sql) {
   await TEST_executeHook('createSale')
+
+  sale.finalSaleRevenue = computeFinalSaleRevenue(sale.products)
 
   // Validate required fields
   assert(sale.salesEventNumber, 'salesEventNumber is required')
@@ -466,7 +474,10 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
     )
     if (sale.cardcomInvoiceNumber) {
       ops = ops.concat(sql`
-          INSERT INTO sale_data_manual VALUES (${dataManualId}, ${sale.cardcomInvoiceNumber})
+        INSERT INTO sale_data_manual ${sql({
+          dataManualId,
+          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
+        })}
       `)
     }
 
@@ -475,7 +486,7 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
       sale.products?.map((product, index) => {
         assert(product.productNumber, `product ${index} productNumber is required`)
         assert(product.quantity !== undefined, `product ${index} quantity is required`)
-        assert(product.unitPrice, `product ${index} unitPrice is required`)
+        assert(product.unitPrice !== undefined, `product ${index} unitPrice is required`)
 
         const productNumber = product.productNumber
         const quantity = product.quantity
@@ -500,6 +511,8 @@ export async function updateSale(
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateSale')
+
+  sale.finalSaleRevenue = computeFinalSaleRevenue(sale.products)
 
   // Validate required fields
   assert(sale.salesEventNumber, 'salesEventNumber is required')
@@ -577,14 +590,17 @@ export async function updateSale(
 
     if (sale.cardcomInvoiceNumber)
       ops = ops.concat(sql`
-        INSERT INTO sale_data_manual VALUES (${dataManualId}, ${sale.cardcomInvoiceNumber})
+        INSERT INTO sale_data_manual ${sql({
+          dataManualId,
+          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
+        })}
       `)
 
     ops = ops.concat(
       sale.products?.map((product, index) => {
         assert(product.productNumber, `product ${index} productNumber is required`)
         assert(product.quantity !== undefined, `product ${index} quantity is required`)
-        assert(product.unitPrice, `product ${index} unitPrice is required`)
+        assert(product.unitPrice !== undefined, `product ${index} unitPrice is required`)
 
         const productNumber = product.productNumber
         const quantity = product.quantity
@@ -643,141 +659,27 @@ export async function deleteSale(
   })
 }
 
-export async function createTaxInvoiceDocument(
-  saleNumber: number,
-  description: string,
-  now: Date,
-  sql: Sql,
-  cardcomIntegration: CardcomIntegrationService,
-) {
-  return await sql.begin(async (sql) => {
-    const historyId = crypto.randomUUID()
-    const dataManualId = crypto.randomUUID()
-    const sale = await querySaleForCreatingTaxInvoiceDocument(saleNumber, sql)
-
-    if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
-
-    const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
-      await cardcomIntegration.createTaxInvoice(
-        {
-          cardcomCustomerId: sale.studentCardcomCustomerId,
-          customerEmail: sale.studentEmail,
-          customerName: sale.studentFirstName + ' ' + sale.studentLastName,
-          productsSold:
-            sale.products?.map((p) => ({
-              productId: p.productNumber,
-              productName: p.productName,
-              quantity: p.quantity,
-              unitPriceInCents: p.unitPrice * 100,
-            })) ?? [],
-          transactionDate: sale.timestamp ?? now,
-          transactionDescription: description,
-        },
-        {sendInvoiceByMail: true},
-      )
-
-    const dataIdResult = await sql<object[]>`
-      INSERT INTO sale_history (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id)
-      SELECT
-        ${historyId},
-        sale.last_data_id as last_data_id,
-        sale.last_data_product_id as last_data_product_id,
-        sale.sale_number,
-        ${now},
-        'create-tax-invoice-document',
-        'manual creation of tax document',
-        ${dataManualId}
-      FROM sale_history
-      INNER JOIN sale ON sale.sale_number = ${saleNumber}
-      WHERE id = sale.last_history_id
-      RETURNING 1
-    `
-
-    if (dataIdResult.length !== 1) {
-      throw new Error(`Zero or more than one sale with ID ${saleNumber}`)
-    }
-
-    await sql`
-      INSERT INTO sale_data_manual ${sql({
-        dataManualId,
-        cardcomInvoiceNumber,
-        invoiceDocumentUrl: cardcomDocumentLink,
-        cardcomCustomerId,
-      })}
-    `
-
-    await sql`
-      UPDATE sale SET
-        last_history_id = ${historyId},
-        data_manual_id = ${dataManualId}
-      WHERE sale_number = ${saleNumber}
-    `
-
-    return {url: cardcomDocumentLink}
-  })
-}
-
-async function querySaleForCreatingTaxInvoiceDocument(saleNumber: number, sql: Sql) {
-  const result = await sql<
-    {
-      studentCardcomCustomerId: number
-      studentEmail: string
-      studentFirstName: string
-      studentLastName: string
-      products: Array<{
-        productNumber: string
-        productName: string
-        quantity: number
-        unitPrice: number
-      }>
-      timestamp: Date | null
-    }[]
-  >`
-    SELECT
-      COALESCE(
-        sale_data_cardcom.customer_id,
-        sale_data_manual.cardcom_customer_id
-      )::integer AS student_cardcom_customer_id,
-      student_email.email AS student_email,
-      student_name.first_name AS student_first_name,
-      student_name.last_name AS student_last_name,
-      sale_data.timestamp AS timestamp,
-      COALESCE(products, json_build_array()) AS products
-    FROM
-      sale
-      JOIN sale_data ON sale_data.data_id = sale.last_data_id
-      LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
-      LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale.last_data_manual_id
-      JOIN student ON student.student_number = sale_data.student_number
-      JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
-      JOIN student_email ON student_email.data_id = student.last_data_id AND student_email.item_order = 0
-      LEFT JOIN LATERAL (
-        SELECT
-          json_agg(
-            json_build_object(
-              'productNumber', sale_data_product.product_number::text,
-              'productName', product_data.name,
-              'quantity', sale_data_product.quantity,
-              'unitPrice', sale_data_product.unit_price
-            )
-            ORDER BY
-              item_order
-          ) AS products
-        FROM
-          sale_data_product
-          INNER JOIN product ON product.product_number = sale_data_product.product_number
-          INNER JOIN product_data ON product_data.data_id = product.last_data_id
-        WHERE
-          sale_data_product.data_product_id = sale.last_data_product_id
-      ) products ON true
-    WHERE
-      sale.sale_number = ${saleNumber}
-  `
-  if (result.length === 0) return undefined
-
-  if (result.length > 1) {
-    throw new Error(`found more than one ${saleNumber} sale`)
+export function computeFinalSaleRevenue(
+  saleProducts: Sale['products'] | NewSale['products'] | undefined,
+): number {
+  if (!saleProducts) {
+    return 0
   }
 
-  return result[0]
+  return saleProducts.reduce(
+    (total, product) => total + (product.unitPrice ?? 0) * product.quantity,
+    0,
+  )
+}
+
+function mergeSaleProducts(
+  originalProducts: NewSale['products'] = [],
+  filledInProducts: Array<{productNumber: number; productName: string}>,
+): NewSale['products'] {
+  return filledInProducts.map((p, index) => ({
+    productNumber: p.productNumber,
+    productName: p.productName,
+    quantity: originalProducts[index]?.quantity ?? 1,
+    unitPrice: originalProducts[index]?.unitPrice ?? 0,
+  }))
 }

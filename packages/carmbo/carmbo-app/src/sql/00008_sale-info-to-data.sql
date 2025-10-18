@@ -56,8 +56,8 @@ CREATE TABLE
     data_product_id UUID NOT NULL,
     item_order INTEGER NOT NULL,
     product_number INTEGER NOT NULL,
-    quantity INTEGER NOT NULL, -- 0 means it was not bought
-    unit_price NUMERIC(10, 2) -- not necessarily what it was bought for. Just what was the price asked for
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(10, 2)
   );
 
 CREATE UNIQUE INDEX IF NOT EXISTS sale_data_product_idx ON sale_data_product (data_product_id, item_order);

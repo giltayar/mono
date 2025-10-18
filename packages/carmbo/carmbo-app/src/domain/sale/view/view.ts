@@ -1,17 +1,13 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
-import {fillInSale, type NewSale, type SaleHistory, type SaleWithHistoryInfo} from '../model.ts'
+import {type NewSale, type SaleHistory, type SaleWithHistoryInfo} from '../model.ts'
 import {SaleUpdateView} from './sale.ts'
 import {Layout} from './layout.ts'
 import {SaleCreateView} from './create-update.ts'
-import type {Sql} from 'postgres'
 import {SalesFormFields} from './form.ts'
 import type {Banner} from '../../../layout/banner.ts'
 
-export async function renderSaleCreatePage(
-  sale: NewSale | undefined,
-  {banner}: {banner?: Banner} = {},
-) {
+export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banner?: Banner} = {}) {
   const finalSale: NewSale = sale ?? {
     salesEventNumber: 0,
     salesEventName: '',
@@ -31,8 +27,8 @@ export async function renderSaleCreatePage(
     </${MainLayout}>
   `
 }
-export async function renderSaleFormFields(sale: NewSale | undefined, sql: Sql) {
-  let finalSale: NewSale = sale ?? {
+export function renderSaleFormFields(sale: NewSale | undefined) {
+  const finalSale: NewSale = sale ?? {
     salesEventNumber: 0,
     salesEventName: '',
     studentNumber: 0,
@@ -43,11 +39,7 @@ export async function renderSaleFormFields(sale: NewSale | undefined, sql: Sql) 
     manualSaleType: 'manual',
   }
 
-  if (sale) {
-    finalSale = await fillInSale(finalSale, sql)
-  }
-
-  return html` <${SalesFormFields} sale=${finalSale} operation="write" />`
+  return html`<${SalesFormFields} sale=${finalSale} operation="write" saleNumber=${undefined} />`
 }
 
 export function renderSaleViewPage(

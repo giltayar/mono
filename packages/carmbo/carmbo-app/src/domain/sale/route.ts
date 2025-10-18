@@ -2,21 +2,20 @@ import type {FastifyInstance} from 'fastify'
 import {z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
-import {CardcomSaleWebhookJsonSchema} from './model-cardcom-sale.ts'
 import {
   dealWithCardcomOneTimeSale,
   showSales,
   showSale,
   showSaleInHistory,
   showSaleCreate,
-  showOngoingSaleCreate,
+  showOngoingSale,
   showSalesEventList,
   showStudentList,
   showProductList,
   createSale,
   updateSale,
   deleteSale,
-  createTaxInvoiceDocument,
+  connectSale,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -24,6 +23,7 @@ import {
 } from '../../commons/routes-commons.ts'
 import {NewSaleSchema, SaleSchema} from './model.ts'
 import assert from 'node:assert'
+import {CardcomSaleWebhookJsonSchema} from '@giltayar/carmel-tools-cardcom-integration/types'
 
 export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undefined}) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
@@ -89,7 +89,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     dealWithControllerResult(reply, await showSaleCreate(undefined)),
   )
   appWithTypes.post('/new', {schema: {body: NewSaleSchema}}, async (request, reply) =>
-    dealWithControllerResult(reply, await showOngoingSaleCreate(request.body)),
+    dealWithControllerResult(reply, await showOngoingSale(request.body)),
   )
 
   appWithTypes.post('/', {schema: {body: NewSaleSchema}}, async (request, reply) => {
@@ -128,6 +128,9 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       return dealWithControllerResult(reply, await showSale(request.params.number, sql))
     },
   )
+  appWithTypes.post('/:number', {schema: {body: NewSaleSchema}}, async (request, reply) =>
+    dealWithControllerResult(reply, await showOngoingSale(request.body)),
+  )
 
   // Update sale
   appWithTypes.put(
@@ -143,19 +146,12 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   appWithTypes.post(
-    '/:number/create-tax-invoice-document',
-    {schema: {params: z.object({number: z.coerce.number()})}},
+    '/:number/connect-manual-sale',
+    {schema: {body: SaleSchema, params: z.object({number: z.coerce.number()})}},
     async (request, reply) => {
       const saleNumber = request.params.number
-      const description = request.headers['HX-Prompt']
 
-      if (Array.isArray(description)) {
-        throw new Error('bad HX-Prompt')
-      }
-
-      return dealWithControllerResultAsync(reply, () =>
-        createTaxInvoiceDocument(saleNumber, description ?? ''),
-      )
+      return dealWithControllerResultAsync(reply, () => connectSale(saleNumber, request.body))
     },
   )
 
@@ -181,13 +177,13 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     {
       schema: {
         params: z.object({number: z.coerce.number().int()}),
-        querystring: z.object({'delete-operation': z.enum(['delete', 'restore'])}),
+        querystring: z.object({operation: z.enum(['delete', 'restore'])}),
       },
     },
     async (request, reply) =>
       dealWithControllerResult(
         reply,
-        await deleteSale(request.params.number, request.query['delete-operation'], sql),
+        await deleteSale(request.params.number, request.query.operation, sql),
       ),
   )
 }

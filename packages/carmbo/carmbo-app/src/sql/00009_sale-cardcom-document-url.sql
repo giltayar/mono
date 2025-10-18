@@ -31,10 +31,9 @@ SET
 ALTER TABLE sale_data_manual
 DROP COLUMN data_id;
 
-ALTER TYPE SALE_OPERATION ADD VALUE 'update';
+DROP TYPE SALE_OPERATION;
 
-CREATE TYPE SALE_OPERATION ADD VALUE 'delete';
+CREATE TYPE SALE_HISTORY_OPERATION AS ENUM ('create', 'update', 'delete', 'restore', 'create-tax-invoice-document');
 
-CREATE TYPE SALE_OPERATION ADD VALUE 'restore';
-
-CREATE TYPE SALE_OPERATION ADD VALUE 'create-tax-invoice-document';
+ALTER TABLE sale_history
+ALTER COLUMN operation TYPE SALE_HISTORY_OPERATION USING operation::text::SALE_HISTORY_OPERATION;

@@ -1,6 +1,7 @@
+import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
+import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
-import {simulateCardcomSale} from '../common/cardcom-simulation.ts'
 
 const argv = await yargs(hideBin(process.argv))
   .option('sales-event', {
@@ -53,21 +54,28 @@ const products = argv.product.map((p) => {
     throw new Error(`Invalid product format: ${p}. Expected: productNumber,quantity,price`)
   }
   return {
-    productId: parseInt(productId),
+    productId,
+    productName: 'Product ' + productId,
     quantity: parseInt(quantity),
-    price: parseFloat(price),
+    unitPriceInCents: parseFloat(price) * 100,
   }
 })
 
+const cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
+
 console.log('Sending Cardcom webhook simulation to', argv.url, argv.salesEvent.toString())
 console.log(
-  await simulateCardcomSale({
-    salesEventNumber: argv.salesEvent,
-    products,
-    email: argv.email,
-    phone: argv.phone,
-    name: argv.name,
-    baseUrl: argv.url,
-    secret: argv.secret,
-  }),
+  await cardcomIntegration._test_simulateCardcomSale(
+    argv.salesEvent,
+    {
+      cardcomCustomerId: undefined,
+      customerName: argv.name,
+      customerPhone: argv.phone,
+      customerEmail: argv.email,
+      productsSold: products,
+      transactionDate: new Date(),
+      transactionDescription: 'Test transaction',
+    } as TaxInvoiceInformation,
+    {secret: argv.secret, baseUrl: argv.url},
+  ),
 )

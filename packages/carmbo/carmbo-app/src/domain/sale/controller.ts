@@ -9,12 +9,12 @@ import {
   createSale as model_createSale,
   updateSale as model_updateSale,
   deleteSale as model_deleteSale,
-  createTaxInvoiceDocument as model_createTaxInvoiceDocument,
   type NewSale,
   type Sale,
+  fillInSale,
 } from './model.ts'
-import {type CardcomSaleWebhookJson} from './model-cardcom-sale.ts'
-import {handleCardcomOneTimeSale} from './model-cardcom-sale.ts'
+import {connectSale as model_connectSale} from './model-sale.ts'
+import {handleCardcomOneTimeSale} from './model-sale.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
 import {renderSaleCreatePage, renderSaleFormFields, renderSaleViewPage} from './view/view.ts'
@@ -24,8 +24,8 @@ import {
   renderStudentListPage,
   renderProductListPage,
 } from './view/list-searches.ts'
-import {renderInvoiceDocumentUrlLink} from './view/tax-invoice-document-url.ts'
 import {exceptionToBanner, exceptionToBannerHtml} from '../../layout/banner.ts'
+import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -33,13 +33,13 @@ export async function showSaleCreate(
 ): Promise<ControllerResult> {
   const banner = exceptionToBanner('Creating sale error: ', error)
 
-  return finalHtml(await renderSaleCreatePage(sale, {banner}))
+  return finalHtml(renderSaleCreatePage(sale, {banner}))
 }
 
-export async function showOngoingSaleCreate(sale?: NewSale): Promise<ControllerResult> {
+export async function showOngoingSale(sale: NewSale): Promise<ControllerResult> {
   const sql = requestContext.get('sql')!
 
-  return finalHtml(await renderSaleFormFields(sale, sql))
+  return finalHtml(renderSaleFormFields(sale ? await fillInSale(sale, sql) : undefined))
 }
 
 export async function showSalesEventList(q: string | undefined): Promise<ControllerResult> {
@@ -207,30 +207,29 @@ export async function deleteSale(
   }
 }
 
-export async function createTaxInvoiceDocument(
-  saleNumber: number,
-  description: string,
-): Promise<ControllerResult> {
+export async function connectSale(saleNumber: number, sale: Sale): Promise<ControllerResult> {
   try {
     const sql = requestContext.get('sql')!
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
+    const smooveIntegration = requestContext.get('smooveIntegration')!
+    const academyIntegration = requestContext.get('academyIntegration')!
 
-    const {url} = await model_createTaxInvoiceDocument(
+    await model_updateSale(sale, undefined, sql)
+
+    await model_connectSale(
       saleNumber,
-      description,
       new Date(),
       sql,
       cardcomIntegration,
+      smooveIntegration,
+      academyIntegration,
     )
 
-    return renderInvoiceDocumentUrlLink(url)
+    return {htmxRedirect: `/sales/${saleNumber}`}
   } catch (err) {
     const logger = requestContext.get('logger')!
-    logger.error({err}, 'create-tax-invoice-document')
+    logger.error({err}, 'connect-manual-sale')
 
-    return retarget(
-      exceptionToBannerHtml('Error creating tax invoice document: ', err),
-      '#banner-container',
-    )
+    return retarget(exceptionToBannerHtml('Error connecting sale: ', err), '#banner-container')
   }
 }

@@ -19,6 +19,7 @@ export function setup(testUrl: string): {
   sql: () => Sql
   smooveIntegration: () => SmooveIntegrationService
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
+  cardcomIntegration: () => ReturnType<typeof createFakeCardcomIntegrationService>
   TEST_hooks: Record<string, TEST_HookFunction>
 } {
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
@@ -29,6 +30,7 @@ export function setup(testUrl: string): {
   let url: URL
   let smooveIntegration: SmooveIntegrationService
   let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
+  let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
 
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
@@ -59,6 +61,7 @@ export function setup(testUrl: string): {
       ],
       enrolledContacts: new Map(),
     })
+    cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
     ;({app, sql} = makeApp({
       db: {
         database: 'carmbo',
@@ -89,7 +92,7 @@ export function setup(testUrl: string): {
           },
         }),
         smooveIntegration,
-        cardcomIntegration: createFakeCardcomIntegrationService({accounts: {}}),
+        cardcomIntegration,
       },
       auth0: undefined,
       appBaseUrl: 'http://localhost:????',
@@ -130,6 +133,7 @@ export function setup(testUrl: string): {
     sql: () => sql,
     smooveIntegration: () => smooveIntegration,
     academyIntegration: () => academyIntegration,
+    cardcomIntegration: () => cardcomIntegration,
     TEST_hooks,
   }
 }

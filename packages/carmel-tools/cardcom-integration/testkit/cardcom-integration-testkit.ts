@@ -8,6 +8,7 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 import assert from 'node:assert'
+import {simulateCardcomSale} from './cardcom-webhook-simulation.ts'
 
 type CardcomIntegrationServiceData = {
   state: Parameters<typeof createFakeCardcomIntegrationService>[0] & {
@@ -65,6 +66,7 @@ export function createFakeCardcomIntegrationService(context: {
       const invoiceDocument = state.taxInvoiceDocuments[parseInt(cardcomInvoiceNumber) - 1]
       return invoiceDocument
     },
+    _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
   }
 }
 
@@ -161,4 +163,18 @@ export function assertTaxInvoiceDocumentUrl(url: string, cardcomInvoiceNumber: s
   assert(url, `http://invoice-document.example.com/${cardcomInvoiceNumber}`)
 
   return url
+}
+
+export async function _test_simulateCardcomSale(
+  s: CardcomIntegrationServiceData,
+  salesEventNumber: number,
+  sale: TaxInvoiceInformation,
+  serverInfo: {
+    secret: string
+    baseUrl: string
+  },
+) {
+  const {cardcomInvoiceNumber} = await createTaxInvoiceDocument(s, sale, {sendInvoiceByMail: false})
+
+  await simulateCardcomSale(salesEventNumber, sale, cardcomInvoiceNumber.toString(), serverInfo)
 }

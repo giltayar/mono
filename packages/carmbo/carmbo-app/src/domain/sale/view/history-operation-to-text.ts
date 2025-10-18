@@ -11,8 +11,8 @@ export function saleHistoryOperationToText(operation: SaleHistoryOperation): str
       return 'archived'
     case 'restore':
       return 'restored'
-    case 'create-tax-invoice-document':
-      return 'created tax invoice document'
+    case 'connect-manual-sale':
+      return 'connected manual sale'
     default:
       assertNever(operation)
   }

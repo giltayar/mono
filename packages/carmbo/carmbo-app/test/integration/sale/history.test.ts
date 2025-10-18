@@ -66,8 +66,6 @@ test('can view history', async ({page}) => {
   await expect(updateHistory.items().locator).toHaveCount(1)
   await expect(updateHistory.items().item(0).locator).toContainText('create')
 
-  await updateForm.finalSaleRevenueInput().locator.fill('150')
-
   await updateForm.updateButton().locator.click()
 
   await expect(updateHistory.items().locator).toHaveCount(2)
@@ -99,7 +97,7 @@ test('can view history', async ({page}) => {
   await expect(updateHistory.items().item(1).locator).toContainText('create')
   await expect(updateHistory.items().item(0).link().locator).not.toBeVisible()
 
-  await expect(historyForm.finalSaleRevenueInput().locator).toHaveValue('150')
+  await expect(historyForm.finalSaleRevenueInput().locator).toHaveValue('100')
 })
 
 test('multiple sales have different histories', async ({page}) => {
@@ -169,7 +167,10 @@ test('multiple sales have different histories', async ({page}) => {
   const firstSaleUrl = await page.url()
 
   // Update first sale
-  await updateSaleModel.form().finalSaleRevenueInput().locator.fill('150')
+
+  await updateSaleModel.form().products().product(0).quantity().locator.fill('2')
+  await updateSaleModel.form().products().product(0).unitPrice().locator.fill('50')
+
   await updateSaleModel.form().updateButton().locator.click()
 
   await expect(updateSaleModel.history().items().locator).toHaveCount(2)

@@ -1,18 +1,16 @@
 import {html} from '../../../commons/html-templates.ts'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {NewSale, Sale} from '../model.ts'
-import {InvoiceDocumentUrlLink} from './tax-invoice-document-url.ts'
 
 export function SalesFormFields({
   sale,
-  saleNumber,
   operation,
 }: {
   sale: Sale | NewSale
   saleNumber: number | undefined
   operation: 'read' | 'write'
 }) {
-  const isReadOnly = operation === 'read' || !('manualSaleType' in sale)
+  const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceDocumentUrl
 
   return html`
     <div class="sales-view_form-fields card">
@@ -64,39 +62,6 @@ export function SalesFormFields({
           />
         </div>
         <datalist id="student-list"> </datalist>
-        <div class="mb-3">
-          <label for="finalSaleRevenue" class="form-label">Final Sale Revenue</label>
-          <input
-            type="number"
-            class="form-control"
-            id="finalSaleRevenue"
-            name="finalSaleRevenue"
-            value=${sale.finalSaleRevenue}
-            readonly=${isReadOnly}
-          />
-        </div>
-        <div class="mb-3">
-          <label for="cardcomInvoiceNumber" class="form-label">Cardcom Invoice Number</label>
-          <input
-            type="number"
-            class="form-control"
-            id="cardcomInvoiceNumber"
-            name="cardcomInvoiceNumber"
-            value=${sale.cardcomInvoiceNumber}
-            readonly=${isReadOnly}
-          />${sale.cardcomInvoiceDocumentUrl
-            ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
-            : sale.cardcomInvoiceNumber && saleNumber
-              ? html`<button
-                  class="button btn-sm"
-                  hx-prompt="Description"
-                  hx-target="this"
-                  hx-post=${`/sales/${saleNumber}/create-tax-invoice-document`}
-                >
-                  Create Tax Invoice Document
-                </button>`
-              : undefined}
-        </div>
         ${sale.products && sale.products.length > 0
           ? html`
               <fieldset class="mb-3">
@@ -147,7 +112,38 @@ export function SalesFormFields({
               </fieldset>
             `
           : ''}
+        <div class="mb-3">
+          <label for="cardcomInvoiceNumber" class="form-label">Cardcom Invoice Number</label>
+          <input
+            type="number"
+            class="form-control"
+            id="cardcomInvoiceNumber"
+            name="cardcomInvoiceNumber"
+            value=${sale.cardcomInvoiceNumber}
+            readonly=${isReadOnly}
+          />${sale.cardcomInvoiceDocumentUrl
+            ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
+            : undefined}
+        </div>
+        <div class="mb-3">
+          <label for="finalSaleRevenue" class="form-label">Final Sale Revenue</label>
+          <input
+            type="number"
+            class="form-control"
+            id="finalSaleRevenue"
+            name="finalSaleRevenue"
+            value=${sale.finalSaleRevenue}
+            readonly
+          />
+        </div>
       </div>
     </div>
   `
+}
+
+function InvoiceDocumentUrlLink({url}: {url: string}) {
+  return html`<a target="_blank" href=${url}>View Invoice </a
+    ><svg class="feather" viewbox="0 0 24 24">
+      <use href="/src/layout/style/external-link.svg" />
+    </svg>`
 }

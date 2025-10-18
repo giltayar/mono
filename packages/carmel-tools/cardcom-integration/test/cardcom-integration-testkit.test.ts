@@ -189,6 +189,7 @@ describe('Cardcom Integration Testkit', () => {
       const invoiceInformation = {
         customerName: 'John Doe',
         customerEmail: 'john@example.com',
+        customerPhone: '050-1234567',
         cardcomCustomerId: 12345,
         productsSold: [
           {
@@ -206,6 +207,7 @@ describe('Cardcom Integration Testkit', () => {
         ],
         transactionDate: new Date('2024-06-15'),
         transactionDescription: 'Test transaction',
+        transactionRevenueInCents: 1100,
       }
 
       const result = await service.createTaxInvoiceDocument(invoiceInformation, {
@@ -222,6 +224,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.ok(storedInvoice)
       assert.strictEqual(storedInvoice.customerName, 'John Doe')
       assert.strictEqual(storedInvoice.customerEmail, 'john@example.com')
+      assert.strictEqual(storedInvoice.customerPhone, '050-1234567')
       assert.strictEqual(storedInvoice.cardcomCustomerId, 12345)
       assert.strictEqual(storedInvoice.productsSold.length, 2)
       assert.strictEqual(storedInvoice.productsSold[0].productId, 'prod-1')
@@ -239,6 +242,7 @@ describe('Cardcom Integration Testkit', () => {
       const invoiceInformation = {
         customerName: 'Jane Smith',
         customerEmail: 'jane@example.com',
+        customerPhone: undefined,
         cardcomCustomerId: undefined,
         productsSold: [
           {
@@ -250,6 +254,7 @@ describe('Cardcom Integration Testkit', () => {
         ],
         transactionDate: new Date('2024-07-01'),
         transactionDescription: undefined,
+        transactionRevenueInCents: 1100,
       }
 
       const result = await service.createTaxInvoiceDocument(invoiceInformation, {
@@ -268,6 +273,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.ok(storedInvoice)
       assert.strictEqual(storedInvoice.customerName, 'Jane Smith')
       assert.strictEqual(storedInvoice.customerEmail, 'jane@example.com')
+      assert.strictEqual(storedInvoice.customerPhone, undefined)
       // The stored invoice should have the generated customer ID
       assert.strictEqual(storedInvoice.cardcomCustomerId, parseInt(result.cardcomCustomerId))
       assert.strictEqual(storedInvoice.productsSold.length, 1)
@@ -285,6 +291,7 @@ describe('Cardcom Integration Testkit', () => {
       const invoiceInformation1 = {
         customerName: 'Customer One',
         customerEmail: 'one@example.com',
+        customerPhone: undefined,
         cardcomCustomerId: 11111,
         productsSold: [
           {
@@ -296,11 +303,13 @@ describe('Cardcom Integration Testkit', () => {
         ],
         transactionDate: new Date('2024-08-01'),
         transactionDescription: 'First invoice',
+        transactionRevenueInCents: 1100,
       }
 
       const invoiceInformation2 = {
         customerName: 'Customer Two',
         customerEmail: 'two@example.com',
+        customerPhone: undefined,
         cardcomCustomerId: 22222,
         productsSold: [
           {
@@ -312,6 +321,7 @@ describe('Cardcom Integration Testkit', () => {
         ],
         transactionDate: new Date('2024-08-02'),
         transactionDescription: 'Second invoice',
+        transactionRevenueInCents: 1100,
       }
 
       const result1 = await service.createTaxInvoiceDocument(invoiceInformation1, {
@@ -348,6 +358,7 @@ describe('Cardcom Integration Testkit', () => {
       const invoiceInformation = {
         customerName: 'Test User',
         customerEmail: 'test@example.com',
+        customerPhone: undefined,
         cardcomCustomerId: 99999,
         productsSold: [
           {
@@ -359,6 +370,7 @@ describe('Cardcom Integration Testkit', () => {
         ],
         transactionDate: new Date('2024-09-01'),
         transactionDescription: 'Test',
+        transactionRevenueInCents: 1100,
       }
 
       const created = await service.createTaxInvoiceDocument(invoiceInformation, {
@@ -397,6 +409,7 @@ describe('Cardcom Integration Testkit', () => {
       const invoiceInfo = {
         customerName: 'Test User',
         customerEmail: 'test@example.com',
+        customerPhone: undefined,
         cardcomCustomerId: 11111,
         productsSold: [
           {
@@ -408,6 +421,7 @@ describe('Cardcom Integration Testkit', () => {
         ],
         transactionDate: new Date('2024-10-01'),
         transactionDescription: 'Test',
+        transactionRevenueInCents: 1100,
       }
 
       await service.createTaxInvoiceDocument(invoiceInfo, {sendInvoiceByMail: true})
@@ -433,6 +447,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(storedInvoice1.customerName, 'Test User')
       assert.strictEqual(storedInvoice2.customerName, 'Test User')
       assert.strictEqual(storedInvoice3.customerName, 'Test User')
+      assert.strictEqual(storedInvoice1.transactionRevenueInCents, 1100)
     })
   })
 
