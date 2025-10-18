@@ -1,4 +1,5 @@
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
+import {fetchAsJsonWithJsonBody} from '@giltayar/http-commons'
 import {$} from 'execa'
 import type {
   RecurringPaymentInfo,
@@ -22,6 +23,8 @@ export function createCardcomIntegrationService(context: CardcomIntegrationServi
     enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
     fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
     fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
+    createTaxInvoiceDocument: sBind(createTaxInvoiceDocument),
+    createTaxInvoiceDocumentUrl: sBind(createTaxInvoiceDocumentUrl),
   }
 }
 
@@ -145,4 +148,76 @@ export async function fetchRecurringPaymentBadPayments(
       badPaymentCount: u.Status === 'SUCCESSFUL' ? 0 : u.BillingAttempts,
     }))
     .sort((a: BadPayment, b: BadPayment) => a.date.getTime() - b.date.getTime())
+}
+
+export interface TaxInvoiceInformation {
+  customerName: string
+  customerEmail: string
+  cardcomCustomerId: number | undefined
+  productsSold: {
+    productId: string
+    productName: string
+    quantity: number
+    unitPriceInCents: number
+  }[]
+  transactionDate: Date
+  transactionDescription: string | undefined
+}
+
+// More information here: https://cardcomapi.zendesk.com/hc/he/articles/25360043043602-%D7%99%D7%A6%D7%99%D7%A8%D7%AA-%D7%97%D7%A9%D7%91%D7%95%D7%A0%D7%99%D7%95%D7%AA-Create-Tax-invoice
+// And here:https://secure.cardcom.solutions/Api/v11/Docs#tag/Documents/operation/Documents_CreateTaxInvoice
+export async function createTaxInvoiceDocument(
+  s: CardcomIntegrationServiceData,
+  invoiceInformation: TaxInvoiceInformation,
+  options: {
+    sendInvoiceByMail: boolean
+  },
+): Promise<{cardcomInvoiceNumber: number; cardcomDocumentLink: string; cardcomCustomerId: string}> {
+  const url = new URL('https://secure.cardcom.solutions/api/v11/Documents/CreateTaxInvoice')
+
+  const result = (await fetchAsJsonWithJsonBody(url, {
+    ApiName: s.context.apiKey,
+    ApiPassword: s.context.apiKeyPassword,
+    InvoiceType: 1, // חשבונית מס קבלה
+    InvoiceHead: {
+      CustName: invoiceInformation.customerName,
+      Email: invoiceInformation.customerEmail,
+      SendByEmail: options.sendInvoiceByMail,
+      ...(invoiceInformation.cardcomCustomerId
+        ? {AccountID: invoiceInformation.cardcomCustomerId}
+        : {}),
+    },
+    InvoiceLines: invoiceInformation.productsSold.map((ps) => ({
+      ProductID: ps.productId,
+      Description: ps.productName,
+      Quantity: ps.quantity,
+      Price: ps.unitPriceInCents / 100,
+    })),
+    CustomLines: {
+      TranDate: invoiceInformation.transactionDate.toISOString(),
+      Description: invoiceInformation.transactionDescription ?? '',
+    },
+  })) as {InvoiceNumber: number; InvoiceLink: string; AccountID: string}
+
+  return {
+    cardcomInvoiceNumber: result.InvoiceNumber,
+    cardcomDocumentLink: result.InvoiceLink,
+    cardcomCustomerId: result.AccountID,
+  }
+}
+
+export async function createTaxInvoiceDocumentUrl(
+  s: CardcomIntegrationServiceData,
+  cardcomInvoiceNumber: string,
+) {
+  const url = new URL('https://secure.cardcom.solutions/api/v11/Documents/CreateDocumentUrl')
+
+  const result = (await fetchAsJsonWithJsonBody(url, {
+    ApiName: s.context.apiKey,
+    ApiPassword: s.context.apiKeyPassword,
+    DocumentType: 'TaxInvoiceAndReceipt',
+    DocumentNumber: cardcomInvoiceNumber,
+  })) as {DocUrl: string}
+
+  return {url: result.DocUrl}
 }

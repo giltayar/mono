@@ -1,12 +1,18 @@
-import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
+import type {
+  CardcomIntegrationService,
+  TaxInvoiceInformation,
+} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {
   RecurringPaymentInfo,
   BadPayment,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
+import assert from 'node:assert'
 
 type CardcomIntegrationServiceData = {
-  state: Parameters<typeof createFakeCardcomIntegrationService>[0]
+  state: Parameters<typeof createFakeCardcomIntegrationService>[0] & {
+    taxInvoiceDocuments: TaxInvoiceInformation[]
+  }
 }
 
 export function createFakeCardcomIntegrationService(context: {
@@ -27,6 +33,7 @@ export function createFakeCardcomIntegrationService(context: {
 }) {
   const state: CardcomIntegrationServiceData['state'] = {
     accounts: structuredClone(context.accounts),
+    taxInvoiceDocuments: [],
   }
   const sBind: ServiceBind<CardcomIntegrationServiceData> = (f) => bind(f, {state})
 
@@ -34,6 +41,8 @@ export function createFakeCardcomIntegrationService(context: {
     enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
     fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
     fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
+    createTaxInvoiceDocument: sBind(createTaxInvoiceDocument),
+    createTaxInvoiceDocumentUrl: sBind(createTaxInvoiceDocumentUrl),
   }
 
   return {
@@ -49,6 +58,12 @@ export function createFakeCardcomIntegrationService(context: {
         (rp) => rp.recurringPaymentId === recurringPaymentId,
       )
       return recurringPayment?.isActive
+    },
+    _test_getTaxInvoiceDocument: async (
+      cardcomInvoiceNumber: string,
+    ): Promise<TaxInvoiceInformation | undefined> => {
+      const invoiceDocument = state.taxInvoiceDocuments[parseInt(cardcomInvoiceNumber) - 1]
+      return invoiceDocument
     },
   }
 }
@@ -107,4 +122,43 @@ async function fetchRecurringPaymentBadPayments(
 
   // Return sorted by date (oldest first)
   return [...badPayments].sort((a, b) => a.date.getTime() - b.date.getTime())
+}
+
+async function createTaxInvoiceDocument(
+  s: CardcomIntegrationServiceData,
+  invoiceInformation: TaxInvoiceInformation,
+  _options: {
+    sendInvoiceByMail: boolean
+  },
+): Promise<{cardcomInvoiceNumber: number; cardcomDocumentLink: string; cardcomCustomerId: string}> {
+  const generatedCustomerId = invoiceInformation.cardcomCustomerId ?? (Math.random() * 100000) | 0
+  const invoiceToStore = {
+    ...invoiceInformation,
+    cardcomCustomerId: generatedCustomerId,
+  }
+  s.state.taxInvoiceDocuments.push(invoiceToStore)
+
+  const cardcomInvoiceNumber = s.state.taxInvoiceDocuments.length
+  return {
+    cardcomInvoiceNumber,
+    cardcomDocumentLink: `http://invoice-document.example.com/${cardcomInvoiceNumber}`,
+    cardcomCustomerId: generatedCustomerId.toString(),
+  }
+}
+
+async function createTaxInvoiceDocumentUrl(
+  s: CardcomIntegrationServiceData,
+  cardcomInvoiceNumber: string,
+) {
+  const invoiceDocument = s.state.taxInvoiceDocuments[parseInt(cardcomInvoiceNumber) - 1]
+
+  if (!invoiceDocument) throw new Error(`Invoice Document ${cardcomInvoiceNumber} not found`)
+
+  return {url: `http://invoice-document.example.com/${cardcomInvoiceNumber}`}
+}
+
+export function assertTaxInvoiceDocumentUrl(url: string, cardcomInvoiceNumber: string) {
+  assert(url, `http://invoice-document.example.com/${cardcomInvoiceNumber}`)
+
+  return url
 }
