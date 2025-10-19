@@ -15,9 +15,14 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
     cardcomInvoiceNumberInput: (inputLocator = locator.getByLabel('Cardcom Invoice Number')) => ({
       locator: inputLocator,
     }),
-    products: (productsLocator = locator.getByRole('group', {name: 'Products'})) => ({
+    viewInvoiceLink: (linkLocator = locator.getByRole('link', {name: 'View Invoice'})) => ({
+      locator: linkLocator,
+    }),
+    products: (
+      productsLocator = locator.getByRole('group', {name: 'Products'}).getByRole('group'),
+    ) => ({
       locator: productsLocator,
-      product: (index: number, productLocator = productsLocator.getByRole('group').nth(index)) => ({
+      product: (index: number, productLocator = productsLocator.nth(index)) => ({
         locator: productLocator,
         title: (titleLocator = productLocator.locator('legend h6')) => ({
           locator: titleLocator,

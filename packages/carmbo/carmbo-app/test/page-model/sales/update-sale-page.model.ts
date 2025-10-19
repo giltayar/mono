@@ -7,7 +7,7 @@ export function createUpdateSalePageModel(page: Page) {
   return {
     ...createAllPagesPageModel(page),
     urlRegex: /\/sales\/\d+$/,
-    pageTitle: (locator = page.getByRole('heading', {name: /Update Sale \d+/})) => ({locator}),
+    pageTitle: (locator = page.getByRole('heading', {level: 2})) => ({locator}),
     form: () => ({
       updateButton: (btnLocator = page.getByRole('button', {name: 'Update'})) => ({
         locator: btnLocator,
@@ -19,6 +19,9 @@ export function createUpdateSalePageModel(page: Page) {
         locator: btnLocator,
       }),
       restoreButton: (btnLocator = page.getByRole('button', {name: 'Restore'})) => ({
+        locator: btnLocator,
+      }),
+      connectButton: (btnLocator = page.getByRole('button', {name: 'Connect'})) => ({
         locator: btnLocator,
       }),
 

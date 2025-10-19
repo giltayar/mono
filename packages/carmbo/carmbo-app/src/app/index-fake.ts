@@ -9,7 +9,7 @@ const {app, sql} = await makeApp({
   db: {
     database: 'carmbo',
     host: 'localhost',
-    port: 5432,
+    port: process.env.DB_HOST ? parseInt(process.env.DB_HOST) : 5432,
     username: 'user',
     password: 'password',
   },

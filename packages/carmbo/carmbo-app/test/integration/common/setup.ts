@@ -50,6 +50,7 @@ export function setup(testUrl: string): {
         {id: 12, name: 'Smoove List Cancelling B'},
         {id: 14, name: 'Smoove List Cancelled C'},
         {id: 16, name: 'Smoove List Removed D'},
+        {id: 20, name: 'Smoove List ID Alpha'},
       ],
       contacts: {},
     })

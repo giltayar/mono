@@ -4,8 +4,9 @@ import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
 import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
-import {createSaleDetailPageModel} from '../../page-model/sales/sale-detail-page.model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
+import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
+import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
 test('cardcom sale creates student, sale, and integrations', async ({page}) => {
@@ -80,7 +81,6 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       customerPhone,
       cardcomCustomerId: undefined,
       transactionDate: new Date(),
-      transactionDescription: '',
       transactionRevenueInCents: 21 * 100,
     },
     {
@@ -139,11 +139,42 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     true,
   )
 
+  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+
+  expect(taxInvoiceDocument).toBeDefined()
+
+  await expect(taxInvoiceDocument).toMatchObject({
+    customerName: 'John Doe',
+    customerEmail: 'test-customer@example.com',
+    customerPhone: '0501234567',
+    productsSold: [
+      {
+        productId: product1Number.toString(),
+        productName: 'Product One',
+        quantity: 1,
+        unitPriceInCents: 10000,
+      },
+      {
+        productId: product2Number.toString(),
+        productName: 'Product Two',
+        quantity: 2,
+        unitPriceInCents: 5000,
+      },
+    ],
+    transactionRevenueInCents: 2100,
+  } as Omit<TaxInvoiceInformation, 'transactionDate'>)
+
   // Click on the sale to view the sale detail page
   await firstSaleRow.idLink().locator.click()
   await page.waitForURL(/\/sales\/\d+$/)
 
-  const saleDetailModel = createSaleDetailPageModel(page)
+  const saleDetailModel = createUpdateSalePageModel(page)
+
+  await expect(saleDetailModel.pageTitle().locator).toHaveText('Sale 1')
+  await expect(saleDetailModel.form().connectButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().restoreButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().deleteButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().discardButton().locator).not.toBeVisible()
 
   // Verify sale details
   await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
@@ -151,6 +182,12 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   )
   await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: John Doe')
   await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('21')
+
+  await expect(saleDetailModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('1')
+  await expect(saleDetailModel.form().viewInvoiceLink().locator).toHaveAttribute(
+    'href',
+    'http://invoice-document.example.com/1',
+  )
 
   // Verify products in the sale detail page
   const products = saleDetailModel.form().products()
@@ -210,7 +247,6 @@ test('cardcom sale with same customer ID reuses existing student', async ({page}
       customerPhone: '0501111111',
       cardcomCustomerId: parseInt(customerId),
       transactionDate: new Date(),
-      transactionDescription: '',
       transactionRevenueInCents: 100 * 100,
     },
     {
@@ -262,7 +298,6 @@ test('cardcom sale with same customer ID reuses existing student', async ({page}
       customerPhone: '0502222222',
       cardcomCustomerId: parseInt(customerId),
       transactionDate: new Date(),
-      transactionDescription: '',
       transactionRevenueInCents: 100 * 100,
     },
     {
@@ -346,7 +381,6 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       customerPhone: '0503333333',
       cardcomCustomerId: 11111,
       transactionDate: new Date(),
-      transactionDescription: '',
       transactionRevenueInCents: 100 * 100,
     },
     {
@@ -394,7 +428,6 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       customerPhone: '0503333334',
       cardcomCustomerId: 22222,
       transactionDate: new Date(),
-      transactionDescription: '',
       transactionRevenueInCents: 100 * 100,
     },
     {

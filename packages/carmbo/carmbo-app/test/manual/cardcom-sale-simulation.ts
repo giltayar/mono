@@ -74,7 +74,6 @@ console.log(
       customerEmail: argv.email,
       productsSold: products,
       transactionDate: new Date(),
-      transactionDescription: 'Test transaction',
     } as TaxInvoiceInformation,
     {secret: argv.secret, baseUrl: argv.url},
   ),
