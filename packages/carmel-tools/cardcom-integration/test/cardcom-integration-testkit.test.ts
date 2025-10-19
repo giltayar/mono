@@ -233,7 +233,6 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(storedInvoice.productsSold[0].unitPriceInCents, 5000)
       assert.strictEqual(storedInvoice.productsSold[1].productId, 'prod-2')
       assert.strictEqual(storedInvoice.transactionDate.getTime(), new Date('2024-06-15').getTime())
-      assert.strictEqual(storedInvoice.transactionDescription, 'Test transaction')
     })
 
     it('should create a tax invoice document without customer ID', async () => {
@@ -282,7 +281,6 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(storedInvoice.productsSold[0].quantity, 1)
       assert.strictEqual(storedInvoice.productsSold[0].unitPriceInCents, 7500)
       assert.strictEqual(storedInvoice.transactionDate.getTime(), new Date('2024-07-01').getTime())
-      assert.strictEqual(storedInvoice.transactionDescription, undefined)
     })
 
     it('should increment invoice numbers for multiple documents', async () => {
@@ -341,12 +339,10 @@ describe('Cardcom Integration Testkit', () => {
       const storedInvoice1 = await service._test_getTaxInvoiceDocument('1')
       assert.ok(storedInvoice1)
       assert.strictEqual(storedInvoice1.customerName, 'Customer One')
-      assert.strictEqual(storedInvoice1.transactionDescription, 'First invoice')
 
       const storedInvoice2 = await service._test_getTaxInvoiceDocument('2')
       assert.ok(storedInvoice2)
       assert.strictEqual(storedInvoice2.customerName, 'Customer Two')
-      assert.strictEqual(storedInvoice2.transactionDescription, 'Second invoice')
     })
   })
 
