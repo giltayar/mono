@@ -10,7 +10,7 @@ export function SaleUpdateView({
   sale: SaleWithHistoryInfo
   history: SaleHistory[]
 }) {
-  const isUnconnectedSale = !sale.cardcomInvoiceDocumentUrl
+  const isUnconnectedSale = !sale.cardcomInvoiceNumber
 
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -22,43 +22,43 @@ export function SaleUpdateView({
     <form hx-put="/sales/${sale.saleNumber}" hx-target="form" class="col-md-6 mt-3">
       <input name="saleNumber" type="hidden" value=${sale.saleNumber} />
       <div class="ms-auto" style="width: fit-content">
-        ${isUnconnectedSale
-          ? html`<section class="btn-group" aria-label="Form actions">
-              ${sale.historyOperation === 'delete'
-                ? html`
-                    <button
-                      class="btn btn-danger"
-                      type="Submit"
-                      hx-delete=""
-                      name="operation"
-                      value="restore"
-                    >
-                      Restore
-                    </button>
-                  `
-                : html`
-                    <button class="btn btn-secondary discard" type="Submit" value="discard">
-                      Discard
-                    </button>
-                    <button
-                      class="btn btn-danger"
-                      type="Submit"
-                      hx-delete=""
-                      name="operation"
-                      value="delete"
-                    >
-                      Archive
-                    </button>
-                    <button class="btn btn-primary" type="Submit" value="save">Update</button>
-                    <button
-                      class="button btn-primary"
-                      hx-post="/sales/${sale.saleNumber}/connect-manual-sale"
-                    >
-                      Connect
-                    </button>
-                  `}
-            </section>`
-          : undefined}
+        <section class="btn-group" aria-label="Form actions">
+          ${isUnconnectedSale
+            ? sale.historyOperation === 'delete'
+              ? html`
+                  <button
+                    class="btn btn-danger"
+                    type="Submit"
+                    hx-delete=""
+                    name="operation"
+                    value="restore"
+                  >
+                    Restore
+                  </button>
+                `
+              : html`
+                  <button class="btn btn-secondary discard" type="Submit" value="discard">
+                    Discard
+                  </button>
+                  <button
+                    class="btn btn-danger"
+                    type="Submit"
+                    hx-delete=""
+                    name="operation"
+                    value="delete"
+                  >
+                    Archive
+                  </button>
+                  <button class="btn btn-primary" type="Submit" value="save">Update</button>
+                `
+            : undefined}
+          <button
+            class="button btn-primary"
+            hx-post="/sales/${sale.saleNumber}/connect-manual-sale"
+          >
+            ${!sale.cardcomInvoiceDocumentUrl ? 'Connect' : 'Reconnect'}
+          </button>
+        </section>
       </div>
       <div class="mt-3">
         <${SalesFormFields}

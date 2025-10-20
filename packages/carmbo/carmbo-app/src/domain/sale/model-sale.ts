@@ -591,11 +591,14 @@ export async function connectSale(
       logger.info('subscribing-student-to-smoove-lists-succeeded')
     }
 
-    if (!sale.cardcomInvoiceDocumentUrl) {
+    if (!sale.cardcomInvoiceNumber) {
+      logger.info('creating-cardcom-invoice-document')
       const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
         await cardcomIntegration.createTaxInvoiceDocument(
           {
-            cardcomCustomerId: sale.studentCardcomCustomerId,
+            cardcomCustomerId: sale.studentCardcomCustomerId
+              ? parseInt(sale.studentCardcomCustomerId)
+              : undefined,
             customerEmail: sale.studentEmail,
             customerName: sale.studentFirstName + ' ' + sale.studentLastName,
             customerPhone: sale.studentPhone ?? undefined,
@@ -612,7 +615,10 @@ export async function connectSale(
           {sendInvoiceByMail: true},
         )
 
-      logger.info({cardcomDocumentLink}, 'cardcom-invoice-document-created')
+      logger.info(
+        {cardcomDocumentLink, cardcomCustomerId, cardcomInvoiceNumber},
+        'cardcom-invoice-document-created',
+      )
 
       sale.cardcomInvoiceDocumentUrl = cardcomDocumentLink
 
@@ -624,7 +630,46 @@ export async function connectSale(
           cardcomCustomerId,
         })}
       `
-      logger.info({cardcomDocumentLink}, 'cardcom-invoice-document-updated-in-sale')
+      logger.info({cardcomInvoiceNumber}, 'cardcom-invoice-document-updated-in-sale')
+    } else if (!sale.cardcomInvoiceDocumentUrl) {
+      logger.info(
+        {cardcomInvoiceNumber: sale.cardcomInvoiceNumber},
+        'creating-cardcom-invoice-document-url',
+      )
+      sale.cardcomInvoiceDocumentUrl = (
+        await cardcomIntegration.createTaxInvoiceDocumentUrl(sale.cardcomInvoiceNumber)
+      ).url
+      await sql`
+        INSERT INTO sale_data_manual ${sql({
+          dataManualId,
+          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
+          invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
+          cardcomCustomerId: sale.studentCardcomCustomerId,
+        })}
+      `
+
+      logger.info(
+        {invoiceUrl: sale.cardcomInvoiceDocumentUrl},
+        'created-cardcom-invoice-document-url',
+      )
+    } else {
+      logger.info(
+        {
+          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
+          invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
+          cardcomCustomerId: sale.studentCardcomCustomerId,
+        },
+        'sale-already-connected-no-action-needed-creating-sale-data-manual-record',
+      )
+      await sql`
+        INSERT INTO sale_data_manual ${sql({
+          dataManualId,
+          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
+          invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
+          cardcomCustomerId: sale.studentCardcomCustomerId,
+        })}
+      `
+      logger.info('sale-already-connected-no-action-needed')
     }
 
     const dataIdResult = await sql<object[]>`
@@ -666,7 +711,7 @@ export async function connectSale(
 async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
   const result = await sql<
     {
-      studentCardcomCustomerId: number
+      studentCardcomCustomerId: string | null
       studentNumber: string
       studentEmail: string
       studentPhone: string | null
@@ -681,17 +726,22 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       timestamp: Date | null
       finalSaleRevenue: string | null
       cardcomInvoiceDocumentUrl: string | null
+      cardcomInvoiceNumber: string | null
     }[]
   >`
     SELECT
       COALESCE(
         sale_data_cardcom.customer_id,
         sale_data_manual.cardcom_customer_id
-      )::integer AS student_cardcom_customer_id,
+      ) AS student_cardcom_customer_id,
       COALESCE(
         sale_data_cardcom.invoice_document_url,
         sale_data_manual.invoice_document_url
       ) AS cardcom_invoice_document_url,
+      COALESCE(
+        sale_data_cardcom.invoice_number,
+        sale_data_manual.cardcom_invoice_number
+      ) AS cardcom_invoice_number,
       student.student_number AS student_number,
       student_email.email AS student_email,
       student_phone.phone AS student_phone,

@@ -10,7 +10,7 @@ export function SalesFormFields({
   saleNumber: number | undefined
   operation: 'read' | 'write'
 }) {
-  const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceDocumentUrl
+  const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceNumber
 
   return html`
     <div class="sales-view_form-fields card">

@@ -72,7 +72,6 @@ test('create sale then update it', async ({page}) => {
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
   await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
-  await newForm.cardcomInvoiceNumberInput().locator.fill('12345')
 
   await expect(newForm.finalSaleRevenueInput().locator).toHaveAttribute('readonly')
 
@@ -97,7 +96,7 @@ test('create sale then update it', async ({page}) => {
   )
   await expect(updateForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
   await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('5')
-  await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('12345')
+  await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('')
 
   // Update the sale data
   await updateForm.cardcomInvoiceNumberInput().locator.fill('54321')

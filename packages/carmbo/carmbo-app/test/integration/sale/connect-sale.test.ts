@@ -75,7 +75,6 @@ test('create sale then connect it', async ({page}) => {
   await newForm.salesEventInput().locator.blur()
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
-  await newForm.cardcomInvoiceNumberInput().locator.fill('12345')
 
   await newForm.products().product(0).quantity().locator.fill('2')
   await newForm.products().product(0).unitPrice().locator.fill('1')

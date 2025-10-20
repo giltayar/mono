@@ -171,6 +171,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const saleDetailModel = createUpdateSalePageModel(page)
 
   await expect(saleDetailModel.pageTitle().locator).toHaveText('Sale 1')
+  await expect(saleDetailModel.form().reconnectButton().locator).toBeVisible()
   await expect(saleDetailModel.form().connectButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().restoreButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().deleteButton().locator).not.toBeVisible()
