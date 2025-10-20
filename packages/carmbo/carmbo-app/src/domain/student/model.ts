@@ -133,20 +133,26 @@ export async function createStudent(
     `
     const studentNumber = studentNumberResult[0].studentNumber
 
-    const {smooveId} = (await smooveIntegration?.createSmooveContact({
+    const result = await smooveIntegration?.createSmooveContact({
       email: normalizedStudent.emails[0],
       firstName: normalizedStudent.names[0].firstName,
       lastName: normalizedStudent.names[0].lastName,
       telephone: normalizedStudent.phones?.[0],
       birthday: normalizedStudent.birthday,
-    })) ?? {smooveId: 0}
+    })
 
     await sql`
       INSERT INTO student VALUES
         (${studentNumber}, ${historyId}, ${dataId})
     `
 
-    await addStudentStuff(studentNumber, normalizedStudent, smooveId, dataId, sql)
+    await addStudentStuff(
+      studentNumber,
+      normalizedStudent,
+      typeof result === 'object' || typeof result === 'undefined' ? result?.smooveId : undefined,
+      dataId,
+      sql,
+    )
 
     return studentNumber
   })
@@ -426,7 +432,7 @@ ORDER BY
 async function addStudentStuff(
   studentNumber: number,
   student: Student | NewStudent,
-  smooveId: number,
+  smooveId: number | undefined,
   dataId: string,
   sql: Sql,
 ) {
@@ -476,7 +482,9 @@ async function addStudentStuff(
     ) ?? [],
   )
 
-  ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+  if (smooveId !== undefined) {
+    ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+  }
 
   await Promise.all(ops)
 }

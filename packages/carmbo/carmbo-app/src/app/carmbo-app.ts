@@ -67,7 +67,19 @@ export function makeApp({
   appBaseUrl: string
   TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
-  const app = fastify({logger: process.env.NODE_ENV !== 'test'})
+  const app = fastify({
+    logger:
+      process.env.NODE_ENV !== 'test'
+        ? {
+            level: 'info',
+            formatters: {
+              level(label, _number) {
+                return {level: label}
+              },
+            },
+          }
+        : false,
+  })
   const sql = postgres({
     host,
     port,

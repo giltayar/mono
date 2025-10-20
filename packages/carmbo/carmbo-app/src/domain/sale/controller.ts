@@ -87,6 +87,7 @@ export async function dealWithCardcomOneTimeSale(
   const academyIntegration = requestContext.get('academyIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
+  const logger = requestContext.get('logger')!
 
   await handleCardcomOneTimeSale(
     salesEventNumber,
@@ -96,6 +97,7 @@ export async function dealWithCardcomOneTimeSale(
     smooveIntegration,
     cardcomIntegration,
     sql,
+    logger,
   )
 
   return 'ok'
@@ -213,6 +215,7 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
     const smooveIntegration = requestContext.get('smooveIntegration')!
     const academyIntegration = requestContext.get('academyIntegration')!
+    const logger = requestContext.get('logger')!
 
     await model_updateSale(sale, undefined, sql)
 
@@ -223,6 +226,7 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
       cardcomIntegration,
       smooveIntegration,
       academyIntegration,
+      logger,
     )
 
     return {htmxRedirect: `/sales/${saleNumber}`}

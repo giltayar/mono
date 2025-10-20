@@ -7,6 +7,7 @@ import {normalizeEmail} from '../../commons/email.ts'
 import {normalizePhoneNumber} from '../../commons/phone.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
+import type {FastifyBaseLogger} from 'fastify'
 
 export async function handleCardcomOneTimeSale(
   salesEventNumber: number,
@@ -16,12 +17,20 @@ export async function handleCardcomOneTimeSale(
   smooveIntegration: SmooveIntegrationService,
   cardcomIntegration: CardcomIntegrationService,
   sql: Sql,
+  loggerParent: FastifyBaseLogger,
 ) {
+  const logger = loggerParent.child({
+    salesEventNumber,
+    jobId: crypto.randomUUID(),
+    job: 'handle-cardcom-one-time-sale',
+  })
+  logger.info('handle-cardcom-one-time-sale-started')
   const student = await sql.begin(async (sql) => {
     const hasSalesEvent = await doesSalesEventExist(salesEventNumber, sql)
     if (!hasSalesEvent) {
       throw makeError(`Sales event not found: ${salesEventNumber}`, {httpStatus: 400})
     }
+    logger.info({hasSalesEvent}, 'does-sales-event-exist')
 
     const student = await findStudent(
       cardcomSaleWebhookJson.RecurringAccountID
@@ -31,13 +40,16 @@ export async function handleCardcomOneTimeSale(
       cardcomSaleWebhookJson.CardOwnerPhone,
       sql,
     )
+    logger.info({studentId: student?.studentNumber}, 'finding-student-result')
     const finalStudent =
       student ??
       (await createStudentFromCardcomSale(cardcomSaleWebhookJson, now, smooveIntegration, sql))
+    logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
 
     const {url} = await cardcomIntegration.createTaxInvoiceDocumentUrl(
       cardcomSaleWebhookJson.invoicenumber,
     )
+    logger.info({url}, 'tax-invoice-document-url-created')
 
     const saleNumber = await createSale(
       finalStudent.studentNumber,
@@ -46,7 +58,11 @@ export async function handleCardcomOneTimeSale(
       url,
       now,
       sql,
+      logger,
     )
+    logger.info({saleNumber}, 'sale-created')
+
+    logger.info('sql-transaction-completed')
 
     return {student: finalStudent, saleNumber}
   })
@@ -60,15 +76,35 @@ export async function handleCardcomOneTimeSale(
     },
     academyIntegration,
     sql,
+    logger,
   )
   const smooveConnectionP = subscribeStudentToSmooveLists(
     student.student.studentNumber,
     student.saleNumber,
     smooveIntegration,
     sql,
+    logger,
   )
 
-  await Promise.all([academyConnectionP, smooveConnectionP])
+  const [academyConnectionResult, smooveConnectionResult] = await Promise.allSettled([
+    academyConnectionP,
+    smooveConnectionP,
+  ])
+
+  if (academyConnectionResult.status === 'rejected') {
+    logger.error(
+      {err: academyConnectionResult.reason},
+      'connecting-student-with-academy-courses-failed',
+    )
+  } else {
+    logger.info('connecting-student-with-academy-courses-succeeded')
+  }
+
+  if (smooveConnectionResult.status === 'rejected') {
+    logger.error({err: smooveConnectionResult.reason}, 'subscribing-student-to-smoove-lists-failed')
+  } else {
+    logger.info('subscribing-student-to-smoove-lists-succeeded')
+  }
 }
 
 async function doesSalesEventExist(salesEventNumber: number, sql: Sql): Promise<boolean> {
@@ -176,7 +212,7 @@ async function createStudentFromCardcomSale(
     `
   const studentNumber = parseInt(studentNumberResult[0].studentNumber)
 
-  const {smooveId} = await smooveIntegration.createSmooveContact({
+  const result = await smooveIntegration.createSmooveContact({
     email,
     telephone: phone,
     firstName,
@@ -213,7 +249,11 @@ async function createStudentFromCardcomSale(
         (${dataId}, ${searchableText})
     `)
 
-  ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+  if (typeof result === 'object') {
+    const {smooveId} = result
+
+    ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+  }
 
   await Promise.all(ops)
 
@@ -227,12 +267,18 @@ async function createSale(
   invoiceDocumentUrl: string,
   now: Date,
   sql: Sql,
+  logger: FastifyBaseLogger,
 ): Promise<number> {
   const historyId = crypto.randomUUID()
   const dataId = crypto.randomUUID()
   const dataProductId = crypto.randomUUID()
   const dataCardcomId = crypto.randomUUID()
+
+  logger.info({historyId, dataId, dataProductId, dataCardcomId}, 'sale-ids-generated')
+
   const products = extractProductsFromCardcom(cardcomSaleWebhookJson)
+
+  logger.info({products}, 'products-extracted-from-cardcom')
 
   // Create sale history record and get sale number
   const saleNumberResult = await sql<{saleNumber: string}[]>`
@@ -242,11 +288,15 @@ async function createSale(
     `
   const saleNumber = parseInt(saleNumberResult[0].saleNumber)
 
+  logger.info({saleNumber}, 'sale-history-generated')
+
   const saleTimestamp = new Date(
     `${cardcomSaleWebhookJson.DealDate} ${cardcomSaleWebhookJson.DealTime}`,
   )
 
   const finalSaleRevenue = cardcomSaleWebhookJson.suminfull
+
+  logger.info({finalSaleRevenue, saleTimestamp}, 'final-sale-revenue-calculated')
 
   const studentNameResult = await sql<{studentName: string}[]>`
       SELECT first_name || ' ' || last_name as student_name
@@ -268,6 +318,8 @@ async function createSale(
     `
   const studentName = studentNameResult[0]?.studentName
   const salesEventName = salesEventNameResult[0]?.salesEventName
+
+  logger.info({salesEventName, studentName}, 'names-determined')
 
   let ops = [] as Promise<unknown>[]
 
@@ -314,7 +366,10 @@ async function createSale(
       `,
     ),
   )
+
+  logger.info('executing-sale-creation-operations')
   await Promise.all(ops).catch(console.error)
+  logger.info('executed-sale-creation-operations')
 
   return saleNumber
 }
@@ -362,6 +417,7 @@ async function connectStudentWithAcademyCourses(
   student: {email: string; name: string; phone: string},
   academyIntegration: AcademyIntegrationService,
   sql: Sql,
+  logger: FastifyBaseLogger,
 ): Promise<void> {
   // Get student info and all academy courses for products in the actual sale
   const courses = await sql<{courseId: string}[]>`
@@ -376,7 +432,9 @@ async function connectStudentWithAcademyCourses(
     ORDER BY pac.workshop_id
   `
 
-  await Promise.all(
+  logger.info({courses}, 'academy-courses-to-connect')
+
+  const result = await Promise.allSettled(
     courses.map(({courseId}) =>
       retry(() => academyIntegration.addStudentToCourse(student, parseInt(courseId)), {
         retries: 5,
@@ -385,6 +443,18 @@ async function connectStudentWithAcademyCourses(
       }),
     ),
   )
+
+  for (const [is, res] of Object.entries(result)) {
+    const i = parseInt(is)
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, courseId: courses[i].courseId, i},
+        'adding-student-to-academy-course-failed',
+      )
+    } else {
+      logger.info({courseId: courses[i].courseId, i}, 'adding-student-to-academy-course-succeeded')
+    }
+  }
 }
 
 async function subscribeStudentToSmooveLists(
@@ -392,6 +462,7 @@ async function subscribeStudentToSmooveLists(
   saleNumber: number,
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
+  logger: FastifyBaseLogger,
 ) {
   const smooveProductsLists = await sql<
     {
@@ -428,15 +499,32 @@ async function subscribeStudentToSmooveLists(
     return
   }
 
-  for (const smooveProductLists of smooveProductsLists) {
-    await smooveIntegration.changeContactLinkedLists(parseInt(smooveContactId), {
-      subscribeTo: [parseInt(smooveProductLists.listId)],
-      unsubscribeFrom: [
-        parseInt(smooveProductLists.cancellingListId),
-        parseInt(smooveProductLists.cancelledListId),
-        parseInt(smooveProductLists.removedListId),
-      ],
-    })
+  const result = await Promise.allSettled(
+    smooveProductsLists.map((smooveProductLists) =>
+      smooveIntegration.changeContactLinkedLists(parseInt(smooveContactId), {
+        subscribeTo: [parseInt(smooveProductLists.listId)],
+        unsubscribeFrom: [
+          parseInt(smooveProductLists.cancellingListId),
+          parseInt(smooveProductLists.cancelledListId),
+          parseInt(smooveProductLists.removedListId),
+        ],
+      }),
+    ),
+  )
+
+  for (const [is, res] of Object.entries(result)) {
+    const i = parseInt(is)
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, courseId: smooveProductsLists[i].listId, i},
+        'adding-student-to-academy-course-failed',
+      )
+    } else {
+      logger.info(
+        {courseId: smooveProductsLists[i].listId, i},
+        'adding-student-to-academy-course-succeeded',
+      )
+    }
   }
 }
 
@@ -447,7 +535,14 @@ export async function connectSale(
   cardcomIntegration: CardcomIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   academyIntegration: AcademyIntegrationService,
+  loggerParent: FastifyBaseLogger,
 ) {
+  const logger = loggerParent.child({
+    saleNumber,
+    jobId: crypto.randomUUID(),
+    job: 'connect-sale',
+  })
+  logger.info('connect-sale-started')
   return await sql.begin(async (sql) => {
     const historyId = crypto.randomUUID()
     const dataManualId = crypto.randomUUID()
@@ -455,12 +550,15 @@ export async function connectSale(
 
     if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
 
-    await Promise.all([
+    logger.info({invoiceUrl: sale.cardcomInvoiceDocumentUrl}, 'connect-sale-succeeded')
+
+    const [smooveConnectionResult, academyConnectionResult] = await Promise.allSettled([
       subscribeStudentToSmooveLists(
         parseInt(sale.studentNumber),
         saleNumber,
         smooveIntegration,
         sql,
+        logger,
       ),
       connectStudentWithAcademyCourses(
         saleNumber,
@@ -471,28 +569,63 @@ export async function connectSale(
         },
         academyIntegration,
         sql,
+        logger,
       ),
     ])
 
-    const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
-      await cardcomIntegration.createTaxInvoiceDocument(
-        {
-          cardcomCustomerId: sale.studentCardcomCustomerId,
-          customerEmail: sale.studentEmail,
-          customerName: sale.studentFirstName + ' ' + sale.studentLastName,
-          customerPhone: sale.studentPhone ?? undefined,
-          productsSold:
-            sale.products?.map((p) => ({
-              productId: p.productNumber,
-              productName: p.productName,
-              quantity: p.quantity,
-              unitPriceInCents: p.unitPrice * 100,
-            })) ?? [],
-          transactionDate: sale.timestamp ?? now,
-          transactionRevenueInCents: parseFloat(sale.finalSaleRevenue ?? '0') * 100,
-        },
-        {sendInvoiceByMail: true},
+    if (academyConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: academyConnectionResult.reason},
+        'connecting-student-with-academy-courses-failed',
       )
+    } else {
+      logger.info('connecting-student-with-academy-courses-succeeded')
+    }
+
+    if (smooveConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: smooveConnectionResult.reason},
+        'subscribing-student-to-smoove-lists-failed',
+      )
+    } else {
+      logger.info('subscribing-student-to-smoove-lists-succeeded')
+    }
+
+    if (!sale.cardcomInvoiceDocumentUrl) {
+      const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
+        await cardcomIntegration.createTaxInvoiceDocument(
+          {
+            cardcomCustomerId: sale.studentCardcomCustomerId,
+            customerEmail: sale.studentEmail,
+            customerName: sale.studentFirstName + ' ' + sale.studentLastName,
+            customerPhone: sale.studentPhone ?? undefined,
+            productsSold:
+              sale.products?.map((p) => ({
+                productId: p.productNumber,
+                productName: p.productName,
+                quantity: p.quantity,
+                unitPriceInCents: p.unitPrice * 100,
+              })) ?? [],
+            transactionDate: sale.timestamp ?? now,
+            transactionRevenueInCents: parseFloat(sale.finalSaleRevenue ?? '0') * 100,
+          },
+          {sendInvoiceByMail: true},
+        )
+
+      logger.info({cardcomDocumentLink}, 'cardcom-invoice-document-created')
+
+      sale.cardcomInvoiceDocumentUrl = cardcomDocumentLink
+
+      await sql`
+        INSERT INTO sale_data_manual ${sql({
+          dataManualId,
+          cardcomInvoiceNumber,
+          invoiceDocumentUrl: cardcomDocumentLink,
+          cardcomCustomerId,
+        })}
+      `
+      logger.info({cardcomDocumentLink}, 'cardcom-invoice-document-updated-in-sale')
+    }
 
     const dataIdResult = await sql<object[]>`
       INSERT INTO sale_history (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id)
@@ -515,14 +648,7 @@ export async function connectSale(
       throw new Error(`Zero or more than one sale with ID ${saleNumber}`)
     }
 
-    await sql`
-      INSERT INTO sale_data_manual ${sql({
-        dataManualId,
-        cardcomInvoiceNumber,
-        invoiceDocumentUrl: cardcomDocumentLink,
-        cardcomCustomerId,
-      })}
-    `
+    logger.info({historyId, dataManualId}, 'sale-history-record-created')
 
     await sql`
       UPDATE sale SET
@@ -531,7 +657,9 @@ export async function connectSale(
       WHERE sale_number = ${saleNumber}
     `
 
-    return {url: cardcomDocumentLink}
+    logger.info('connect-sale-completed')
+
+    return {url: sale.cardcomInvoiceDocumentUrl}
   })
 }
 
@@ -552,6 +680,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       }>
       timestamp: Date | null
       finalSaleRevenue: string | null
+      cardcomInvoiceDocumentUrl: string | null
     }[]
   >`
     SELECT
@@ -559,6 +688,10 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
         sale_data_cardcom.customer_id,
         sale_data_manual.cardcom_customer_id
       )::integer AS student_cardcom_customer_id,
+      COALESCE(
+        sale_data_cardcom.invoice_document_url,
+        sale_data_manual.invoice_document_url
+      ) AS cardcom_invoice_document_url,
       student.student_number AS student_number,
       student_email.email AS student_email,
       student_phone.phone AS student_phone,
