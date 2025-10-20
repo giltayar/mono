@@ -48,6 +48,7 @@ export default tseslint.config([
       'valid-typeof': 'warn',
       'n/exports-style': ['error', 'module.exports'],
       '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',

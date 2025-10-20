@@ -54,6 +54,7 @@ describe('Smoove Integration Testkit', () => {
         [anotherListId]: {id: anotherListId, name: 'Another List'},
         300: {id: 300, name: 'Empty List'},
       },
+      blacklistedEmails: new Set(['blacklisted@example.com']),
     })
   }
 
@@ -93,13 +94,15 @@ describe('Smoove Integration Testkit', () => {
     it('should return contacts sorted by id descending', async () => {
       const service = createTestService()
 
-      const {smooveId} = await service.createSmooveContact({
+      const result = await service.createSmooveContact({
         email: 'highest@example.com',
         firstName: 'first',
         lastName: 'last',
         telephone: '972501111111',
         birthday: undefined,
       })
+      assert.ok(typeof result === 'object')
+      const {smooveId} = result
 
       await service.changeContactLinkedLists(smooveId, {
         subscribeTo: [testListId],
@@ -236,7 +239,7 @@ describe('Smoove Integration Testkit', () => {
     it('should create a new contact', async () => {
       const service = createTestService()
 
-      const {smooveId} = await service.createSmooveContact({
+      const result = await service.createSmooveContact({
         email: 'new@example.com',
         firstName: 'first',
         lastName: 'last',
@@ -244,7 +247,8 @@ describe('Smoove Integration Testkit', () => {
         birthday: undefined,
       })
 
-      assert.ok(smooveId)
+      assert.ok(typeof result === 'object')
+      const {smooveId} = result
       const retrievedContact = await service.fetchSmooveContact(String(smooveId))
       assert.ok(retrievedContact)
       assert.strictEqual(retrievedContact.email, 'new@example.com')
@@ -258,13 +262,16 @@ describe('Smoove Integration Testkit', () => {
       const service = createTestService()
 
       // Use existing email but different telephone
-      const {smooveId} = await service.createSmooveContact({
+      const result = await service.createSmooveContact({
         email: testEmail, // This email already exists
         firstName: 'firstUpdated',
         lastName: 'lastUpdated',
         telephone: '972509999999', // Different telephone
         birthday: undefined,
       })
+
+      assert.ok(typeof result === 'object')
+      const {smooveId} = result
 
       assert.strictEqual(smooveId, testContactId) // Should return existing contact ID
       const retrievedContact = await service.fetchSmooveContact(testContactId)
@@ -279,7 +286,7 @@ describe('Smoove Integration Testkit', () => {
     it('should create contact with auto-incremented ID', async () => {
       const service = createTestService()
 
-      const {smooveId: id1} = await service.createSmooveContact({
+      const result1 = await service.createSmooveContact({
         email: 'first@example.com',
         firstName: 'first',
         lastName: 'last',
@@ -287,14 +294,18 @@ describe('Smoove Integration Testkit', () => {
         telephone: undefined,
         birthday: undefined,
       })
+      assert.ok(typeof result1 === 'object')
+      const {smooveId: id1} = result1
 
-      const {smooveId: id2} = await service.createSmooveContact({
+      const result2 = await service.createSmooveContact({
         email: 'second@example.com',
         firstName: 'first2',
         lastName: 'last2',
         telephone: undefined,
         birthday: undefined,
       })
+      assert.ok(typeof result2 === 'object')
+      const {smooveId: id2} = result2
 
       assert.ok(id2 > id1) // Second ID should be higher
       assert.notStrictEqual(id1, id2) // IDs should be different
@@ -303,13 +314,15 @@ describe('Smoove Integration Testkit', () => {
     it('should handle contact creation without telephone', async () => {
       const service = createTestService()
 
-      const {smooveId} = await service.createSmooveContact({
+      const result = await service.createSmooveContact({
         email: 'notelephone@example.com',
         firstName: 'first',
         lastName: 'last',
         telephone: undefined,
         birthday: undefined,
       })
+      assert.ok(typeof result === 'object')
+      const {smooveId} = result
 
       const retrievedContact = await service.fetchSmooveContact(String(smooveId))
       assert.ok(retrievedContact)

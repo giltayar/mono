@@ -28,6 +28,7 @@ export function createFakeSmooveIntegrationService(context: {
     }
   >
   lists: Record<number, {id: number; name: string}>
+  blacklistedEmails?: Set<string>
 }) {
   const state: SmooveIntegrationServiceData['state'] = {
     contacts: structuredClone(context.contacts),
@@ -130,7 +131,10 @@ async function changeContactLinkedLists(
 async function createSmooveContact(
   s: SmooveIntegrationServiceData,
   contact: SmooveContact,
-): Promise<{smooveId: number}> {
+): Promise<{smooveId: number} | 'blacklisted'> {
+  if (s.state.blacklistedEmails?.has(contact.email)) {
+    return 'blacklisted'
+  }
   const existingContact = Object.values(s.state.contacts).find((c) => c.email === contact.email)
 
   if (existingContact) {

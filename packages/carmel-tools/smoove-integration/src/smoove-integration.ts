@@ -110,27 +110,42 @@ async function fetchContactsOfList(
 async function createSmooveContact(
   s: SmooveIntegrationServiceData,
   contact: SmooveContact,
-): Promise<{smooveId: number}> {
+): Promise<{smooveId: number} | 'blacklisted'> {
   const url = new URL(`Contacts?updateIfExists=true&restoreIfDeleted=true`, s.context.apiUrl)
 
-  const response = (await fetchAsJsonWithJsonBody(
-    url,
-    removeUndefinedFields({
-      email: contact.email,
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      phone: contact.telephone,
-      cellPhone: contact.telephone,
-      dateOfBirth: contact.birthday ? contact.birthday.toISOString().slice(0, 10) : undefined,
-    }),
-    {
-      headers: {
-        Authorization: `Bearer ${s.context.apiKey}`,
+  try {
+    const response = (await fetchAsJsonWithJsonBody(
+      url,
+      removeUndefinedFields({
+        email: contact.email,
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        phone: contact.telephone,
+        cellPhone: contact.telephone,
+        dateOfBirth: contact.birthday ? contact.birthday.toISOString().slice(0, 10) : undefined,
+      }),
+      {
+        headers: {
+          Authorization: `Bearer ${s.context.apiKey}`,
+        },
       },
-    },
-  )) as {id: number}
+    )) as {id: number}
 
-  return {smooveId: response.id}
+    return {smooveId: response.id}
+  } catch (err: any) {
+    if (err.code == 'ERR_X_STATUS_CODE_NOT_OK' && err.status === 400) {
+      try {
+        const bodyJson = JSON.parse(err.body)
+        if (bodyJson.message === 'ErrBlackListed') {
+          return 'blacklisted'
+        }
+      } catch {
+        throw err
+      }
+    }
+
+    throw err
+  }
 }
 
 async function fetchSmooveContact(
