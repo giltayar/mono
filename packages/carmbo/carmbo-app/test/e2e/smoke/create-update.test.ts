@@ -7,7 +7,7 @@ import {setup} from '../common/setup.ts'
 const {url, smooveIntegration} = setup(import.meta.url)
 
 test('create student then update her (e2e)', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)

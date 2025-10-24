@@ -9,6 +9,7 @@ import productRoutes from '../domain/product/route.ts'
 import salesEvents from '../domain/sales-event/route.ts'
 import salesRoutes from '../domain/sale/route.ts'
 import {apiRoute as salesApiRoute} from '../domain/sale/route.ts'
+import {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
   AcademyCourse,
@@ -25,6 +26,7 @@ import type {
 } from '@giltayar/carmel-tools-smoove-integration/service'
 import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
+import {registerGlobalHelpersForJobExecution} from '../domain/job/job-executor.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -90,6 +92,7 @@ export function makeApp({
     ssl: host.includes('neon') ? 'require' : undefined,
     // debug: console.log,
   })
+  registerGlobalHelpersForJobExecution(sql, app.log)
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
   app.setValidatorCompiler(validatorCompiler)
@@ -130,7 +133,7 @@ export function makeApp({
       pathName.endsWith('.svg'),
   })
 
-  app.get('/', async (_, reply) => reply.redirect('/students'))
+  app.get('/', async (_, reply) => reply.redirect('/sales'))
 
   app.register((app) => {
     addAuth0Hook(app, app.auth0Client)
@@ -146,7 +149,16 @@ export function makeApp({
     app.register(salesRoutes, {prefix: '/sales', sql})
   })
 
-  app.register(salesApiRoute, {prefix: '/api/sales', secret: auth0?.sessionSecret})
+  app.register(salesApiRoute, {
+    prefix: '/api/sales',
+    secret: auth0?.sessionSecret,
+    academyIntegration,
+    smooveIntegration,
+  })
+  app.register(jobsApiRoute, {
+    prefix: '/api/jobs',
+    secret: auth0?.sessionSecret,
+  })
 
   app.get('/health', async () => ({status: 'ok'}))
 

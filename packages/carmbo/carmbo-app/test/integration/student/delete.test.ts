@@ -7,7 +7,7 @@ import {setup} from '../common/setup.ts'
 const {url, TEST_hooks} = setup(import.meta.url)
 
 test('deleting a student', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -29,7 +29,8 @@ test('deleting a student', async ({page}) => {
   await page.waitForURL(updateStudentModel.urlRegex)
 
   // Go back to student list to create second student
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
+
   await studentListModel.createNewStudentButton().locator.click()
   await page.waitForURL(newStudentModel.urlRegex)
 
@@ -83,7 +84,7 @@ test('deleting a student', async ({page}) => {
   // Verify that Restore button IS visible
   await expect(updateForm.restoreButton().locator).toBeVisible()
 
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   // Verify only Alice is visible (Bob should be archived/hidden)
   const rows = studentListModel.list().rows()
@@ -113,7 +114,7 @@ test('deleting a student', async ({page}) => {
 })
 
 test('restoring a student', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -162,7 +163,7 @@ test('restoring a student', async ({page}) => {
 
   await expect(updateStudentModel.pageTitle().locator).not.toContainText('(archived)')
 
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   // Verify Bob is visible again
   const rows = studentListModel.list().rows()

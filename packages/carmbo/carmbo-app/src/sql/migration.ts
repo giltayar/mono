@@ -4,13 +4,18 @@ import fs from 'node:fs'
 import {join, basename} from 'path'
 import retry from 'p-retry'
 import type {Sql} from 'postgres'
+import {fileURLToPath} from 'node:url'
 
-export async function migrate({sql, path}: {sql: Sql; path: string}) {
+export async function migrate({sql, path}: {sql: Sql; path: string | URL}) {
   await retry(() => sql`select 1`, {
     retries: 10,
     minTimeout: 1000,
     maxTimeout: 1000,
   })
+
+  if (path instanceof URL) {
+    path = fileURLToPath(path)
+  }
 
   const migrations = fs
     .readdirSync(path)

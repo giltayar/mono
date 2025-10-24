@@ -6,7 +6,7 @@ import {setup} from '../common/setup.ts'
 const {url, smooveIntegration, TEST_hooks} = setup(import.meta.url)
 
 test('create student then update her', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -84,7 +84,7 @@ test('create student then update her', async ({page}) => {
   })
 
   // Back to list
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   // Check that the student appears in the list
   const rows = studentListModel.list().rows()
@@ -96,7 +96,7 @@ test('create student then update her', async ({page}) => {
 })
 
 test('discard button', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
   const updateStudentModel = createUpdateStudentPageModel(page)
@@ -144,7 +144,7 @@ test('discard button', async ({page}) => {
 })
 
 test('birthday field is optional', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -183,7 +183,7 @@ test('birthday field is optional', async ({page}) => {
 })
 
 test('creation/update error shows alert', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)

@@ -8,7 +8,7 @@ import {setup} from '../common/setup.ts'
 const {url} = setup(import.meta.url)
 
 test('can view history', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -74,7 +74,7 @@ test('can view history', async ({page}) => {
 })
 
 test('multiple students have different histories', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -108,7 +108,8 @@ test('multiple students have different histories', async ({page}) => {
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
 
   // Go back to student list to create second student
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
+
   await studentListModel.createNewStudentButton().locator.click()
   await page.waitForURL(newStudentModel.urlRegex)
 

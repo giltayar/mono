@@ -123,13 +123,15 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await expect(firstSaleRow.productsCell().locator).toContainText('Product One')
   await expect(firstSaleRow.productsCell().locator).toContainText('Product Two')
 
-  const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
-  expect(smooveContacts.length).toBe(1)
-  expect(smooveContacts[0].email).toBe(customerEmail)
-  expect(smooveContacts[0].firstName).toBe('John')
-  expect(smooveContacts[0].lastName).toBe('Doe')
-  expect(smooveContacts[0].telephone).toBe(customerPhone)
-  expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
+  await expect(async () => {
+    const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+    expect(smooveContacts.length).toBe(1)
+    expect(smooveContacts[0].email).toBe(customerEmail)
+    expect(smooveContacts[0].firstName).toBe('John')
+    expect(smooveContacts[0].lastName).toBe('Doe')
+    expect(smooveContacts[0].telephone).toBe(customerPhone)
+    expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
+  }).toPass()
 
   const academyContact = academyIntegration()._test_getContact(customerEmail)
   expect(academyContact).toBeDefined()

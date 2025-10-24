@@ -13,6 +13,7 @@ import {migrate} from '../../../src/sql/migration.ts'
 import {fileURLToPath} from 'node:url'
 import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
+import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
 
 export function setup(testUrl: string): {
   url: () => URL
@@ -63,6 +64,7 @@ export function setup(testUrl: string): {
       enrolledContacts: new Map(),
     })
     cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
+    TEST_resetJobHandlers()
     ;({app, sql} = makeApp({
       db: {
         database: 'carmbo',
@@ -125,6 +127,7 @@ export function setup(testUrl: string): {
     await sql`TRUNCATE TABLE sale_data_search RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_data_manual RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_data_cardcom RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE jobs RESTART IDENTITY CASCADE`
   })
 
   test.afterAll(async () => teardown?.())

@@ -84,7 +84,6 @@ export async function dealWithCardcomOneTimeSale(
 ): Promise<ControllerResult> {
   const now = new Date()
   const sql = requestContext.get('sql')!
-  const academyIntegration = requestContext.get('academyIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
@@ -93,7 +92,6 @@ export async function dealWithCardcomOneTimeSale(
     salesEventNumber,
     cardcomSaleWebhookJson,
     now,
-    academyIntegration,
     smooveIntegration,
     cardcomIntegration,
     sql,

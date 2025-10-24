@@ -7,7 +7,7 @@ import {setup} from '../common/setup.ts'
 const {url} = setup(import.meta.url)
 
 test('create student and update multiple fields', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -129,7 +129,7 @@ test('create student and update multiple fields', async ({page}) => {
   await expect(updateForm.facebookNames().facebookNameInput(0).locator).toHaveValue('fb3')
   await expect(updateForm.facebookNames().facebookNameInput(1).locator).toHaveValue('fb4')
 
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const rows = studentListModel.list().rows()
   await expect(rows.locator).toHaveCount(1)
@@ -140,7 +140,7 @@ test('create student and update multiple fields', async ({page}) => {
 })
 
 test('form validations', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)
@@ -188,7 +188,7 @@ test('form validations', async ({page}) => {
 })
 
 test('remove any possible fields', async ({page}) => {
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const newStudentModel = createNewStudentPageModel(page)

@@ -11,7 +11,7 @@ test('searching students', async ({page}) => {
 
   await TEST_seedStudents(sql(), smooveIntegration(), 200)
 
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   const studentListModel = createStudentListPageModel(page)
   const updateStudentModel = createUpdateStudentPageModel(page)
@@ -71,7 +71,7 @@ test('searching students', async ({page}) => {
   await expect(studentListModel.list().rows().row(0).idLink().locator).toHaveText('50')
   await expect(studentListModel.list().rows().row(0).emailCell().locator).toContainText('jabi.ee')
 
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   await studentListModel.search().queryInput().locator.fill('st')
 
@@ -94,7 +94,7 @@ test('searching students', async ({page}) => {
   await updateStudentModel.form().deleteButton().locator.click()
   await expect(updateStudentModel.form().restoreButton().locator).toBeVisible()
 
-  await page.goto(url().href)
+  await page.goto(new URL('/students', url()).href)
 
   await studentListModel.search().queryInput().locator.fill('Jessie')
 

@@ -8,12 +8,37 @@ import {normalizePhoneNumber} from '../../commons/phone.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
+import {registerJobHandler, type JobSubmitter} from '../job/job-handlers.ts'
+import {triggerJobsExecution} from '../job/job-executor.ts'
 
+type SaleConnectionToStudent = {
+  studentNumber: number
+  saleNumber: number
+}
+
+let submitConnectionJob: JobSubmitter<SaleConnectionToStudent> | undefined
+
+export async function initializeJobHandlers(
+  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
+) {
+  submitConnectionJob = registerJobHandler<SaleConnectionToStudent>(
+    'connecting-cardcom-one-time-sale',
+    async (payload, _attempt, logger, sql) => {
+      await connectSaleToExternalProviders(
+        payload,
+        academyIntegration,
+        smooveIntegration,
+        sql,
+        logger,
+      )
+    },
+  )
+}
 export async function handleCardcomOneTimeSale(
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
-  academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   cardcomIntegration: CardcomIntegrationService,
   sql: Sql,
@@ -25,7 +50,7 @@ export async function handleCardcomOneTimeSale(
     job: 'handle-cardcom-one-time-sale',
   })
   logger.info('handle-cardcom-one-time-sale-started')
-  const student = await sql.begin(async (sql) => {
+  await sql.begin(async (sql) => {
     const hasSalesEvent = await doesSalesEventExist(salesEventNumber, sql)
     if (!hasSalesEvent) {
       throw makeError(`Sales event not found: ${salesEventNumber}`, {httpStatus: 400})
@@ -62,25 +87,65 @@ export async function handleCardcomOneTimeSale(
     )
     logger.info({saleNumber}, 'sale-created')
 
-    logger.info('sql-transaction-completed')
+    if (!submitConnectionJob) throw new Error('Job handlers not initialized')
 
-    return {student: finalStudent, saleNumber}
+    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, sql, {})
+
+    logger.info('sql-transaction-completed')
   })
 
+  triggerJobsExecution()
+}
+
+async function connectSaleToExternalProviders(
+  {studentNumber, saleNumber}: SaleConnectionToStudent,
+  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
+  parentLogger: FastifyBaseLogger,
+) {
+  const logger = parentLogger.child({saleNumber, studentNumber})
+
+  logger.info('connect-sale-to-external-providers-started')
+  const studentResult = await sql<
+    {email: string; firstName: string; lastName: string; phone: string | undefined}[]
+  >`
+    SELECT
+      se.email,
+      sn.first_name,
+      sn.last_name,
+      sp.phone
+    FROM student s
+    JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
+    JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
+    JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
+    WHERE s.student_number = ${studentNumber}
+  `
+
+  const student = studentResult[0]
+
+  if (!student)
+    throw new Error(`cannot connect student in sale to external providers because not found`)
+
+  logger.info(
+    {email: student.email, phone: student.phone, name: student.firstName + ' ' + student.lastName},
+    'student-found-for-connecting-to-external-providers',
+  )
+
   const academyConnectionP = connectStudentWithAcademyCourses(
-    student.saleNumber,
+    saleNumber,
     {
-      email: student.student.email,
-      name: student.student.firstName + ' ' + student.student.lastName,
-      phone: student.student.phone ?? '',
+      email: student.email,
+      name: student.firstName + ' ' + student.lastName,
+      phone: student.phone ?? '',
     },
     academyIntegration,
     sql,
     logger,
   )
   const smooveConnectionP = subscribeStudentToSmooveLists(
-    student.student.studentNumber,
-    student.saleNumber,
+    studentNumber,
+    saleNumber,
     smooveIntegration,
     sql,
     logger,
@@ -105,6 +170,13 @@ export async function handleCardcomOneTimeSale(
   } else {
     logger.info('subscribing-student-to-smoove-lists-succeeded')
   }
+
+  if (
+    academyConnectionResult.status === 'rejected' ||
+    smooveConnectionResult.status === 'rejected'
+  ) {
+    throw new Error('Connecting sale to external providers failed')
+  }
 }
 
 async function doesSalesEventExist(salesEventNumber: number, sql: Sql): Promise<boolean> {
@@ -119,7 +191,7 @@ type StudentInfoFound = {
   email: string
   firstName: string
   lastName: string
-  phone: string
+  phone: string | undefined
 }
 
 async function findStudent(
@@ -373,6 +445,7 @@ async function createSale(
 
   return saleNumber
 }
+
 function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
   const products = []
 

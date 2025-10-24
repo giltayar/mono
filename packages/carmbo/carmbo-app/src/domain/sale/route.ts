@@ -24,9 +24,25 @@ import {
 import {NewSaleSchema, SaleSchema} from './model.ts'
 import assert from 'node:assert'
 import {CardcomSaleWebhookJsonSchema} from '@giltayar/carmel-tools-cardcom-integration/types'
+import {initializeJobHandlers} from './model-sale.ts'
+import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 
-export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undefined}) {
+export function apiRoute(
+  app: FastifyInstance,
+  {
+    secret,
+    smooveIntegration,
+    academyIntegration,
+  }: {
+    secret: string | undefined
+    smooveIntegration: SmooveIntegrationService
+    academyIntegration: AcademyIntegrationService
+  },
+) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
+  initializeJobHandlers(academyIntegration, smooveIntegration)
 
   appWithTypes.post(
     '/cardcom/one-time-sale',
@@ -38,7 +54,7 @@ export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undef
     },
     async (request, reply) => {
       if (secret && request.query.secret !== secret) {
-        request.log.warn({query: request.query}, 'cardcom-one-time-sale-wrong-secret')
+        request.log.warn({query: request.query}, 'wrong-api-secret')
         return reply.status(403).send({error: 'Forbidden'})
       }
 

@@ -1,6 +1,6 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
-import {normalizePhoneNumber} from '../../src/commons/phone.ts'
+import {normalizePhoneNumber} from '../../../src/commons/phone.ts'
 
 describe('normalizePhoneNumber', () => {
   describe('international format with +', () => {
