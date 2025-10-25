@@ -138,7 +138,7 @@ describe('Smoove Integration Testkit', () => {
       assert.ok(contact.lists_Linked.includes(testListId))
     })
 
-    it.only('should fetch contact by email', async () => {
+    it('should fetch contact by email', async () => {
       const service = createTestService()
 
       const contact = await service.fetchSmooveContact(testEmail, {by: 'email'})
