@@ -58,9 +58,6 @@ export async function handleCardcomOneTimeSale(
     logger.info({hasSalesEvent}, 'does-sales-event-exist')
 
     const student = await findStudent(
-      cardcomSaleWebhookJson.RecurringAccountID
-        ? parseInt(cardcomSaleWebhookJson.RecurringAccountID)
-        : undefined,
       cardcomSaleWebhookJson.UserEmail,
       cardcomSaleWebhookJson.CardOwnerPhone,
       sql,
@@ -195,7 +192,6 @@ type StudentInfoFound = {
 }
 
 async function findStudent(
-  cardcomCustomerId: number | undefined,
   email: string,
   phone: string | undefined,
   sql: Sql,
@@ -203,7 +199,7 @@ async function findStudent(
   const finalEmail = normalizeEmail(email)
   const finalPhone = phone ? normalizePhoneNumber(phone) : undefined
 
-  const resultByEmailAndPhonePromise = sql<StudentInfoFound[]>`
+  const resultByEmailAndPhone = await sql<StudentInfoFound[]>`
     SELECT DISTINCT
       s.student_number,
       se.email,
@@ -221,33 +217,6 @@ async function findStudent(
     )
     LIMIT 1
   `
-
-  const resultByCardcomCustomerId = cardcomCustomerId
-    ? await sql<StudentInfoFound[]>`
-    SELECT
-      DISTINCT ON (sd.student_number)
-      sd.student_number,
-      se.email,
-      sn.first_name,
-      sn.last_name,
-      sp.phone
-    FROM sale_data_cardcom sdc
-    JOIN sale s on s.data_cardcom_id = sdc.data_cardcom_id
-    JOIN sale_data sd on sd.data_id = s.last_data_id
-    JOIN student st ON st.student_number = sd.student_number
-    JOIN student_email se ON se.data_id = st.last_data_id AND se.item_order = 0
-    JOIN student_name sn ON sn.data_id = st.last_data_id AND sn.item_order = 0
-    JOIN student_phone sp ON sp.data_id = st.last_data_id AND sp.item_order = 0
-    WHERE sdc.customer_id = ${cardcomCustomerId}
-    ORDER BY sd.student_number
-  `
-    : undefined
-
-  if (resultByCardcomCustomerId && resultByCardcomCustomerId.length > 0) {
-    return resultByCardcomCustomerId[0]
-  }
-
-  const resultByEmailAndPhone = await resultByEmailAndPhonePromise
 
   if (resultByEmailAndPhone.length === 0) {
     return undefined
