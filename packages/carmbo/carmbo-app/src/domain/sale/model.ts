@@ -13,7 +13,10 @@ export const SaleSchema = z.object({
   salesEventName: z.string().optional(),
   studentNumber: z.coerce.number().int().positive(),
   studentName: z.string().optional(),
-  finalSaleRevenue: z.coerce.number().nonnegative().optional(),
+  finalSaleRevenue: z.preprocess(
+    (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
+    z.number().optional(),
+  ),
   products: z
     .array(
       z.object({
@@ -34,7 +37,10 @@ export const NewSaleSchema = z.object({
   salesEventName: z.string().optional(),
   studentNumber: z.coerce.number().int().optional(),
   studentName: z.string().optional(),
-  finalSaleRevenue: z.coerce.number().optional(),
+  finalSaleRevenue: z.preprocess(
+    (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
+    z.number().optional(),
+  ),
   products: z
     .array(
       z.object({
@@ -113,13 +119,18 @@ export async function listSales(
       sales_event_data.name AS sale_event_name,
       sale_data.student_number AS student_number,
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
-      sale_data.final_sale_revenue AS final_sale_revenue,
+      COALESCE(
+        sale_data_cardcom.cardcom_sale_revenue,
+        sale_data_manual.cardcom_sale_revenue,
+        sale_data.final_sale_revenue) AS final_sale_revenue,
       COALESCE(products, json_build_array()) AS products
     FROM
       sale_history
     INNER JOIN sale ON last_history_id = id
     LEFT JOIN sale_data_search ON sale_data_search.data_id = sale.last_data_id
     LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
+    LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+    LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale_history.data_manual_id
     LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
     LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
     LEFT JOIN student ON student.student_number = sale_data.student_number
@@ -323,7 +334,6 @@ export async function fillInSale(sale: NewSale, sql: Sql): Promise<NewSale> {
 
   return {
     ...sale,
-    finalSaleRevenue: computeFinalSaleRevenue(products),
     manualSaleType: 'manual',
     salesEventName: fillResult[0].salesEventName ?? '',
     studentName: fillResult[0].studentFirstName
@@ -344,7 +354,10 @@ function saleSelect(saleNumber: number, sql: Sql) {
       sales_event_data.name AS sales_event_name,
       sale_data.student_number AS student_number,
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
-      sale_data.final_sale_revenue AS final_sale_revenue,
+      COALESCE(
+        sale_data_cardcom.cardcom_sale_revenue,
+        sale_data_manual.cardcom_sale_revenue,
+        sale_data.final_sale_revenue) AS final_sale_revenue,
       COALESCE(sale_data_cardcom.invoice_number, sale_data_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_manual.invoice_document_url) AS cardcom_invoice_document_url,
       CASE WHEN sale_data_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
@@ -400,8 +413,6 @@ function saleHistorySelect(saleNumber: number, sql: Sql) {
 export async function createSale(sale: NewSale, reason: string | undefined, sql: Sql) {
   await TEST_executeHook('createSale')
 
-  sale.finalSaleRevenue = computeFinalSaleRevenue(sale.products)
-
   // Validate required fields
   assert(sale.salesEventNumber, 'salesEventNumber is required')
   assert(sale.studentNumber, 'studentNumber is required')
@@ -453,7 +464,7 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
     ops = ops.concat(
       sql`
       INSERT INTO sale VALUES
-        (${saleNumber}, ${historyId}, ${dataId}, ${dataProductId}, NULL)
+        (${saleNumber}, ${historyId}, ${dataId}, ${dataProductId}, NULL, ${dataManualId})
     `,
     )
 
@@ -511,8 +522,6 @@ export async function updateSale(
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateSale')
-
-  sale.finalSaleRevenue = computeFinalSaleRevenue(sale.products)
 
   // Validate required fields
   assert(sale.salesEventNumber, 'salesEventNumber is required')

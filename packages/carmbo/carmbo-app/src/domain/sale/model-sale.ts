@@ -426,7 +426,8 @@ async function createSale(
         ${cardcomSaleWebhookJson.CouponNumber ?? null},
         ${parseInt(cardcomSaleWebhookJson.internaldealnumber)},
         ${cardcomSaleWebhookJson.RecurringAccountID ? parseInt(cardcomSaleWebhookJson.RecurringAccountID) : null},
-        ${invoiceDocumentUrl}
+        ${invoiceDocumentUrl},
+        ${finalSaleRevenue}
       )
     `)
 
@@ -521,11 +522,14 @@ async function connectStudentWithAcademyCourses(
     const i = parseInt(is)
     if (res.status === 'rejected') {
       logger.error(
-        {err: res.reason, courseId: courses[i].courseId, i},
+        {err: res.reason, courseId: courses[i].courseId, i, student: student.email},
         'adding-student-to-academy-course-failed',
       )
     } else {
-      logger.info({courseId: courses[i].courseId, i}, 'adding-student-to-academy-course-succeeded')
+      logger.info(
+        {courseId: courses[i].courseId, i, student: student.email},
+        'adding-student-to-academy-course-succeeded',
+      )
     }
   }
 }
@@ -589,12 +593,12 @@ async function subscribeStudentToSmooveLists(
     const i = parseInt(is)
     if (res.status === 'rejected') {
       logger.error(
-        {err: res.reason, courseId: smooveProductsLists[i].listId, i},
+        {err: res.reason, courseId: smooveProductsLists[i].listId, i, studentNumber},
         'adding-student-to-academy-course-failed',
       )
     } else {
       logger.info(
-        {courseId: smooveProductsLists[i].listId, i},
+        {courseId: smooveProductsLists[i].listId, i, studentNumber},
         'adding-student-to-academy-course-succeeded',
       )
     }
@@ -666,6 +670,7 @@ export async function connectSale(
 
     if (!sale.cardcomInvoiceNumber) {
       logger.info('creating-cardcom-invoice-document')
+      const transactionRevenueInCents = parseFloat(sale.finalSaleRevenue ?? '0') * 100
       const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =
         await cardcomIntegration.createTaxInvoiceDocument(
           {
@@ -683,7 +688,7 @@ export async function connectSale(
                 unitPriceInCents: p.unitPrice * 100,
               })) ?? [],
             transactionDate: sale.timestamp ?? now,
-            transactionRevenueInCents: parseFloat(sale.finalSaleRevenue ?? '0') * 100,
+            transactionRevenueInCents,
           },
           {sendInvoiceByMail: true},
         )
@@ -701,6 +706,7 @@ export async function connectSale(
           cardcomInvoiceNumber,
           invoiceDocumentUrl: cardcomDocumentLink,
           cardcomCustomerId,
+          cardcomSaleRevenue: transactionRevenueInCents / 100,
         })}
       `
       logger.info({cardcomInvoiceNumber}, 'cardcom-invoice-document-updated-in-sale')
@@ -717,7 +723,8 @@ export async function connectSale(
           dataManualId,
           cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
           invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
-          cardcomCustomerId: sale.studentCardcomCustomerId,
+          cardcomCustomerId: sale.cardcomCustomerId,
+          cardcomSaleRevenue: parseFloat(sale.finalSaleRevenue ?? '0'),
         })}
       `
 
@@ -730,7 +737,7 @@ export async function connectSale(
         {
           cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
           invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
-          cardcomCustomerId: sale.studentCardcomCustomerId,
+          cardcomCustomerId: sale.cardcomCustomerId,
         },
         'sale-already-connected-no-action-needed-creating-sale-data-manual-record',
       )
@@ -739,7 +746,8 @@ export async function connectSale(
           dataManualId,
           cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
           invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
-          cardcomCustomerId: sale.studentCardcomCustomerId,
+          cardcomCustomerId: sale.cardcomCustomerId,
+          cardcomSaleRevenue: parseFloat(sale.finalSaleRevenue ?? '0'),
         })}
       `
       logger.info('sale-already-connected-no-action-needed')
@@ -799,6 +807,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       timestamp: Date | null
       finalSaleRevenue: string | null
       cardcomInvoiceDocumentUrl: string | null
+      cardcomCustomerId: string | null
       cardcomInvoiceNumber: string | null
     }[]
   >`
@@ -815,19 +824,27 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
         sale_data_cardcom.invoice_number,
         sale_data_manual.cardcom_invoice_number
       ) AS cardcom_invoice_number,
+      COALESCE(
+        sale_data_cardcom.customer_id,
+        sale_data_manual.cardcom_customer_id
+      ) AS cardcom_customer_id,
       student.student_number AS student_number,
       student_email.email AS student_email,
       student_phone.phone AS student_phone,
       student_name.first_name AS student_first_name,
       student_name.last_name AS student_last_name,
       sale_data.timestamp AS timestamp,
-      sale_data.final_sale_revenue AS final_sale_revenue,
+      COALESCE(
+        sale_data_cardcom.cardcom_sale_revenue,
+        sale_data_manual.cardcom_sale_revenue,
+        sale_data.final_sale_revenue) AS final_sale_revenue,
       COALESCE(products, json_build_array()) AS products
     FROM
       sale
-      JOIN sale_data ON sale_data.data_id = sale.last_data_id
+      JOIN sale_history ON sale_history.id = sale.last_history_id
+      JOIN sale_data ON sale_data.data_id = sale_history.data_id
       LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
-      LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale.last_data_manual_id
+      LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale_history.data_manual_id
       JOIN student ON student.student_number = sale_data.student_number
       JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
       JOIN student_email ON student_email.data_id = student.last_data_id AND student_email.item_order = 0

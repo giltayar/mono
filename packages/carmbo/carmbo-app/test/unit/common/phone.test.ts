@@ -7,6 +7,9 @@ describe('normalizePhoneNumber', () => {
     it('should keep number starting with +', () => {
       assert.equal(normalizePhoneNumber('+972501234567'), '0501234567')
     })
+    it('should remove the leading zero from starting with +', () => {
+      assert.equal(normalizePhoneNumber('+9720501234567'), '0501234567')
+    })
 
     it('should keep + format with spaces and dashes', () => {
       assert.equal(normalizePhoneNumber('+972-50-123-4567'), '0501234567')

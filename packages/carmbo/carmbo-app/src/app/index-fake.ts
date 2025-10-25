@@ -5,6 +5,8 @@ import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {prepareDatabase} from './prepare-database.ts'
 
+const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
+
 const {app, sql} = await makeApp({
   db: {
     database: 'carmbo',
@@ -54,11 +56,26 @@ const {app, sql} = await makeApp({
       ],
       contacts: {},
     }),
-    cardcomIntegration: createFakeCardcomIntegrationService({accounts: {}}),
+    cardcomIntegration: fakeCardcomIntegrationService,
   },
   auth0: undefined,
   appBaseUrl: 'http://localhost:3000',
 })
+
+await fakeCardcomIntegrationService.createTaxInvoiceDocument(
+  {
+    cardcomCustomerId: 12345,
+    customerEmail: 'test-cardcom@example.com',
+    customerName: 'Test CardcomCustomer',
+    customerPhone: '0501234567',
+    productsSold: [
+      {productId: '1', productName: 'Product 1', unitPriceInCents: 10_000, quantity: 2},
+    ],
+    transactionDate: new Date(),
+    transactionRevenueInCents: 100,
+  },
+  {sendInvoiceByMail: false},
+)
 
 await prepareDatabase(sql)
 await app.listen({port: 3000, host: 'localhost'})

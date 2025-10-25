@@ -10,7 +10,7 @@ export function SaleUpdateView({
   sale: SaleWithHistoryInfo
   history: SaleHistory[]
 }) {
-  const isUnconnectedSale = !sale.cardcomInvoiceNumber
+  const isUnconnectedSale = !sale.cardcomInvoiceDocumentUrl
 
   return html`
     <h2 class="border-bottom col-md-6 mt-3">

@@ -73,7 +73,8 @@ test('create sale then update it', async ({page}) => {
   await newForm.studentInput().locator.blur()
   await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
 
-  await expect(newForm.finalSaleRevenueInput().locator).toHaveAttribute('readonly')
+  await expect(newForm.finalSaleRevenueInput().locator).toHaveAttribute('required')
+  await newForm.finalSaleRevenueInput().locator.fill('7')
 
   await newForm.products().product(0).quantity().locator.fill('2')
   await newForm.products().product(0).unitPrice().locator.fill('1')
@@ -95,7 +96,7 @@ test('create sale then update it', async ({page}) => {
     `${salesEventNumber}: Test Sales Event`,
   )
   await expect(updateForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
-  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('5')
+  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('7')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('')
 
   // Update the sale data
@@ -107,7 +108,7 @@ test('create sale then update it', async ({page}) => {
   // Save the sale and verify data
   await updateForm.updateButton().locator.click()
 
-  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('303')
+  await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('7')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('54321')
 
   // Back to list
@@ -119,7 +120,7 @@ test('create sale then update it', async ({page}) => {
   const firstRow = saleListModel.list().rows().row(0)
   await expect(firstRow.eventCell().locator).toHaveText('Test Sales Event')
   await expect(firstRow.studentCell().locator).toHaveText('John Doe')
-  await expect(firstRow.revenueCell().locator).toHaveText('₪303.00')
+  await expect(firstRow.revenueCell().locator).toHaveText('₪7.00')
 })
 
 test('discard button', async ({page}) => {
@@ -182,6 +183,8 @@ test('discard button', async ({page}) => {
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
 
+  await newForm.finalSaleRevenueInput().locator.fill('15')
+
   await newForm.createButton().locator.click()
   await page.waitForURL(updateSaleModel.urlRegex)
 
@@ -242,11 +245,13 @@ test('optional fields', async ({page}) => {
   await newSaleModel.form().studentInput().locator.fill(`${studentNumber}`)
   await newSaleModel.form().studentInput().locator.blur()
 
+  await newSaleModel.form().finalSaleRevenueInput().locator.fill('17')
+
   await newSaleModel.form().createButton().locator.click()
 
   await page.waitForURL(updateSaleModel.urlRegex)
 
-  await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('0')
+  await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('17')
   await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
 })
 
@@ -303,6 +308,7 @@ test('creation/update error shows alert', async ({page}) => {
 
   await newForm.products().product(0).quantity().locator.fill('2')
   await newForm.products().product(0).unitPrice().locator.fill('50')
+  await newForm.finalSaleRevenueInput().locator.fill('100')
 
   TEST_hooks['createSale'] = () => {
     throw new Error('ouch!')

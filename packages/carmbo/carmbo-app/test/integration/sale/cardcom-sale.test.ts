@@ -79,7 +79,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       customerEmail,
       customerName,
       customerPhone,
-      cardcomCustomerId: undefined,
+      cardcomCustomerId: 1776,
       transactionDate: new Date(),
       transactionRevenueInCents: 21 * 100,
     },
@@ -106,8 +106,8 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await page.waitForURL(/\/students\/\d+$/)
 
   const updateStudentModel = createUpdateStudentPageModel(page)
-  // The Cardcom Customer IDs field should not be visible since no customer ID was provided
-  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).not.toBeVisible()
+
+  await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue('1776')
 
   await page.goto(new URL('/sales', url()).href)
 
@@ -206,6 +206,72 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await expect(product2.title().locator).toContainText('Product Two')
   await expect(product2.quantity().locator).toHaveValue('2')
   await expect(product2.unitPrice().locator).toHaveValue('50')
+
+  await expect(saleDetailModel.history().items().item(0).locator).toHaveText(/created/)
+
+  const smooveId = (
+    await smooveIntegration().fetchSmooveContact('test-customer@example.com', {by: 'email'})
+  ).id!
+  await smooveIntegration().changeContactLinkedLists(smooveId, {
+    unsubscribeFrom: [smooveListId],
+    subscribeTo: [],
+  })
+  expect(await smooveIntegration().fetchContactsOfList(2)).toEqual([])
+
+  await academyIntegration().removeContactFromAccount('test-customer@example.com')
+  expect(
+    await academyIntegration()._test_isContactEnrolledInCourse('test-customer@example.com', 1),
+  ).toBe(false)
+
+  await saleDetailModel.form().reconnectButton().locator.click()
+
+  await expect(saleDetailModel.history().items().locator).toHaveCount(3)
+
+  // Verify sale details
+  await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
+    `${salesEventNumber}: Test Sales Event`,
+  )
+  await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: John Doe')
+  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('21')
+
+  await expect(saleDetailModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('1')
+  await expect(saleDetailModel.form().viewInvoiceLink().locator).toHaveAttribute(
+    'href',
+    'http://invoice-document.example.com/1',
+  )
+
+  // Verify products in the sale detail page
+  const productsX = saleDetailModel.form().products()
+  await expect(productsX.locator).toHaveCount(2)
+
+  const product1x = productsX.product(0)
+  await expect(product1x.title().locator).toContainText('Product One')
+  await expect(product1x.locator).toContainText(`${product1Number}: Product One`)
+  await expect(product1x.quantity().locator).toHaveValue('1')
+  await expect(product1x.unitPrice().locator).toHaveValue('100')
+
+  const product2x = productsX.product(1)
+  await expect(product2x.title().locator).toContainText('Product Two')
+  await expect(product2x.quantity().locator).toHaveValue('2')
+  await expect(product2x.unitPrice().locator).toHaveValue('50')
+
+  expect(academyIntegration()._test_isContactEnrolledInCourse('test-customer@example.com', 1)).toBe(
+    true,
+  )
+  expect(
+    academyIntegration()._test_isContactEnrolledInCourse('test-customer@example.com', 33),
+  ).toBe(true)
+
+  expect(
+    (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
+  ).toEqual(['test-customer@example.com'])
+
+  await page.goto(new URL(`/students/1`, url()).href)
+
+  await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student 1`)
+
+  const studentForm = updateStudentModel.form()
+  await expect(studentForm.cardcomCustomerIdsInput().locator).toHaveValue('1776')
 })
 
 test('cardcom sale with same customer ID reuses existing student', async ({page}) => {

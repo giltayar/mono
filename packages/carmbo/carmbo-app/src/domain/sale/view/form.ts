@@ -10,7 +10,7 @@ export function SalesFormFields({
   saleNumber: number | undefined
   operation: 'read' | 'write'
 }) {
-  const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceNumber
+  const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceDocumentUrl
 
   return html`
     <div class="sales-view_form-fields card">
@@ -133,7 +133,8 @@ export function SalesFormFields({
             id="finalSaleRevenue"
             name="finalSaleRevenue"
             value=${sale.finalSaleRevenue}
-            readonly
+            readonly=${isReadOnly}
+            required
           />
         </div>
       </div>
