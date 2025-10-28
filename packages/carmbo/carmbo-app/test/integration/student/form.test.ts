@@ -19,19 +19,19 @@ test('create student and update multiple fields', async ({page}) => {
 
   // Fill the names
   const newForm = newStudentModel.form()
-  await newForm.names().firstNameInput(0).locator.fill('John')
-  await newForm.names().lastNameInput(0).locator.fill('Doe')
+  await newForm.names().firstNameInput(0).locator.fill(' John')
+  await newForm.names().lastNameInput(0).locator.fill('Doe ')
   await newForm.names().addButton().locator.click()
-  await newForm.names().firstNameInput(1).locator.fill('first2')
-  await newForm.names().lastNameInput(1).locator.fill('last2')
+  await newForm.names().firstNameInput(1).locator.fill('first2 ')
+  await newForm.names().lastNameInput(1).locator.fill(' last2')
   await newForm.names().addButton().locator.click()
   await newForm.names().firstNameInput(2).locator.fill('first3')
   await newForm.names().lastNameInput(2).locator.fill('last3')
 
   await newForm.names().trashButton(1).locator.click()
 
-  await expect(newForm.names().firstNameInput(0).locator).toHaveValue('John')
-  await expect(newForm.names().lastNameInput(0).locator).toHaveValue('Doe')
+  await expect(newForm.names().firstNameInput(0).locator).toHaveValue(' John')
+  await expect(newForm.names().lastNameInput(0).locator).toHaveValue('Doe ')
   await expect(newForm.names().firstNameInput(1).locator).toHaveValue('first3')
   await expect(newForm.names().lastNameInput(1).locator).toHaveValue('last3')
 
@@ -44,16 +44,16 @@ test('create student and update multiple fields', async ({page}) => {
   // Wait for the third email field to appear
   await expect(newForm.emails().emailInput(2).locator).toBeVisible()
 
-  await newForm.emails().emailInput(2).locator.fill('email3@example.com')
+  await newForm.emails().emailInput(2).locator.fill(' email3@example.com')
   await newForm.emails().trashButton(1).locator.click()
 
   await expect(newForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
   await expect(newForm.emails().emailInput(1).locator).toHaveValue('email3@example.com')
 
   // Fill the phones
-  await newForm.phones().phoneInput(0).locator.fill('1234567890')
+  await newForm.phones().phoneInput(0).locator.fill(' 1234567890')
   await newForm.phones().addButton().locator.click()
-  await newForm.phones().phoneInput(1).locator.fill('2222222222')
+  await newForm.phones().phoneInput(1).locator.fill('2222222222 ')
   await newForm.phones().addButton().locator.click()
 
   // Wait for the third phone field to appear
@@ -62,7 +62,7 @@ test('create student and update multiple fields', async ({page}) => {
   await newForm.phones().phoneInput(2).locator.fill('3333333333')
   await newForm.phones().trashButton(1).locator.click()
 
-  await expect(newForm.phones().phoneInput(0).locator).toHaveValue('1234567890')
+  await expect(newForm.phones().phoneInput(0).locator).toHaveValue(' 1234567890')
   await expect(newForm.phones().phoneInput(1).locator).toHaveValue('3333333333')
 
   // Fill the facebook names

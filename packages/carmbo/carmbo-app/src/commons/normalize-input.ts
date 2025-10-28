@@ -1,3 +1,7 @@
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
 export function normalizePhoneNumber(phoneNumber: string): string {
   phoneNumber = phoneNumber.replace(/[^0-9\+]/g, '')
 
@@ -19,4 +23,11 @@ export function normalizePhoneNumber(phoneNumber: string): string {
     default:
       return phoneNumber
   }
+}
+
+export function normalizeName({firstName, lastName}: {firstName: string; lastName: string}): {
+  firstName: string
+  lastName: string
+} {
+  return {firstName: firstName.trim(), lastName: lastName.trim()}
 }

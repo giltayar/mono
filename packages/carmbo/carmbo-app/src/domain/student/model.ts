@@ -6,8 +6,7 @@ import {range} from '@giltayar/functional-commons'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {assertNever} from '@giltayar/functional-commons'
-import {normalizePhoneNumber} from '../../commons/phone.ts'
-import {normalizeEmail} from '../../commons/email.ts'
+import {normalizeEmail, normalizePhoneNumber, normalizeName} from '../../commons/normalize-input.ts'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
 
 export const StudentSchema = z.object({
@@ -532,6 +531,7 @@ function normalizeStudent<TStudent extends Student | NewStudent>(student: TStude
   return {
     ...student,
     emails: student.emails.map(normalizeEmail),
+    names: student.names.map(normalizeName),
     phones: student.phones?.map(normalizePhoneNumber),
   }
 }
