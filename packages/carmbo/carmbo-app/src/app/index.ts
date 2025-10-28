@@ -41,7 +41,9 @@ const env = EnvironmentVariablesSchema.parse(
       },
 )
 
-const appBaseUrl = env.APP_BASE_URL ? env.APP_BASE_URL : `http://${env.HOST}:${env.PORT}`
+const appBaseUrl = env.APP_BASE_URL
+  ? env.APP_BASE_URL
+  : `http://${env.HOST.includes(':') ? `[${env.HOST}]` : env.HOST}:${env.PORT}`
 
 const {app, sql} = await makeApp({
   db: {

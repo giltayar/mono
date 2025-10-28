@@ -435,10 +435,13 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
       RETURNING sale_number
     `
 
-    const studentNameResult = await sql<{studentName: string}[]>`
-      SELECT first_name || ' ' || last_name as student_name
+    const studentResult = await sql<{studentName: string; studentEmail: string}[]>`
+      SELECT
+        first_name || ' ' || last_name as student_name,
+        student_email.email as student_email
       FROM student_name
       JOIN student ON student.student_number = ${sale.studentNumber ?? 0}
+      JOIN student_email ON student_email.data_id = student.last_data_id
       WHERE student_name.data_id = student.last_data_id
     `
     const salesEventNameResult = await sql<{salesEventName: string}[]>`
@@ -454,7 +457,8 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
       WHERE product_data.data_id = product.last_data_id
     `
 
-    const studentName = studentNameResult[0]?.studentName
+    const studentName = studentResult[0]?.studentName
+    const studentEmail = studentResult[0]?.studentEmail
     const salesEventName = salesEventNameResult[0]?.salesEventName
 
     const saleNumber = saleNumberResult[0].saleNumber
@@ -468,7 +472,7 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
     `,
     )
 
-    const searchableText = `${saleNumber} ${studentName ?? ''} ${salesEventName ?? ''} ${productNamesResult
+    const searchableText = `${saleNumber} ${studentName ?? ''} ${studentEmail ?? ''} ${salesEventName ?? ''} ${productNamesResult
       .map((p) => p.productName)
       .join(' ')}`
 

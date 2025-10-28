@@ -186,4 +186,10 @@ test('searching sales', async ({page}) => {
   await expect(saleListModel.list().rows().locator).toHaveCount(2)
   await expect(saleListModel.list().rows().row(0).studentCell().locator).toHaveText('Charlie Brown')
   await expect(saleListModel.list().rows().row(1).studentCell().locator).toHaveText('Bob Williams')
+
+  // Search by email
+  await saleListModel.search().queryInput().locator.fill('charlie.brown@')
+
+  await expect(saleListModel.list().rows().locator).toHaveCount(1)
+  await expect(saleListModel.list().rows().row(0).studentCell().locator).toHaveText('Charlie Brown')
 })
