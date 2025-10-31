@@ -397,4 +397,9 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
   await expect(updateStudentModel.form().cardcomCustomerIdsInput().locator).toHaveValue(
     '11111, 22222',
   )
+
+  // update student model
+  await updateStudentModel.form().updateButton().locator.click()
+
+  await expect(updateStudentModel.history().items().item(0).locator).toHaveText(/updated/)
 })

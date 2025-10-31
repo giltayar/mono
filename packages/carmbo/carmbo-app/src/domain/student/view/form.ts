@@ -167,7 +167,6 @@ export function StudentCreateOrUpdateFormFields({
           ? html`
               <div class="mt-3 form-floating">
                 <input
-                  name="cardcomCustomerIds"
                   type="text"
                   placeholder=" "
                   class="form-control"
