@@ -59,6 +59,14 @@ export const CardcomSaleWebhookJsonSchema = z.looseObject({
   ProdPrice7: z.string().optional(),
   ProdQuantity7: z.string().optional(),
   ProductID7: z.string().optional(),
+
+  DeliveryCity: z.string().optional(),
+  DeliveryStreet: z.string().optional(),
+  DeliveryBuilding: z.string().optional(),
+  DeliveryApartment: z.string().optional(),
+  DeliveryFloor: z.string().optional(),
+  DeliveryEntrance: z.string().optional(),
+  DeliveryNotes: z.string().optional(),
 })
 
 export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema>
