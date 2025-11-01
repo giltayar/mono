@@ -16,6 +16,16 @@ type CardcomIntegrationServiceData = {
   }
 }
 
+export interface DeliveryInformation {
+  city: string
+  street: string
+  building: string
+  apartment: string | undefined
+  floor: string | undefined
+  entrance: string | undefined
+  notes: string | undefined
+}
+
 export function createFakeCardcomIntegrationService(context: {
   accounts: Record<
     string,
@@ -169,6 +179,7 @@ export async function _test_simulateCardcomSale(
   s: CardcomIntegrationServiceData,
   salesEventNumber: number,
   sale: TaxInvoiceInformation,
+  delivery: DeliveryInformation | undefined,
   serverInfo: {
     secret: string
     baseUrl: string
@@ -176,5 +187,11 @@ export async function _test_simulateCardcomSale(
 ) {
   const {cardcomInvoiceNumber} = await createTaxInvoiceDocument(s, sale, {sendInvoiceByMail: false})
 
-  await simulateCardcomSale(salesEventNumber, sale, cardcomInvoiceNumber.toString(), serverInfo)
+  await simulateCardcomSale(
+    salesEventNumber,
+    sale,
+    delivery,
+    cardcomInvoiceNumber.toString(),
+    serverInfo,
+  )
 }

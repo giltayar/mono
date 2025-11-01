@@ -3,19 +3,21 @@ import {fetchAsBufferWithJsonBody} from '@giltayar/http-commons'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import type {CardcomSaleWebhookJson} from '../src/types.ts'
 import type {TaxInvoiceInformation} from '../src/cardcom-integration.ts'
+import type {DeliveryInformation} from './cardcom-integration-testkit.ts'
 
 const chance = new Chance()
 
 export async function simulateCardcomSale(
   salesEventNumber: number,
   invoiceInformation: TaxInvoiceInformation,
+  delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
   serverInfo: {
     secret: string
     baseUrl: string
   },
 ): Promise<void> {
-  const webhookData = generateCardcomWebhookData(invoiceInformation, invoiceNumber)
+  const webhookData = generateCardcomWebhookData(invoiceInformation, delivery, invoiceNumber)
 
   const url = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', serverInfo.baseUrl), {
     secret: serverInfo.secret ?? 'secret',
@@ -27,6 +29,7 @@ export async function simulateCardcomSale(
 
 function generateCardcomWebhookData(
   invoiceInfo: TaxInvoiceInformation,
+  delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
 ): CardcomSaleWebhookJson {
   const now = new Date()
@@ -56,6 +59,14 @@ function generateCardcomWebhookData(
     ProductID: invoiceInfo.productsSold[0].productId.toString(),
     ProdQuantity: invoiceInfo.productsSold[0].quantity.toString(),
     ProdPrice: (invoiceInfo.productsSold[0].unitPriceInCents / 100).toFixed(2),
+
+    DeliveryCity: delivery?.city,
+    DeliveryStreet: delivery?.street,
+    DeliveryBuilding: delivery?.building,
+    DeliveryApartment: delivery?.apartment,
+    DeliveryFloor: delivery?.floor,
+    DeliveryEntrance: delivery?.entrance,
+    DeliveryNotes: delivery?.notes,
   }
 
   for (let i = 1; i < invoiceInfo.productsSold.length; i++) {
