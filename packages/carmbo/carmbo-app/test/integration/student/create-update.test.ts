@@ -3,7 +3,8 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createNewStudentPageModel} from '../../page-model/students/new-student-page.model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {setup} from '../common/setup.ts'
-const {url, smooveIntegration, TEST_hooks} = setup(import.meta.url)
+
+const {url, smooveIntegration, academyIntegration, TEST_hooks} = setup(import.meta.url)
 
 test('create student then update her', async ({page}) => {
   await page.goto(new URL('/students', url()).href)
@@ -21,7 +22,7 @@ test('create student then update her', async ({page}) => {
   const newForm = newStudentModel.form()
   await newForm.names().firstNameInput(0).locator.fill('John')
   await newForm.names().lastNameInput(0).locator.fill('Doe')
-  await newForm.emails().emailInput(0).locator.fill('John.Doe@example.com')
+  await newForm.emails().emailInput(0).locator.fill('john.already-enrolled@example.com')
   await newForm.phones().phoneInput(0).locator.fill('+972-54-6344457')
   await newForm.birthdayInput().locator.fill('2000-01-01')
   await newForm.facebookNames().facebookNameInput(0).locator.fill('johnfb')
@@ -33,13 +34,13 @@ test('create student then update her', async ({page}) => {
   await page.waitForURL(updateStudentModel.urlRegex)
 
   expect(
-    await smooveIntegration().fetchSmooveContact('john.doe@example.com', {
+    await smooveIntegration().fetchSmooveContact('john.already-enrolled@example.com', {
       by: 'email',
     }),
   ).toMatchObject({
     firstName: 'John',
     lastName: 'Doe',
-    email: 'john.doe@example.com',
+    email: 'john.already-enrolled@example.com',
     telephone: '0546344457',
     birthday: new Date('2000-01-01'),
   })
@@ -51,7 +52,9 @@ test('create student then update her', async ({page}) => {
   const updateForm = updateStudentModel.form()
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('John')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Doe')
-  await expect(updateForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
+  await expect(updateForm.emails().emailInput(0).locator).toHaveValue(
+    'john.already-enrolled@example.com',
+  )
   await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('0546344457')
   await expect(updateForm.birthdayInput().locator).toHaveValue('2000-01-01')
 
@@ -81,6 +84,11 @@ test('create student then update her', async ({page}) => {
     email: 'jane.smith@example.com',
     telephone: '0546344456',
     birthday: new Date('2001-02-02'),
+  })
+
+  expect(await academyIntegration()._test_getContact('jane.smith@example.com')).toMatchObject({
+    name: 'John Already-Enrolled',
+    phone: '123-456-7890',
   })
 
   // Back to list
@@ -118,7 +126,7 @@ test('discard button', async ({page}) => {
 
   await newForm.names().firstNameInput(0).locator.fill('John')
   await newForm.names().lastNameInput(0).locator.fill('Doe')
-  await newForm.emails().emailInput(0).locator.fill('john.doe@example.com')
+  await newForm.emails().emailInput(0).locator.fill('john.already-enrolled@example.com')
 
   await newForm.phones().trashButton(0).locator.click()
   await newForm.facebookNames().trashButton(0).locator.click()
@@ -129,7 +137,9 @@ test('discard button', async ({page}) => {
   const updateForm = updateStudentModel.form()
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('John')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('Doe')
-  await expect(newForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
+  await expect(newForm.emails().emailInput(0).locator).toHaveValue(
+    'john.already-enrolled@example.com',
+  )
 
   await updateForm.names().firstNameInput(0).locator.fill('Jane')
   await updateForm.names().lastNameInput(0).locator.fill('Smith')
@@ -140,7 +150,9 @@ test('discard button', async ({page}) => {
 
   await expect(newForm.names().firstNameInput(0).locator).toHaveValue('John')
   await expect(newForm.names().lastNameInput(0).locator).toHaveValue('Doe')
-  await expect(newForm.emails().emailInput(0).locator).toHaveValue('john.doe@example.com')
+  await expect(newForm.emails().emailInput(0).locator).toHaveValue(
+    'john.already-enrolled@example.com',
+  )
 })
 
 test('birthday field is optional', async ({page}) => {
@@ -158,7 +170,11 @@ test('birthday field is optional', async ({page}) => {
 
   await newStudentModel.form().names().firstNameInput(0).locator.fill('John')
   await newStudentModel.form().names().lastNameInput(0).locator.fill('Doe')
-  await newStudentModel.form().emails().emailInput(0).locator.fill('john.doe@example.com')
+  await newStudentModel
+    .form()
+    .emails()
+    .emailInput(0)
+    .locator.fill('john.already-enrolled@example.com')
   await newStudentModel.form().phones().trashButton(0).locator.click()
   await newStudentModel.form().facebookNames().trashButton(0).locator.click()
 

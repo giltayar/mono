@@ -141,6 +141,8 @@ export async function createSalesEvent(
 
     return {htmxRedirect: `/sales-events/${salesEventNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'create-sales-event')
     return showSalesEventCreate(salesEvent, {error}, sql)
   }
 }
@@ -165,6 +167,9 @@ export async function deleteSalesEvent(
 
     return {htmxRedirect: `/sales-events/${salesEventNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, `${deleteOperation}-sales-event`)
+
     return retarget(
       await showSalesEventUpdate(
         salesEventNumber,
@@ -195,6 +200,8 @@ export async function updateSalesEvent(
 
     return {htmxRedirect: `/sales-events/${salesEventNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'update-sales-event')
     return showSalesEventUpdate(
       salesEvent.salesEventNumber,
       {salesEvent, error, operation: 'Updating'},

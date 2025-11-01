@@ -134,6 +134,8 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
 
     return {htmxRedirect: `/products/${productNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'create-product')
     return showProductCreate(product, {error})
   }
 }
@@ -148,6 +150,8 @@ export async function updateProduct(product: Product, sql: Sql): Promise<Control
 
     return {htmxRedirect: `/products/${productNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'update-product')
     return showProductUpdate(product.productNumber, {product, error, operation: 'Updating'}, sql)
   }
 }
@@ -166,6 +170,8 @@ export async function deleteProduct(
 
     return {htmxRedirect: `/products/${productNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, `${deleteOperation}-product`)
     const operation = deleteOperation === 'delete' ? 'Archiving' : 'Restoring'
     return retarget(
       await showProductUpdate(productNumber, {product: undefined, error, operation}, sql),

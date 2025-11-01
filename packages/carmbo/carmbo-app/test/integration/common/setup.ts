@@ -61,7 +61,12 @@ export function setup(testUrl: string): {
         {id: 33, name: 'Course 2'},
         {id: 777, name: 'Course 3'},
       ],
-      enrolledContacts: new Map(),
+      enrolledContacts: new Map([
+        [
+          'john.already-enrolled@example.com',
+          {name: 'John Already-Enrolled', phone: '123-456-7890', enrolledInCourses: [1, 33]},
+        ],
+      ]),
     })
     cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
     TEST_resetJobHandlers()

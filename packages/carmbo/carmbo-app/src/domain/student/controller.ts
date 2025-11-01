@@ -98,15 +98,25 @@ export async function createStudent(student: NewStudent, sql: Sql): Promise<Cont
 
     return {htmxRedirect: `/students/${studentNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, 'create-student')
     return showStudentCreate(student, {error})
   }
 }
 
 export async function updateStudent(student: Student, sql: Sql): Promise<ControllerResult> {
+  const logger = requestContext.get('logger')!
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')!
+    const academyIntegration = requestContext.get('academyIntegration')!
 
-    const studentNumber = await model_updateStudent(student, undefined, smooveIntegration, sql)
+    const studentNumber = await model_updateStudent(
+      student,
+      undefined,
+      smooveIntegration,
+      academyIntegration,
+      sql,
+    )
 
     if (!studentNumber) {
       return {status: 404, body: 'Student not found'}
@@ -114,6 +124,7 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
 
     return {htmxRedirect: `/students/${studentNumber}`}
   } catch (error) {
+    logger.error({err: error}, 'update-student')
     return showStudentUpdate(student.studentNumber, {student, error, operation: 'Updating'}, sql)
   }
 }
@@ -140,6 +151,8 @@ export async function deleteStudent(
 
     return {htmxRedirect: `/students/${studentNumber}`}
   } catch (error) {
+    const logger = requestContext.get('logger')!
+    logger.error({err: error}, `${deleteOperation}-student`)
     return retarget(
       await showStudentUpdate(
         studentNumber,

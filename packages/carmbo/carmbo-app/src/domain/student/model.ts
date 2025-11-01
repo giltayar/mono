@@ -8,6 +8,7 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import {assertNever} from '@giltayar/functional-commons'
 import {normalizeEmail, normalizePhoneNumber, normalizeName} from '../../commons/normalize-input.ts'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
+import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -161,6 +162,7 @@ export async function updateStudent(
   student: Student,
   reason: string | undefined,
   smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService,
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateStudent')
@@ -168,7 +170,10 @@ export async function updateStudent(
   const normalizedStudent = normalizeStudent(student)
 
   return await sql.begin(async (sql) => {
-    const smooveId = await getSmooveId(normalizedStudent.studentNumber, sql)
+    const {smooveId, email: originalEmail} = await getStudentInfo(
+      normalizedStudent.studentNumber,
+      sql,
+    )
 
     const now = new Date()
     const historyId = crypto.randomUUID()
@@ -198,7 +203,7 @@ export async function updateStudent(
 
     await addStudentStuff(normalizedStudent.studentNumber, normalizedStudent, smooveId, dataId, sql)
 
-    if (smooveId > 0)
+    if (smooveId > 0) {
       await smooveIntegration.updateSmooveContact(smooveId, {
         email: normalizedStudent.emails[0],
         birthday: normalizedStudent.birthday,
@@ -206,20 +211,31 @@ export async function updateStudent(
         lastName: normalizedStudent.names?.[0].lastName ?? '',
         telephone: normalizedStudent.phones?.[0] ?? '',
       })
+    }
+
+    if (originalEmail !== normalizedStudent.emails[0]) {
+      await academyIntegration
+        .updateStudentEmail(originalEmail, normalizedStudent.emails[0])
+        .catch((err) => (err.status === 404 ? undefined : Promise.reject(err)))
+    }
 
     return student.studentNumber
   })
 }
 
-async function getSmooveId(studentNumber: number, sql: Sql) {
-  const smooveIdResult = await sql<{smooveContactId: string}[]>`
-    SELECT smoove_contact_id
+async function getStudentInfo(studentNumber: number, sql: Sql) {
+  const smooveIdResult = await sql<{smooveContactId: string; email: string}[]>`
+    SELECT
+      smoove_contact_id,
+      email
     FROM student_integration_smoove sis
     JOIN student s ON s.last_data_id = sis.data_id
+    JOIN student_history sh ON sh.id = s.last_history_id
+    JOIN student_email se ON se.data_id = sh.data_id AND se.item_order = 0
     WHERE s.student_number = ${studentNumber}
   `
 
-  return parseInt(smooveIdResult[0].smooveContactId)
+  return {smooveId: parseInt(smooveIdResult[0].smooveContactId), email: smooveIdResult[0].email}
 }
 
 export async function deleteStudent(
@@ -250,7 +266,7 @@ export async function deleteStudent(
     if (dataIdResult.length > 1) {
       throw new Error(`More than one student with ID ${studentNumber}`)
     }
-    const smooveId = await getSmooveId(studentNumber, sql)
+    const {smooveId} = await getStudentInfo(studentNumber, sql)
 
     await sql`
         UPDATE student SET

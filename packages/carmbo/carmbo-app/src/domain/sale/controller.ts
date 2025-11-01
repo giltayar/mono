@@ -153,6 +153,7 @@ export async function showSaleInHistory(
 }
 
 export async function updateSale(sale: Sale, sql: Sql): Promise<ControllerResult> {
+  const logger = requestContext.get('logger')!
   try {
     const saleNumber = await model_updateSale(sale, undefined, sql)
 
@@ -162,6 +163,7 @@ export async function updateSale(sale: Sale, sql: Sql): Promise<ControllerResult
 
     return {htmxRedirect: `/sales/${saleNumber}`}
   } catch (error) {
+    logger.error({err: error}, 'update-sale')
     return showSale(sale.saleNumber, {sale, error, operation: 'Updating'}, sql)
   }
 }
