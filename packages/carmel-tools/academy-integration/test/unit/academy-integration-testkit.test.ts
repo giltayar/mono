@@ -205,6 +205,7 @@ describe('Academy Integration Testkit', () => {
         {
           name: 'Error',
           message: `Student with email ${nonExistentEmail} not found`,
+          status: 404,
         },
       )
 

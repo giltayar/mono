@@ -2,6 +2,7 @@ import type {
   AcademyCourse,
   AcademyIntegrationService,
 } from '@giltayar/carmel-tools-academy-integration/service'
+import {makeError} from '@giltayar/functional-commons'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 type AcademyIntegrationServiceData = {
@@ -67,7 +68,7 @@ async function updateStudentEmail(
 ): Promise<void> {
   const student = s.state.enrolledContacts.get(oldEmail)
   if (!student) {
-    throw new Error(`Student with email ${oldEmail} not found`)
+    throw makeError(`Student with email ${oldEmail} not found`, {status: 404})
   }
 
   s.state.enrolledContacts.delete(oldEmail)

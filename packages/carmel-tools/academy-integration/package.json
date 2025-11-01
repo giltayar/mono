@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-academy-integration",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "type": "module",
   "exports": {
     "./service": {
