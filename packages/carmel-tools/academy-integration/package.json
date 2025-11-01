@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-academy-integration",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "type": "module",
   "exports": {
     "./service": {
@@ -18,7 +18,7 @@
     "./package.json": "./package.json"
   },
   "engines": {
-    "node": ">=24.3.0"
+    "node": ">=24.9.0"
   },
   "files": [
     "src",
@@ -31,7 +31,7 @@
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
-    "test:node": "node --test"
+    "test:node": "node --test 'test/**/*.test.ts'"
   },
   "keywords": [
     "nodejs",
@@ -52,21 +52,21 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.37.0",
-    "@types/node": "^24.7.0",
-    "@typescript/native-preview": "7.0.0-dev.20251007.1",
-    "eslint": "^9.37.0",
+    "@eslint/js": "^9.38.0",
+    "@types/node": "^24.9.1",
+    "@typescript/native-preview": "7.0.0-dev.20251027.1",
+    "eslint": "^9.38.0",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.45.0"
+    "typescript-eslint": "^8.46.2"
   },
   "dependencies": {
-    "@giltayar/functional-commons": "^2.0.1",
+    "@giltayar/functional-commons": "^2.1.0",
     "@giltayar/http-commons": "^3.1.1",
     "@giltayar/service-commons": "^1.1.3"
   },
-  "packageManager": "pnpm@10.18.1"
+  "packageManager": "pnpm@10.20.0"
 }

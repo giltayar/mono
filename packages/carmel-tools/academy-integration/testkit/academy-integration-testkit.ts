@@ -20,6 +20,7 @@ export function createFakeAcademyIntegrationService(context: {
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
     addStudentToCourse: sBind(addStudentToCourse),
+    updateStudentEmail: sBind(updateStudentEmail),
   }
 
   return {
@@ -41,7 +42,7 @@ async function listCourses(s: AcademyIntegrationServiceData): Promise<AcademyCou
   return s.state.courses
 }
 
-export async function addStudentToCourse(
+async function addStudentToCourse(
   s: AcademyIntegrationServiceData,
   student: {email: string; name: string; phone: string},
   courseId: number,
@@ -57,4 +58,18 @@ export async function addStudentToCourse(
   }
 
   s.state.enrolledContacts.get(student.email)!.enrolledInCourses.push(courseId)
+}
+
+async function updateStudentEmail(
+  s: AcademyIntegrationServiceData,
+  oldEmail: string,
+  newEmail: string,
+): Promise<void> {
+  const student = s.state.enrolledContacts.get(oldEmail)
+  if (!student) {
+    throw new Error(`Student with email ${oldEmail} not found`)
+  }
+
+  s.state.enrolledContacts.delete(oldEmail)
+  s.state.enrolledContacts.set(newEmail, student)
 }

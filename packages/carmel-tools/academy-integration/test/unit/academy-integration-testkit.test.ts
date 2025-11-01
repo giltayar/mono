@@ -132,4 +132,106 @@ describe('Academy Integration Testkit', () => {
       assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), true)
     })
   })
+
+  describe('updateStudentEmail', () => {
+    it('should update existing student email', async () => {
+      const service = createTestService()
+      const newEmail = 'updated@example.com'
+
+      // Verify initial state
+      const initialContact = service._test_getContact(testEmail)
+      assert.ok(initialContact)
+      assert.equal(initialContact.name, 'Test Student')
+      assert.equal(initialContact.phone, '123-456-7890')
+      assert.deepStrictEqual(initialContact.enrolledInCourses, [testCourseId])
+      assert.equal(service._test_getContact(newEmail), undefined)
+
+      await service.updateStudentEmail(testEmail, newEmail)
+
+      // Verify old email no longer exists
+      assert.equal(service._test_getContact(testEmail), undefined)
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), false)
+
+      // Verify student exists with new email and same data
+      const updatedContact = service._test_getContact(newEmail)
+      assert.ok(updatedContact)
+      assert.equal(updatedContact.name, 'Test Student')
+      assert.equal(updatedContact.phone, '123-456-7890')
+      assert.deepStrictEqual(updatedContact.enrolledInCourses, [testCourseId])
+      assert.equal(service._test_isContactEnrolledInCourse(newEmail, testCourseId), true)
+    })
+
+    it('should preserve all course enrollments when updating email', async () => {
+      const service = createTestService()
+      const newEmail = 'multi-course@example.com'
+
+      // First, enroll the student in multiple courses
+      await service.addStudentToCourse(
+        {email: testEmail, name: 'Test Student', phone: '123-456-7890'},
+        anotherCourseId,
+      )
+
+      // Verify student is enrolled in both courses
+      const beforeUpdate = service._test_getContact(testEmail)
+      assert.ok(beforeUpdate)
+      assert.deepStrictEqual(beforeUpdate.enrolledInCourses, [testCourseId, anotherCourseId])
+
+      await service.updateStudentEmail(testEmail, newEmail)
+
+      // Verify all enrollments are preserved with new email
+      const afterUpdate = service._test_getContact(newEmail)
+      assert.ok(afterUpdate)
+      assert.deepStrictEqual(afterUpdate.enrolledInCourses, [testCourseId, anotherCourseId])
+      assert.equal(service._test_isContactEnrolledInCourse(newEmail, testCourseId), true)
+      assert.equal(service._test_isContactEnrolledInCourse(newEmail, anotherCourseId), true)
+
+      // Verify old email is completely removed
+      assert.equal(service._test_getContact(testEmail), undefined)
+    })
+
+    it('should throw error when trying to update non-existent student', async () => {
+      const service = createTestService()
+      const nonExistentEmail = 'nonexistent@example.com'
+      const newEmail = 'new@example.com'
+
+      // Verify student doesn't exist
+      assert.equal(service._test_getContact(nonExistentEmail), undefined)
+
+      // Attempt to update non-existent student should throw
+      await assert.rejects(
+        async () => {
+          await service.updateStudentEmail(nonExistentEmail, newEmail)
+        },
+        {
+          name: 'Error',
+          message: `Student with email ${nonExistentEmail} not found`,
+        },
+      )
+
+      // Verify no student was created with the new email
+      assert.equal(service._test_getContact(newEmail), undefined)
+    })
+
+    it('should handle updating to an email that already exists', async () => {
+      const service = createTestService()
+
+      // Verify both students exist initially
+      assert.ok(service._test_getContact(testEmail))
+      assert.ok(service._test_getContact(anotherEmail))
+
+      // Update testEmail to anotherEmail (which already exists)
+      // This should overwrite the existing anotherEmail entry
+      await service.updateStudentEmail(testEmail, anotherEmail)
+
+      // Verify testEmail no longer exists
+      assert.equal(service._test_getContact(testEmail), undefined)
+
+      // Verify anotherEmail now has testEmail's original data
+      const updatedContact = service._test_getContact(anotherEmail)
+      assert.ok(updatedContact)
+      assert.equal(updatedContact.name, 'Test Student') // Original testEmail data
+      assert.equal(updatedContact.phone, '123-456-7890') // Original testEmail data
+      assert.deepStrictEqual(updatedContact.enrolledInCourses, [testCourseId]) // Original testEmail data
+    })
+  })
 })

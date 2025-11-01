@@ -23,6 +23,7 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
     addStudentToCourse: sBind(addStudentToCourse),
+    updateStudentEmail: sBind(updateStudentEmail),
   }
 }
 
@@ -68,5 +69,18 @@ export async function addStudentToCourse(
     email: student.email,
     name: student.name,
     phone: student.phone,
+  })
+}
+
+export async function updateStudentEmail(
+  s: AcademyIntegrationServiceData,
+  oldEmail: string,
+  newEmail: string,
+): Promise<void> {
+  const url = new URL(`https://www.mypages.co.il/tasks/update_email/${s.context.accountApiKey}`)
+
+  await fetchAsTextWithJsonBody(url, {
+    email: oldEmail,
+    new_email: newEmail,
   })
 }
