@@ -83,6 +83,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       transactionDate: new Date(),
       transactionRevenueInCents: 21 * 100,
     },
+    undefined,
     {
       secret: 'secret',
       baseUrl: url().href,
@@ -320,6 +321,7 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       transactionDate: new Date(),
       transactionRevenueInCents: 100 * 100,
     },
+    undefined,
     {
       secret: 'secret',
       baseUrl: url().href,
@@ -367,6 +369,7 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       transactionDate: new Date(),
       transactionRevenueInCents: 100 * 100,
     },
+    undefined,
     {
       secret: 'secret',
       baseUrl: url().href,

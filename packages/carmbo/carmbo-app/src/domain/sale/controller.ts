@@ -115,17 +115,7 @@ export async function showSales(
   return finalHtml(renderSalesPage(flash, sales, {withArchived, query: query ?? '', page}))
 }
 
-export async function showSale(saleNumber: number, sql: Sql): Promise<ControllerResult> {
-  const saleWithHistory = await querySaleByNumber(saleNumber, sql)
-
-  if (!saleWithHistory) {
-    return {status: 404, body: 'Sale not found'}
-  }
-
-  return finalHtml(renderSaleViewPage(saleWithHistory.sale, saleWithHistory.history))
-}
-
-export async function showSaleUpdate(
+export async function showSale(
   saleNumber: number,
   saleWithError: {sale: Sale | undefined; error: any; operation: string} | undefined,
   sql: Sql,
@@ -172,7 +162,7 @@ export async function updateSale(sale: Sale, sql: Sql): Promise<ControllerResult
 
     return {htmxRedirect: `/sales/${saleNumber}`}
   } catch (error) {
-    return showSaleUpdate(sale.saleNumber, {sale, error, operation: 'Updating'}, sql)
+    return showSale(sale.saleNumber, {sale, error, operation: 'Updating'}, sql)
   }
 }
 
@@ -193,7 +183,7 @@ export async function deleteSale(
     const logger = requestContext.get('logger')!
     logger.error({err: error}, 'delete-sale')
     return retarget(
-      await showSaleUpdate(
+      await showSale(
         saleNumber,
         {
           sale: undefined,

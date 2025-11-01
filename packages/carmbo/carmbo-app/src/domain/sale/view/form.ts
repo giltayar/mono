@@ -70,7 +70,9 @@ export function SalesFormFields({
                   (product, index) => html`
                     <fieldset class="card mb-2">
                       <div class="card-body">
-                        <legend class="mb-2"><h6>${index + 1}: ${product.productName}</h6></legend>
+                        <legend class="mb-2">
+                          <h6>${index + 1}: ${product.productName}</h6>
+                        </legend>
                         <input
                           type="hidden"
                           name=${`products[${index}][productNumber]`}
@@ -137,6 +139,128 @@ export function SalesFormFields({
             required
           />
         </div>
+        <div class="mb-3">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              checked=${sale.hasDeliveryAddress}
+              value="on"
+              id="delivery-address"
+              name="hasDeliveryAddress"
+              hx-post=""
+              hx-target="closest .sales-view_form-fields"
+              hx-swap="outerHTML"
+              hx-trigger="change delay:100ms"
+              readonly=${isReadOnly}
+            />
+            <label class="form-check-label" for="delivery-address">Has delivery</label>
+          </div>
+        </div>
+        <fieldset class="mb-3" style="display: ${sale.hasDeliveryAddress ? 'block' : 'none'}">
+          <legend><h6>Delivery Address</h6></legend>
+          <div class="row">
+            <div class="col-md-6">
+              <label for="delivery-address-street" class="form-label">Street</label>
+              <input
+                type="text"
+                class="form-control"
+                id="delivery-address-street"
+                name="deliveryAddress[street]"
+                value=${sale.deliveryAddress?.street ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="delivery-address-street-number" class="form-label">Street Number</label>
+              <input
+                type="text"
+                class="form-control"
+                id="delivery-address-street-number"
+                name="deliveryAddress[streetNumber]"
+                value=${sale.deliveryAddress?.streetNumber ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+            <div class="col-md-3">
+              <label for="delivery-address-entrance" class="form-label">Entrance</label>
+              <input
+                type="text"
+                class="form-control"
+                id="delivery-address-entrance"
+                name="deliveryAddress[entrance]"
+                value=${sale.deliveryAddress?.entrance ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="delivery-address-city" class="form-label">City</label>
+              <input
+                type="text"
+                class="form-control"
+                id="delivery-address-city"
+                name="deliveryAddress[city]"
+                value=${sale.deliveryAddress?.city ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <label for="delivery-address-floor" class="form-label">Floor</label>
+              <input
+                type="text"
+                class="form-control"
+                id="delivery-address-floor"
+                name="deliveryAddress[floor]"
+                value=${sale.deliveryAddress?.floor ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="delivery-address-apartment-number" class="form-label"
+                >Apartment Number</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="delivery-address-apartment-number"
+                name="deliveryAddress[apartmentNumber]"
+                value=${sale.deliveryAddress?.apartmentNumber ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="delivery-address-contact-phone" class="form-label">Contact Phone</label>
+              <input
+                type="tel"
+                class="form-control"
+                id="delivery-address-contact-phone"
+                name="deliveryAddress[contactPhone]"
+                value=${sale.deliveryAddress?.contactPhone ?? ''}
+                readonly=${isReadOnly}
+              />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label for="delivery-address-notes" class="form-label">Notes</label>
+              <textarea
+                class="form-control"
+                id="delivery-address-notes"
+                name="deliveryAddress[notesToDeliveryPerson]"
+                rows="2"
+                readonly=${isReadOnly}
+              >
+${sale.deliveryAddress?.notesToDeliveryPerson ?? ''}</textarea
+              >
+            </div>
+          </div>
+        </fieldset>
       </div>
     </div>
   `

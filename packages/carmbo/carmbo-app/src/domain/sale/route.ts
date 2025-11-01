@@ -141,7 +141,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     '/:number',
     {schema: {params: z.object({number: z.coerce.number().int()})}},
     async (request, reply) => {
-      return dealWithControllerResult(reply, await showSale(request.params.number, sql))
+      return dealWithControllerResult(reply, await showSale(request.params.number, undefined, sql))
     },
   )
   appWithTypes.post('/:number', {schema: {body: NewSaleSchema}}, async (request, reply) =>

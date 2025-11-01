@@ -75,6 +75,7 @@ console.log(
       productsSold: products,
       transactionDate: new Date(),
     } as TaxInvoiceInformation,
+    undefined,
     {secret: argv.secret, baseUrl: argv.url},
   ),
 )

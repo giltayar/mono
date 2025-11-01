@@ -114,7 +114,7 @@ async function connectSaleToExternalProviders(
     FROM student s
     JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
     JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
-    JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
+    LEFT JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
     WHERE s.student_number = ${studentNumber}
   `
 
@@ -208,7 +208,7 @@ async function findStudent(
     FROM student s
     JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
     JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
-    JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
+    LEFT JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
     WHERE s.last_data_id IN (
       SELECT se2.data_id FROM student_email se2 WHERE se2.email = ${finalEmail}
       UNION
@@ -407,6 +407,21 @@ async function createSale(
       `,
     ),
   )
+
+  if (cardcomSaleWebhookJson.DeliveryCity) {
+    await sql`
+      INSERT INTO sale_data_delivery ${sql({
+        dataCardcomId,
+        city: cardcomSaleWebhookJson.DeliveryCity ?? '',
+        street: cardcomSaleWebhookJson.DeliveryStreet ?? '',
+        streetNumber: cardcomSaleWebhookJson.DeliveryBuilding ?? '',
+        apartmentNumber: cardcomSaleWebhookJson.DeliveryApartment ?? '',
+        floor: cardcomSaleWebhookJson.DeliveryFloor ?? '',
+        entrance: cardcomSaleWebhookJson.DeliveryEntrance ?? '',
+        contactPhone: cardcomSaleWebhookJson.CardOwnerPhone ?? '',
+        notesToDeliveryPerson: cardcomSaleWebhookJson.DeliveryNotes,
+      })}`
+  }
 
   logger.info('executing-sale-creation-operations')
   await Promise.all(ops).catch(console.error)
@@ -816,7 +831,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       JOIN student ON student.student_number = sale_data.student_number
       JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
       JOIN student_email ON student_email.data_id = student.last_data_id AND student_email.item_order = 0
-      JOIN student_phone ON student_phone.data_id = student.last_data_id AND student_phone.item_order = 0
+      LEFT JOIN student_phone ON student_phone.data_id = student.last_data_id AND student_phone.item_order = 0
       LEFT JOIN LATERAL (
         SELECT
           json_agg(

@@ -30,6 +30,19 @@ export const SaleSchema = z.object({
   cardcomInvoiceNumber: z.string().optional(),
   cardcomInvoiceDocumentUrl: z.url().optional(),
   manualSaleType: z.enum(['manual']).optional(),
+  hasDeliveryAddress: z.stringbool().optional(),
+  deliveryAddress: z
+    .object({
+      city: z.string().optional(),
+      street: z.string().optional(),
+      streetNumber: z.string().optional(),
+      entrance: z.string().optional(),
+      floor: z.string().optional(),
+      apartmentNumber: z.string().optional(),
+      contactPhone: z.string().optional(),
+      notesToDeliveryPerson: z.string().optional(),
+    })
+    .optional(),
 })
 
 export const NewSaleSchema = z.object({
@@ -54,6 +67,19 @@ export const NewSaleSchema = z.object({
   cardcomInvoiceNumber: z.string().optional(),
   cardcomInvoiceDocumentUrl: z.url().optional(),
   manualSaleType: z.enum(['manual']).optional(),
+  hasDeliveryAddress: z.stringbool().optional(),
+  deliveryAddress: z
+    .object({
+      city: z.string().optional(),
+      street: z.string().optional(),
+      streetNumber: z.string().optional(),
+      entrance: z.string().optional(),
+      floor: z.string().optional(),
+      apartmentNumber: z.string().optional(),
+      contactPhone: z.string().optional(),
+      notesToDeliveryPerson: z.string().optional(),
+    })
+    .optional(),
 })
 
 export const SaleHistoryOperationSchema = z.enum([
@@ -334,6 +360,7 @@ export async function fillInSale(sale: NewSale, sql: Sql): Promise<NewSale> {
 
   return {
     ...sale,
+    ...(sale.hasDeliveryAddress && !sale.deliveryAddress ? {deliveryAddress: {}} : undefined),
     manualSaleType: 'manual',
     salesEventName: fillResult[0].salesEventName ?? '',
     studentName: fillResult[0].studentFirstName
@@ -361,7 +388,18 @@ function saleSelect(saleNumber: number, sql: Sql) {
       COALESCE(sale_data_cardcom.invoice_number, sale_data_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_manual.invoice_document_url) AS cardcom_invoice_document_url,
       CASE WHEN sale_data_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
-      COALESCE(products, json_build_array()) AS products
+      COALESCE(products, json_build_array()) AS products,
+      sale_data_delivery.data_id IS NOT NULL OR sale_data_delivery.data_cardcom_id IS NOT NULL AS has_delivery_address,
+      json_build_object(
+        'city', sale_data_delivery.city,
+        'street', sale_data_delivery.street,
+        'streetNumber', sale_data_delivery.street_number,
+        'entrance', sale_data_delivery.entrance,
+        'floor', sale_data_delivery.floor,
+        'apartmentNumber', sale_data_delivery.apartment_number,
+        'contactPhone', sale_data_delivery.contact_phone,
+        'notesToDeliveryPerson', sale_data_delivery.notes_to_delivery_person
+      ) AS delivery_address
     FROM
       parameters
     JOIN sale_history sh ON sh.id = current_history_id
@@ -373,6 +411,9 @@ function saleSelect(saleNumber: number, sql: Sql) {
     LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
     LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sh.data_manual_id
+    LEFT JOIN sale_data_delivery ON
+        (sale_data_delivery.data_cardcom_id IS NULL AND sale_data_delivery.data_id = sh.data_id) OR
+        (sale_data_delivery.data_id IS NULL AND sale_data_delivery.data_cardcom_id = s.data_cardcom_id)
     LEFT JOIN LATERAL (
       SELECT
         json_agg(
@@ -496,6 +537,26 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
       `)
     }
 
+    if (sale.hasDeliveryAddress && sale.deliveryAddress) {
+      const deliveryAddress = sale.deliveryAddress
+
+      ops = ops.concat(
+        sql`
+          INSERT INTO sale_data_delivery ${sql({
+            dataId,
+            city: deliveryAddress.city,
+            street: deliveryAddress.street,
+            streetNumber: deliveryAddress.streetNumber,
+            entrance: deliveryAddress.entrance,
+            floor: deliveryAddress.floor,
+            apartmentNumber: deliveryAddress.apartmentNumber,
+            contactPhone: deliveryAddress.contactPhone,
+            notesToDeliveryPerson: deliveryAddress.notesToDeliveryPerson,
+          })}
+        `,
+      )
+    }
+
     // Insert sale_data_product
     ops = ops.concat(
       sale.products?.map((product, index) => {
@@ -608,6 +669,26 @@ export async function updateSale(
           cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
         })}
       `)
+
+    if (sale.hasDeliveryAddress && sale.deliveryAddress) {
+      const deliveryAddress = sale.deliveryAddress
+
+      ops = ops.concat(
+        sql`
+          INSERT INTO sale_data_delivery ${sql({
+            dataId,
+            city: deliveryAddress.city,
+            street: deliveryAddress.street,
+            streetNumber: deliveryAddress.streetNumber,
+            entrance: deliveryAddress.entrance,
+            floor: deliveryAddress.floor,
+            apartmentNumber: deliveryAddress.apartmentNumber,
+            contactPhone: deliveryAddress.contactPhone,
+            notesToDeliveryPerson: deliveryAddress.notesToDeliveryPerson,
+          })}
+        `,
+      )
+    }
 
     ops = ops.concat(
       sale.products?.map((product, index) => {

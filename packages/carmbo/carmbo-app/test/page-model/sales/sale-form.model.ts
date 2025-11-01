@@ -35,6 +35,38 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
         }),
       }),
     }),
+    hasDeliveryAddressCheckbox: (checkboxLocator = locator.getByLabel('Has Delivery')) => ({
+      locator: checkboxLocator,
+    }),
+    deliveryAddress: (addressLocator = locator.getByRole('group', {name: 'Delivery Address'})) => ({
+      locator: addressLocator,
+      streetInput: (streetLocator = addressLocator.getByLabel('Street', {exact: true})) => ({
+        locator: streetLocator,
+      }),
+      streetNumberInput: (numberLocator = addressLocator.getByLabel('Street Number')) => ({
+        locator: numberLocator,
+      }),
+      entranceInput: (entranceLocator = addressLocator.getByLabel('Entrance')) => ({
+        locator: entranceLocator,
+      }),
+      cityInput: (cityLocator = addressLocator.getByLabel('City')) => ({
+        locator: cityLocator,
+      }),
+      floorInput: (floorLocator = addressLocator.getByLabel('Floor')) => ({
+        locator: floorLocator,
+      }),
+      apartmentNumberInput: (
+        apartmentNumberLocator = addressLocator.getByLabel('Apartment Number'),
+      ) => ({
+        locator: apartmentNumberLocator,
+      }),
+      contactPhoneInput: (contactPhoneLocator = addressLocator.getByLabel('Contact Phone')) => ({
+        locator: contactPhoneLocator,
+      }),
+      notesInput: (notesLocator = addressLocator.getByLabel('Notes')) => ({
+        locator: notesLocator,
+      }),
+    }),
   }
 }
 
