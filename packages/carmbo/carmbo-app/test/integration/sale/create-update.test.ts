@@ -6,6 +6,9 @@ import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
+import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
+import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
+import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 
 const {url, sql, TEST_hooks, smooveIntegration} = setup(import.meta.url)
 
@@ -58,6 +61,9 @@ test('create sale then update it', async ({page}) => {
   const saleListModel = createSaleListPageModel(page)
   const newSaleModel = createNewSalePageModel(page)
   const updateSaleModel = createUpdateSalePageModel(page)
+  const studentModel = createUpdateStudentPageModel(page)
+  const salesEventModel = createUpdateSalesEventPageModel(page)
+  const product1Model = createUpdateProductPageModel(page)
 
   // Navigate to create new sale page
   await page.goto(new URL('/sales/new', url()).href)
@@ -69,6 +75,7 @@ test('create sale then update it', async ({page}) => {
   const newForm = newSaleModel.form()
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
+
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
   await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
@@ -98,6 +105,25 @@ test('create sale then update it', async ({page}) => {
   await expect(updateForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
   await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('7')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('')
+
+  await updateForm.salesEventInput().link().locator.click()
+
+  await expect(salesEventModel.pageTitle().locator).toHaveText(
+    `Update Sales Event ${salesEventNumber}`,
+  )
+
+  await page.goBack()
+  await updateForm.studentInput().link().locator.click()
+
+  await expect(studentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
+
+  await page.goBack()
+
+  await updateForm.products().product(0).link().locator.click()
+
+  await expect(product1Model.pageTitle().locator).toHaveText(`Update Product ${product1Number}`)
+
+  await page.goBack()
 
   // Update the sale data
   await updateForm.cardcomInvoiceNumberInput().locator.fill('54321')

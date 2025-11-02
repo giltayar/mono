@@ -15,51 +15,74 @@ export function SalesFormFields({
   return html`
     <div class="sales-view_form-fields card">
       <div class="card-body">
-        <div class="mb-3">
-          <label for="salesEventNumber" class="form-label">Sales Event</label>
-          <input
-            type="hidden"
-            id="salesEventNumber_value"
-            name="salesEventNumber"
-            value=${sale.salesEventNumber}
-          />
-          <input
-            class="form-control pick-item-title-async"
-            type="text"
-            id="salesEventNumber"
-            hx-post=""
-            hx-target="closest .sales-view_form-fields"
-            hx-swap="outerHTML"
-            hx-trigger="change delay:1ms"
-            value=${generateItemTitle(sale.salesEventNumber, sale.salesEventName)}
-            list="sales-event-list"
-            data-list-fetch="/sales/query/sales-event-list"
-            required
-            readonly=${isReadOnly}
-          />
-          <datalist id="sales-event-list"> </datalist>
+        <div class="row">
+          <div class="col form-floating mb-3">
+            <input
+              type="hidden"
+              id="salesEventNumber_value"
+              name="salesEventNumber"
+              value=${sale.salesEventNumber}
+            />
+            <input
+              class="form-control pick-item-title-async"
+              type="text"
+              id="salesEventNumber"
+              hx-post=""
+              hx-target="closest .sales-view_form-fields"
+              hx-swap="outerHTML"
+              hx-trigger="change delay:1ms"
+              value=${generateItemTitle(sale.salesEventNumber, sale.salesEventName)}
+              list="sales-event-list"
+              data-list-fetch="/sales/query/sales-event-list"
+              required
+              readonly=${isReadOnly}
+            />
+            <label for="salesEventNumber" class="form-label">Sales Event</label>
+            <datalist id="sales-event-list"> </datalist>
+          </div>
+          <div class="col-auto link">
+            ${sale.salesEventNumber
+              ? html`<a href="/sales-events/${sale.salesEventNumber}" title="View sales event"
+                  ><svg class="feather feather-small pe-none" viewbox="0 0 24 24">
+                    <use href="/src/layout/style/link.svg" /></svg
+                ></a>`
+              : ''}
+          </div>
         </div>
         <div class="mb-3">
-          <label for="studentNumber" class="form-label">Student</label>
-          <input
-            type="hidden"
-            id="studentNumber_value"
-            name="studentNumber"
-            value=${sale.studentNumber}
-          />
-          <input
-            class="form-control pick-item-title-async"
-            id="studentNumber"
-            list="student-list"
-            hx-post=""
-            hx-target="closest .sales-view_form-fields"
-            hx-swap="outerHTML"
-            hx-trigger="change delay:1ms"
-            data-list-fetch="/sales/query/student-list"
-            value=${generateItemTitle(sale.studentNumber, sale.studentName)}
-            required
-            readonly=${isReadOnly}
-          />
+          <div class="row">
+            <div class="col form-floating">
+              <input
+                type="hidden"
+                id="studentNumber_value"
+                name="studentNumber"
+                value=${sale.studentNumber}
+              />
+              <input
+                class="form-control pick-item-title-async"
+                id="studentNumber"
+                list="student-list"
+                hx-post=""
+                hx-target="closest .sales-view_form-fields"
+                hx-swap="outerHTML"
+                hx-trigger="change delay:1ms"
+                data-list-fetch="/sales/query/student-list"
+                value=${generateItemTitle(sale.studentNumber, sale.studentName)}
+                required
+                placeholder=" "
+                readonly=${isReadOnly}
+              />
+              <label for="studentNumber" class="form-label">Student</label>
+            </div>
+            <div class="col-auto link">
+              ${sale.studentNumber
+                ? html`<a href="/students/${sale.studentNumber}" title="View student"
+                    ><svg class="feather feather-small pe-none" viewbox="0 0 24 24">
+                      <use href="/src/layout/style/link.svg" /></svg
+                  ></a>`
+                : ''}
+            </div>
+          </div>
         </div>
         <datalist id="student-list"> </datalist>
         ${sale.products && sale.products.length > 0
@@ -71,7 +94,13 @@ export function SalesFormFields({
                     <fieldset class="card mb-2">
                       <div class="card-body">
                         <legend class="mb-2">
-                          <h6>${index + 1}: ${product.productName}</h6>
+                          <h6>
+                            ${index + 1}: ${product.productName}
+                            <a href="/products/${product.productNumber}" title="View product"
+                              ><svg class="feather feather-small pe-none" viewbox="0 0 24 24">
+                                <use href="/src/layout/style/link.svg" /></svg
+                            ></a>
+                          </h6>
                         </legend>
                         <input
                           type="hidden"

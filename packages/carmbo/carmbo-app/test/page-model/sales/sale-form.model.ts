@@ -5,9 +5,15 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
     locator,
     salesEventInput: (inputLocator = locator.getByLabel('Sales Event')) => ({
       locator: inputLocator,
+      link: (linkLocator = locator.getByRole('link', {name: 'View sales event'})) => ({
+        locator: linkLocator,
+      }),
     }),
     studentInput: (inputLocator = locator.getByLabel('Student')) => ({
       locator: inputLocator,
+      link: (linkLocator = locator.getByRole('link', {name: 'View student'})) => ({
+        locator: linkLocator,
+      }),
     }),
     finalSaleRevenueInput: (inputLocator = locator.getByLabel('Final Sale Revenue')) => ({
       locator: inputLocator,
@@ -26,6 +32,9 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
         locator: productLocator,
         title: (titleLocator = productLocator.locator('legend h6')) => ({
           locator: titleLocator,
+        }),
+        link: (linkLocator = productLocator.getByRole('link', {name: 'View product'})) => ({
+          locator: linkLocator,
         }),
         quantity: (quantityLocator = productLocator.getByLabel('Quantity')) => ({
           locator: quantityLocator,
