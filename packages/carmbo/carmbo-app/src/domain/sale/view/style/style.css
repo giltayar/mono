@@ -1,1 +1,8 @@
-/* Sale view styles */
+h2 .spinner-border {
+  display: none;
+}
+
+h2.htmx-request .spinner-border {
+  display: inline-block;
+  margin-left: 10px;
+}
