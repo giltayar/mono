@@ -6,8 +6,16 @@ import {ProductHistoryList, historyOperationToText} from './history.ts'
 
 export function ProductCreateView({product}: {product: Product}) {
   return html`
-    <h2 class="border-bottom col-md-6 mt-3">New Product</h2>
-    <form hx-post="/products/" hx-target="body" class="col-md-6 mt-3">
+    <h2 class="border-bottom col-md-6 mt-3">
+      New Product
+      <div class="operation-spinner spinner-border" role="status"></div>
+    </h2>
+    <form
+      hx-post="/products/"
+      hx-target="body"
+      class="col-md-6 mt-3"
+      hx-indicator=".operation-spinner"
+    >
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
           <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
@@ -36,8 +44,14 @@ export function ProductUpdateView({
       ${product.historyOperation === 'delete'
         ? html` <small class="text-body-secondary">(archived)</small>`
         : ''}
+      <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
-    <form hx-put="/products/${product.productNumber}" hx-target="form" class="col-md-6 mt-3">
+    <form
+      hx-put="/products/${product.productNumber}"
+      hx-target="form"
+      class="col-md-6 mt-3"
+      hx-indicator=".operation-spinner"
+    >
       <input name="productNumber" type="hidden" value=${product.productNumber} />
       <input
         name="delete-operation"
@@ -102,8 +116,9 @@ export function ProductHistoryView({
       <small class="text-body-secondary"
         >(${historyOperationToText(currentHistory?.operation)})</small
       >
+      <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
-    <form class="col-md-6 mt-3">
+    <form class="col-md-6 mt-3" hx-indicator=".operation-spinner">
       <input name="productNumber" type="hidden" value=${product.productNumber} readonly />
       <div class="mt-3">
         <${ProductCreateOrUpdateFormFields} product=${product} operation="read" />

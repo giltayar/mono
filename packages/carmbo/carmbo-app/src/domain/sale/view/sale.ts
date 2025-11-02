@@ -18,13 +18,13 @@ export function SaleUpdateView({
       ${sale.historyOperation === 'delete'
         ? html` <small class="text-body-secondary">(archived)</small>`
         : ''}
-      <div class="spinner-border mr-1" role="status"></div>
+      <div class="operation-spinner spinner-border mr-1" role="status"></div>
     </h2>
     <form
       hx-put="/sales/${sale.saleNumber}"
       hx-target="form"
       class="col-md-6 mt-3"
-      hx-indicator="h2"
+      hx-indicator=".operation-spinner"
     >
       <input name="saleNumber" type="hidden" value=${sale.saleNumber} />
       <div class="ms-auto" style="width: fit-content">

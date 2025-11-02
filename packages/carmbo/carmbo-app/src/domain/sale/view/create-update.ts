@@ -4,8 +4,16 @@ import {SalesFormFields} from './form.ts'
 
 export function SaleCreateView({sale}: {sale: NewSale}) {
   return html`
-    <h2 class="border-bottom col-md-6 mt-3">New Sale</h2>
-    <form hx-post="/sales/" hx-target="body" class="col-md-6 mt-3">
+    <h2 class="border-bottom col-md-6 mt-3">
+      New Sale
+      <div class="operation-spinner spinner-border" role="status"></div>
+    </h2>
+    <form
+      hx-post="/sales/"
+      hx-target="body"
+      class="col-md-6 mt-3"
+      hx-indicator=".operation-spinner"
+    >
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
           <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
