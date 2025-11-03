@@ -190,10 +190,16 @@ export async function _test_simulateCardcomSale(
     cardcomInvoiceNumberToSend?: number
   } = {},
 ) {
-  const {cardcomInvoiceNumber} = await createTaxInvoiceDocument(s, sale, {
-    sendInvoiceByMail: false,
-    TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
-  })
+  assert.ok(
+    !options.cardcomInvoiceNumberToSend ||
+      s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend],
+  )
+  const {cardcomInvoiceNumber} = options.cardcomInvoiceNumberToSend
+    ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
+    : await createTaxInvoiceDocument(s, sale, {
+        sendInvoiceByMail: false,
+        TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
+      })
 
   await simulateCardcomSale(
     salesEventNumber,
