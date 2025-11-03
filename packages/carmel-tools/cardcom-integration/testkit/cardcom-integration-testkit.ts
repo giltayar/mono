@@ -58,6 +58,10 @@ export function createFakeCardcomIntegrationService(context: {
 
   return {
     ...service,
+    _test_reset_data: () => {
+      state.accounts = structuredClone(context.accounts)
+      state.taxInvoiceDocuments = []
+    },
     _test_getRecurringPaymentStatus: async (
       accountId: string,
       recurringPaymentId: string,
