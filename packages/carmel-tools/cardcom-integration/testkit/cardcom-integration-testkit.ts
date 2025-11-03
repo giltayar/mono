@@ -139,8 +139,9 @@ async function fetchRecurringPaymentBadPayments(
 async function createTaxInvoiceDocument(
   s: CardcomIntegrationServiceData,
   invoiceInformation: TaxInvoiceInformation,
-  _options: {
+  options: {
     sendInvoiceByMail: boolean
+    TEST_sendCardcomInvoiceNumber?: number
   },
 ): Promise<{cardcomInvoiceNumber: number; cardcomDocumentLink: string; cardcomCustomerId: string}> {
   const generatedCustomerId = invoiceInformation.cardcomCustomerId ?? (Math.random() * 100000) | 0
@@ -150,7 +151,8 @@ async function createTaxInvoiceDocument(
   }
   s.state.taxInvoiceDocuments.push(invoiceToStore)
 
-  const cardcomInvoiceNumber = s.state.taxInvoiceDocuments.length
+  const cardcomInvoiceNumber =
+    options.TEST_sendCardcomInvoiceNumber ?? s.state.taxInvoiceDocuments.length
   return {
     cardcomInvoiceNumber,
     cardcomDocumentLink: `http://invoice-document.example.com/${cardcomInvoiceNumber}`,
@@ -184,8 +186,14 @@ export async function _test_simulateCardcomSale(
     secret: string
     baseUrl: string
   },
+  options: {
+    cardcomInvoiceNumberToSend?: number
+  } = {},
 ) {
-  const {cardcomInvoiceNumber} = await createTaxInvoiceDocument(s, sale, {sendInvoiceByMail: false})
+  const {cardcomInvoiceNumber} = await createTaxInvoiceDocument(s, sale, {
+    sendInvoiceByMail: false,
+    TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
+  })
 
   await simulateCardcomSale(
     salesEventNumber,
