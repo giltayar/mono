@@ -192,7 +192,7 @@ export async function _test_simulateCardcomSale(
 ) {
   assert.ok(
     !options.cardcomInvoiceNumberToSend ||
-      s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend],
+      s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend + 1],
   )
   const {cardcomInvoiceNumber} = options.cardcomInvoiceNumberToSend
     ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
