@@ -414,4 +414,72 @@ describe('Smoove Integration Testkit', () => {
       await assert.rejects(() => service.restoreSmooveContact(999999), /Contact 999999 not found/)
     })
   })
+
+  describe('_test_reset_data', () => {
+    it('should reset service state to original data', async () => {
+      const service = createTestService()
+
+      // Make some changes to the state
+      const newContactResult = await service.createSmooveContact({
+        email: 'new@example.com',
+        firstName: 'NewFirst',
+        lastName: 'NewLast',
+        telephone: '972501111111',
+        birthday: undefined,
+      })
+      assert.ok(typeof newContactResult === 'object')
+      const {smooveId: newContactId} = newContactResult
+
+      // Update an existing contact
+      await service.updateSmooveContact(testContactId, {
+        email: 'changed@example.com',
+        firstName: 'ChangedFirst',
+        lastName: 'ChangedLast',
+        telephone: '972509999999',
+        birthday: undefined,
+      })
+
+      // Delete a contact
+      await service.deleteSmooveContact(67890)
+
+      // Change contact lists
+      await service.changeContactLinkedLists(testContactId, {
+        subscribeTo: [anotherListId],
+        unsubscribeFrom: [testListId],
+      })
+
+      // Verify changes were made
+      const changedContact = await service.fetchSmooveContact(testContactId)
+      assert.strictEqual(changedContact.email, 'changed@example.com')
+      assert.strictEqual(changedContact.firstName, 'ChangedFirst')
+      assert.ok(changedContact.lists_Linked.includes(anotherListId))
+      assert.ok(!changedContact.lists_Linked.includes(testListId))
+
+      const newContact = await service.fetchSmooveContact(newContactId)
+      assert.strictEqual(newContact.email, 'new@example.com')
+
+      assert.ok(service._test_isContactDeleted(67890))
+
+      // Reset the data
+      service._test_reset_data()
+
+      // Verify original state is restored
+      const restoredContact = await service.fetchSmooveContact(testContactId)
+      assert.strictEqual(restoredContact.email, testEmail)
+      assert.strictEqual(restoredContact.firstName, 'testfirstname')
+      assert.strictEqual(restoredContact.lastName, 'testlastname')
+      assert.strictEqual(restoredContact.telephone, '972501234567')
+      assert.ok(restoredContact.lists_Linked.includes(testListId))
+      assert.ok(!restoredContact.lists_Linked.includes(anotherListId))
+
+      // The new contact should no longer exist
+      await assert.rejects(() => service.fetchSmooveContact(newContactId), /Contact not found/)
+
+      // Contact 67890 should no longer be deleted
+      assert.ok(!service._test_isContactDeleted(67890))
+      const restoredContact67890 = await service.fetchSmooveContact(67890)
+      assert.strictEqual(restoredContact67890.email, 'another@example.com')
+      assert.strictEqual(restoredContact67890.firstName, '67890First')
+    })
+  })
 })

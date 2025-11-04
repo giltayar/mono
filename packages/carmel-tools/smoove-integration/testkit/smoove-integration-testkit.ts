@@ -49,6 +49,12 @@ export function createFakeSmooveIntegrationService(context: {
 
   return {
     ...service,
+    _test_reset_data: () => {
+      Object.assign(state, {
+        contacts: structuredClone(context.contacts),
+        lists: structuredClone(context.lists),
+      })
+    },
     _test_isContactDeleted: (id: number) => !!state.contacts[id].isDeleted,
   }
 }
