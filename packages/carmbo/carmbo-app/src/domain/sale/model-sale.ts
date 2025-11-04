@@ -50,7 +50,15 @@ export async function handleCardcomOneTimeSale(
   })
   logger.info('handle-cardcom-one-time-sale-started')
   await sql.begin(async (sql) => {
-    const hasSalesEvent = await doesSalesEventExist(salesEventNumber, sql)
+    const [hasSaleWithInvoiceNumber_, hasSalesEvent] = await Promise.all([
+      hasSaleWithInvoiceNumber(cardcomSaleWebhookJson.invoicenumber, sql, logger),
+      doesSalesEventExist(salesEventNumber, sql, logger),
+    ])
+
+    if (hasSaleWithInvoiceNumber_) {
+      logger.info({invoiceNumber: cardcomSaleWebhookJson.invoicenumber}, 'sale-already-exists')
+      return
+    }
     if (!hasSalesEvent) {
       throw makeError(`Sales event not found: ${salesEventNumber}`, {httpStatus: 400})
     }
@@ -175,9 +183,16 @@ async function connectSaleToExternalProviders(
   }
 }
 
-async function doesSalesEventExist(salesEventNumber: number, sql: Sql): Promise<boolean> {
+async function doesSalesEventExist(
+  salesEventNumber: number,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+): Promise<boolean> {
+  logger.info({salesEventNumber}, 'checking-if-sales-event-exists')
   const result =
     await sql`SELECT 1 FROM sales_event WHERE sales_event_number = ${salesEventNumber} LIMIT 1`
+
+  logger.info({exists: result.length > 0}, 'sales-event-existence-checked')
 
   return result.length > 0
 }
@@ -861,4 +876,18 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
   }
 
   return result[0]
+}
+
+async function hasSaleWithInvoiceNumber(
+  invoicenumber: string,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+): Promise<boolean> {
+  logger.info({invoicenumber}, 'checking-if-sale-with-invoice-number-exists')
+  const result = await sql<{count: string}[]>`
+    SELECT 1 FROM sale_data_cardcom WHERE invoice_number = ${invoicenumber} LIMIT 1
+  `
+  logger.info({exists: result.length > 0}, 'sale-with-invoice-number-existence-checked')
+
+  return result.length > 0
 }

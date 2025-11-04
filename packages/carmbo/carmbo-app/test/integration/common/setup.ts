@@ -8,7 +8,6 @@ import postgres from 'postgres'
 import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
-import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {migrate} from '../../../src/sql/migration.ts'
 import {fileURLToPath} from 'node:url'
 import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
@@ -18,7 +17,7 @@ import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
 export function setup(testUrl: string): {
   url: () => URL
   sql: () => Sql
-  smooveIntegration: () => SmooveIntegrationService
+  smooveIntegration: () => ReturnType<typeof createFakeSmooveIntegrationService>
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
   cardcomIntegration: () => ReturnType<typeof createFakeCardcomIntegrationService>
   TEST_hooks: Record<string, TEST_HookFunction>
@@ -29,7 +28,7 @@ export function setup(testUrl: string): {
   let app: FastifyInstance
   let sql: Sql
   let url: URL
-  let smooveIntegration: SmooveIntegrationService
+  let smooveIntegration: ReturnType<typeof createFakeSmooveIntegrationService>
   let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
   let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
 
@@ -119,6 +118,8 @@ export function setup(testUrl: string): {
 
   test.beforeEach(async () => {
     resetHooks()
+    cardcomIntegration._test_reset_data()
+    smooveIntegration._test_reset_data()
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product RESTART IDENTITY CASCADE`

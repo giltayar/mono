@@ -300,7 +300,6 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
 
   const customerEmail = 'repeat-customer@example.com'
   const customerName = 'Jane Doe'
-  const _customerPhone = '0503333333'
 
   // First sale with customer ID "11111"
   await cardcomIntegration()._test_simulateCardcomSale(
@@ -405,4 +404,119 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
   await updateStudentModel.form().updateButton().locator.click()
 
   await expect(updateStudentModel.history().items().item(0).locator).toHaveText(/updated/)
+})
+
+test('double call of cardcom webhook should create only one sale and one student', async ({
+  page,
+}) => {
+  const academyCourseId = 1
+  const smooveListId = 2
+
+  const productNumber = await createProduct(
+    {
+      name: 'Test Product',
+      productType: 'recorded',
+      academyCourses: [academyCourseId],
+      smooveListId: smooveListId,
+    },
+    undefined,
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    sql(),
+  )
+
+  const customerEmail = 'duplicate-customer@example.com'
+  const customerName = 'Jane Smith'
+  const customerPhone = '0507777777'
+
+  const saleData = {
+    productsSold: [
+      {
+        productId: productNumber.toString(),
+        quantity: 1,
+        unitPriceInCents: 100 * 100,
+        productName: 'Test Product',
+      },
+    ],
+    customerEmail,
+    customerName,
+    customerPhone,
+    cardcomCustomerId: 9999,
+    transactionDate: new Date(),
+    transactionRevenueInCents: 100 * 100,
+  }
+
+  // First call - should create student and sale
+  await cardcomIntegration()._test_simulateCardcomSale(salesEventNumber, saleData, undefined, {
+    secret: 'secret',
+    baseUrl: url().href,
+  })
+
+  // Second call with same data and same invoice number - should NOT create duplicates
+  await cardcomIntegration()._test_simulateCardcomSale(
+    salesEventNumber,
+    saleData,
+    undefined,
+    {
+      secret: 'secret',
+      baseUrl: url().href,
+    },
+    {
+      cardcomInvoiceNumberToSend: 1, // Use same invoice number as first call
+    },
+  )
+
+  // Verify only one student was created
+  await page.goto(new URL('/students', url()).href)
+  const studentListModel = createStudentListPageModel(page)
+  const studentRows = studentListModel.list().rows()
+
+  await expect(studentRows.locator).toHaveCount(1)
+
+  const firstStudentRow = studentRows.row(0)
+  await expect(firstStudentRow.nameCell().locator).toHaveText('Jane Smith')
+
+  // Verify only one sale was created
+  await page.goto(new URL('/sales', url()).href)
+  const saleListModel = createSaleListPageModel(page)
+  const saleRows = saleListModel.list().rows()
+
+  await expect(saleRows.locator).toHaveCount(1)
+
+  const firstSaleRow = saleRows.row(0)
+  await expect(firstSaleRow.eventCell().locator).toHaveText('Test Sales Event')
+  await expect(firstSaleRow.studentCell().locator).toHaveText('Jane Smith')
+
+  const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+  expect(smooveContacts.length).toBe(1)
+  expect(smooveContacts[0].email).toBe(customerEmail)
+  expect(smooveContacts[0].firstName).toBe('Jane')
+  expect(smooveContacts[0].lastName).toBe('Smith')
+  expect(smooveContacts[0].telephone).toBe(customerPhone)
+
+  const academyContact = academyIntegration()._test_getContact(customerEmail)
+  expect(academyContact).toBeDefined()
+  expect(academyContact?.name).toBe(customerName)
+  expect(academyContact?.phone).toBe(customerPhone)
+  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+    true,
+  )
+
+  // Verify only one tax invoice document was created
+  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  expect(taxInvoiceDocument).toBeDefined()
+
+  // There should be no second tax invoice document
+  const secondTaxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('2')
+  expect(secondTaxInvoiceDocument).toBeUndefined()
 })
