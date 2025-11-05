@@ -23,6 +23,7 @@ export function createCardcomIntegrationService(context: CardcomIntegrationServi
     enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
     fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
     fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
+    fetchAccountInformation: sBind(fetchAccountInformation),
     createTaxInvoiceDocument: sBind(createTaxInvoiceDocument),
     createTaxInvoiceDocumentUrl: sBind(createTaxInvoiceDocumentUrl),
   }
@@ -236,4 +237,37 @@ export async function createTaxInvoiceDocumentUrl(
   })) as {DocUrl: string}
 
   return {url: result.DocUrl}
+}
+
+export interface AccountInformation {
+  accountId: string
+  name: string
+  email: string | undefined
+  phone: string | undefined
+}
+
+async function fetchAccountInformation(
+  service: CardcomIntegrationServiceData,
+  accountId: number,
+): Promise<AccountInformation> {
+  const url = new URL('https://secure.cardcom.solutions/api/v11/Account/GetByAccountId')
+
+  const response = (await fetchAsJsonWithJsonBody(url, {
+    ApiName: service.context.apiKey,
+    ApiPassword: service.context.apiKeyPassword,
+    AccountId: accountId,
+  })) as {
+    AccountId: string
+    Name: string
+    Email?: string
+    Phone?: string
+    Mobile?: string
+  }
+
+  return {
+    accountId: response.AccountId,
+    name: response.Name,
+    email: response.Email,
+    phone: response.Mobile || response.Phone,
+  }
 }

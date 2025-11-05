@@ -11,7 +11,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - /tmp/carmbo-app/.db-data:/var/lib/postgresql/data
+      - /${HOME}/.carmbo-app/.db-data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U user -d carmbo']
       interval: 10s

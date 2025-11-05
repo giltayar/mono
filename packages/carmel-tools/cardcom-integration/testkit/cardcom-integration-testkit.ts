@@ -1,6 +1,7 @@
 import type {
   CardcomIntegrationService,
   TaxInvoiceInformation,
+  AccountInformation,
 } from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {
   RecurringPaymentInfo,
@@ -30,7 +31,7 @@ export function createFakeCardcomIntegrationService(context: {
   accounts: Record<
     string,
     {
-      recurringPayments: Record<
+      recurringPayments?: Record<
         string,
         {
           recurringPaymentId: string
@@ -38,7 +39,12 @@ export function createFakeCardcomIntegrationService(context: {
           isActive: boolean
         }
       >
-      badPayments: Record<string, BadPayment[]>
+      badPayments?: Record<string, BadPayment[]>
+      accountInfo: {
+        name: string
+        email?: string
+        phone?: string
+      }
     }
   >
 }) {
@@ -52,6 +58,7 @@ export function createFakeCardcomIntegrationService(context: {
     enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
     fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
     fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
+    fetchAccountInformation: sBind(fetchAccountInformation),
     createTaxInvoiceDocument: sBind(createTaxInvoiceDocument),
     createTaxInvoiceDocumentUrl: sBind(createTaxInvoiceDocumentUrl),
   }
@@ -69,7 +76,7 @@ export function createFakeCardcomIntegrationService(context: {
       const account = state.accounts[accountId]
       if (!account) return undefined
 
-      const recurringPayment = Object.values(account.recurringPayments).find(
+      const recurringPayment = Object.values(account.recurringPayments ?? {}).find(
         (rp) => rp.recurringPaymentId === recurringPaymentId,
       )
       return recurringPayment?.isActive
@@ -90,7 +97,7 @@ async function enableDisableRecurringPayment(
   action: 'enable' | 'disable',
 ): Promise<Record<string, string>> {
   for (const account of Object.values(s.state.accounts)) {
-    for (const recurringPayment of Object.values(account.recurringPayments)) {
+    for (const recurringPayment of Object.values(account.recurringPayments ?? {})) {
       if (recurringPayment.recurringPaymentId === cardcomRecurringPaymentId) {
         recurringPayment.isActive = action === 'enable'
         return {
@@ -114,7 +121,7 @@ async function fetchRecurringPaymentInformation(
   if (!account) return undefined
 
   // Find the first recurring payment that matches the name
-  const recurringPayment = Object.values(account.recurringPayments).find((rp) =>
+  const recurringPayment = Object.values(account.recurringPayments ?? {}).find((rp) =>
     nameMatch.test(rp.name),
   )
   if (!recurringPayment) return undefined
@@ -132,12 +139,34 @@ async function fetchRecurringPaymentBadPayments(
   const account = s.state.accounts[accountId]
   if (!account) return undefined
 
-  const badPayments = productIds.map((id) => account.badPayments[id] ?? []).flat()
+  const badPayments = productIds.map((id) => account.badPayments?.[id] ?? []).flat()
 
   if (badPayments.length === 0) return undefined
 
   // Return sorted by date (oldest first)
   return [...badPayments].sort((a, b) => a.date.getTime() - b.date.getTime())
+}
+
+async function fetchAccountInformation(
+  s: CardcomIntegrationServiceData,
+  accountId: number,
+): Promise<AccountInformation> {
+  const account = s.state.accounts[accountId.toString()]
+  if (!account) {
+    throw new Error(`Account ${accountId} not found`)
+  }
+
+  const accountInfo = account.accountInfo
+  if (!accountInfo) {
+    throw new Error(`Account information for ${accountId} not found`)
+  }
+
+  return {
+    accountId: accountId.toString(),
+    name: accountInfo.name,
+    email: accountInfo.email,
+    phone: accountInfo.phone,
+  }
 }
 
 async function createTaxInvoiceDocument(

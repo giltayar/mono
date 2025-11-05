@@ -70,3 +70,32 @@ export const CardcomSaleWebhookJsonSchema = z.looseObject({
 })
 
 export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema>
+
+export const CardcomStandingOrderBaseJsonSchema = z.looseObject({
+  AccountId: z.number().optional(),
+  RecurringId: z.number(),
+})
+
+export const CardcomStandingOrderJsonSchema = z.looseObject({
+  RecordType: z.literal('MasterRecurring'),
+  'FlexItem.Price': z.number(),
+  'FlexItem.ProductId': z.number(),
+})
+
+export const CardcomStandingOrderPaymentJsonSchema = z.looseObject({
+  RecordType: z.literal('DetailRecurring'),
+  Status: z.string(),
+  ProductId: z.number(),
+  Quantity: z.number(),
+  Sum: z.number(),
+  InternalDealNumber: z.coerce.string(),
+  DocumentNumber: z.number(),
+  BillingAttempts: z.number(),
+})
+
+export const CardcomStandingOrderWebHookJsonSchema = z.discriminatedUnion('RecordType', [
+  CardcomStandingOrderJsonSchema,
+  CardcomStandingOrderPaymentJsonSchema,
+])
+
+export type CardcomStandingOrderWebHookJson = z.infer<typeof CardcomStandingOrderWebHookJsonSchema>

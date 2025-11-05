@@ -35,10 +35,24 @@ describe('Cardcom Integration Testkit', () => {
               },
             ],
           },
+          accountInfo: {
+            name: 'John Doe',
+            email: 'john.doe@example.com',
+            phone: '050-1234567',
+          },
         },
         'empty-account': {
-          recurringPayments: {},
-          badPayments: {},
+          accountInfo: {
+            name: 'Empty Account User',
+            email: 'empty@example.com',
+          },
+        },
+        '12345': {
+          accountInfo: {
+            name: 'Numeric Account User',
+            email: 'numeric@example.com',
+            phone: '052-9876543',
+          },
         },
       },
     })
@@ -179,6 +193,49 @@ describe('Cardcom Integration Testkit', () => {
       ])
 
       assert.strictEqual(result, undefined)
+    })
+  })
+
+  describe('fetchAccountInformation', () => {
+    it('should return account information for existing account with numeric ID', async () => {
+      const service = createTestService()
+
+      const result = await service.fetchAccountInformation(12345)
+
+      assert.ok(result)
+      assert.strictEqual(result.accountId, '12345')
+      assert.strictEqual(result.name, 'Numeric Account User')
+      assert.strictEqual(result.email, 'numeric@example.com')
+      assert.strictEqual(result.phone, '052-9876543')
+    })
+
+    it('should return account information without optional fields', async () => {
+      const serviceWithOptionalFields = createFakeCardcomIntegrationService({
+        accounts: {
+          '999': {
+            recurringPayments: {},
+            badPayments: {},
+            accountInfo: {
+              name: 'Empty Fields User',
+              // email and phone are undefined
+            },
+          },
+        },
+      })
+
+      const result = await serviceWithOptionalFields.fetchAccountInformation(999)
+
+      assert.ok(result)
+      assert.strictEqual(result.accountId, '999')
+      assert.strictEqual(result.name, 'Empty Fields User')
+      assert.strictEqual(result.email, undefined)
+      assert.strictEqual(result.phone, undefined)
+    })
+
+    it('should throw error for non-existent account', async () => {
+      const service = createTestService()
+
+      await assert.rejects(() => service.fetchAccountInformation(99999), /Account 99999 not found/)
     })
   })
 
