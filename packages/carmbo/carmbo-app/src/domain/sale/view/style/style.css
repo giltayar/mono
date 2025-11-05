@@ -1,0 +1,7 @@
+.sales-view {
+  section.add-new {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+  }
+}
