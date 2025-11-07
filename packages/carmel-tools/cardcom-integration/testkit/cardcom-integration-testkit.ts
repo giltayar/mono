@@ -9,11 +9,12 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 import assert from 'node:assert'
-import {simulateCardcomSale} from './cardcom-webhook-simulation.ts'
+import {simulateCardcomSale, simulateMasterRecurring} from './cardcom-webhook-simulation.ts'
 
 type CardcomIntegrationServiceData = {
   state: Parameters<typeof createFakeCardcomIntegrationService>[0] & {
     taxInvoiceDocuments: TaxInvoiceInformation[]
+    standingOrderNumbers: number[]
   }
 }
 
@@ -51,6 +52,7 @@ export function createFakeCardcomIntegrationService(context: {
   const state: CardcomIntegrationServiceData['state'] = {
     accounts: structuredClone(context.accounts),
     taxInvoiceDocuments: [],
+    standingOrderNumbers: [],
   }
   const sBind: ServiceBind<CardcomIntegrationServiceData> = (f) => bind(f, {state})
 
@@ -240,24 +242,45 @@ export async function _test_simulateCardcomSale(
     sale,
     delivery,
     cardcomInvoiceNumber.toString(),
+    undefined,
     serverInfo,
   )
 }
 
 export async function _test_simulateCardcomStandingOrder(
-  _s: CardcomIntegrationServiceData,
-  _salesEventNumber: number,
-  _standingOrderInfo: {
-    amount: number
-    customerName: string
-    customerEmail: string
-    customerPhone: string | undefined
-    cardcomCustomerId: number | undefined
-    transactionRevenueInCents: number
-    transactionDate: Date
-  },
-  _serverInfo: {
+  s: CardcomIntegrationServiceData,
+  salesEventNumber: number,
+  sale: TaxInvoiceInformation,
+  delivery: DeliveryInformation | undefined,
+  serverInfo: {
     secret: string
     baseUrl: string
   },
-) {}
+  options: {
+    cardcomInvoiceNumberToSend?: number
+  } = {},
+) {
+  assert.ok(
+    !options.cardcomInvoiceNumberToSend ||
+      s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend - 1],
+  )
+  const {cardcomInvoiceNumber} = options.cardcomInvoiceNumberToSend
+    ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
+    : await createTaxInvoiceDocument(s, sale, {
+        sendInvoiceByMail: false,
+        TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
+      })
+
+  const standingOrderNumber = Math.max(...s.state.standingOrderNumbers) + 1
+
+  await simulateCardcomSale(
+    salesEventNumber,
+    sale,
+    delivery,
+    cardcomInvoiceNumber.toString(),
+    standingOrderNumber.toString(),
+    serverInfo,
+  )
+
+  await simulateMasterRecurring(sale, standingOrderNumber.toString(), serverInfo)
+}

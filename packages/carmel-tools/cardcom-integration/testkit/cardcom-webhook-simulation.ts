@@ -1,7 +1,7 @@
 import Chance from 'chance'
 import {fetchAsBufferWithJsonBody} from '@giltayar/http-commons'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
-import type {CardcomSaleWebhookJson} from '../src/types.ts'
+import type {CardcomMasterRecurringJson, CardcomSaleWebhookJson} from '../src/types.ts'
 import type {TaxInvoiceInformation} from '../src/cardcom-integration.ts'
 import type {DeliveryInformation} from './cardcom-integration-testkit.ts'
 
@@ -12,25 +12,47 @@ export async function simulateCardcomSale(
   invoiceInformation: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
+  standingOrderNumber: string | undefined,
   serverInfo: {
     secret: string
     baseUrl: string
   },
 ): Promise<void> {
-  const webhookData = generateCardcomWebhookData(invoiceInformation, delivery, invoiceNumber)
+  const webhookData = generateCardcomWebhookData(
+    invoiceInformation,
+    delivery,
+    invoiceNumber,
+    standingOrderNumber,
+  )
 
-  const url = addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', serverInfo.baseUrl), {
+  const url = addQueryParamsToUrl(new URL('/api/sales/cardcom/sale', serverInfo.baseUrl), {
     secret: serverInfo.secret ?? 'secret',
     'sales-event': salesEventNumber.toString(),
   })
 
-  await fetchAsBufferWithJsonBody(url.toString(), webhookData as any)
+  await fetchAsBufferWithJsonBody(url, webhookData as any)
+}
+
+export async function simulateMasterRecurring(
+  invoiceInformation: TaxInvoiceInformation,
+  standingOrderNumber: string,
+  serverInfo: {
+    secret: string
+    baseUrl: string
+  },
+): Promise<void> {
+  const webhookData = generateMasterRecurringWebhookData(invoiceInformation, standingOrderNumber)
+
+  const url = new URL('/api/sales/cardcom/sale', serverInfo.baseUrl)
+
+  await fetchAsBufferWithJsonBody(url, webhookData as any)
 }
 
 function generateCardcomWebhookData(
   invoiceInfo: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
+  standingOrderNumber: string | undefined,
 ): CardcomSaleWebhookJson {
   const now = new Date()
   const dealDate = now.toISOString().split('T')[0].replace(/-/g, '/')
@@ -67,6 +89,8 @@ function generateCardcomWebhookData(
     DeliveryFloor: delivery?.floor,
     DeliveryEntrance: delivery?.entrance,
     DeliveryNotes: delivery?.notes,
+
+    RecurringOrderID: standingOrderNumber,
   }
 
   for (let i = 1; i < invoiceInfo.productsSold.length; i++) {
@@ -77,4 +101,16 @@ function generateCardcomWebhookData(
   }
 
   return webhookData
+}
+
+function generateMasterRecurringWebhookData(
+  invoiceInfo: TaxInvoiceInformation,
+  standingOrderNumber: string,
+): CardcomMasterRecurringJson {
+  return {
+    RecordType: 'MasterRecurring',
+    AccountId: invoiceInfo.cardcomCustomerId,
+    RecurringId: parseInt(standingOrderNumber),
+    'FlexItem.Price': invoiceInfo.transactionRevenueInCents / 100,
+  }
 }

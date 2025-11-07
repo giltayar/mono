@@ -44,27 +44,29 @@ export function apiRoute(
 
   initializeJobHandlers(academyIntegration, smooveIntegration)
 
-  appWithTypes.post(
-    '/cardcom/one-time-sale',
-    {
-      schema: {
-        querystring: z.object({secret: z.string(), 'sales-event': z.coerce.number().positive()}),
-        body: CardcomSaleWebhookJsonSchema,
+  for (const path of ['/cardcom/sale', '/cardcom/one-time-sale'])
+    appWithTypes.post(
+      path,
+      {
+        schema: {
+          querystring: z.object({secret: z.string(), 'sales-event': z.coerce.number().positive()}),
+          body: CardcomSaleWebhookJsonSchema,
+        },
       },
-    },
-    async (request, reply) => {
-      if (secret && request.query.secret !== secret) {
-        request.log.warn({query: request.query}, 'wrong-api-secret')
-        return reply.status(403).send({error: 'Forbidden'})
-      }
+      async (request, reply) => {
+        if (secret && request.query.secret !== secret) {
+          request.log.warn({query: request.query}, 'wrong-api-secret')
+          return reply.status(403).send({error: 'Forbidden'})
+        }
 
-      request.log.info({body: request.body}, 'cardcom-one-time-sale-webhook')
+        request.log.info({body: request.body}, 'cardcom-one-time-sale-webhook')
 
-      return await dealWithControllerResultAsync(reply, () =>
-        dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
-      )
-    },
-  )
+        return await dealWithControllerResultAsync(reply, () =>
+          dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
+        )
+      },
+    )
+
   appWithTypes.post(
     '/cardcom/standing-order-one-time-sale',
     {

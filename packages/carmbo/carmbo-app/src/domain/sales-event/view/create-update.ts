@@ -103,7 +103,7 @@ export function SalesEventUpdateView({
         <input
           class="form-control"
           type="url"
-          value=${addQueryParamsToUrl(new URL('/api/sales/cardcom/one-time-sale', appBaseUrl), {
+          value=${addQueryParamsToUrl(new URL('/api/sales/cardcom/sale', appBaseUrl), {
             'sales-event': salesEvent.salesEventNumber.toString(),
             secret: apiSecret,
           }).href}

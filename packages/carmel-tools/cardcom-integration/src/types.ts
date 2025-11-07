@@ -67,6 +67,8 @@ export const CardcomSaleWebhookJsonSchema = z.looseObject({
   DeliveryFloor: z.string().optional(),
   DeliveryEntrance: z.string().optional(),
   DeliveryNotes: z.string().optional(),
+
+  RecurringOrderID: z.string().optional(), // for standing orders
 })
 
 export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema>
@@ -74,17 +76,16 @@ export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema
 export const CardcomStandingOrderBaseJsonSchema = z.looseObject({
   AccountId: z.number().optional(),
   RecurringId: z.number(),
-  Secret: z.string(),
+  Secret: z.string().optional(),
 })
 
-export const CardcomStandingOrderJsonSchema = z.looseObject({
+export const CardcomMasterRecurringJsonSchema = z.looseObject({
   RecordType: z.literal('MasterRecurring'),
   ...CardcomStandingOrderBaseJsonSchema.shape,
   'FlexItem.Price': z.number(),
-  'FlexItem.ProductId': z.number(),
 })
 
-export const CardcomStandingOrderPaymentJsonSchema = z.looseObject({
+export const CardcomDetailRecurringJsonSchema = z.looseObject({
   RecordType: z.literal('DetailRecurring'),
   ...CardcomStandingOrderBaseJsonSchema.shape,
   Status: z.string(),
@@ -96,9 +97,12 @@ export const CardcomStandingOrderPaymentJsonSchema = z.looseObject({
   BillingAttempts: z.number(),
 })
 
-export const CardcomStandingOrderWebHookJsonSchema = z.discriminatedUnion('RecordType', [
-  CardcomStandingOrderJsonSchema,
-  CardcomStandingOrderPaymentJsonSchema,
+export const CardcomRecurringOrderWebHookJsonSchema = z.discriminatedUnion('RecordType', [
+  CardcomMasterRecurringJsonSchema,
+  CardcomDetailRecurringJsonSchema,
 ])
 
-export type CardcomStandingOrderWebHookJson = z.infer<typeof CardcomStandingOrderWebHookJsonSchema>
+export type CardcomRecurringOrderWebHookJson = z.infer<
+  typeof CardcomRecurringOrderWebHookJsonSchema
+>
+export type CardcomMasterRecurringJson = z.infer<typeof CardcomMasterRecurringJsonSchema>
