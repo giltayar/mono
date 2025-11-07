@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "5.8.3",
+  "version": "5.8.5",
   "description": "",
   "type": "module",
   "exports": {
@@ -35,7 +35,7 @@
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
     "test:playwright": "NODE_ENV=test playwright test --config=test/integration",
-    "test:playwright-e2e": "NODE_ENV=test playwright test --config=test/e2e",
+    "ztest:playwright-e2e": "NODE_ENV=test playwright test --config=test/e2e",
     "test:node": "node $INSPECT_APP $TEST_ONLY --test-force-exit --test test/unit/**.test.ts",
     "postpublish": "docker push giltayar/carmbo-app:$npm_package_version"
   },
@@ -56,7 +56,7 @@
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^8.3.0",
     "@giltayar/carmel-tools-academy-integration": "^4.1.1",
-    "@giltayar/carmel-tools-cardcom-integration": "^4.4.5",
+    "@giltayar/carmel-tools-cardcom-integration": "^4.5.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.1.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.5.1",
     "@giltayar/functional-commons": "^2.1.0",
@@ -88,7 +88,7 @@
     "@types/node": "^24.10.0",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20251104.1",
+    "@typescript/native-preview": "7.0.0-dev.20251106.1",
     "eslint": "^9.39.1",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",

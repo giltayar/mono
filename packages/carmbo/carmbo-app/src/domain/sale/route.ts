@@ -65,6 +65,41 @@ export function apiRoute(
       )
     },
   )
+  appWithTypes.post(
+    '/cardcom/standing-order-one-time-sale',
+    {
+      schema: {
+        querystring: z.object({secret: z.string()}),
+        body: z.looseObject({}),
+      },
+    },
+    async (request, reply) => {
+      if (secret && request.query.secret !== secret) {
+        request.log.warn({query: request.query}, 'wrong-api-secret')
+        return reply.status(403).send({error: 'Forbidden'})
+      }
+
+      request.log.info({body: request.body}, 'cardcom-standing-order-one-time-sale-webhook')
+    },
+  )
+
+  appWithTypes.post(
+    '/cardcom/standing-order-sale',
+    {
+      schema: {
+        querystring: z.object({secret: z.string()}),
+        body: z.looseObject({}),
+      },
+    },
+    async (request, reply) => {
+      if (secret && request.query.secret !== secret) {
+        request.log.warn({query: request.query}, 'wrong-api-secret')
+        return reply.status(403).send({error: 'Forbidden'})
+      }
+
+      request.log.info({body: request.body}, 'cardcom-standing-order-sale-webhook')
+    },
+  )
 }
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
