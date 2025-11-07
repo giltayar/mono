@@ -88,6 +88,7 @@ export function createFakeCardcomIntegrationService(context: {
       return invoiceDocument
     },
     _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
+    _test_simulateCardcomStandingOrder: sBind(_test_simulateCardcomStandingOrder),
   }
 }
 
@@ -242,3 +243,21 @@ export async function _test_simulateCardcomSale(
     serverInfo,
   )
 }
+
+export async function _test_simulateCardcomStandingOrder(
+  _s: CardcomIntegrationServiceData,
+  _salesEventNumber: number,
+  _standingOrderInfo: {
+    amount: number
+    customerName: string
+    customerEmail: string
+    customerPhone: string | undefined
+    cardcomCustomerId: number | undefined
+    transactionRevenueInCents: number
+    transactionDate: Date
+  },
+  _serverInfo: {
+    secret: string
+    baseUrl: string
+  },
+) {}

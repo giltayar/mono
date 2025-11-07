@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-cardcom-integration",
-  "version": "4.4.5",
+  "version": "4.5.0",
   "type": "module",
   "exports": {
     "./service": {
@@ -52,11 +52,11 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.38.0",
+    "@eslint/js": "^9.39.1",
     "@types/chance": "^1.1.7",
-    "@types/node": "^24.9.1",
-    "@typescript/native-preview": "7.0.0-dev.20251027.1",
-    "eslint": "^9.38.0",
+    "@types/node": "^24.10.0",
+    "@typescript/native-preview": "7.0.0-dev.20251106.1",
+    "eslint": "^9.39.1",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.4.0",

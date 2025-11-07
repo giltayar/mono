@@ -74,16 +74,19 @@ export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema
 export const CardcomStandingOrderBaseJsonSchema = z.looseObject({
   AccountId: z.number().optional(),
   RecurringId: z.number(),
+  Secret: z.string(),
 })
 
 export const CardcomStandingOrderJsonSchema = z.looseObject({
   RecordType: z.literal('MasterRecurring'),
+  ...CardcomStandingOrderBaseJsonSchema.shape,
   'FlexItem.Price': z.number(),
   'FlexItem.ProductId': z.number(),
 })
 
 export const CardcomStandingOrderPaymentJsonSchema = z.looseObject({
   RecordType: z.literal('DetailRecurring'),
+  ...CardcomStandingOrderBaseJsonSchema.shape,
   Status: z.string(),
   ProductId: z.number(),
   Quantity: z.number(),
