@@ -13,8 +13,8 @@ import {
   type Sale,
   fillInSale,
 } from './model.ts'
-import {connectSale as model_connectSale} from './model-sale.ts'
-import {handleCardcomOneTimeSale} from './model-sale.ts'
+import {handleCardcomRecurringPayment, connectSale as model_connectSale} from './model-sale.ts'
+import {handleCardcomSale} from './model-sale.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
 import {renderSaleCreatePage, renderSaleFormFields, renderSaleViewPage} from './view/view.ts'
@@ -25,7 +25,10 @@ import {
   renderProductListPage,
 } from './view/list-searches.ts'
 import {exceptionToBanner, exceptionToBannerHtml} from '../../layout/banner.ts'
-import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
+import type {
+  CardcomRecurringOrderWebHookJson,
+  CardcomSaleWebhookJson,
+} from '@giltayar/carmel-tools-cardcom-integration/types'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -88,7 +91,7 @@ export async function dealWithCardcomOneTimeSale(
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
-  await handleCardcomOneTimeSale(
+  await handleCardcomSale(
     salesEventNumber,
     cardcomSaleWebhookJson,
     now,
@@ -97,6 +100,18 @@ export async function dealWithCardcomOneTimeSale(
     sql,
     logger,
   )
+
+  return 'ok'
+}
+
+export async function dealWithCardcomRecurringPayment(
+  cardcomSaleWebhookJson: CardcomRecurringOrderWebHookJson,
+): Promise<ControllerResult> {
+  const now = new Date()
+  const sql = requestContext.get('sql')!
+  const logger = requestContext.get('logger')!
+
+  await handleCardcomRecurringPayment(cardcomSaleWebhookJson, now, sql, logger)
 
   return 'ok'
 }

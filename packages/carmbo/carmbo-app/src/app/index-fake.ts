@@ -4,6 +4,7 @@ import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whats
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {prepareDatabase} from './prepare-database.ts'
+import {range} from '@giltayar/functional-commons'
 
 const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
 
@@ -62,20 +63,51 @@ const {app, sql} = await makeApp({
   appBaseUrl: 'http://localhost:3000',
 })
 
-await fakeCardcomIntegrationService.createTaxInvoiceDocument(
-  {
-    cardcomCustomerId: 12345,
-    customerEmail: 'test-cardcom@example.com',
-    customerName: 'Test CardcomCustomer',
-    customerPhone: '0501234567',
-    productsSold: [
-      {productId: '1', productName: 'Product 1', unitPriceInCents: 10_000, quantity: 2},
-    ],
-    transactionDate: new Date(),
-    transactionRevenueInCents: 100,
-  },
-  {sendInvoiceByMail: false},
-)
+const countCardcomSalesResult = await sql<{count: string}[]>`
+  SELECT
+  count(*) as count
+FROM sale_data_cardcom
+`
+
+for (const _ of range(0, parseInt(countCardcomSalesResult[0].count))) {
+  await fakeCardcomIntegrationService.createTaxInvoiceDocument(
+    {
+      cardcomCustomerId: 12345,
+      customerEmail: 'test-cardcom@example.com',
+      customerName: 'Test CardcomCustomer',
+      customerPhone: '0501234567',
+      productsSold: [
+        {productId: '1', productName: 'Product 1', unitPriceInCents: 10_000, quantity: 2},
+      ],
+      transactionDate: new Date(),
+      transactionRevenueInCents: 100,
+    },
+    {sendInvoiceByMail: false},
+  )
+}
 
 await prepareDatabase(sql)
+
 await app.listen({port: 3000, host: 'localhost'})
+
+await createTestData()
+
+async function createTestData() {
+  // await fakeCardcomIntegrationService._test_simulateCardcomStandingOrder(
+  //   1,
+  //   {
+  //     cardcomCustomerId: undefined,
+  //     customerName: 'Gil Tayar',
+  //     customerPhone: '0546344457',
+  //     customerEmail: 'gil@tayar.org',
+  //     productsSold: [
+  //       {productId: '1', productName: 'Product 101', unitPriceInCents: 5000, quantity: 2},
+  //     ],
+  //     transactionDate: new Date(),
+  //     transactionRevenueInCents: 10_000,
+  //   },
+  //   undefined,
+  //   {secret: 'supersecret', baseUrl: 'http://localhost:3000'},
+  //   {cardcomInvoiceNumberToSend: (Math.random() * 1_000_000) | 0},
+  // )
+}

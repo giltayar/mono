@@ -1,10 +1,2 @@
-# minimumReleaseAge: 10080
-
-# minimumReleaseAgeExclude:
-#   - '@giltayar/*'
-#   - '@typescript/*'
-#   - '@types/*'
-#   - '@eslint/*'
-
 neverBuiltDependencies:
   - es5-ext

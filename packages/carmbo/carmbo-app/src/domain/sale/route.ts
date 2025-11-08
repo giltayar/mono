@@ -16,6 +16,7 @@ import {
   updateSale,
   deleteSale,
   connectSale,
+  dealWithCardcomRecurringPayment,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -23,7 +24,10 @@ import {
 } from '../../commons/routes-commons.ts'
 import {NewSaleSchema, SaleSchema} from './model.ts'
 import assert from 'node:assert'
-import {CardcomSaleWebhookJsonSchema} from '@giltayar/carmel-tools-cardcom-integration/types'
+import {
+  CardcomRecurringOrderWebHookJsonSchema,
+  CardcomSaleWebhookJsonSchema,
+} from '@giltayar/carmel-tools-cardcom-integration/types'
 import {initializeJobHandlers} from './model-sale.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
@@ -59,7 +63,7 @@ export function apiRoute(
           return reply.status(403).send({error: 'Forbidden'})
         }
 
-        request.log.info({body: request.body}, 'cardcom-one-time-sale-webhook')
+        request.log.info({body: request.body}, 'cardcom-sale-webhook')
 
         return await dealWithControllerResultAsync(reply, () =>
           dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
@@ -68,11 +72,11 @@ export function apiRoute(
     )
 
   appWithTypes.post(
-    '/cardcom/standing-order-one-time-sale',
+    '/cardcom/recurring-payment',
     {
       schema: {
         querystring: z.object({secret: z.string()}),
-        body: z.looseObject({}),
+        body: CardcomRecurringOrderWebHookJsonSchema,
       },
     },
     async (request, reply) => {
@@ -81,7 +85,11 @@ export function apiRoute(
         return reply.status(403).send({error: 'Forbidden'})
       }
 
-      request.log.info({body: request.body}, 'cardcom-standing-order-one-time-sale-webhook')
+      request.log.info({body: request.body}, 'cardcom-recurring-payment-webhook')
+
+      return await dealWithControllerResultAsync(reply, () =>
+        dealWithCardcomRecurringPayment(request.body),
+      )
     },
   )
 

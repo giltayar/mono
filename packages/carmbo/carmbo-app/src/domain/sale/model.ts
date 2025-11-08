@@ -17,6 +17,8 @@ export const SaleSchema = z.object({
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
     z.number().optional(),
   ),
+  isStandingOrder: z.coerce.boolean(),
+  recurringOrderId: z.string().optional(),
   products: z
     .array(
       z.object({
@@ -54,6 +56,8 @@ export const NewSaleSchema = z.object({
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
     z.number().optional(),
   ),
+  isStandingOrder: z.literal(false).optional(),
+  recurringOrderId: z.string().optional(),
   products: z
     .array(
       z.object({
@@ -147,8 +151,7 @@ export async function listSales(
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
       COALESCE(
         sale_data_cardcom.cardcom_sale_revenue,
-        sale_data_manual.cardcom_sale_revenue,
-        sale_data.final_sale_revenue) AS final_sale_revenue,
+        sale_data_manual.cardcom_sale_revenue) AS final_sale_revenue,
       COALESCE(products, json_build_array()) AS products
     FROM
       sale_history
@@ -383,11 +386,13 @@ function saleSelect(saleNumber: number, sql: Sql) {
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
       COALESCE(
         sale_data_cardcom.cardcom_sale_revenue,
-        sale_data_manual.cardcom_sale_revenue,
-        sale_data.final_sale_revenue) AS final_sale_revenue,
+        sale_data_manual.cardcom_sale_revenue
+      ) AS final_sale_revenue,
       COALESCE(sale_data_cardcom.invoice_number, sale_data_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_manual.invoice_document_url) AS cardcom_invoice_document_url,
       CASE WHEN sale_data_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
+      CASE WHEN sale_data_cardcom.recurring_order_id IS NOT NULL THEN true ELSE false END AS is_standing_order,
+      sale_data_cardcom.recurring_order_id,
       COALESCE(products, json_build_array()) AS products,
       sale_data_delivery.data_id IS NOT NULL OR sale_data_delivery.data_cardcom_id IS NOT NULL AS has_delivery_address,
       json_build_object(
@@ -524,18 +529,23 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
 
     ops = ops.concat(
       sql`
-      INSERT INTO sale_data VALUES
-        (${dataId}, ${salesEventNumber}, ${studentNumber}, ${now}, ${sale.finalSaleRevenue ?? null})
+      INSERT INTO sale_data ${sql({
+        dataId,
+        salesEventNumber,
+        studentNumber,
+        timestamp: now,
+        saleType: sale.isStandingOrder ? 'standing-order' : 'one-time',
+      })}
     `,
     )
-    if (sale.cardcomInvoiceNumber) {
-      ops = ops.concat(sql`
-        INSERT INTO sale_data_manual ${sql({
-          dataManualId,
-          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
-        })}
-      `)
-    }
+
+    ops = ops.concat(sql`
+      INSERT INTO sale_data_manual ${sql({
+        dataManualId,
+        cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
+        cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
+      })}
+    `)
 
     if (sale.hasDeliveryAddress && sale.deliveryAddress) {
       const deliveryAddress = sale.deliveryAddress
@@ -646,12 +656,15 @@ export async function updateSale(
 
     let ops = [] as Promise<unknown>[]
 
-    ops = ops.concat(
-      sql`
-      INSERT INTO sale_data VALUES
-        (${dataId}, ${salesEventNumber}, ${studentNumber}, ${now}, ${sale.finalSaleRevenue ?? null})
-    `,
-    )
+    ops = ops.concat(sql`
+      INSERT INTO sale_data ${sql({
+        dataId,
+        salesEventNumber,
+        studentNumber,
+        timestamp: now,
+        saleType: sale.isStandingOrder ? 'standing-order' : 'one-time',
+      })}
+    `)
 
     const searchableText = `${sale.saleNumber} ${salesEventName ?? ''} ${studentName ?? ''} ${
       productNamesResult.map((p) => p.productName).join(' ') ?? ''
@@ -662,13 +675,13 @@ export async function updateSale(
         (${dataId}, ${searchableText})
     `)
 
-    if (sale.cardcomInvoiceNumber)
-      ops = ops.concat(sql`
-        INSERT INTO sale_data_manual ${sql({
-          dataManualId,
-          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
-        })}
-      `)
+    ops = ops.concat(sql`
+      INSERT INTO sale_data_manual ${sql({
+        dataManualId,
+        cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
+        cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
+      })}
+    `)
 
     if (sale.hasDeliveryAddress && sale.deliveryAddress) {
       const deliveryAddress = sale.deliveryAddress

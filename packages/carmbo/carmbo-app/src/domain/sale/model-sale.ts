@@ -5,10 +5,16 @@ import type {Sql} from 'postgres'
 import retry from 'p-retry'
 import {normalizeEmail, normalizePhoneNumber} from '../../commons/normalize-input.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
-import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
+import type {
+  CardcomDetailRecurringJson,
+  CardcomRecurringOrderWebHookJson,
+  CardcomSaleWebhookJson,
+} from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import {registerJobHandler, type JobSubmitter} from '../job/job-handlers.ts'
 import {triggerJobsExecution} from '../job/job-executor.ts'
+
+export type StandingOrderPaymentResolution = 'payed' | 'failure-but-retrying' | 'failed' | 'on-hold'
 
 type SaleConnectionToStudent = {
   studentNumber: number
@@ -34,7 +40,8 @@ export async function initializeJobHandlers(
     },
   )
 }
-export async function handleCardcomOneTimeSale(
+
+export async function handleCardcomSale(
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
@@ -99,6 +106,61 @@ export async function handleCardcomOneTimeSale(
   })
 
   triggerJobsExecution()
+}
+
+export async function handleCardcomRecurringPayment(
+  cardcomRecurringOrderWebHookJson: CardcomRecurringOrderWebHookJson,
+  now: Date,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+) {
+  logger.info('handle-cardcom-recurring-payment-started')
+  if (cardcomRecurringOrderWebHookJson.RecordType === 'MasterRecurring') {
+    logger.info('master-recurring-payment-no-action-needed')
+    return
+  }
+  const cardcomDetailRecurringJson: CardcomDetailRecurringJson = cardcomRecurringOrderWebHookJson
+
+  await sql.begin(async (sql) => {
+    const recurringId = cardcomDetailRecurringJson.RecurringId
+    const saleStandingOrderPaymentId = crypto.randomUUID()
+
+    const referencesResult = await sql<{saleNumber: string; saleDataId: string}[]>`
+      SELECT
+        s.sale_number,
+        sh.data_id
+      FROM sale_data_cardcom sdc
+      JOIN sale s ON s.data_cardcom_id = sdc.data_cardcom_id
+      JOIN sale_history sh on sh.id = s.last_history_id
+      WHERE
+        sdc.recurring_order_id = ${recurringId}
+    `
+
+    if (referencesResult.length === 0) {
+      logger.error({recurringId}, 'no-sale-standing-order-payment-found')
+      throw new Error(`No sale standing order payment found for recurring ID ${recurringId}`)
+    }
+
+    await sql`
+      INSERT INTO sale_standing_order_payments ${sql({
+        id: saleStandingOrderPaymentId,
+        saleNumber: referencesResult[0].saleNumber,
+        saleDataId: referencesResult[0].saleDataId,
+        timestamp: now,
+        paymentRevenue: cardcomDetailRecurringJson.Sum,
+        resolution: cardcomStatusToStandingOrderPaymentResolution(
+          cardcomDetailRecurringJson.Status,
+        ),
+      })}`
+
+    await sql`
+      INSERT INTO sale_standing_order_cardcom_recurring_payment ${sql({
+        sale_standing_order_payment_id: saleStandingOrderPaymentId,
+        status: cardcomDetailRecurringJson.Status,
+        invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber,
+        internalDealNumber: cardcomDetailRecurringJson.InternalDealNumber,
+      })}`
+  })
 }
 
 async function connectSaleToExternalProviders(
@@ -328,6 +390,7 @@ async function createSale(
   const dataId = crypto.randomUUID()
   const dataProductId = crypto.randomUUID()
   const dataCardcomId = crypto.randomUUID()
+  const dataActiveId = crypto.randomUUID()
 
   logger.info({historyId, dataId, dataProductId, dataCardcomId}, 'sale-ids-generated')
 
@@ -337,8 +400,15 @@ async function createSale(
 
   // Create sale history record and get sale number
   const saleNumberResult = await sql<{saleNumber: string}[]>`
-      INSERT INTO sale_history VALUES
-        (${historyId}, ${dataId}, ${dataProductId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
+      INSERT INTO sale_history ${sql({
+        id: historyId,
+        dataId,
+        dataProductId,
+        timestamp: now,
+        operation: 'create',
+        operationReason: 'Created from Cardcom sale',
+        dataActiveId,
+      })}
       RETURNING sale_number
     `
   const saleNumber = parseInt(saleNumberResult[0].saleNumber)
@@ -384,8 +454,13 @@ async function createSale(
     `)
 
   ops = ops.concat(sql`
-      INSERT INTO sale_data VALUES
-        (${dataId}, ${salesEventNumber}, ${studentNumber}, ${now}, ${finalSaleRevenue})
+      INSERT INTO sale_data ${sql({
+        dataId,
+        salesEventNumber,
+        studentNumber,
+        timestamp: now,
+        saleType: cardcomSaleWebhookJson.RecurringOrderID ? 'standing-order' : 'one-time',
+      })}
     `)
 
   const searchableText = `${saleNumber} ${studentName ?? ''} ${salesEventName ?? ''} ${productNamesResult
@@ -398,20 +473,17 @@ async function createSale(
     `)
 
   ops = ops.concat(sql`
-      INSERT INTO sale_data_cardcom VALUES (
-        ${dataCardcomId},
-        ${JSON.stringify(cardcomSaleWebhookJson)},
-        ${cardcomSaleWebhookJson.invoicenumber},
-        ${cardcomSaleWebhookJson.terminalnumber},
-        ${cardcomSaleWebhookJson.ApprovelNumber},
-        ${saleTimestamp},
-        ${cardcomSaleWebhookJson.UserEmail},
-        ${cardcomSaleWebhookJson.CouponNumber ?? null},
-        ${parseInt(cardcomSaleWebhookJson.internaldealnumber)},
-        ${cardcomSaleWebhookJson.RecurringAccountID ? parseInt(cardcomSaleWebhookJson.RecurringAccountID) : null},
-        ${invoiceDocumentUrl},
-        ${finalSaleRevenue}
-      )
+      INSERT INTO sale_data_cardcom ${sql({
+        dataCardcomId,
+        responseJson: JSON.stringify(cardcomSaleWebhookJson),
+        invoiceNumber: cardcomSaleWebhookJson.invoicenumber,
+        coupon: cardcomSaleWebhookJson.CouponNumber ?? null,
+        internalDealNumber: cardcomSaleWebhookJson.internaldealnumber,
+        customerId: cardcomSaleWebhookJson.RecurringAccountID ?? null,
+        invoiceDocumentUrl: invoiceDocumentUrl,
+        cardcomSaleRevenue: finalSaleRevenue,
+        recurringOrderId: cardcomSaleWebhookJson.RecurringOrderID ?? null,
+      })}
     `)
 
   ops = ops.concat(
@@ -436,6 +508,32 @@ async function createSale(
         contactPhone: cardcomSaleWebhookJson.CardOwnerPhone ?? '',
         notesToDeliveryPerson: cardcomSaleWebhookJson.DeliveryNotes,
       })}`
+  }
+
+  ops = ops.concat(sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`)
+
+  if (cardcomSaleWebhookJson.RecurringOrderID) {
+    const standOrderPaymentId = crypto.randomUUID()
+
+    ops = ops.concat(
+      sql`INSERT INTO sale_standing_order_payments ${sql({
+        id: standOrderPaymentId,
+        saleNumber,
+        saleDataId: dataId,
+        timestamp: saleTimestamp,
+        paymentRevenue: finalSaleRevenue,
+        resolution: 'payed',
+      })}`,
+    )
+
+    ops = ops.concat(
+      sql`INSERT INTO sale_standing_order_cardcom_recurring_payment ${sql({
+        saleStandingOrderPaymentId: standOrderPaymentId,
+        status: 'SUCCESSFUL',
+        invoiceDocumentNumber: cardcomSaleWebhookJson.invoicenumber,
+        internalDealNumber: cardcomSaleWebhookJson.internaldealnumber,
+      })}`,
+    )
   }
 
   logger.info('executing-sale-creation-operations')
@@ -834,8 +932,8 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       sale_data.timestamp AS timestamp,
       COALESCE(
         sale_data_cardcom.cardcom_sale_revenue,
-        sale_data_manual.cardcom_sale_revenue,
-        sale_data.final_sale_revenue) AS final_sale_revenue,
+        sale_data_manual.cardcom_sale_revenue
+      ) AS final_sale_revenue,
       COALESCE(products, json_build_array()) AS products
     FROM
       sale
@@ -887,7 +985,29 @@ async function hasSaleWithInvoiceNumber(
   const result = await sql<{count: string}[]>`
     SELECT 1 FROM sale_data_cardcom WHERE invoice_number = ${invoicenumber} LIMIT 1
   `
-  logger.info({exists: result.length > 0}, 'sale-with-invoice-number-existence-checked')
+  logger.info(
+    {exists: result.length > 0, invoicenumber},
+    'sale-with-invoice-number-existence-checked',
+  )
 
   return result.length > 0
+}
+
+function cardcomStatusToStandingOrderPaymentResolution(
+  status: string,
+): StandingOrderPaymentResolution {
+  switch (status) {
+    case 'SUCCESSFUL':
+    case 'PAYBYOTHERE':
+    case 'PAYBYOTHER':
+      return 'payed'
+    case 'PENDINGFORPROCESSING':
+    case 'DEBTAUTOBILLING':
+      return 'failure-but-retrying'
+    case 'ON_HOLD':
+      return 'on-hold'
+    case 'OTHER':
+    default:
+      return 'failure-but-retrying'
+  }
 }

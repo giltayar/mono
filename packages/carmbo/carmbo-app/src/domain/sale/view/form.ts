@@ -84,6 +84,26 @@ export function SalesFormFields({
             </div>
           </div>
         </div>
+        <div class="mb-3 row">
+          <div class="col">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              value=${sale.isStandingOrder ? 'on' : undefined}
+              id="is-standing-order-checkbox"
+              readonly
+              onclick="return false"
+            />
+            <label class="ms-2 form-check-label" for="is-standing-order-checkbox"
+              >Standing Order${sale.isStandingOrder ? ':' : ''}
+            </label>
+          </div>
+          ${sale.isStandingOrder
+            ? html`<div class="col">
+                <input class="form-control" type="text" value=${sale.recurringOrderId} readonly />
+              </div>`
+            : undefined}
+        </div>
         <datalist id="student-list"> </datalist>
         ${sale.products && sale.products.length > 0
           ? html`
@@ -182,6 +202,7 @@ export function SalesFormFields({
               hx-swap="outerHTML"
               hx-trigger="change delay:100ms"
               readonly=${isReadOnly}
+              onclick=${isReadOnly ? 'return false' : undefined}
             />
             <label class="form-check-label" for="delivery-address">Has delivery</label>
           </div>
