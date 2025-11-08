@@ -43,7 +43,12 @@ export async function simulateMasterRecurring(
 ): Promise<void> {
   const webhookData = generateMasterRecurringWebhookData(invoiceInformation, standingOrderNumber)
 
-  const url = new URL('/api/sales/cardcom/sale', serverInfo.baseUrl)
+  const url = addQueryParamsToUrl(
+    new URL('/api/sales/cardcom/recurring-payment', serverInfo.baseUrl),
+    {
+      secret: serverInfo.secret ?? 'secret',
+    },
+  )
 
   await fetchAsBufferWithJsonBody(url, webhookData as any)
 }

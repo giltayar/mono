@@ -102,7 +102,10 @@ export const CardcomRecurringOrderWebHookJsonSchema = z.discriminatedUnion('Reco
   CardcomDetailRecurringJsonSchema,
 ])
 
+export type CardcomStandingOrderBaseJson = z.infer<typeof CardcomStandingOrderBaseJsonSchema>
+
 export type CardcomRecurringOrderWebHookJson = z.infer<
   typeof CardcomRecurringOrderWebHookJsonSchema
 >
 export type CardcomMasterRecurringJson = z.infer<typeof CardcomMasterRecurringJsonSchema>
+export type CardcomDetailRecurringJson = z.infer<typeof CardcomDetailRecurringJsonSchema>
