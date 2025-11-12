@@ -9,7 +9,11 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 import assert from 'node:assert'
-import {simulateCardcomSale, simulateMasterRecurring} from './cardcom-webhook-simulation.ts'
+import {
+  simulateCardcomSale,
+  simulateDetailRecurring,
+  simulateMasterRecurring,
+} from './cardcom-webhook-simulation.ts'
 
 type CardcomIntegrationServiceData = {
   state: Parameters<typeof createFakeCardcomIntegrationService>[0] & {
@@ -91,6 +95,7 @@ export function createFakeCardcomIntegrationService(context: {
     },
     _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
     _test_simulateCardcomStandingOrder: sBind(_test_simulateCardcomStandingOrder),
+    _test_simulateCardcomStandingOrderPayment: sBind(_test_simulateCardcomStandingOrderPayment),
   }
 }
 
@@ -272,16 +277,42 @@ export async function _test_simulateCardcomStandingOrder(
           TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
         })
 
-  const standingOrderNumber = (Math.random() * 1_000_000) | 0
+  const recurringOrderId = (Math.random() * 1_000_000) | 0
 
   await simulateCardcomSale(
     salesEventNumber,
     sale,
     delivery,
     cardcomInvoiceNumber.toString(),
-    standingOrderNumber.toString(),
+    recurringOrderId.toString(),
     serverInfo,
   )
 
-  await simulateMasterRecurring(sale, standingOrderNumber.toString(), serverInfo)
+  await simulateMasterRecurring(sale, recurringOrderId.toString(), serverInfo)
+
+  return {recurringOrderId: recurringOrderId.toString()}
+}
+
+export async function _test_simulateCardcomStandingOrderPayment(
+  s: CardcomIntegrationServiceData,
+  recurringOrderId: string,
+  sale: TaxInvoiceInformation,
+  serverInfo: {
+    secret: string
+    baseUrl: string
+  },
+  options: {
+    cardcomInvoiceNumberToSend?: number
+  } = {},
+) {
+  const {cardcomInvoiceNumber} =
+    options.cardcomInvoiceNumberToSend &&
+    s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend.toString()]
+      ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
+      : await createTaxInvoiceDocument(s, sale, {
+          sendInvoiceByMail: false,
+          TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
+        })
+
+  await simulateDetailRecurring(sale, recurringOrderId, cardcomInvoiceNumber, serverInfo)
 }

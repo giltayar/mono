@@ -89,12 +89,10 @@ export const CardcomDetailRecurringJsonSchema = z.looseObject({
   RecordType: z.literal('DetailRecurring'),
   ...CardcomStandingOrderBaseJsonSchema.shape,
   Status: z.string(),
-  ProductId: z.number(),
-  Quantity: z.number(),
-  Sum: z.number(),
   InternalDealNumber: z.coerce.string(),
   DocumentNumber: z.number(),
   BillingAttempts: z.number(),
+  Sum: z.number(),
 })
 
 export const CardcomRecurringOrderWebHookJsonSchema = z.discriminatedUnion('RecordType', [

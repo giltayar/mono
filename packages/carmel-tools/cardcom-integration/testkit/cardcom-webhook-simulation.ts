@@ -1,7 +1,11 @@
 import Chance from 'chance'
 import {fetchAsBufferWithJsonBody} from '@giltayar/http-commons'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
-import type {CardcomMasterRecurringJson, CardcomSaleWebhookJson} from '../src/types.ts'
+import type {
+  CardcomDetailRecurringJson,
+  CardcomMasterRecurringJson,
+  CardcomSaleWebhookJson,
+} from '../src/types.ts'
 import type {TaxInvoiceInformation} from '../src/cardcom-integration.ts'
 import type {DeliveryInformation} from './cardcom-integration-testkit.ts'
 
@@ -42,6 +46,31 @@ export async function simulateMasterRecurring(
   },
 ): Promise<void> {
   const webhookData = generateMasterRecurringWebhookData(invoiceInformation, standingOrderNumber)
+
+  const url = addQueryParamsToUrl(
+    new URL('/api/sales/cardcom/recurring-payment', serverInfo.baseUrl),
+    {
+      secret: serverInfo.secret ?? 'secret',
+    },
+  )
+
+  await fetchAsBufferWithJsonBody(url, webhookData as any)
+}
+
+export async function simulateDetailRecurring(
+  invoiceInformation: TaxInvoiceInformation,
+  recurringOrderId: string,
+  cardcomInvoiceDocumentNumber: number,
+  serverInfo: {
+    secret: string
+    baseUrl: string
+  },
+): Promise<void> {
+  const webhookData = generateDetailRecurringWebhookData(
+    invoiceInformation,
+    recurringOrderId,
+    cardcomInvoiceDocumentNumber,
+  )
 
   const url = addQueryParamsToUrl(
     new URL('/api/sales/cardcom/recurring-payment', serverInfo.baseUrl),
@@ -117,5 +146,22 @@ function generateMasterRecurringWebhookData(
     AccountId: invoiceInfo.cardcomCustomerId,
     RecurringId: parseInt(standingOrderNumber),
     'FlexItem.Price': invoiceInfo.transactionRevenueInCents / 100,
+  }
+}
+
+function generateDetailRecurringWebhookData(
+  invoiceInfo: TaxInvoiceInformation,
+  recurringOrderId: string,
+  invoiceDocumentNumber: number,
+): CardcomDetailRecurringJson {
+  return {
+    RecordType: 'DetailRecurring',
+    AccountId: invoiceInfo.cardcomCustomerId,
+    RecurringId: parseInt(recurringOrderId),
+    Status: 'SUCCESSFUL',
+    DocumentNumber: invoiceDocumentNumber,
+    InternalDealNumber: chance.integer({min: 10000000, max: 99999999}).toString(),
+    BillingAttempts: 1,
+    Sum: invoiceInfo.transactionRevenueInCents / 100,
   }
 }
