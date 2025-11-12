@@ -1,11 +1,17 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
-import {type NewSale, type SaleHistory, type SaleWithHistoryInfo} from '../model.ts'
+import {
+  type NewSale,
+  type SaleHistory,
+  type SaleWithHistoryInfo,
+  type SaleWithPayments,
+} from '../model.ts'
 import {SaleUpdateView} from './sale.ts'
 import {Layout} from './layout.ts'
 import {SaleCreateView} from './create-update.ts'
 import {SalesFormFields} from './form.ts'
 import type {Banner} from '../../../layout/banner.ts'
+import {SalePaymentsView} from './sale-payment.ts'
 
 export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banner?: Banner} = {}) {
   const finalSale: NewSale = sale ?? {
@@ -51,6 +57,16 @@ export function renderSaleViewPage(
     <${MainLayout} title="Sales" activeNavItem="sales" banner=${banner}>
       <${Layout}>
         <${SaleUpdateView} sale=${sale} history=${history} />
+      </${Layout}>
+    </${MainLayout}>
+  `
+}
+
+export function renderSalePaymentsPage(sale: SaleWithPayments) {
+  return html`
+    <${MainLayout} title="Sale Payments" activeNavItem="sales">
+      <${Layout}>
+        <${SalePaymentsView} sale=${sale} />
       </${Layout}>
     </${MainLayout}>
   `

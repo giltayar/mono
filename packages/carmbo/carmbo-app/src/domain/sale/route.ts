@@ -17,6 +17,7 @@ import {
   deleteSale,
   connectSale,
   dealWithCardcomRecurringPayment,
+  showSalePayments,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -189,6 +190,16 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       return dealWithControllerResult(reply, await showSale(request.params.number, undefined, sql))
     },
   )
+
+  // View sale payments
+  appWithTypes.get(
+    '/:number/payments',
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showSalePayments(request.params.number, sql))
+    },
+  )
+
   appWithTypes.post('/:number', {schema: {body: NewSaleSchema}}, async (request, reply) =>
     dealWithControllerResult(reply, await showOngoingSale(request.body)),
   )

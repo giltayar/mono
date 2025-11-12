@@ -5,6 +5,7 @@ import type {PendingQuery, Row} from 'postgres'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import assert from 'node:assert'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
+import type {StandingOrderPaymentResolution} from './model-sale.ts'
 
 export const SaleSchema = z.object({
   saleNumber: z.coerce.number().int().positive(),
@@ -217,6 +218,55 @@ export async function querySaleByNumber(
   assert(sale.length === 1, `More than one sale with ID ${saleNumber}`)
 
   return {sale: sale[0], history}
+}
+
+export type SaleWithPayments = {
+  saleNumber: number
+  payments: {
+    timestamp: Date
+    amount: string
+    resolution: StandingOrderPaymentResolution
+    invoiceDocumentNumber: string
+    invoiceDocumentUrl: string
+    cardcomStatus: string
+  }[]
+}
+
+export async function querySalePayments(
+  saleNumber: number,
+  sql: Sql,
+): Promise<SaleWithPayments | undefined> {
+  const paymentsResultp = sql<SaleWithPayments['payments']>`
+    SELECT
+      ssop.timestamp,
+      ssop.payment_revenue AS amount,
+      ssop.resolution,
+      ssocrp.invoice_document_number,
+      ssocrp.invoice_document_url,
+      ssocrp.status AS cardcom_status
+    FROM
+      sale_standing_order_payments ssop
+    JOIN sale_standing_order_cardcom_recurring_payment ssocrp ON ssocrp.sale_standing_order_payment_id = ssop.id
+    WHERE
+      ssop.sale_number = ${saleNumber}
+  `
+
+  const saleResult = await sql<{saleNumber: string}[]>`
+    SELECT
+      sale_number
+    FROM
+      sale
+    WHERE
+      sale_number = ${saleNumber}
+  `
+  const paymentsResult = await paymentsResultp
+
+  if (saleResult.length === 0) return undefined
+
+  return {
+    saleNumber,
+    payments: [...paymentsResult],
+  }
 }
 
 export async function querySaleByHistoryId(

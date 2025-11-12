@@ -2,6 +2,7 @@ import {html} from '../../../commons/html-templates.ts'
 import type {SaleHistory, SaleWithHistoryInfo} from '../model.ts'
 import {SalesFormFields} from './form.ts'
 import {SaleHistoryList} from './history.ts'
+import {Tabs} from './layout.ts'
 
 export function SaleUpdateView({
   sale,
@@ -20,6 +21,7 @@ export function SaleUpdateView({
         : ''}
       <div class="operation-spinner spinner-border mr-1" role="status"></div>
     </h2>
+    <${Tabs} saleNumber=${sale.saleNumber} activeTab="details" />
     <form
       hx-put="/sales/${sale.saleNumber}"
       hx-target="form"

@@ -12,12 +12,18 @@ import {
   type NewSale,
   type Sale,
   fillInSale,
+  querySalePayments,
 } from './model.ts'
 import {handleCardcomRecurringPayment, connectSale as model_connectSale} from './model-sale.ts'
 import {handleCardcomSale} from './model-sale.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
-import {renderSaleCreatePage, renderSaleFormFields, renderSaleViewPage} from './view/view.ts'
+import {
+  renderSaleCreatePage,
+  renderSaleFormFields,
+  renderSalePaymentsPage,
+  renderSaleViewPage,
+} from './view/view.ts'
 import type {Sql} from 'postgres'
 import {
   renderSalesEventListPage,
@@ -109,9 +115,10 @@ export async function dealWithCardcomRecurringPayment(
 ): Promise<ControllerResult> {
   const now = new Date()
   const sql = requestContext.get('sql')!
+  const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
-  await handleCardcomRecurringPayment(cardcomSaleWebhookJson, now, sql, logger)
+  await handleCardcomRecurringPayment(cardcomSaleWebhookJson, now, sql, cardcomIntegration, logger)
 
   return 'ok'
 }
@@ -151,6 +158,15 @@ export async function showSale(
   }
 
   return finalHtml(renderSaleViewPage(saleWithHistory.sale, saleWithHistory.history, {banner}))
+}
+
+export async function showSalePayments(saleNumber: number, sql: Sql): Promise<ControllerResult> {
+  const saleWithPayments = await querySalePayments(saleNumber, sql)
+
+  if (!saleWithPayments) {
+    return {status: 404, body: 'Sale not found'}
+  }
+  return finalHtml(renderSalePaymentsPage(saleWithPayments))
 }
 
 export async function showSaleInHistory(

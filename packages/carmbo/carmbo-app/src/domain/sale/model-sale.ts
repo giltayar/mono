@@ -112,6 +112,7 @@ export async function handleCardcomRecurringPayment(
   cardcomRecurringOrderWebHookJson: CardcomRecurringOrderWebHookJson,
   now: Date,
   sql: Sql,
+  cardcomIntegration: CardcomIntegrationService,
   logger: FastifyBaseLogger,
 ) {
   logger.info('handle-cardcom-recurring-payment-started')
@@ -125,7 +126,7 @@ export async function handleCardcomRecurringPayment(
     const recurringId = cardcomDetailRecurringJson.RecurringId
     const saleStandingOrderPaymentId = crypto.randomUUID()
 
-    const referencesResult = await sql<{saleNumber: string; saleDataId: string}[]>`
+    const referencesResult = await sql<{saleNumber: string; dataId: string}[]>`
       SELECT
         s.sale_number,
         sh.data_id
@@ -137,21 +138,41 @@ export async function handleCardcomRecurringPayment(
     `
 
     if (referencesResult.length === 0) {
-      logger.error({recurringId}, 'no-sale-standing-order-payment-found')
-      throw new Error(`No sale standing order payment found for recurring ID ${recurringId}`)
+      logger.info({recurringId}, 'no-sale-standing-order-payment-found')
+      return
     }
 
+    const standingOrderPaymentExistsResult = await sql<{1: number}[]>`
+      SELECT 1
+      FROM sale_standing_order_cardcom_recurring_payment ssocrp
+      WHERE ssocrp.invoice_document_number = ${cardcomDetailRecurringJson.DocumentNumber}
+    `
+
+    if (standingOrderPaymentExistsResult.length > 0) {
+      logger.info(
+        {invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber},
+        'sale-standing-order-payment-already-exists',
+      )
+      return
+    }
     await sql`
       INSERT INTO sale_standing_order_payments ${sql({
         id: saleStandingOrderPaymentId,
         saleNumber: referencesResult[0].saleNumber,
-        saleDataId: referencesResult[0].saleDataId,
+        saleDataId: referencesResult[0].dataId,
         timestamp: now,
         paymentRevenue: cardcomDetailRecurringJson.Sum,
         resolution: cardcomStatusToStandingOrderPaymentResolution(
           cardcomDetailRecurringJson.Status,
         ),
+        isFirstPayment: false,
       })}`
+
+    const cardcomInvoiceDocumentUrl = (
+      await cardcomIntegration.createTaxInvoiceDocumentUrl(
+        cardcomDetailRecurringJson.DocumentNumber.toString(),
+      )
+    ).url
 
     await sql`
       INSERT INTO sale_standing_order_cardcom_recurring_payment ${sql({
@@ -159,6 +180,7 @@ export async function handleCardcomRecurringPayment(
         status: cardcomDetailRecurringJson.Status,
         invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber,
         internalDealNumber: cardcomDetailRecurringJson.InternalDealNumber,
+        invoiceDocumentUrl: cardcomInvoiceDocumentUrl,
       })}`
   })
 }
@@ -523,6 +545,7 @@ async function createSale(
         timestamp: saleTimestamp,
         paymentRevenue: finalSaleRevenue,
         resolution: 'payed',
+        isFirstPayment: true,
       })}`,
     )
 
