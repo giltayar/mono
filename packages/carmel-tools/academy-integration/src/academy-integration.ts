@@ -23,6 +23,7 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
     addStudentToCourse: sBind(addStudentToCourse),
+    removeStudentFromCourse: sBind(removeStudentFromCourse),
     updateStudentEmail: sBind(updateStudentEmail),
   }
 }
@@ -69,6 +70,20 @@ export async function addStudentToCourse(
     email: student.email,
     name: student.name,
     phone: student.phone,
+  })
+}
+
+export async function removeStudentFromCourse(
+  s: AcademyIntegrationServiceData,
+  studentEmail: string,
+  courseId: number,
+): Promise<void> {
+  const url = new URL(`https://www.mypages.co.il/tasks/remove`)
+
+  await fetchAsTextWithJsonBody(url, {
+    account_id: s.context.accountApiKey,
+    workshop_ids: courseId.toString(),
+    email: studentEmail,
   })
 }
 

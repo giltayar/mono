@@ -133,6 +133,119 @@ describe('Academy Integration Testkit', () => {
     })
   })
 
+  describe('removeStudentFromCourse', () => {
+    it('should remove student from course', async () => {
+      const service = createTestService()
+
+      // Verify initial state
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), true)
+      const initialContact = service._test_getContact(testEmail)
+      assert.ok(initialContact)
+      assert.deepStrictEqual(initialContact.enrolledInCourses, [testCourseId])
+
+      await service.removeStudentFromCourse(testEmail, testCourseId)
+
+      // Verify student is no longer enrolled in the course
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), false)
+      const updatedContact = service._test_getContact(testEmail)
+      assert.ok(updatedContact)
+      assert.deepStrictEqual(updatedContact.enrolledInCourses, [])
+
+      // Verify student still exists
+      assert.equal(updatedContact.name, 'Test Student')
+      assert.equal(updatedContact.phone, '123-456-7890')
+    })
+
+    it('should remove student from one course while preserving other enrollments', async () => {
+      const service = createTestService()
+
+      // Enroll student in multiple courses
+      await service.addStudentToCourse(
+        {email: testEmail, name: 'Test Student', phone: '123-456-7890'},
+        anotherCourseId,
+      )
+
+      // Verify student is enrolled in both courses
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), true)
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, anotherCourseId), true)
+      const beforeRemoval = service._test_getContact(testEmail)
+      assert.ok(beforeRemoval)
+      assert.deepStrictEqual(beforeRemoval.enrolledInCourses, [testCourseId, anotherCourseId])
+
+      await service.removeStudentFromCourse(testEmail, testCourseId)
+
+      // Verify student is only enrolled in anotherCourseId now
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), false)
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, anotherCourseId), true)
+      const afterRemoval = service._test_getContact(testEmail)
+      assert.ok(afterRemoval)
+      assert.deepStrictEqual(afterRemoval.enrolledInCourses, [anotherCourseId])
+    })
+
+    it('should throw error when trying to remove student that does not exist', async () => {
+      const service = createTestService()
+      const nonExistentEmail = 'nonexistent@example.com'
+
+      // Verify student doesn't exist
+      assert.equal(service._test_getContact(nonExistentEmail), undefined)
+
+      // Attempt to remove non-existent student should throw
+      await assert.rejects(
+        async () => {
+          await service.removeStudentFromCourse(nonExistentEmail, testCourseId)
+        },
+        {
+          name: 'Error',
+          message: `Student with email ${nonExistentEmail} not found`,
+          status: 404,
+        },
+      )
+    })
+
+    it('should handle removing student from course they are not enrolled in', async () => {
+      const service = createTestService()
+
+      // Verify student exists but is not enrolled in anotherCourseId
+      assert.ok(service._test_getContact(testEmail))
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), true)
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, anotherCourseId), false)
+
+      // Remove from course they're not enrolled in
+      await service.removeStudentFromCourse(testEmail, anotherCourseId)
+
+      // Verify enrollments unchanged
+      const contact = service._test_getContact(testEmail)
+      assert.ok(contact)
+      assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId])
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), true)
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, anotherCourseId), false)
+    })
+
+    it('should handle removing duplicate enrollments correctly', async () => {
+      const service = createTestService()
+
+      // Add student to same course twice (creating duplicate enrollment)
+      await service.addStudentToCourse(
+        {email: testEmail, name: 'Test Student', phone: '123-456-7890'},
+        testCourseId,
+      )
+
+      // Verify duplicate enrollments
+      const beforeRemoval = service._test_getContact(testEmail)
+      assert.ok(beforeRemoval)
+      assert.deepStrictEqual(beforeRemoval.enrolledInCourses, [testCourseId, testCourseId])
+
+      // Remove student from course (should remove all instances)
+      await service.removeStudentFromCourse(testEmail, testCourseId)
+
+      // Verify all instances of the course were removed
+      const afterRemoval = service._test_getContact(testEmail)
+      assert.ok(afterRemoval)
+      assert.deepStrictEqual(afterRemoval.enrolledInCourses, [])
+      assert.equal(service._test_isContactEnrolledInCourse(testEmail, testCourseId), false)
+    })
+  })
+
   describe('updateStudentEmail', () => {
     it('should update existing student email', async () => {
       const service = createTestService()
