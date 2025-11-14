@@ -6,6 +6,11 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createSalePaymentsPageModel} from '../../page-model/sales/sale-payments-page.model.ts'
+import {fetchAsTextWithJsonBody} from '@giltayar/http-commons'
+import type {
+  CardcomDetailRecurringJson,
+  CardcomMasterRecurringJson,
+} from '@giltayar/carmel-tools-cardcom-integration/types'
 
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
@@ -226,4 +231,34 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   const secondPayment = paymentRows.row(1)
   await expect(secondPayment.amountCell().locator).toContainText('200')
   await expect(secondPayment.resolutionCell().locator).toContainText('payed')
+})
+
+test('cardcom master recurring webhooks are ignored', async () => {
+  const result = await fetchAsTextWithJsonBody(
+    new URL('/api/sales/cardcom/recurring-payment?secret=', url()),
+    {
+      RecordType: 'MasterRecurring',
+      RecurringId: 12345,
+      'FlexItem.Price': 10000,
+    } as CardcomMasterRecurringJson as Record<string, number | string>,
+  )
+
+  expect(result).toBe('ok')
+})
+
+test('cardcom detail recurring webhooks from a sale that is not in the system are ignored', async () => {
+  const result = await fetchAsTextWithJsonBody(
+    new URL('/api/sales/cardcom/recurring-payment?secret=', url()),
+    {
+      RecordType: 'DetailRecurring',
+      RecurringId: 12345,
+      BillingAttempts: 1,
+      DocumentNumber: 1,
+      InternalDealNumber: '111',
+      Status: 'SUCCESSFUL',
+      Sum: 10000,
+    } as CardcomDetailRecurringJson as Record<string, number | string>,
+  )
+
+  expect(result).toBe('ok')
 })
