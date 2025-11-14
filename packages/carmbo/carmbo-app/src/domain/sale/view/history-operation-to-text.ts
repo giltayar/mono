@@ -1,5 +1,5 @@
 import {assertNever} from '@giltayar/functional-commons'
-import type {SaleHistoryOperation} from '../model.ts'
+import type {SaleHistoryOperation} from '../model/model.ts'
 
 export function saleHistoryOperationToText(operation: SaleHistoryOperation): string {
   switch (operation) {

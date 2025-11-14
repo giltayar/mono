@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import type {NewSale} from '../model.ts'
+import type {NewSale} from '../model/model.ts'
 import {SalesFormFields} from './form.ts'
 
 export function SaleCreateView({sale}: {sale: NewSale}) {

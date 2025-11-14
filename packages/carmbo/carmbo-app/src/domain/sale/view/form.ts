@@ -1,6 +1,6 @@
 import {html} from '../../../commons/html-templates.ts'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
-import type {NewSale, Sale} from '../model.ts'
+import type {NewSale, Sale} from '../model/model.ts'
 
 export function SalesFormFields({
   sale,

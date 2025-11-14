@@ -7,8 +7,10 @@ import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
 import productRoutes from '../domain/product/route.ts'
 import salesEvents from '../domain/sales-event/route.ts'
-import salesRoutes from '../domain/sale/route.ts'
-import {apiRoute as salesApiRoute} from '../domain/sale/route.ts'
+import salesRoutes, {
+  landingPageApiRoute as salesLandingPageApiRoute,
+  apiRoute as salesApiRoute,
+} from '../domain/sale/route.ts'
 import {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
@@ -158,6 +160,10 @@ export function makeApp({
   app.register(jobsApiRoute, {
     prefix: '/api/jobs',
     secret: auth0?.sessionSecret,
+  })
+
+  app.register(salesLandingPageApiRoute, {
+    prefix: '/landing-page/sales',
   })
 
   app.get('/health', async () => ({status: 'ok'}))

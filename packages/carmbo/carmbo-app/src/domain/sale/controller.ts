@@ -13,9 +13,13 @@ import {
   type Sale,
   fillInSale,
   querySalePayments,
-} from './model.ts'
-import {handleCardcomRecurringPayment, connectSale as model_connectSale} from './model-sale.ts'
-import {handleCardcomSale} from './model-sale.ts'
+  findSalesEventAndStudentByEmail as findSaleAndStudentAndProductByEmail,
+} from './model/model.ts'
+import {handleCardcomSale, connectSale as model_connectSale} from './model/model-sale.ts'
+import {
+  handleCardcomRecurringPayment,
+  cancelSubscription as model_cancelSubscription,
+} from './model/model-standing-order.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
 import {
@@ -35,6 +39,11 @@ import type {
   CardcomRecurringOrderWebHookJson,
   CardcomSaleWebhookJson,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
+import {
+  showErrorCancellingSubscription,
+  showErrorSubscriptionNotFound,
+  showSubscriptionCancelled,
+} from './view/cancel-subscription.ts'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -256,5 +265,55 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
     logger.error({err}, 'connect-manual-sale')
 
     return retarget(exceptionToBannerHtml('Error connecting sale: ', err), '#banner-container')
+  }
+}
+
+export async function cancelSubscription(
+  email: string,
+  salesEventNumber: number,
+): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+  const cardcomIntegration = requestContext.get('cardcomIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const logger = requestContext.get('logger')!
+  const now = new Date()
+
+  try {
+    const {studentName, productName, saleNumber} = await findSaleAndStudentAndProductByEmail(
+      email,
+      salesEventNumber,
+      sql,
+    )
+
+    if (studentName === undefined || productName === undefined || saleNumber === undefined) {
+      return {
+        status: 303,
+        body: finalHtml(
+          showErrorSubscriptionNotFound({email, salesEventNumber, studentName, productName}),
+        ),
+      }
+    }
+
+    await model_cancelSubscription(
+      email,
+      saleNumber,
+      sql,
+      cardcomIntegration,
+      academyIntegration,
+      smooveIntegration,
+      now,
+      logger,
+    )
+
+    return {
+      status: 303,
+      body: finalHtml(showSubscriptionCancelled(email, studentName, productName)),
+    }
+  } catch (err) {
+    const logger = requestContext.get('logger')!
+    logger.error({err}, 'cancel-subscription')
+
+    return {status: 303, body: finalHtml(showErrorCancellingSubscription(email, salesEventNumber))}
   }
 }

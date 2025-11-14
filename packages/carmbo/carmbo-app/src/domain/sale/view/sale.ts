@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import type {SaleHistory, SaleWithHistoryInfo} from '../model.ts'
+import type {SaleHistory, SaleWithHistoryInfo} from '../model/model.ts'
 import {SalesFormFields} from './form.ts'
 import {SaleHistoryList} from './history.ts'
 import {Tabs} from './layout.ts'

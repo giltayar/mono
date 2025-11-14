@@ -1,7 +1,7 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
-import type {SaleForGrid} from '../model.ts'
+import type {SaleForGrid} from '../model/model.ts'
 
 export function renderSalesPage(
   flash: string | undefined,

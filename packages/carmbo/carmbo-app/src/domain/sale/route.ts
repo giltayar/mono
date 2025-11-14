@@ -1,5 +1,5 @@
 import type {FastifyInstance} from 'fastify'
-import {z} from 'zod'
+import {email, z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import {
@@ -18,18 +18,19 @@ import {
   connectSale,
   dealWithCardcomRecurringPayment,
   showSalePayments,
+  cancelSubscription,
 } from './controller.ts'
 import {
   dealWithControllerResult,
   dealWithControllerResultAsync,
 } from '../../commons/routes-commons.ts'
-import {NewSaleSchema, SaleSchema} from './model.ts'
+import {NewSaleSchema, SaleSchema} from './model/model.ts'
 import assert from 'node:assert'
 import {
   CardcomRecurringOrderWebHookJsonSchema,
   CardcomSaleWebhookJsonSchema,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
-import {initializeJobHandlers} from './model-sale.ts'
+import {initializeJobHandlers} from './model/model-sale.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 
@@ -110,6 +111,42 @@ export function apiRoute(
 
       request.log.info({body: request.body}, 'cardcom-standing-order-sale-webhook')
     },
+  )
+}
+
+export function landingPageApiRoute(app: FastifyInstance) {
+  const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
+  appWithTypes.post(
+    '/cancel-subscription',
+    {
+      schema: {
+        body: z.object({
+          email: z.string().email(),
+          querystring: z.object({'sales-event': z.coerce.number().positive()}),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const {email} = request.body
+      const {'sales-event': salesEventNumber} = request.body.querystring
+
+      await dealWithControllerResult(
+        reply,
+        await cancelSubscription(email, Number(salesEventNumber)),
+      )
+    },
+  )
+
+  appWithTypes.get(
+    '/subscription-cancelled',
+    {
+      schema: z.object({
+        email: z.string().email(),
+        querystring: z.object({'sales-event': z.coerce.number().positive()}),
+      }),
+    },
+    async (_request, reply) => {},
   )
 }
 

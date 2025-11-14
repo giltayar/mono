@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import type {SaleWithPayments} from '../model.ts'
+import type {SaleWithPayments} from '../model/model.ts'
 import {Tabs} from './layout.ts'
 
 export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {

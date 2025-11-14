@@ -5,7 +5,7 @@ import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
-import {createSale} from '../../../src/domain/sale/model.ts'
+import {createSale} from '../../../src/domain/sale/model/model.ts'
 
 const {url, sql, smooveIntegration} = setup(import.meta.url)
 

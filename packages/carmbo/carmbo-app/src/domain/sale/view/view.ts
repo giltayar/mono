@@ -5,7 +5,7 @@ import {
   type SaleHistory,
   type SaleWithHistoryInfo,
   type SaleWithPayments,
-} from '../model.ts'
+} from '../model/model.ts'
 import {SaleUpdateView} from './sale.ts'
 import {Layout} from './layout.ts'
 import {SaleCreateView} from './create-update.ts'

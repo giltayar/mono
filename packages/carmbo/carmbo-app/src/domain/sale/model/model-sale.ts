@@ -3,16 +3,12 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import {makeError} from '@giltayar/functional-commons'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
-import {normalizeEmail, normalizePhoneNumber} from '../../commons/normalize-input.ts'
+import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
-import type {
-  CardcomDetailRecurringJson,
-  CardcomRecurringOrderWebHookJson,
-  CardcomSaleWebhookJson,
-} from '@giltayar/carmel-tools-cardcom-integration/types'
+import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
-import {registerJobHandler, type JobSubmitter} from '../job/job-handlers.ts'
-import {triggerJobsExecution} from '../job/job-executor.ts'
+import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
+import {triggerJobsExecution} from '../../job/job-executor.ts'
 
 export type StandingOrderPaymentResolution = 'payed' | 'failure-but-retrying' | 'failed' | 'on-hold'
 
@@ -108,83 +104,6 @@ export async function handleCardcomSale(
   triggerJobsExecution()
 }
 
-export async function handleCardcomRecurringPayment(
-  cardcomRecurringOrderWebHookJson: CardcomRecurringOrderWebHookJson,
-  now: Date,
-  sql: Sql,
-  cardcomIntegration: CardcomIntegrationService,
-  logger: FastifyBaseLogger,
-) {
-  logger.info('handle-cardcom-recurring-payment-started')
-  if (cardcomRecurringOrderWebHookJson.RecordType === 'MasterRecurring') {
-    logger.info('master-recurring-payment-no-action-needed')
-    return
-  }
-  const cardcomDetailRecurringJson: CardcomDetailRecurringJson = cardcomRecurringOrderWebHookJson
-
-  await sql.begin(async (sql) => {
-    const recurringId = cardcomDetailRecurringJson.RecurringId
-    const saleStandingOrderPaymentId = crypto.randomUUID()
-
-    const referencesResult = await sql<{saleNumber: string; dataId: string}[]>`
-      SELECT
-        s.sale_number,
-        sh.data_id
-      FROM sale_data_cardcom sdc
-      JOIN sale s ON s.data_cardcom_id = sdc.data_cardcom_id
-      JOIN sale_history sh on sh.id = s.last_history_id
-      WHERE
-        sdc.recurring_order_id = ${recurringId}
-    `
-
-    if (referencesResult.length === 0) {
-      logger.info({recurringId}, 'no-sale-standing-order-payment-found')
-      return
-    }
-
-    const standingOrderPaymentExistsResult = await sql<{1: number}[]>`
-      SELECT 1
-      FROM sale_standing_order_cardcom_recurring_payment ssocrp
-      WHERE ssocrp.invoice_document_number = ${cardcomDetailRecurringJson.DocumentNumber}
-    `
-
-    if (standingOrderPaymentExistsResult.length > 0) {
-      logger.info(
-        {invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber},
-        'sale-standing-order-payment-already-exists',
-      )
-      return
-    }
-    await sql`
-      INSERT INTO sale_standing_order_payments ${sql({
-        id: saleStandingOrderPaymentId,
-        saleNumber: referencesResult[0].saleNumber,
-        saleDataId: referencesResult[0].dataId,
-        timestamp: now,
-        paymentRevenue: cardcomDetailRecurringJson.Sum,
-        resolution: cardcomStatusToStandingOrderPaymentResolution(
-          cardcomDetailRecurringJson.Status,
-        ),
-        isFirstPayment: false,
-      })}`
-
-    const cardcomInvoiceDocumentUrl = (
-      await cardcomIntegration.createTaxInvoiceDocumentUrl(
-        cardcomDetailRecurringJson.DocumentNumber.toString(),
-      )
-    ).url
-
-    await sql`
-      INSERT INTO sale_standing_order_cardcom_recurring_payment ${sql({
-        sale_standing_order_payment_id: saleStandingOrderPaymentId,
-        status: cardcomDetailRecurringJson.Status,
-        invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber,
-        internalDealNumber: cardcomDetailRecurringJson.InternalDealNumber,
-        invoiceDocumentUrl: cardcomInvoiceDocumentUrl,
-      })}`
-  })
-}
-
 async function connectSaleToExternalProviders(
   {studentNumber, saleNumber}: SaleConnectionToStudent,
   academyIntegration: AcademyIntegrationService,
@@ -264,6 +183,77 @@ async function connectSaleToExternalProviders(
     smooveConnectionResult.status === 'rejected'
   ) {
     throw new Error('Connecting sale to external providers failed')
+  }
+}
+
+export async function disconnectSaleFromExternalProviders(
+  {studentNumber, saleNumber}: SaleConnectionToStudent,
+  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
+  parentLogger: FastifyBaseLogger,
+) {
+  const logger = parentLogger.child({saleNumber, studentNumber})
+
+  logger.info('disconnect-sale-from-external-providers-started')
+  const studentResult = await sql<{email: string}[]>`
+    SELECT
+      se.email
+    FROM student s
+    JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
+    WHERE s.student_number = ${studentNumber}
+  `
+
+  const student = studentResult[0]
+
+  if (!student)
+    throw new Error(`cannot disconnect student in sale from external providers because not found`)
+
+  logger.info({email: student.email}, 'student-found-for-disconnecting-from-external-providers')
+
+  const academyConnectionP = disconnectStudentFromAcademyCourses(
+    saleNumber,
+    student.email,
+    academyIntegration,
+    sql,
+    logger,
+  )
+  const smooveConnectionP = unsubscribeStudentFromSmooveLists(
+    studentNumber,
+    saleNumber,
+    smooveIntegration,
+    sql,
+    logger,
+  )
+
+  const [academyConnectionResult, smooveConnectionResult] = await Promise.allSettled([
+    academyConnectionP,
+    smooveConnectionP,
+  ])
+
+  if (academyConnectionResult.status === 'rejected') {
+    logger.error(
+      {err: academyConnectionResult.reason},
+      'disconnecting-student-from-academy-courses-failed',
+    )
+  } else {
+    logger.info('disconnecting-student-from-academy-courses-succeeded')
+  }
+
+  if (smooveConnectionResult.status === 'rejected') {
+    logger.error(
+      {err: smooveConnectionResult.reason},
+      'unsubscribing-student-from-smoove-lists-failed',
+    )
+  } else {
+    logger.info('unsubscribing-student-from-smoove-lists-succeeded')
+  }
+
+  if (
+    academyConnectionResult.status === 'rejected' ||
+    smooveConnectionResult.status === 'rejected'
+  ) {
+    throw new Error('Disconnecting sale from external providers failed')
   }
 }
 
@@ -653,6 +643,54 @@ async function connectStudentWithAcademyCourses(
   }
 }
 
+async function disconnectStudentFromAcademyCourses(
+  saleNumber: number,
+  studentEmail: string,
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+): Promise<void> {
+  // Get student info and all academy courses for products in the actual sale
+  const courses = await sql<{courseId: string}[]>`
+    SELECT DISTINCT
+      pac.workshop_id as course_id
+
+    FROM sale_data_product sip
+    INNER JOIN sale s ON s.last_data_product_id = sip.data_product_id
+    INNER JOIN product p ON p.product_number = sip.product_number
+    INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber}
+    ORDER BY pac.workshop_id
+  `
+
+  logger.info({courses}, 'academy-courses-to-disconnect')
+
+  const result = await Promise.allSettled(
+    courses.map(({courseId}) =>
+      retry(() => academyIntegration.removeStudentFromCourse(studentEmail, parseInt(courseId)), {
+        retries: 5,
+        minTimeout: 1000,
+        maxTimeout: 5000,
+      }),
+    ),
+  )
+
+  for (const [is, res] of Object.entries(result)) {
+    const i = parseInt(is)
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, courseId: courses[i].courseId, i, student: studentEmail},
+        'removing-student-from-academy-course-failed',
+      )
+    } else {
+      logger.info(
+        {courseId: courses[i].courseId, i, student: studentEmail},
+        'removing-student-from-academy-course-succeeded',
+      )
+    }
+  }
+}
+
 async function subscribeStudentToSmooveLists(
   studentNumber: number,
   saleNumber: number,
@@ -701,6 +739,77 @@ async function subscribeStudentToSmooveLists(
         subscribeTo: [parseInt(smooveProductLists.listId)],
         unsubscribeFrom: [
           parseInt(smooveProductLists.cancellingListId),
+          parseInt(smooveProductLists.cancelledListId),
+          parseInt(smooveProductLists.removedListId),
+        ],
+      }),
+    ),
+  )
+
+  for (const [is, res] of Object.entries(result)) {
+    const i = parseInt(is)
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, courseId: smooveProductsLists[i].listId, i, studentNumber},
+        'adding-student-to-academy-course-failed',
+      )
+    } else {
+      logger.info(
+        {courseId: smooveProductsLists[i].listId, i, studentNumber},
+        'adding-student-to-academy-course-succeeded',
+      )
+    }
+  }
+}
+
+async function unsubscribeStudentFromSmooveLists(
+  studentNumber: number,
+  saleNumber: number,
+  smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+) {
+  const smooveProductsLists = await sql<
+    {
+      listId: string
+      cancellingListId: string
+      cancelledListId: string
+      removedListId: string
+    }[]
+  >`
+    SELECT
+      pis.list_id as list_id,
+      pis.cancelling_list_id as cancellingListId,
+      pis.cancelled_list_id as cancelledListId,
+      pis.removed_list_id as removedListId
+    FROM sale_data_product sip
+    JOIN sale s ON s.last_data_product_id = sip.data_product_id
+    JOIN product p ON p.product_number = sip.product_number
+    JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber};
+  `
+
+  const smooveContactIdResult = await sql<{smooveContactId: string}[]>`
+    SELECT
+      smoove_contact_id
+    FROM student
+    INNER JOIN student_integration_smoove sis ON sis.data_id = student.last_data_id
+    WHERE student_number = ${studentNumber}
+  `
+
+  const smooveContactId =
+    smooveContactIdResult.length > 0 ? smooveContactIdResult[0].smooveContactId : undefined
+
+  if (!smooveContactId) {
+    return
+  }
+
+  const result = await Promise.allSettled(
+    smooveProductsLists.map((smooveProductLists) =>
+      smooveIntegration.changeContactLinkedLists(parseInt(smooveContactId), {
+        subscribeTo: [parseInt(smooveProductLists.cancellingListId)],
+        unsubscribeFrom: [
+          parseInt(smooveProductLists.listId),
           parseInt(smooveProductLists.cancelledListId),
           parseInt(smooveProductLists.removedListId),
         ],
@@ -1014,23 +1123,4 @@ async function hasSaleWithInvoiceNumber(
   )
 
   return result.length > 0
-}
-
-function cardcomStatusToStandingOrderPaymentResolution(
-  status: string,
-): StandingOrderPaymentResolution {
-  switch (status) {
-    case 'SUCCESSFUL':
-    case 'PAYBYOTHERE':
-    case 'PAYBYOTHER':
-      return 'payed'
-    case 'PENDINGFORPROCESSING':
-    case 'DEBTAUTOBILLING':
-      return 'failure-but-retrying'
-    case 'ON_HOLD':
-      return 'on-hold'
-    case 'OTHER':
-    default:
-      return 'failure-but-retrying'
-  }
 }

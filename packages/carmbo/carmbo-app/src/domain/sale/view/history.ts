@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import type {SaleHistory, SaleWithHistoryInfo} from '../model.ts'
+import type {SaleHistory, SaleWithHistoryInfo} from '../model/model.ts'
 import type {HistoryOperation} from '../../../commons/operation-type.ts'
 import {saleHistoryOperationToText} from './history-operation-to-text.ts'
 
