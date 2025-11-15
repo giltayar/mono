@@ -287,12 +287,9 @@ export async function cancelSubscription(
     )
 
     if (studentName === undefined || productName === undefined || saleNumber === undefined) {
-      return {
-        status: 303,
-        body: finalHtml(
-          showErrorSubscriptionNotFound({email, salesEventNumber, studentName, productName}),
-        ),
-      }
+      return finalHtml(
+        showErrorSubscriptionNotFound({email, salesEventNumber, studentName, productName}),
+      )
     }
 
     await model_cancelSubscription(
@@ -306,14 +303,11 @@ export async function cancelSubscription(
       logger,
     )
 
-    return {
-      status: 303,
-      body: finalHtml(showSubscriptionCancelled(email, studentName, productName)),
-    }
+    return finalHtml(showSubscriptionCancelled(email, studentName, productName))
   } catch (err) {
     const logger = requestContext.get('logger')!
     logger.error({err}, 'cancel-subscription')
 
-    return {status: 303, body: finalHtml(showErrorCancellingSubscription(email, salesEventNumber))}
+    return finalHtml(showErrorCancellingSubscription(email, salesEventNumber))
   }
 }

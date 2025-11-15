@@ -49,9 +49,9 @@ export async function handleCardcomSale(
   const logger = loggerParent.child({
     salesEventNumber,
     jobId: crypto.randomUUID(),
-    job: 'handle-cardcom-one-time-sale',
+    job: 'handle-cardcom-sale',
   })
-  logger.info('handle-cardcom-one-time-sale-started')
+  logger.info('handle-cardcom-sale-started')
   await sql.begin(async (sql) => {
     const [hasSaleWithInvoiceNumber_, hasSalesEvent] = await Promise.all([
       hasSaleWithInvoiceNumber(cardcomSaleWebhookJson.invoicenumber, sql, logger),
@@ -480,7 +480,7 @@ async function createSale(
     .join(' ')}`
 
   ops = ops.concat(sql`
-      INSERT INTO sale_data_search VALUES
+    INSERT INTO sale_data_search VALUES
         (${dataId}, ${searchableText})
     `)
 
@@ -708,9 +708,9 @@ async function subscribeStudentToSmooveLists(
   >`
     SELECT
       pis.list_id as list_id,
-      pis.cancelling_list_id as cancellingListId,
-      pis.cancelled_list_id as cancelledListId,
-      pis.removed_list_id as removedListId
+      pis.cancelling_list_id,
+      pis.cancelled_list_id,
+      pis.removed_list_id
     FROM sale_data_product sip
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number
@@ -779,9 +779,9 @@ async function unsubscribeStudentFromSmooveLists(
   >`
     SELECT
       pis.list_id as list_id,
-      pis.cancelling_list_id as cancellingListId,
-      pis.cancelled_list_id as cancelledListId,
-      pis.removed_list_id as removedListId
+      pis.cancelling_list_id,
+      pis.cancelled_list_id,
+      pis.removed_list_id
     FROM sale_data_product sip
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number

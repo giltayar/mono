@@ -13,6 +13,8 @@ export function saleHistoryOperationToText(operation: SaleHistoryOperation): str
       return 'restored'
     case 'connect-manual-sale':
       return 'connected manual sale'
+    case 'cancel-subscription':
+      return 'canceled subscription'
     default:
       assertNever(operation)
   }

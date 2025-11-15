@@ -1,5 +1,5 @@
 import type {FastifyInstance} from 'fastify'
-import {email, z} from 'zod'
+import {z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import {
@@ -117,36 +117,24 @@ export function apiRoute(
 export function landingPageApiRoute(app: FastifyInstance) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  appWithTypes.post(
+  appWithTypes.get(
     '/cancel-subscription',
     {
       schema: {
-        body: z.object({
+        querystring: z.object({
+          'sales-event': z.coerce.number().positive(),
           email: z.string().email(),
-          querystring: z.object({'sales-event': z.coerce.number().positive()}),
         }),
       },
     },
     async (request, reply) => {
-      const {email} = request.body
-      const {'sales-event': salesEventNumber} = request.body.querystring
+      const {'sales-event': salesEventNumber, email} = request.query
 
       await dealWithControllerResult(
         reply,
         await cancelSubscription(email, Number(salesEventNumber)),
       )
     },
-  )
-
-  appWithTypes.get(
-    '/subscription-cancelled',
-    {
-      schema: z.object({
-        email: z.string().email(),
-        querystring: z.object({'sales-event': z.coerce.number().positive()}),
-      }),
-    },
-    async (_request, reply) => {},
   )
 }
 

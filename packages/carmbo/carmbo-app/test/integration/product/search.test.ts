@@ -45,8 +45,7 @@ test('searching products', async ({page}) => {
   await productListModel.search().queryInput().locator.fill(searchTerm)
   await productListModel.search().queryInput().locator.press('Enter')
 
-  const rowCountAfterSearch = await productListModel.list().rows().locator.count()
-  expect(rowCountAfterSearch).toBeGreaterThan(0)
+  await expect(productListModel.list().rows().locator).toHaveCount(1)
   await expect(productListModel.list().rows().row(0).nameCell().locator).toContainText(searchTerm)
 
   // test search by type

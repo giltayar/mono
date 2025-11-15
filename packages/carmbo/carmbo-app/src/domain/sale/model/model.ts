@@ -93,6 +93,7 @@ export const SaleHistoryOperationSchema = z.enum([
   'delete',
   'restore',
   'connect-manual-sale',
+  'cancel-subscription',
 ])
 
 export type SaleHistoryOperation = z.infer<typeof SaleHistoryOperationSchema>
@@ -156,22 +157,22 @@ export async function listSales(
       COALESCE(products, json_build_array()) AS products
     FROM
       sale_history
-    INNER LEFT JOIN sale ON last_history_id = id
-    LEFT LEFT JOIN sale_data_search ON sale_data_search.data_id = sale.last_data_id
-    LEFT LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
-    LEFT LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
-    LEFT LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale_history.data_manual_id
-    LEFT LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
-    LEFT LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
-    LEFT LEFT JOIN student ON student.student_number = sale_data.student_number
-    LEFT LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
-    LEFT LEFT JOIN LATERAL (
+    JOIN sale ON last_history_id = id
+    LEFT JOIN sale_data_search ON sale_data_search.data_id = sale.last_data_id
+    LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
+    LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+    LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale_history.data_manual_id
+    LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
+    LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
+    LEFT JOIN student ON student.student_number = sale_data.student_number
+    LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
+    LEFT JOIN LATERAL (
       SELECT
         json_agg(product_data.name ORDER BY item_order) AS products
       FROM
         sale_data_product
-        INNER LEFT JOIN product ON product.product_number = sale_data_product.product_number
-        INNER LEFT JOIN product_data ON product_data.data_id = product.last_data_id
+        JOIN product ON product.product_number = sale_data_product.product_number
+        JOIN product_data ON product_data.data_id = product.last_data_id
       WHERE
         sale_data_product.data_product_id = sale.last_data_product_id
     ) products ON true
@@ -384,11 +385,11 @@ export async function fillInSale(sale: NewSale, sql: Sql): Promise<NewSale> {
       COALESCE(products_agg.products, json_build_array()) AS products
     FROM
       (VALUES (1)) AS dummy(x)
-      LEFT LEFT JOIN sales_event se ON se.sales_event_number = ${sale.salesEventNumber ?? 0}
-      LEFT LEFT JOIN sales_event_data sed ON sed.data_id = se.last_data_id
-      LEFT LEFT JOIN student s ON s.student_number = ${sale.studentNumber ?? 0}
-      LEFT LEFT JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
-      LEFT LEFT JOIN LATERAL (
+      LEFT JOIN sales_event se ON se.sales_event_number = ${sale.salesEventNumber ?? 0}
+      LEFT JOIN sales_event_data sed ON sed.data_id = se.last_data_id
+      LEFT JOIN student s ON s.student_number = ${sale.studentNumber ?? 0}
+      LEFT JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
+      LEFT JOIN LATERAL (
         SELECT
           json_agg(
             json_build_object(
@@ -457,19 +458,19 @@ function saleSelect(saleNumber: number, sql: Sql) {
       ) AS delivery_address
     FROM
       parameters
-    LEFT JOIN sale_history sh ON sh.id = current_history_id
-    LEFT JOIN sale s ON s.sale_number = ${saleNumber}
-    LEFT JOIN sale_data ON sale_data.data_id = sh.data_id
-    LEFT LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
-    LEFT LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
-    LEFT LEFT JOIN student ON student.student_number = sale_data.student_number
-    LEFT LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
-    LEFT LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
-    LEFT LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sh.data_manual_id
-    LEFT LEFT JOIN sale_data_delivery ON
+    JOIN sale_history sh ON sh.id = current_history_id
+    JOIN sale s ON s.sale_number = ${saleNumber}
+    JOIN sale_data ON sale_data.data_id = sh.data_id
+    LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
+    LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
+    LEFT JOIN student ON student.student_number = sale_data.student_number
+    LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
+    LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
+    LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sh.data_manual_id
+    LEFT JOIN sale_data_delivery ON
         (sale_data_delivery.data_cardcom_id IS NULL AND sale_data_delivery.data_id = sh.data_id) OR
         (sale_data_delivery.data_id IS NULL AND sale_data_delivery.data_cardcom_id = s.data_cardcom_id)
-    LEFT LEFT JOIN LATERAL (
+    LEFT JOIN LATERAL (
       SELECT
         json_agg(
           json_build_object(
@@ -483,8 +484,8 @@ function saleSelect(saleNumber: number, sql: Sql) {
         ) AS products
       FROM
         sale_data_product
-        INNER LEFT JOIN product ON product.product_number = sale_data_product.product_number
-        INNER LEFT JOIN product_data ON product_data.data_id = product.last_data_id
+        INNER JOIN product ON product.product_number = sale_data_product.product_number
+        INNER JOIN product_data ON product_data.data_id = product.last_data_id
       WHERE
         sale_data_product.data_product_id = sh.data_product_id
     ) products ON true
@@ -792,7 +793,7 @@ export async function deleteSale(
       INSERT INTO sale_history (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason)
       SELECT ${historyId}, sale.last_data_id as last_data_id, sale.last_data_product_id as last_data_product_id, sale.sale_number, ${now}, ${deleteOperation}, ${reason ?? null}
       FROM sale_history
-      INNER LEFT JOIN sale ON sale.sale_number = ${saleNumber}
+      INNER JOIN sale ON sale.sale_number = ${saleNumber}
       WHERE id = sale.last_history_id
       RETURNING 1
     `
@@ -838,25 +839,25 @@ export async function findSalesEventAndStudentByEmail(
     SELECT
       sn.first_name AS student_first_name,
       sn.last_name AS student_last_name,
-      pd.name AS product_name
-      sl.sale_number AS sale_number,
+      pd.name AS product_name,
+      sl.sale_number AS sale_number
     FROM
       student_email se
-    LEFT JOIN student sh ON sh.data_id = se.data_id
-    LEFT JOIN student s ON s.student_number = sh.student_number
+    LEFT JOIN student_history sh ON sh.data_id = se.data_id
+    LEFT JOIN student s ON s.last_history_id = sh.id
     LEFT JOIN student_name sn ON sn.data_id = se.data_id
 
     LEFT JOIN sale_data sd ON sd.student_number = s.student_number
     LEFT JOIN sale_history slh ON slh.data_id = sd.data_id
     LEFT JOIN sale sl ON sl.sale_number = slh.sale_number
 
-    LEFT JOIN sale_data_product sdp ON sdp.data_product_id = slh.data_product_id AND item_order = 0
+    LEFT JOIN sale_data_product sdp ON sdp.data_product_id = slh.data_product_id AND sdp.item_order = 0
 
     LEFT JOIN product p ON p.product_number = sdp.product_number
     LEFT JOIN product_data pd ON pd.data_id = p.last_data_id
     WHERE
       se.email = ${email}
-      AND sso.sales_event_number = ${salesEventNumber}
+      AND sd.sales_event_number = ${salesEventNumber}
   `) as {
     studentFirstName: string | null
     studentLastName: string | null

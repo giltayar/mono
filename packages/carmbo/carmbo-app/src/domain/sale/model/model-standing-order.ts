@@ -102,25 +102,25 @@ export async function cancelSubscription(
   const logger = parentLogger.child({email, saleNumber})
   await sql.begin(async (sql) => {
     const result = (await sql`
-    SELECT
-      recurring_order_id
-      s.student_number,
-      sl.sale_number
-    FROM
-      student_email se
-    JOIN student sh ON sh.data_id = se.data_id
-    JOIN student s ON s.student_number = sh.student_number
+      SELECT
+        recurring_order_id,
+        s.student_number,
+        sl.sale_number
+      FROM
+        student_email se
+      JOIN student_history sh ON sh.data_id = se.data_id
+      JOIN student s ON s.student_number = sh.student_number
 
-    JOIN sale_data sd ON sd.student_number = s.student_number
-    JOIN sale_history slh ON slh.data_id = sd.data_id
-    JOIN sale sl ON sl.sale_number = slh.sale_number
+      JOIN sale_data sd ON sd.student_number = s.student_number
+      JOIN sale_history slh ON slh.data_id = sd.data_id
+      JOIN sale sl ON sl.sale_number = slh.sale_number
 
-    JOIN sale_data_cardcom sdc ON sdc.data_cardcom_id = sl.data_cardcom_id
+      JOIN sale_data_cardcom sdc ON sdc.data_cardcom_id = sl.data_cardcom_id
 
-    WHERE
-      se.email = ${email} AND
-      sl.sale_number = ${saleNumber}
-  `) as {recurringOrderId: string; studentNumber: number}[]
+      WHERE
+        se.email = ${email} AND
+        sl.sale_number = ${saleNumber}
+    `) as {recurringOrderId: string; studentNumber: number}[]
 
     if (result.length === 0) {
       throw new Error('No subscription found for given email and sales event')
@@ -150,7 +150,7 @@ export async function cancelSubscription(
 
     await sql`
       INSERT INTO sale_data_active ${sql({
-        data_id: saleDataActiveId,
+        dataActiveId: saleDataActiveId,
         isActive: false,
       })}
     `
@@ -179,8 +179,7 @@ export async function cancelSubscription(
 
     await sql`
       UPDATE sale
-      SET last_history_id = ${historyId},
-          data_active_id = ${saleDataActiveId}
+      SET last_history_id = ${historyId}
       WHERE sale_number = ${saleNumber}
     `
   })

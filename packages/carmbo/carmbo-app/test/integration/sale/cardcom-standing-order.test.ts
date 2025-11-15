@@ -14,6 +14,8 @@ import type {
 
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
+test.use({viewport: {width: 1280, height: 1280}})
+
 test('cardcom standing order creates student, sale with one payment', async ({page}) => {
   const academyCourseId = 1
   const smooveListId = 2
@@ -261,4 +263,125 @@ test('cardcom detail recurring webhooks from a sale that is not in the system ar
   )
 
   expect(result).toBe('ok')
+})
+
+test('cancelling a standing order subscription removes student from academy courses and updates smoove lists', async ({
+  page,
+}) => {
+  const academyCourseId = 1
+  const smooveListId = 2
+  const smooveCancelledListId = 3
+  const smooveCancellingListId = 4
+  const smooveRemovedListId = 5
+
+  const product1Number = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+      academyCourses: [academyCourseId],
+      smooveListId,
+      smooveCancelledListId,
+      smooveCancellingListId,
+      smooveRemovedListId,
+    },
+    undefined,
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [product1Number],
+    },
+    undefined,
+    sql(),
+  )
+
+  const customerEmail = 'test-customer@example.com'
+  const customerName = 'John Doe'
+  const customerPhone = '0501234567'
+
+  // Create a standing order sale
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
+    salesEventNumber,
+    {
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: 1776,
+      transactionDate: new Date(),
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    {
+      secret: 'secret',
+      baseUrl: url().href,
+    },
+  )
+
+  // Verify student was enrolled in academy course
+  await expect(async () => {
+    const academyContact = academyIntegration()._test_getContact(customerEmail)
+    expect(academyContact).toBeDefined()
+    expect(
+      academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId),
+    ).toBe(true)
+  }).toPass()
+
+  // Verify student was subscribed to smoove list
+  await expect(async () => {
+    const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+    expect(smooveContacts.length).toBe(1)
+    expect(smooveContacts[0].email).toBe(customerEmail)
+    expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
+  }).toPass()
+
+  // Cancel the subscription via the API endpoint
+  await page.goto(
+    new URL(
+      `/landing-page/sales/cancel-subscription?sales-event=${salesEventNumber}&email=${encodeURIComponent(customerEmail)}`,
+      url(),
+    ).href,
+  )
+
+  // Navigate to the sale page to verify the history
+  await page.goto(new URL('/sales/1', url()).href)
+  await page.waitForURL(/\/sales\/\d+$/)
+
+  const saleDetailModel = createUpdateSalePageModel(page)
+
+  // Verify the sale history includes a cancel-subscription entry
+  const saleHistory = saleDetailModel.history()
+  await expect(saleHistory.items().locator).toHaveCount(2)
+  await expect(saleHistory.items().item(0).locator).toContainText('canceled subscription')
+  await expect(saleHistory.items().item(1).locator).toContainText('created')
+
+  // Verify student was removed from academy course
+  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+    false,
+  )
+
+  // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
+  await expect(async () => {
+    const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+    // Student should no longer be in the main list
+    expect(smooveContacts.length).toBe(0)
+
+    // Student should be in the cancelling list
+    const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveCancellingListId)
+    expect(cancelledContacts.length).toBe(1)
+    expect(cancelledContacts[0].email).toBe(customerEmail)
+    expect(cancelledContacts[0].lists_Linked).toContain(smooveCancellingListId)
+  }).toPass()
 })

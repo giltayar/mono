@@ -1,2 +1,11 @@
 neverBuiltDependencies:
   - es5-ext
+
+minimumReleaseAge: 10080
+
+minimumReleaseAgeExclude:
+  - '@giltayar/*'
+  - '@typescript/*'
+  - '@types/*'
+  - eslint*
+  - '@eslint/*'
