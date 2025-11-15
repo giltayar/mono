@@ -241,7 +241,7 @@ test('cardcom master recurring webhooks are ignored', async () => {
     {
       RecordType: 'MasterRecurring',
       RecurringId: '12345',
-      'FlexItem.Price': 10000,
+      'FlexItem.Price': '10000',
     } as CardcomMasterRecurringJson as Record<string, number | string>,
   )
 
