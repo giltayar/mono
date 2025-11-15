@@ -145,7 +145,7 @@ function generateMasterRecurringWebhookData(
     RecordType: 'MasterRecurring',
     AccountId: String(invoiceInfo.cardcomCustomerId),
     RecurringId: standingOrderNumber,
-    'FlexItem.Price': invoiceInfo.transactionRevenueInCents / 100,
+    'FlexItem.Price': (invoiceInfo.transactionRevenueInCents / 100).toFixed(2),
   }
 }
 

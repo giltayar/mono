@@ -82,7 +82,7 @@ export const CardcomStandingOrderBaseJsonSchema = z.looseObject({
 export const CardcomMasterRecurringJsonSchema = z.looseObject({
   RecordType: z.literal('MasterRecurring'),
   ...CardcomStandingOrderBaseJsonSchema.shape,
-  'FlexItem.Price': z.number(),
+  'FlexItem.Price': z.string(),
 })
 
 export const CardcomDetailRecurringJsonSchema = z.looseObject({
