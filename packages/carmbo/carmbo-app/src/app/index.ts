@@ -9,6 +9,7 @@ import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-in
 import {prepareDatabase} from './prepare-database.ts'
 
 export const EnvironmentVariablesSchema = z.object({
+  DB_CONNECTION_STRING: z.string().optional(),
   DB_DATABASE: z.string().default('carmbo'),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.coerce.number().default(5432),
@@ -47,6 +48,7 @@ const appBaseUrl = env.APP_BASE_URL
 
 const {app, sql} = await makeApp({
   db: {
+    connectionString: env.DB_CONNECTION_STRING,
     database: env.DB_DATABASE,
     host: env.DB_HOST,
     port: env.DB_PORT,

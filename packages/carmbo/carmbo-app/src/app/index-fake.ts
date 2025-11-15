@@ -10,6 +10,7 @@ const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accou
 
 const {app, sql} = await makeApp({
   db: {
+    connectionString: undefined,
     database: 'carmbo',
     host: 'localhost',
     port: process.env.DB_HOST ? parseInt(process.env.DB_HOST) : 5432,

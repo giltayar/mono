@@ -47,13 +47,20 @@ declare module '@fastify/request-context' {
 }
 
 export function makeApp({
-  db: {database, host, port, username, password},
+  db: {connectionString, database, host, port, username, password},
   services: {academyIntegration, whatsappIntegration, smooveIntegration, cardcomIntegration},
   auth0,
   appBaseUrl,
   TEST_hooks,
 }: {
-  db: {database: string; host: string; port: number; username: string; password: string}
+  db: {
+    connectionString: string | undefined
+    database: string
+    host: string
+    port: number
+    username: string
+    password: string
+  }
   services: {
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
@@ -84,16 +91,22 @@ export function makeApp({
           }
         : false,
   })
-  const sql = postgres({
-    host,
-    port,
-    database,
-    username,
-    password,
+
+  const postgresJsOptions = {
     transform: {...postgres.camel},
-    ssl: host.includes('neon') ? 'require' : undefined,
     // debug: console.log,
-  })
+  }
+  const sql = connectionString
+    ? postgres(connectionString, postgresJsOptions)
+    : postgres({
+        host,
+        port,
+        database,
+        username,
+        password,
+        ssl: host.includes('neon') ? 'require' : undefined,
+        ...postgresJsOptions,
+      })
   registerGlobalHelpersForJobExecution(sql, app.log)
 
   app.register(formbody, {parser: (str) => qs.parse(str)})

@@ -71,6 +71,7 @@ export function setup(testUrl: string): {
     TEST_resetJobHandlers()
     ;({app, sql} = makeApp({
       db: {
+        connectionString: undefined,
         database: 'carmbo',
         host: host.split(':')[0],
         port: parseInt(host.split(':')[1]),
