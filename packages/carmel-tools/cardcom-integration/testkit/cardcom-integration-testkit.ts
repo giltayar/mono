@@ -18,7 +18,6 @@ import {
 type CardcomIntegrationServiceData = {
   state: Parameters<typeof createFakeCardcomIntegrationService>[0] & {
     taxInvoiceDocuments: Record<string, TaxInvoiceInformation>
-    standingOrderNumbers: number[]
   }
 }
 
@@ -56,7 +55,6 @@ export function createFakeCardcomIntegrationService(context: {
   const state: CardcomIntegrationServiceData['state'] = {
     accounts: structuredClone(context.accounts),
     taxInvoiceDocuments: {},
-    standingOrderNumbers: [],
   }
   const sBind: ServiceBind<CardcomIntegrationServiceData> = (f) => bind(f, {state})
 
@@ -185,21 +183,32 @@ async function createTaxInvoiceDocument(
     TEST_sendCardcomInvoiceNumber?: number
   },
 ): Promise<{cardcomInvoiceNumber: number; cardcomDocumentLink: string; cardcomCustomerId: string}> {
-  const generatedCustomerId = invoiceInformation.cardcomCustomerId ?? (Math.random() * 100000) | 0
+  const generatedCustomerId = String(
+    invoiceInformation.cardcomCustomerId ?? (Math.random() * 100000) | 0,
+  )
   const invoiceToStore = {
     ...invoiceInformation,
-    cardcomCustomerId: generatedCustomerId,
+    cardcomCustomerId: Number(generatedCustomerId),
+  }
+
+  if (s.state.accounts[generatedCustomerId] === undefined) {
+    s.state.accounts[generatedCustomerId] = {
+      accountInfo: {
+        name: 'Test User',
+      },
+    }
   }
 
   const cardcomInvoiceNumber =
     options.TEST_sendCardcomInvoiceNumber ??
     Math.max(Math.max(...Object.keys(s.state.taxInvoiceDocuments).map(Number), 0) + 1, 1)
-  s.state.taxInvoiceDocuments[cardcomInvoiceNumber.toString()] = invoiceToStore
+
+  s.state.taxInvoiceDocuments[cardcomInvoiceNumber] = invoiceToStore
 
   return {
     cardcomInvoiceNumber,
     cardcomDocumentLink: `http://invoice-document.example.com/${cardcomInvoiceNumber}`,
-    cardcomCustomerId: generatedCustomerId.toString(),
+    cardcomCustomerId: generatedCustomerId,
   }
 }
 
@@ -268,10 +277,13 @@ export async function _test_simulateCardcomStandingOrder(
     cardcomInvoiceNumberToSend?: number
   } = {},
 ) {
-  const {cardcomInvoiceNumber} =
+  const {cardcomInvoiceNumber, cardcomCustomerId} =
     options.cardcomInvoiceNumberToSend &&
     s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend.toString()]
-      ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
+      ? {
+          cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
+          cardcomCustomerId: String((Math.random() * 100000) | 0),
+        }
       : await createTaxInvoiceDocument(s, sale, {
           sendInvoiceByMail: false,
           TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
@@ -289,6 +301,17 @@ export async function _test_simulateCardcomStandingOrder(
   )
 
   await simulateMasterRecurring(sale, recurringOrderId.toString(), serverInfo)
+
+  if (s.state.accounts[cardcomCustomerId] != undefined) {
+    s.state.accounts[cardcomCustomerId].recurringPayments = {
+      ...s.state.accounts[cardcomCustomerId].recurringPayments,
+      [recurringOrderId.toString()]: {
+        recurringPaymentId: recurringOrderId.toString(),
+        name: `Test Recurring Payment ${recurringOrderId}`,
+        isActive: true,
+      },
+    }
+  }
 
   return {recurringOrderId: recurringOrderId.toString()}
 }
