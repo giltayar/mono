@@ -5,10 +5,7 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
-import {
-  disconnectSaleFromExternalProviders,
-  type StandingOrderPaymentResolution,
-} from './model-sale.ts'
+import {type StandingOrderPaymentResolution} from './model-sale.ts'
 import {type SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 
@@ -94,8 +91,8 @@ export async function cancelSubscription(
   saleNumber: number,
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
-  academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  _academyIntegration: AcademyIntegrationService,
+  _smooveIntegration: SmooveIntegrationService,
   now: Date,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -126,21 +123,21 @@ export async function cancelSubscription(
       throw new Error('No subscription found for given email and sales event')
     }
 
-    const {recurringOrderId, studentNumber} = result[0]
+    const {recurringOrderId} = result[0]
     logger.info(
       {recurringOrderId: recurringOrderId, saleNumber},
       'disconnecting-subscription-from-external-providers',
     )
-    await disconnectSaleFromExternalProviders(
-      {studentNumber, saleNumber},
-      academyIntegration,
-      smooveIntegration,
-      sql,
-      logger.child({
-        recurringOrderId: recurringOrderId,
-        saleNumber,
-      }),
-    )
+    // await disconnectSaleFromExternalProviders(
+    //   {studentNumber, saleNumber},
+    //   academyIntegration,
+    //   smooveIntegration,
+    //   sql,
+    //   logger.child({
+    //     recurringOrderId: recurringOrderId,
+    //     saleNumber,
+    //   }),
+    // )
 
     logger.info({recurringOrderId: recurringOrderId}, 'disabling-cardcom-recurring-payment')
     await cardcomIntegration.enableDisableRecurringPayment(recurringOrderId, 'disable')
