@@ -9,7 +9,7 @@ export function showSubscriptionCancelled(email: string, studentName: string, pr
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>שגיאה בביטול מנוי</title>
+          <title>ביטול מנוי</title>
         </head>
         <body>
           <h1>
@@ -19,7 +19,6 @@ export function showSubscriptionCancelled(email: string, studentName: string, pr
               email,
             })}
           </h1>
-          <p>נתקלנו בשגיאה בעת ניסיון לבטל את המנוי שלך. אנא נסה שוב מאוחר יותר או פנה לתמיכה.</p>
         </body>
       </html>
     `

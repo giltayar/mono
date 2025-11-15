@@ -240,7 +240,7 @@ test('cardcom master recurring webhooks are ignored', async () => {
     new URL('/api/sales/cardcom/recurring-payment?secret=', url()),
     {
       RecordType: 'MasterRecurring',
-      RecurringId: 12345,
+      RecurringId: '12345',
       'FlexItem.Price': 10000,
     } as CardcomMasterRecurringJson as Record<string, number | string>,
   )
@@ -253,7 +253,7 @@ test('cardcom detail recurring webhooks from a sale that is not in the system ar
     new URL('/api/sales/cardcom/recurring-payment?secret=', url()),
     {
       RecordType: 'DetailRecurring',
-      RecurringId: 12345,
+      RecurringId: '12345',
       BillingAttempts: 1,
       DocumentNumber: 1,
       InternalDealNumber: '111',

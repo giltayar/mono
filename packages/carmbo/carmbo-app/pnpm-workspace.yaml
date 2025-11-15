@@ -7,5 +7,5 @@ minimumReleaseAgeExclude:
   - '@giltayar/*'
   - '@typescript/*'
   - '@types/*'
-  - eslint*
+  - 'eslint*'
   - '@eslint/*'
