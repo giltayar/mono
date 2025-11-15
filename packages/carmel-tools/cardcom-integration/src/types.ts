@@ -74,8 +74,8 @@ export const CardcomSaleWebhookJsonSchema = z.looseObject({
 export type CardcomSaleWebhookJson = z.infer<typeof CardcomSaleWebhookJsonSchema>
 
 export const CardcomStandingOrderBaseJsonSchema = z.looseObject({
-  AccountId: z.number().optional(),
-  RecurringId: z.number(),
+  AccountId: z.string().optional(),
+  RecurringId: z.string(),
   Secret: z.string().optional(),
 })
 

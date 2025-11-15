@@ -143,8 +143,8 @@ function generateMasterRecurringWebhookData(
 ): CardcomMasterRecurringJson {
   return {
     RecordType: 'MasterRecurring',
-    AccountId: invoiceInfo.cardcomCustomerId,
-    RecurringId: parseInt(standingOrderNumber),
+    AccountId: String(invoiceInfo.cardcomCustomerId),
+    RecurringId: standingOrderNumber,
     'FlexItem.Price': invoiceInfo.transactionRevenueInCents / 100,
   }
 }
@@ -156,8 +156,8 @@ function generateDetailRecurringWebhookData(
 ): CardcomDetailRecurringJson {
   return {
     RecordType: 'DetailRecurring',
-    AccountId: invoiceInfo.cardcomCustomerId,
-    RecurringId: parseInt(recurringOrderId),
+    AccountId: String(invoiceInfo.cardcomCustomerId),
+    RecurringId: recurringOrderId,
     Status: 'SUCCESSFUL',
     DocumentNumber: invoiceDocumentNumber,
     InternalDealNumber: chance.integer({min: 10000000, max: 99999999}).toString(),
