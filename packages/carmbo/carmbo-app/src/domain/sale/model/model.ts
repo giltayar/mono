@@ -94,6 +94,7 @@ export const SaleHistoryOperationSchema = z.enum([
   'restore',
   'connect-manual-sale',
   'cancel-subscription',
+  'removed-from-subscription',
 ])
 
 export type SaleHistoryOperation = z.infer<typeof SaleHistoryOperationSchema>
@@ -507,7 +508,7 @@ function saleHistorySelect(saleNumber: number, sql: Sql) {
   `
 }
 
-export async function createSale(sale: NewSale, reason: string | undefined, sql: Sql) {
+export async function createSale(sale: NewSale, reason: string | undefined, now: Date, sql: Sql) {
   await TEST_executeHook('createSale')
 
   // Validate required fields
@@ -520,7 +521,6 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
   if (!studentNumber) throw new Error('student number is required')
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
     const dataProductId = crypto.randomUUID()
@@ -645,6 +645,7 @@ export async function createSale(sale: NewSale, reason: string | undefined, sql:
 export async function updateSale(
   sale: Sale,
   reason: string | undefined,
+  now: Date,
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateSale')
@@ -657,7 +658,6 @@ export async function updateSale(
   const studentNumber = sale.studentNumber
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
     const dataProductId = crypto.randomUUID()
@@ -781,12 +781,12 @@ export async function deleteSale(
   saleNumber: number,
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
+  now: Date,
   sql: Sql,
 ): Promise<string | undefined> {
   await TEST_executeHook(`${deleteOperation}Sale`)
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
 
     const dataIdResult = await sql<object[]>`

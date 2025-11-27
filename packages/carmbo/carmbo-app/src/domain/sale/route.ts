@@ -30,9 +30,11 @@ import {
   CardcomRecurringOrderWebHookJsonSchema,
   CardcomSaleWebhookJsonSchema,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
-import {initializeJobHandlers} from './model/model-sale.ts'
+import {initializeJobHandlers as initializeSaleJobHandlers} from './model/model-sale.ts'
+import {initializeJobHandlers as initializeStandingOrderJobHandlers} from './model/model-standing-order.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {NowService} from '../../commons/now-service.ts'
 
 export function apiRoute(
   app: FastifyInstance,
@@ -40,15 +42,18 @@ export function apiRoute(
     secret,
     smooveIntegration,
     academyIntegration,
+    nowService,
   }: {
     secret: string | undefined
     smooveIntegration: SmooveIntegrationService
     academyIntegration: AcademyIntegrationService
+    nowService: NowService
   },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  initializeJobHandlers(academyIntegration, smooveIntegration)
+  initializeSaleJobHandlers(academyIntegration, smooveIntegration)
+  initializeStandingOrderJobHandlers(academyIntegration, smooveIntegration, nowService)
 
   for (const path of ['/cardcom/sale', '/cardcom/one-time-sale'])
     appWithTypes.post(

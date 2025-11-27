@@ -86,10 +86,14 @@ export async function listProducts(
     `
 }
 
-export async function createProduct(product: NewProduct, reason: string | undefined, sql: Sql) {
+export async function createProduct(
+  product: NewProduct,
+  reason: string | undefined,
+  now: Date,
+  sql: Sql,
+) {
   await TEST_executeHook('createProduct')
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -114,11 +118,11 @@ export async function createProduct(product: NewProduct, reason: string | undefi
 export async function updateProduct(
   product: Product,
   reason: string | undefined,
+  now: Date,
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateProduct')
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -151,11 +155,11 @@ export async function deleteProduct(
   productNumber: number,
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
+  now: Date,
   sql: Sql,
 ): Promise<string | undefined> {
   await TEST_executeHook(`${deleteOperation}Product`)
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataIdResult = await sql<{dataId: string}[]>`
       INSERT INTO product_history (id, data_id, product_number, timestamp, operation, operation_reason)
@@ -436,6 +440,7 @@ export async function TEST_seedProducts(sql: Sql, count: number) {
         smooveRemovedListId: chance.integer({min: 1, max: 9999}),
       },
       chance.word(),
+      new Date(),
       sql,
     )
   }

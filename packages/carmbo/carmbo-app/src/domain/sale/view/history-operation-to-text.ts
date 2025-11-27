@@ -15,6 +15,8 @@ export function saleHistoryOperationToText(operation: SaleHistoryOperation): str
       return 'connected manual sale'
     case 'cancel-subscription':
       return 'canceled subscription'
+    case 'removed-from-subscription':
+      return 'removed from subscription'
     default:
       assertNever(operation)
   }

@@ -23,6 +23,7 @@ test('create sale then update it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -32,6 +33,7 @@ test('create sale then update it', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -41,6 +43,7 @@ test('create sale then update it', async ({page}) => {
       productType: 'challenge',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -53,6 +56,7 @@ test('create sale then update it', async ({page}) => {
       productsForSale: [product1Number, product2Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -160,6 +164,7 @@ test('discard button', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -169,6 +174,7 @@ test('discard button', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -181,6 +187,7 @@ test('discard button', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -232,6 +239,7 @@ test('optional fields', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -241,6 +249,7 @@ test('optional fields', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -253,6 +262,7 @@ test('optional fields', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -292,6 +302,7 @@ test('creation/update error shows alert', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -301,6 +312,7 @@ test('creation/update error shows alert', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -313,6 +325,7 @@ test('creation/update error shows alert', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 

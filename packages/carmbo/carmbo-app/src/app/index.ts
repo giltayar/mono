@@ -73,6 +73,7 @@ const {app, sql} = await makeApp({
       apiKeyPassword: env.CARDCOM_API_KEY_PASSWORD,
       terminalNumber: env.CARDCOM_TERMINAL_NUMBER.toString(),
     }),
+    nowService: () => new Date(),
   },
   auth0: env.FORCE_NO_AUTH
     ? undefined

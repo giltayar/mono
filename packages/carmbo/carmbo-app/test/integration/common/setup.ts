@@ -21,6 +21,8 @@ export function setup(testUrl: string): {
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
   cardcomIntegration: () => ReturnType<typeof createFakeCardcomIntegrationService>
   TEST_hooks: Record<string, TEST_HookFunction>
+  setTime: (date: Date) => void
+  resetTime: () => void
 } {
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
   let findAddress
@@ -28,6 +30,7 @@ export function setup(testUrl: string): {
   let app: FastifyInstance
   let sql: Sql
   let url: URL
+  let overridingDate: Date | undefined
   let smooveIntegration: ReturnType<typeof createFakeSmooveIntegrationService>
   let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
   let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
@@ -101,6 +104,7 @@ export function setup(testUrl: string): {
         }),
         smooveIntegration,
         cardcomIntegration,
+        nowService: () => (overridingDate ? overridingDate : new Date()),
       },
       auth0: undefined,
       appBaseUrl: 'http://localhost:????',
@@ -121,6 +125,7 @@ export function setup(testUrl: string): {
     resetHooks()
     cardcomIntegration._test_reset_data()
     smooveIntegration._test_reset_data()
+    overridingDate = undefined
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product RESTART IDENTITY CASCADE`
@@ -150,6 +155,8 @@ export function setup(testUrl: string): {
     academyIntegration: () => academyIntegration,
     cardcomIntegration: () => cardcomIntegration,
     TEST_hooks,
+    setTime: (date: Date) => (overridingDate = date),
+    resetTime: () => (overridingDate = undefined),
   }
 }
 

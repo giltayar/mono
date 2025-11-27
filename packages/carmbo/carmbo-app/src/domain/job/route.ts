@@ -14,10 +14,11 @@ export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undef
         request.log.warn({query: request.query}, 'wrong-api-secret')
         return reply.status(403).send({error: 'Forbidden'})
       }
+      const nowService = request.requestContext.get('nowService')!
 
       request.log.info('execute-jobs-api-called')
 
-      triggerJobsExecution()
+      triggerJobsExecution(nowService)
 
       return {message: 'triggered'}
     },

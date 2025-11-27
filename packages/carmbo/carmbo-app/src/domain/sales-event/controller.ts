@@ -137,7 +137,8 @@ export async function createSalesEvent(
   sql: Sql,
 ): Promise<ControllerResult> {
   try {
-    const salesEventNumber = await model_createSalesEvent(salesEvent, undefined, sql)
+    const nowService = requestContext.get('nowService')!
+    const salesEventNumber = await model_createSalesEvent(salesEvent, undefined, nowService(), sql)
 
     return {htmxRedirect: `/sales-events/${salesEventNumber}`}
   } catch (error) {
@@ -154,10 +155,12 @@ export async function deleteSalesEvent(
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
   try {
+    const nowService = requestContext.get('nowService')!
     const operationId = await model_deleteSalesEvent(
       salesEventNumber,
       undefined,
       deleteOperation,
+      nowService(),
       sql,
     )
 
@@ -192,7 +195,8 @@ export async function updateSalesEvent(
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
   try {
-    const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, sql)
+    const nowService = requestContext.get('nowService')!
+    const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, nowService(), sql)
 
     if (!salesEventNumber) {
       return {status: 404, body: 'Sales event not found'}

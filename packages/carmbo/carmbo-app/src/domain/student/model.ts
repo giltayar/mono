@@ -115,6 +115,7 @@ export async function createStudent(
   student: NewStudent,
   reason: string | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  now: Date,
   sql: Sql,
 ) {
   await TEST_executeHook('createStudent')
@@ -122,7 +123,6 @@ export async function createStudent(
   const normalizedStudent = normalizeStudent(student)
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -163,6 +163,7 @@ export async function updateStudent(
   reason: string | undefined,
   smooveIntegration: SmooveIntegrationService,
   academyIntegration: AcademyIntegrationService,
+  now: Date,
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateStudent')
@@ -175,7 +176,6 @@ export async function updateStudent(
       sql,
     )
 
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -243,12 +243,12 @@ export async function deleteStudent(
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
   smooveIntegration: SmooveIntegrationService,
+  now: Date,
   sql: Sql,
 ): Promise<string | undefined> {
   await TEST_executeHook(`${deleteOperation}Student`)
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataIdResult = await sql<{dataId: string}[]>`
       INSERT INTO student_history (id, data_id, student_number, timestamp, operation, operation_reason)
@@ -538,6 +538,7 @@ export async function TEST_seedStudents(
       },
       chance.word(),
       smooveIntegration,
+      new Date(),
       sql,
     )
   }

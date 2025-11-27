@@ -59,6 +59,7 @@ const {app, sql} = await makeApp({
       contacts: {},
     }),
     cardcomIntegration: fakeCardcomIntegrationService,
+    nowService: () => new Date(),
   },
   auth0: undefined,
   appBaseUrl: 'http://localhost:3000',

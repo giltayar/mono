@@ -5,9 +5,38 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
-import {type StandingOrderPaymentResolution} from './model-sale.ts'
+import {type SaleConnectionToStudent, type StandingOrderPaymentResolution} from './model-sale.ts'
+import {
+  disconnectSaleFromExternalProviders,
+  moveStudentToSmooveCancelledSubscriptionList,
+} from './model-external-providers.ts'
 import {type SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
+import {Temporal} from '@js-temporal/polyfill'
+import type {NowService} from '../../../commons/now-service.ts'
+
+let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<SaleConnectionToStudent> | undefined
+
+export async function initializeJobHandlers(
+  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
+  nowService: NowService,
+) {
+  createDisconnectSaleFromExternalProvidersJob = registerJobHandler<SaleConnectionToStudent>(
+    'disconnecting-sale-from-external-providers',
+    async (payload, _attempt, logger, sql) => {
+      await disconnectSaleFromExternalProviders(
+        payload,
+        academyIntegration,
+        smooveIntegration,
+        nowService(),
+        sql,
+        logger,
+      )
+    },
+  )
+}
 
 export async function handleCardcomRecurringPayment(
   cardcomRecurringOrderWebHookJson: CardcomRecurringOrderWebHookJson,
@@ -92,7 +121,7 @@ export async function cancelSubscription(
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
   _academyIntegration: AcademyIntegrationService,
-  _smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
   now: Date,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -102,7 +131,8 @@ export async function cancelSubscription(
       SELECT
         recurring_order_id,
         s.student_number,
-        sl.sale_number
+        sl.sale_number,
+        fsl.timestamp AS sale_creation_timestamp
       FROM
         student_email se
       JOIN student_history sh ON sh.data_id = se.data_id
@@ -112,38 +142,37 @@ export async function cancelSubscription(
       JOIN sale_history slh ON slh.data_id = sd.data_id
       JOIN sale sl ON sl.sale_number = slh.sale_number
 
+      JOIN sale_history fsl ON fsl.sale_number = ${saleNumber} AND fsl.operation = 'create'
+
       JOIN sale_data_cardcom sdc ON sdc.data_cardcom_id = sl.data_cardcom_id
 
       WHERE
         se.email = ${email} AND
         sl.sale_number = ${saleNumber}
-    `) as {recurringOrderId: string; studentNumber: number}[]
+    `) as {recurringOrderId: string; studentNumber: number; saleCreationTimestamp: Date}[]
 
     if (result.length === 0) {
       throw new Error('No subscription found for given email and sales event')
     }
 
-    const {recurringOrderId} = result[0]
-    logger.info(
-      {recurringOrderId: recurringOrderId, saleNumber},
-      'disconnecting-subscription-from-external-providers',
-    )
-    // await disconnectSaleFromExternalProviders(
-    //   {studentNumber, saleNumber},
-    //   academyIntegration,
-    //   smooveIntegration,
-    //   sql,
-    //   logger.child({
-    //     recurringOrderId: recurringOrderId,
-    //     saleNumber,
-    //   }),
-    // )
+    const {recurringOrderId, saleCreationTimestamp, studentNumber} = result[0]
 
     logger.info({recurringOrderId: recurringOrderId}, 'disabling-cardcom-recurring-payment')
     await cardcomIntegration.enableDisableRecurringPayment(recurringOrderId, 'disable')
 
+    logger.info({recurringOrderId: recurringOrderId}, 'moving-student-to-cancelled-smoove-listv')
+    await moveStudentToSmooveCancelledSubscriptionList(
+      studentNumber,
+      saleNumber,
+      smooveIntegration,
+      sql,
+      logger,
+    )
+
+    logger.info({recurringOrderId: recurringOrderId}, 'creating-history-for-cancellation')
     const saleDataActiveId = crypto.randomUUID()
     const historyId = crypto.randomUUID()
+    logger.info({recurringOrderId: recurringOrderId, historyId}, 'creating-history')
 
     await sql`
       INSERT INTO sale_data_active ${sql({
@@ -179,6 +208,18 @@ export async function cancelSubscription(
       SET last_history_id = ${historyId}
       WHERE sale_number = ${saleNumber}
     `
+
+    const disconnectTime = computeDisconnectTime({
+      unsubscribeTimestamp: now,
+      subscriptionTimestamp: saleCreationTimestamp,
+    })
+    logger.info(
+      {saleNumber, studentNumber, disconnectTime: disconnectTime.toISOString()},
+      'creating-disconnect-job',
+    )
+    await createDisconnectSaleFromExternalProvidersJob!({saleNumber, studentNumber}, sql, {
+      scheduledAt: disconnectTime,
+    })
   })
 }
 
@@ -199,4 +240,36 @@ export function cardcomStatusToStandingOrderPaymentResolution(
     default:
       return 'failure-but-retrying'
   }
+}
+
+function computeDisconnectTime({
+  unsubscribeTimestamp: unsubscriptionTimestamp,
+  subscriptionTimestamp,
+}: {
+  unsubscribeTimestamp: Date
+  subscriptionTimestamp: Date
+}): Date {
+  const subscriptionDate = Temporal.Instant.fromEpochMilliseconds(subscriptionTimestamp.getTime())
+    .toZonedDateTimeISO('UTC')
+    .toPlainDate()
+
+  const unsubscriptionDate = Temporal.Instant.fromEpochMilliseconds(
+    unsubscriptionTimestamp.getTime(),
+  )
+    .toZonedDateTimeISO('UTC')
+    .toPlainDate()
+
+  let removalDate = unsubscriptionDate
+
+  if (removalDate.day >= subscriptionDate.day) {
+    removalDate = removalDate.add({months: 1}, {overflow: 'constrain'})
+  }
+
+  removalDate = removalDate.with({day: subscriptionDate.day}, {overflow: 'constrain'})
+
+  return new Date(
+    removalDate
+      .toZonedDateTime({plainTime: Temporal.PlainTime.from('05:00'), timeZone: 'Asia/Jerusalem'})
+      .toInstant().epochMilliseconds,
+  )
 }

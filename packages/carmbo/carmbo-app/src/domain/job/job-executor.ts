@@ -1,6 +1,8 @@
 import type {FastifyBaseLogger} from 'fastify'
+import {setTimeout} from 'timers/promises'
 import type {Sql} from 'postgres'
 import {jobHandlers} from './job-handlers.ts'
+import type {NowService} from '../../commons/now-service.ts'
 
 type JobToExecute = {
   id: string
@@ -12,40 +14,51 @@ type JobToExecute = {
 
 let jobMutex = 0
 
-async function executeJobs() {
-  if (jobMutex) return
+async function executeJobs(nowService: NowService) {
+  ++jobMutex
+  const now = nowService()
+  const jobExecutionId = crypto.randomUUID()
+  const jobLogger = globalLogger.child({jobExecutionId})
+  jobLogger.info({jobMutex, now: now.toISOString()}, 'execute-jobs-started')
+  if (jobMutex > 1) {
+    jobLogger.info({jobMutex}, 'execute-jobs-already-running')
+    return
+  }
 
   try {
-    jobMutex = 1
+    jobLogger.info('finding-jobs-to-execute')
     const jobsToExecute = await globalSql<JobToExecute[]>`
       SELECT
         id, type, payload, number_of_retries, attempts
       FROM
         jobs
       WHERE
-        scheduled_at IS NULL OR scheduled_at <= NOW()
+        scheduled_at IS NULL OR scheduled_at <= ${now}
     `
+    jobLogger.info({jobsToExecute: jobsToExecute.length}, 'finding-jobs-to-execute')
 
     for (const job of jobsToExecute) {
-      const childLogger = globalLogger.child({jobId: job.id, type: job.type})
+      const childLogger = jobLogger.child({jobId: job.id, type: job.type})
       childLogger.info({}, 'executing-job-start')
 
       try {
-        await executeJob(job, globalSql, childLogger)
+        await executeJob(job, now, globalSql, childLogger)
       } catch (err) {
         childLogger.error({err}, 'executing-job-failed')
       }
     }
-
-    if (jobsToExecute.length > 0) {
-      triggerJobsExecution()
-    }
   } finally {
-    jobMutex = 0
+    jobLogger.info({jobMutex}, 'ending-jobs-execution')
+    --jobMutex
+    if (jobMutex > 0) {
+      jobLogger.info({jobMutex}, 'retriggering-jobs-execution')
+      jobMutex = 0
+      triggerJobsExecution(nowService)
+    }
   }
 }
 
-async function executeJob(job: JobToExecute, sql: Sql, logger: FastifyBaseLogger) {
+async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: FastifyBaseLogger) {
   const attempts = parseInt(job.attempts)
   const numberOfRetries = parseInt(job.numberOfRetries)
 
@@ -74,7 +87,7 @@ async function executeJob(job: JobToExecute, sql: Sql, logger: FastifyBaseLogger
           logger.info({attempts, numberOfRetries}, 'job-scheduled-for-retry')
 
           await sql`
-            UPDATE jobs SET ${sql({attempts: attempts + 1, scheduledAt: null, updatedAt: new Date()})}
+            UPDATE jobs SET ${sql({attempts: attempts + 1, scheduledAt: null, updatedAt: now})}
           `
         }
 
@@ -83,16 +96,14 @@ async function executeJob(job: JobToExecute, sql: Sql, logger: FastifyBaseLogger
     )
 }
 
-export function triggerJobsExecution() {
+export async function triggerJobsExecution(nowService: NowService) {
   if (!globalSql || !globalLogger)
     throw new Error('Global helpers for job execution not registered')
-  setTimeout(
-    () =>
-      executeJobs().catch((err) => {
-        globalLogger.error({err}, 'execute-jobs-under-trigger-failed')
-      }),
-    0,
-  )
+
+  await setTimeout(0)
+  await executeJobs(nowService).catch((err) => {
+    globalLogger.error({err}, 'execute-jobs-under-trigger-failed')
+  })
 }
 
 let globalSql: Sql

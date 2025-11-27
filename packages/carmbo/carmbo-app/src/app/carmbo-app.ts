@@ -36,6 +36,7 @@ declare module '@fastify/request-context' {
     whatsappIntegration: WhatsAppIntegrationService
     smooveIntegration: SmooveIntegrationService
     cardcomIntegration: CardcomIntegrationService
+    nowService: () => Date
     logger: FastifyBaseLogger
     sql: Sql
     courses: AcademyCourse[] | undefined
@@ -46,9 +47,26 @@ declare module '@fastify/request-context' {
   }
 }
 
+function addAuth0Hook(app: FastifyInstance, auth0Client: any) {
+  if (auth0Client)
+    app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
+      const session = await auth0Client.getSession({request, reply})
+
+      if (!session) {
+        reply.redirect('/auth/login')
+      }
+    })
+}
+
 export function makeApp({
   db: {connectionString, database, host, port, username, password},
-  services: {academyIntegration, whatsappIntegration, smooveIntegration, cardcomIntegration},
+  services: {
+    academyIntegration,
+    whatsappIntegration,
+    smooveIntegration,
+    cardcomIntegration,
+    nowService,
+  },
   auth0,
   appBaseUrl,
   TEST_hooks,
@@ -66,6 +84,7 @@ export function makeApp({
     whatsappIntegration: WhatsAppIntegrationService
     smooveIntegration: SmooveIntegrationService
     cardcomIntegration: CardcomIntegrationService
+    nowService: () => Date
   }
   auth0:
     | {
@@ -119,6 +138,7 @@ export function makeApp({
       whatsappIntegration,
       smooveIntegration,
       cardcomIntegration,
+      nowService,
       courses: undefined,
       logger: request.log,
       whatsappGroups: undefined,
@@ -169,6 +189,7 @@ export function makeApp({
     secret: auth0?.sessionSecret,
     academyIntegration,
     smooveIntegration,
+    nowService,
   })
   app.register(jobsApiRoute, {
     prefix: '/api/jobs',
@@ -182,15 +203,4 @@ export function makeApp({
   app.get('/health', async () => ({status: 'ok'}))
 
   return {app, sql}
-}
-
-function addAuth0Hook(app: FastifyInstance, auth0Client: any) {
-  if (auth0Client)
-    app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
-      const session = await auth0Client.getSession({request, reply})
-
-      if (!session) {
-        reply.redirect('/auth/login')
-      }
-    })
 }

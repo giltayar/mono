@@ -19,6 +19,7 @@ test('create sale with delivery address then update it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -28,6 +29,7 @@ test('create sale with delivery address then update it', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -37,6 +39,7 @@ test('create sale with delivery address then update it', async ({page}) => {
       productType: 'challenge',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -49,6 +52,7 @@ test('create sale with delivery address then update it', async ({page}) => {
       productsForSale: [product1Number, product2Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -159,6 +163,7 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
       smooveListId: smooveListId,
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -169,6 +174,7 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
       academyCourses: [33],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -178,6 +184,7 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
       productType: 'club',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -190,6 +197,7 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
       productsForSale: [product1Number, product2Number, product3Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 

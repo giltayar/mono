@@ -89,12 +89,12 @@ export async function listSalesEvents(
 export async function createSalesEvent(
   salesEvent: NewSalesEvent,
   reason: string | undefined,
+  now: Date,
   sql: Sql,
 ) {
   await TEST_executeHook('createSalesEvent')
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -119,12 +119,12 @@ export async function createSalesEvent(
 export async function updateSalesEvent(
   salesEvent: SalesEvent,
   reason: string | undefined,
+  now: Date,
   sql: Sql,
 ): Promise<number | undefined> {
   await TEST_executeHook('updateSalesEvent')
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -160,12 +160,12 @@ export async function deleteSalesEvent(
   salesEventNumber: number,
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
+  now: Date,
   sql: Sql,
 ): Promise<string | undefined> {
   await TEST_executeHook(`${deleteOperation}SalesEvent`)
 
   return await sql.begin(async (sql) => {
-    const now = new Date()
     const historyId = crypto.randomUUID()
     const dataIdResult = await sql<{dataId: string}[]>`
       INSERT INTO sales_event_history (id, data_id, sales_event_number, timestamp, operation, operation_reason)
@@ -364,6 +364,7 @@ export async function TEST_seedSalesEvents(sql: Sql, count: number, productCount
         ],
       },
       chance.word(),
+      new Date(),
       sql,
     )
   }

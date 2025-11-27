@@ -6,13 +6,15 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createSalePaymentsPageModel} from '../../page-model/sales/sale-payments-page.model.ts'
-import {fetchAsTextWithJsonBody} from '@giltayar/http-commons'
+import {fetchAsBuffer, fetchAsTextWithJsonBody} from '@giltayar/http-commons'
 import type {
   CardcomDetailRecurringJson,
   CardcomMasterRecurringJson,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration, setTime} = setup(
+  import.meta.url,
+)
 
 test.use({viewport: {width: 1280, height: 1280}})
 
@@ -28,6 +30,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       smooveListId: smooveListId,
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -38,6 +41,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       academyCourses: [33],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -50,6 +54,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       productsForSale: [product1Number, product2Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -265,7 +270,7 @@ test('cardcom detail recurring webhooks from a sale that is not in the system ar
   expect(result).toBe('ok')
 })
 
-test('cancelling a standing order subscription removes student from academy courses and updates smoove lists', async ({
+test('cancelling a standing order subscription removes student from academy courses and updates smoove lists after the subscription ends', async ({
   page,
 }) => {
   const academyCourseId = 1
@@ -285,6 +290,7 @@ test('cancelling a standing order subscription removes student from academy cour
       smooveRemovedListId,
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -297,6 +303,7 @@ test('cancelling a standing order subscription removes student from academy cour
       productsForSale: [product1Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -354,34 +361,80 @@ test('cancelling a standing order subscription removes student from academy cour
       url(),
     ).href,
   )
-
-  // Navigate to the sale page to verify the history
-  await page.goto(new URL('/sales/1', url()).href)
-  await page.waitForURL(/\/sales\/\d+$/)
-
   const saleDetailModel = createUpdateSalePageModel(page)
-
-  // Verify the sale history includes a cancel-subscription entry
   const saleHistory = saleDetailModel.history()
-  await expect(saleHistory.items().locator).toHaveCount(2)
-  await expect(saleHistory.items().item(0).locator).toContainText('canceled subscription')
-  await expect(saleHistory.items().item(1).locator).toContainText('created')
+
+  await expect(async () => {
+    // Navigate to the sale page to verify the history
+    await page.goto(new URL('/sales/1', url()).href)
+
+    // Verify the sale history includes a cancel-subscription entry
+    await expect(saleHistory.items().locator).toHaveCount(2)
+    await expect(saleHistory.items().item(0).locator).toContainText('canceled subscription')
+    await expect(saleHistory.items().item(1).locator).toContainText('created')
+  }).toPass()
 
   // Verify student was NOT removed from academy course
   expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
 
-  // Verify smoove lists were NOT updated according to unsubscribeStudentFromSmooveLists
+  // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
   await expect(async () => {
     const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
-    // Student should no longer be in the main list
-    expect(smooveContacts.length).toBe(1)
+    expect(smooveContacts.length).toBe(0)
 
-    // Student should be in the cancelling list
-    const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveCancellingListId)
-    expect(cancelledContacts.length).toBe(0)
-    // expect(cancelledContacts[0].email).toBe(customerEmail)
-    // expect(cancelledContacts[0].lists_Linked).toContain(smooveCancellingListId)
+    const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveCancelledListId)
+    expect(cancelledContacts.length).toBe(1)
+    expect(cancelledContacts[0].email).toBe(customerEmail)
+    expect(cancelledContacts[0].lists_Linked).toContain(smooveCancelledListId)
   }).toPass()
+
+  setTime(new Date(Date.now() + 2 * 7 * 24 * 60 * 60 * 1000)) // Advance time by 2 weeks
+
+  await fetchAsBuffer(new URL('/api/jobs/trigger-job-execution?secret=', url()), {method: 'POST'})
+
+  // Verify student was STILL not removed from academy course
+  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+    true,
+  )
+
+  // Verify smoove lists were STILL the same
+  await expect(async () => {
+    const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+    expect(smooveContacts.length).toBe(0)
+
+    const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveCancelledListId)
+    expect(cancelledContacts.length).toBe(1)
+  }).toPass()
+
+  setTime(new Date(Date.now() + 5 * 7 * 24 * 60 * 60 * 1000)) // Advance time by 5 weeks
+
+  await fetchAsBuffer(new URL('/api/jobs/trigger-job-execution?secret=', url()), {method: 'POST'})
+
+  await expect
+    .poll(async () =>
+      // Verify student WAS removed from academy course
+      academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId),
+    )
+    .toBe(false)
+
+  // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
+  const smooveContacts1 = await smooveIntegration().fetchContactsOfList(smooveListId)
+  // Student should no longer be in the main list
+  expect(smooveContacts1.length).toBe(0)
+  const smooveContacts2 = await smooveIntegration().fetchContactsOfList(smooveCancelledListId)
+  expect(smooveContacts2.length).toBe(0)
+  // Student should be in the removed list`
+  const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveRemovedListId)
+  expect(cancelledContacts.length).toBe(1)
+  expect(cancelledContacts[0].email).toBe(customerEmail)
+  expect(cancelledContacts[0].lists_Linked).toContain(smooveRemovedListId)
+
+  await page.reload()
+
+  await expect(saleHistory.items().locator).toHaveCount(3)
+  await expect(saleHistory.items().item(0).locator).toContainText('removed from subscription')
+  await expect(saleHistory.items().item(1).locator).toContainText('canceled subscription')
+  await expect(saleHistory.items().item(2).locator).toContainText('created')
 })

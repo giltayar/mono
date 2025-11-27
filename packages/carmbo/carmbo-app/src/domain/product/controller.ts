@@ -130,7 +130,8 @@ export async function showProductInHistory(
 
 export async function createProduct(product: NewProduct, sql: Sql): Promise<ControllerResult> {
   try {
-    const productNumber = await model_createProduct(product, undefined, sql)
+    const nowService = requestContext.get('nowService')!
+    const productNumber = await model_createProduct(product, undefined, nowService(), sql)
 
     return {htmxRedirect: `/products/${productNumber}`}
   } catch (error) {
@@ -142,7 +143,8 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
 
 export async function updateProduct(product: Product, sql: Sql): Promise<ControllerResult> {
   try {
-    const productNumber = await model_updateProduct(product, undefined, sql)
+    const nowService = requestContext.get('nowService')!
+    const productNumber = await model_updateProduct(product, undefined, nowService(), sql)
 
     if (!productNumber) {
       return {status: 404, body: 'Product not found'}
@@ -162,7 +164,14 @@ export async function deleteProduct(
   sql: Sql,
 ): Promise<ControllerResult> {
   try {
-    const operationId = await model_deleteProduct(productNumber, undefined, deleteOperation, sql)
+    const nowService = requestContext.get('nowService')!
+    const operationId = await model_deleteProduct(
+      productNumber,
+      undefined,
+      deleteOperation,
+      nowService(),
+      sql,
+    )
 
     if (!operationId) {
       return {status: 404, body: 'Product not found'}
@@ -190,10 +199,12 @@ const cachedCourses: {
 
 async function listCourses() {
   const academyIntegration = requestContext.get('academyIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService().getTime()
 
-  if (Date.now() - cachedCourses.timestamp > 1 * 60 * 1000 || !cachedCourses.courses) {
+  if (now - cachedCourses.timestamp > 1 * 60 * 1000 || !cachedCourses.courses) {
     cachedCourses.courses = await academyIntegration.listCourses()
-    cachedCourses.timestamp = Date.now()
+    cachedCourses.timestamp = now
   }
 
   return cachedCourses.courses
@@ -209,10 +220,12 @@ const cachedWhatsAppGroups: {
 
 async function listWhatsAppGroups() {
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService().getTime()
 
-  if (Date.now() - cachedWhatsAppGroups.timestamp > 1 * 60 * 1000 || !cachedWhatsAppGroups.groups) {
+  if (now - cachedWhatsAppGroups.timestamp > 1 * 60 * 1000 || !cachedWhatsAppGroups.groups) {
     cachedWhatsAppGroups.groups = await whatsappIntegration.fetchWhatsAppGroups()
-    cachedWhatsAppGroups.timestamp = Date.now()
+    cachedWhatsAppGroups.timestamp = now
   }
 
   return cachedWhatsAppGroups.groups
@@ -228,10 +241,12 @@ const cachedSmooveLists: {
 
 async function listSmooveLists() {
   const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService().getTime()
 
-  if (Date.now() - cachedSmooveLists.timestamp > 1 * 60 * 1000 || !cachedSmooveLists.groups) {
+  if (now - cachedSmooveLists.timestamp > 1 * 60 * 1000 || !cachedSmooveLists.groups) {
     cachedSmooveLists.groups = await smooveIntegration.fetchLists()
-    cachedSmooveLists.timestamp = Date.now()
+    cachedSmooveLists.timestamp = now
   }
 
   return cachedSmooveLists.groups

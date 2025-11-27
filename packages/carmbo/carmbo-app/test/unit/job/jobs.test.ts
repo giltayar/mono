@@ -98,7 +98,7 @@ describe('Job Executor', () => {
 
     await submitJob({message: 'Hello World'}, sql, {retries: 3})
 
-    triggerJobsExecution()
+    triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 
@@ -113,7 +113,7 @@ describe('Job Executor', () => {
 
     const submitJob = registerJobHandler('failing-job', async (payload, attempt) => {
       executedJobs.push({payload, attempt})
-      callCount++
+      ++callCount
       if (callCount < 3) {
         throw new Error('Job failed')
       }
@@ -121,7 +121,15 @@ describe('Job Executor', () => {
 
     await submitJob({data: 'test'}, sql, {retries: 3})
 
-    triggerJobsExecution()
+    await triggerJobsExecution(() => new Date())
+
+    await waitForJobsToComplete(sql, 1)
+
+    await triggerJobsExecution(() => new Date())
+
+    await waitForJobsToComplete(sql, 1)
+
+    await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 
@@ -143,8 +151,13 @@ describe('Job Executor', () => {
     await submitJob({data: 'test'}, sql, {retries: 2})
 
     // First execution (attempt 0)
-    triggerJobsExecution()
+    await triggerJobsExecution(() => new Date())
 
+    await waitForJobsToComplete(sql, 1)
+
+    await triggerJobsExecution(() => new Date())
+    await waitForJobsToComplete(sql, 1)
+    await triggerJobsExecution(() => new Date())
     await waitForJobsToComplete(sql)
 
     assert.partialDeepStrictEqual(executedJobs, [
@@ -155,6 +168,7 @@ describe('Job Executor', () => {
   })
 
   test('should only execute jobs scheduled in the past or now', async () => {
+    const now = Date.now()
     const executedJobs: string[] = []
 
     const submitJob = registerJobHandler('scheduled-job', async (payload: {id: string}) => {
@@ -162,14 +176,16 @@ describe('Job Executor', () => {
     })
 
     // Job scheduled in the past
-    await submitJob({id: 'past'}, sql, {scheduledAt: new Date(Date.now() - 1000), retries: 3})
+    await submitJob({id: 'past'}, sql, {scheduledAt: new Date(now - 5000), retries: 3})
 
     // Job scheduled now
-    await submitJob({id: 'now'}, sql, {scheduledAt: new Date(), retries: 3})
+    await submitJob({id: 'now'}, sql, {scheduledAt: new Date(now), retries: 3})
 
     // Job scheduled in the future
-    await submitJob({id: 'future'}, sql, {scheduledAt: new Date(Date.now() + 700_000), retries: 3})
-    triggerJobsExecution()
+    const future = now + 700_000
+    await submitJob({id: 'future'}, sql, {scheduledAt: new Date(future), retries: 3})
+
+    triggerJobsExecution(() => new Date(now))
 
     await waitForJobsToComplete(sql, 1)
 
@@ -179,10 +195,16 @@ describe('Job Executor', () => {
     assert.ok(executedJobs.includes('now'))
     assert.ok(!executedJobs.includes('future'))
 
-    // Future job should still be in the database
-    const jobs = await sql`SELECT * FROM jobs WHERE type = 'scheduled-job'`
-    assert.strictEqual(jobs.length, 1)
-    assert.strictEqual(jobs[0].payload.id, 'future')
+    const pastTheFuture = future + 1
+
+    triggerJobsExecution(() => new Date(pastTheFuture))
+
+    await waitForJobsToComplete(sql)
+
+    assert.strictEqual(executedJobs.length, 3)
+    assert.ok(executedJobs.includes('past'))
+    assert.ok(executedJobs.includes('now'))
+    assert.ok(executedJobs.includes('future'))
   })
 
   test('should handle multiple jobs in sequence', async () => {
@@ -195,7 +217,7 @@ describe('Job Executor', () => {
     await submitJob({id: 'job1'}, sql, {retries: 3})
     await submitJob({id: 'job2'}, sql, {retries: 3})
     await submitJob({id: 'job3'}, sql, {retries: 3})
-    triggerJobsExecution()
+    triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 
@@ -222,7 +244,10 @@ describe('Job Executor', () => {
     )
 
     await submitJob({value: 'test-value'}, sql, {retries: 1})
-    triggerJobsExecution()
+    void triggerJobsExecution(() => new Date())
+    await waitForJobsToComplete(sql, 1)
+
+    void triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 
@@ -243,7 +268,8 @@ describe('Job Executor', () => {
     })
 
     await submitJob({data: 'test'}, sql, {retries: 1})
-    triggerJobsExecution()
+    await triggerJobsExecution(() => new Date())
+    await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
   })
@@ -252,9 +278,11 @@ describe('Job Executor', () => {
     // Insert a job directly without registering a handler
     await sql`
       INSERT INTO jobs (type, payload, number_of_retries, scheduled_at, attempts)
-      VALUES ('unregistered-job', '{"data": "test"}', 3, NOW(), 0)
+      VALUES ('unregistered-job', '{"data": "test"}', 2, NOW(), 0)
     `
-    triggerJobsExecution()
+    await triggerJobsExecution(() => new Date())
+    await triggerJobsExecution(() => new Date())
+    await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 
@@ -277,9 +305,9 @@ describe('Job Executor', () => {
     await submitJob({id: 'job1'}, sql, {retries: 3})
 
     // Trigger multiple times quickly - mutex should prevent concurrent execution
-    triggerJobsExecution()
-    triggerJobsExecution()
-    triggerJobsExecution()
+    triggerJobsExecution(() => new Date())
+    triggerJobsExecution(() => new Date())
+    triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 

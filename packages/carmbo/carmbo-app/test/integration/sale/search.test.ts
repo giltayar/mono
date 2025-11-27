@@ -20,6 +20,7 @@ test('searching sales', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -32,6 +33,7 @@ test('searching sales', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -44,6 +46,7 @@ test('searching sales', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -53,6 +56,7 @@ test('searching sales', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -65,6 +69,7 @@ test('searching sales', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -77,6 +82,7 @@ test('searching sales', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -89,6 +95,7 @@ test('searching sales', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -101,6 +108,7 @@ test('searching sales', async ({page}) => {
       products: [{productNumber, quantity: 1, unitPrice: 100}],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -112,6 +120,7 @@ test('searching sales', async ({page}) => {
       products: [{productNumber, quantity: 2, unitPrice: 100}],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -123,6 +132,7 @@ test('searching sales', async ({page}) => {
       products: [{productNumber, quantity: 1, unitPrice: 150}],
     },
     undefined,
+    new Date(),
     sql(),
   )
 

@@ -93,8 +93,15 @@ export async function showStudentInHistory(
 export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')!
+    const nowService = requestContext.get('nowService')!
 
-    const studentNumber = await model_createStudent(student, undefined, smooveIntegration, sql)
+    const studentNumber = await model_createStudent(
+      student,
+      undefined,
+      smooveIntegration,
+      nowService(),
+      sql,
+    )
 
     return {htmxRedirect: `/students/${studentNumber}`}
   } catch (error) {
@@ -109,12 +116,14 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')!
     const academyIntegration = requestContext.get('academyIntegration')!
+    const nowService = requestContext.get('nowService')!
 
     const studentNumber = await model_updateStudent(
       student,
       undefined,
       smooveIntegration,
       academyIntegration,
+      nowService(),
       sql,
     )
 
@@ -136,12 +145,14 @@ export async function deleteStudent(
 ): Promise<ControllerResult> {
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')!
+    const nowService = requestContext.get('nowService')!
 
     const operationId = await model_deleteStudent(
       studentNumber,
       undefined,
       deleteOperation,
       smooveIntegration,
+      nowService(),
       sql,
     )
 

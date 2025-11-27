@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "6.1.4",
+  "version": "6.2.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -37,7 +37,7 @@
     "test:typescript": "tsgo",
     "test:playwright": "NODE_ENV=test playwright test --config=test/integration",
     "ztest:playwright-e2e": "NODE_ENV=test playwright test --config=test/e2e",
-    "test:node": "node $INSPECT_APP $TEST_ONLY --test-force-exit --test test/unit/**.test.ts",
+    "test:node": "node $INSPECT_APP $TEST_ONLY --test-force-exit --test 'test/unit/**/**.test.ts'",
     "postpublish": "docker push giltayar/carmbo-app:$npm_package_version"
   },
   "keywords": [
@@ -64,6 +64,7 @@
     "@giltayar/http-commons": "^3.1.1",
     "@giltayar/promise-commons": "^2.0.0",
     "@giltayar/url-commons": "^2.2.0",
+    "@js-temporal/polyfill": "^0.5.1",
     "@types/yargs": "^17.0.35",
     "bootstrap": "^5.3.8",
     "chance": "^1.1.13",
@@ -76,26 +77,26 @@
     "qs": "^6.14.0",
     "vhtml": "^2.2.0",
     "yargs": "^18.0.0",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
-  "packageManager": "pnpm@10.22.0",
+  "packageManager": "pnpm@10.23.0",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.39.1",
     "@giltayar/docker-compose-testkit": "^2.1.0",
-    "@playwright/test": "^1.56.1",
-    "@railway/cli": "^4.11.1",
+    "@playwright/test": "^1.57.0",
+    "@railway/cli": "^4.11.2",
     "@types/chance": "^1.1.7",
     "@types/node": "^24.10.1",
     "@types/qs": "^6.14.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20251115.1",
+    "@typescript/native-preview": "7.0.0-dev.20251126.1",
     "eslint": "^9.39.1",
     "eslint-plugin-n": "^17.23.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.48.0"
   }
 }

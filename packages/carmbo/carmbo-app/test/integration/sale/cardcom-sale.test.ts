@@ -21,6 +21,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       smooveListId: smooveListId,
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -31,6 +32,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       academyCourses: [33],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -40,6 +42,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       productType: 'club',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -52,6 +55,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       productsForSale: [product1Number, product2Number, product3Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -283,6 +287,7 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -295,6 +300,7 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -420,6 +426,7 @@ test('double call of cardcom webhook should create only one sale and one student
       smooveListId: smooveListId,
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -432,6 +439,7 @@ test('double call of cardcom webhook should create only one sale and one student
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 

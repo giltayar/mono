@@ -21,6 +21,7 @@ test('create sale then connect it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -32,6 +33,7 @@ test('create sale then connect it', async ({page}) => {
       academyCourses: [1],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -43,6 +45,7 @@ test('create sale then connect it', async ({page}) => {
       academyCourses: [33, 777],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -55,6 +58,7 @@ test('create sale then connect it', async ({page}) => {
       productsForSale: [product1Number, product2Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -168,6 +172,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
   const product1Number = await createProduct(
@@ -178,6 +183,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       academyCourses: [1],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -189,6 +195,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       academyCourses: [33, 777],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -227,6 +234,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       productsForSale: [product1Number, product2Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -346,6 +354,7 @@ test('connect sale then reconnect it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -357,6 +366,7 @@ test('connect sale then reconnect it', async ({page}) => {
       academyCourses: [1],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -368,6 +378,7 @@ test('connect sale then reconnect it', async ({page}) => {
       academyCourses: [33, 777],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -380,6 +391,7 @@ test('connect sale then reconnect it', async ({page}) => {
       productsForSale: [product1Number, product2Number],
     },
     undefined,
+    new Date(),
     sql(),
   )
 

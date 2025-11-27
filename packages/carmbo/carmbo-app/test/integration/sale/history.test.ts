@@ -20,6 +20,7 @@ test('can view history', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -29,6 +30,7 @@ test('can view history', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -41,6 +43,7 @@ test('can view history', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -52,6 +55,7 @@ test('can view history', async ({page}) => {
       products: [{productNumber, quantity: 1, unitPrice: 100}],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -111,6 +115,7 @@ test('multiple sales have different histories', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -123,6 +128,7 @@ test('multiple sales have different histories', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    new Date(),
     sql(),
   )
 
@@ -132,6 +138,7 @@ test('multiple sales have different histories', async ({page}) => {
       productType: 'recorded',
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -144,6 +151,7 @@ test('multiple sales have different histories', async ({page}) => {
       productsForSale: [productNumber],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -156,6 +164,7 @@ test('multiple sales have different histories', async ({page}) => {
       products: [{productNumber, quantity: 1, unitPrice: 100}],
     },
     undefined,
+    new Date(),
     sql(),
   )
 
@@ -184,6 +193,7 @@ test('multiple sales have different histories', async ({page}) => {
       products: [{productNumber, quantity: 2, unitPrice: 100}],
     },
     undefined,
+    new Date(),
     sql(),
   )
 

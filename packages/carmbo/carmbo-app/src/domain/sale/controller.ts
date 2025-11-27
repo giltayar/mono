@@ -86,7 +86,8 @@ export async function showProductList(q: string | undefined): Promise<Controller
 
 export async function createSale(sale: NewSale, sql: Sql): Promise<ControllerResult> {
   try {
-    const saleNumber = await model_createSale(sale, undefined, sql)
+    const nowService = requestContext.get('nowService')!
+    const saleNumber = await model_createSale(sale, undefined, nowService(), sql)
 
     return {htmxRedirect: `/sales/${saleNumber}`}
   } catch (error) {
@@ -100,7 +101,8 @@ export async function dealWithCardcomOneTimeSale(
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   salesEventNumber: number,
 ): Promise<ControllerResult> {
-  const now = new Date()
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
   const sql = requestContext.get('sql')!
   const smooveIntegration = requestContext.get('smooveIntegration')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
@@ -122,8 +124,9 @@ export async function dealWithCardcomOneTimeSale(
 export async function dealWithCardcomRecurringPayment(
   cardcomSaleWebhookJson: CardcomRecurringOrderWebHookJson,
 ): Promise<ControllerResult> {
-  const now = new Date()
+  const nowService = requestContext.get('nowService')!
   const sql = requestContext.get('sql')!
+  const now = nowService()
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
@@ -195,7 +198,8 @@ export async function showSaleInHistory(
 export async function updateSale(sale: Sale, sql: Sql): Promise<ControllerResult> {
   const logger = requestContext.get('logger')!
   try {
-    const saleNumber = await model_updateSale(sale, undefined, sql)
+    const nowService = requestContext.get('nowService')!
+    const saleNumber = await model_updateSale(sale, undefined, nowService(), sql)
 
     if (!saleNumber) {
       return {status: 404, body: 'Sale not found'}
@@ -214,7 +218,14 @@ export async function deleteSale(
   sql: Sql,
 ): Promise<ControllerResult> {
   try {
-    const operationId = await model_deleteSale(saleNumber, undefined, deleteOperation, sql)
+    const nowService = requestContext.get('nowService')!
+    const operationId = await model_deleteSale(
+      saleNumber,
+      undefined,
+      deleteOperation,
+      nowService(),
+      sql,
+    )
 
     if (!operationId) {
       return {status: 404, body: 'Sale not found'}
@@ -245,13 +256,15 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
     const smooveIntegration = requestContext.get('smooveIntegration')!
     const academyIntegration = requestContext.get('academyIntegration')!
+    const nowService = requestContext.get('nowService')!
     const logger = requestContext.get('logger')!
+    const now = nowService()
 
-    await model_updateSale(sale, undefined, sql)
+    await model_updateSale(sale, undefined, now, sql)
 
     await model_connectSale(
       saleNumber,
-      new Date(),
+      now,
       sql,
       cardcomIntegration,
       smooveIntegration,
@@ -276,8 +289,9 @@ export async function cancelSubscription(
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')!
   const academyIntegration = requestContext.get('academyIntegration')!
+  const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
-  const now = new Date()
+  const now = nowService()
 
   try {
     const {studentName, productName, saleNumber} = await findSaleAndStudentAndProductByEmail(

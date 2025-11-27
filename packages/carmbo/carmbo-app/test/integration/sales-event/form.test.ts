@@ -14,6 +14,7 @@ test.beforeEach(async () => {
       productType: 'bundle',
     },
     undefined,
+    new Date(),
     sql(),
   )
   await createProduct(
@@ -22,6 +23,7 @@ test.beforeEach(async () => {
       productType: 'bundle',
     },
     undefined,
+    new Date(),
     sql(),
   )
   await createProduct(
@@ -30,6 +32,7 @@ test.beforeEach(async () => {
       productType: 'bundle',
     },
     undefined,
+    new Date(),
     sql(),
   )
   await createProduct(
@@ -38,6 +41,7 @@ test.beforeEach(async () => {
       productType: 'bundle',
     },
     undefined,
+    new Date(),
     sql(),
   )
   await createProduct(
@@ -46,6 +50,7 @@ test.beforeEach(async () => {
       productType: 'bundle',
     },
     undefined,
+    new Date(),
     sql(),
   )
 })
