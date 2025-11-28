@@ -27,7 +27,7 @@ export function ProductCreateOrUpdateFormFields({
             required
             class="form-control"
             id="name"
-            value="${product.name}"
+            value=${product.name}
             autocomplete="off"
             data-1p-ignore
             readonly=${isReadOnly}
@@ -303,22 +303,19 @@ export function ProductCreateOrUpdateFormFields({
     <datalist id="academy-courses-list">
       ${courses.map(
         (course) =>
-          html`<option
-            data-id="${course.id}"
-            value="${generateItemTitle(course.id, course.name)}"
-          />`,
+          html`<option data-id=${course.id} value=${generateItemTitle(course.id, course.name)} />`,
       )}
     </datalist>
     <datalist id="whatsapp-groups-list">
       ${whatsappGroups.map(
         (group) =>
-          html`<option data-id="${group.id}" value="${generateItemTitle(group.id, group.name)}" />`,
+          html`<option data-id=${group.id} value=${generateItemTitle(group.id, group.name)} />`,
       )}
     </datalist>
     <datalist id="smoove-lists-list">
       ${smooveLists.map(
         (list) =>
-          html`<option data-id="${list.id}" value="${generateItemTitle(list.id, list.name)}" />`,
+          html`<option data-id=${list.id} value=${generateItemTitle(list.id, list.name)} />`,
       )}
     </datalist>
   `

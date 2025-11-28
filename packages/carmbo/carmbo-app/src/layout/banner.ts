@@ -22,7 +22,7 @@ export function exceptionToBanner(prefix: string, error: any): Banner | undefine
 }
 
 export function BannerComponent({banner}: {banner: Banner}) {
-  return html`<div class="main-view_banner" role="${banner.type === 'error' ? 'alert' : 'status'}">
+  return html`<div class="main-view_banner" role=${banner.type === 'error' ? 'alert' : 'status'}>
     ${banner.message}
   </div>`
 }

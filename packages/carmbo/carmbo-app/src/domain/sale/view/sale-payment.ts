@@ -20,9 +20,7 @@ export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {
           (payment) => html`
             <tr>
               <td>
-                <span
-                  class="d-block ms-auto"
-                  title="${payment.timestamp.toLocaleTimeString('he-IL')}"
+                <span class="d-block ms-auto" title=${payment.timestamp.toLocaleTimeString('he-IL')}
                   >${payment.timestamp.toLocaleDateString('he-IL')}</span
                 >
               </td>
@@ -34,7 +32,7 @@ export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {
               </td>
               <td>
                 ${payment.invoiceDocumentNumber
-                  ? html`<a href="${payment.invoiceDocumentUrl}" target="_blank"
+                  ? html`<a href=${payment.invoiceDocumentUrl} target="_blank"
                       >${payment.invoiceDocumentNumber}</a
                     >`
                   : 'N/A'}

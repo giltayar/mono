@@ -20,6 +20,7 @@ export function setup(testUrl: string): {
   smooveIntegration: () => ReturnType<typeof createFakeSmooveIntegrationService>
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
   cardcomIntegration: () => ReturnType<typeof createFakeCardcomIntegrationService>
+  whatsappIntegration: () => ReturnType<typeof createFakeWhatsAppIntegrationService>
   TEST_hooks: Record<string, TEST_HookFunction>
   setTime: (date: Date) => void
   resetTime: () => void
@@ -34,6 +35,7 @@ export function setup(testUrl: string): {
   let smooveIntegration: ReturnType<typeof createFakeSmooveIntegrationService>
   let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
   let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
+  let whatsappIntegration: ReturnType<typeof createFakeWhatsAppIntegrationService>
 
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
@@ -72,6 +74,25 @@ export function setup(testUrl: string): {
     })
     cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
     TEST_resetJobHandlers()
+    whatsappIntegration = createFakeWhatsAppIntegrationService({
+      groups: {
+        '1@g.us': {
+          name: 'Test Group 1',
+          recentSentMessages: [],
+          participants: [],
+        },
+        '2@g.us': {
+          name: 'Test Group 2',
+          recentSentMessages: [],
+          participants: [],
+        },
+        '3@g.us': {
+          name: 'Test Group 3',
+          recentSentMessages: [],
+          participants: [],
+        },
+      },
+    })
     ;({app, sql} = makeApp({
       db: {
         connectionString: undefined,
@@ -83,25 +104,7 @@ export function setup(testUrl: string): {
       },
       services: {
         academyIntegration,
-        whatsappIntegration: createFakeWhatsAppIntegrationService({
-          groups: {
-            '1@g.us': {
-              name: 'Test Group 1',
-              recentSentMessages: [],
-              participants: [],
-            },
-            '2@g.us': {
-              name: 'Test Group 2',
-              recentSentMessages: [],
-              participants: [],
-            },
-            '3@g.us': {
-              name: 'Test Group 3',
-              recentSentMessages: [],
-              participants: [],
-            },
-          },
-        }),
+        whatsappIntegration,
         smooveIntegration,
         cardcomIntegration,
         nowService: () => (overridingDate ? overridingDate : new Date()),
@@ -154,6 +157,7 @@ export function setup(testUrl: string): {
     smooveIntegration: () => smooveIntegration,
     academyIntegration: () => academyIntegration,
     cardcomIntegration: () => cardcomIntegration,
+    whatsappIntegration: () => whatsappIntegration,
     TEST_hooks,
     setTime: (date: Date) => (overridingDate = date),
     resetTime: () => (overridingDate = undefined),

@@ -155,7 +155,7 @@ export function StudentCreateOrUpdateFormFields({
             placeholder=" "
             class="form-control"
             id="birthday"
-            value="${student.birthday ? student.birthday.toISOString().split('T')[0] : ''}"
+            value=${student.birthday ? student.birthday.toISOString().split('T')[0] : ''}
             readonly=${isReadOnly}
           />
           <label for="birthday">Birthday</label>
@@ -171,7 +171,7 @@ export function StudentCreateOrUpdateFormFields({
                   placeholder=" "
                   class="form-control"
                   id="cardcomCustomerIds"
-                  value="${student.cardcomCustomerIds.join(', ')}"
+                  value=${student.cardcomCustomerIds.join(', ')}
                   readonly
                 />
                 <label for="cardcomCustomerIds">Cardcom Customer IDs</label>

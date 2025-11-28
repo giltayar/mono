@@ -25,7 +25,7 @@ export function SalesEventCreateOrUpdateFormFields({
             required
             class="form-control"
             id="name"
-            value="${salesEvent.name}"
+            value=${salesEvent.name}
             autocomplete="off"
             data-1p-ignore
             readonly=${isReadOnly}
@@ -40,7 +40,7 @@ export function SalesEventCreateOrUpdateFormFields({
             placeholder=" "
             class="form-control"
             id="fromDate"
-            value="${salesEvent.fromDate ? formatDateForInput(salesEvent.fromDate) : ''}"
+            value=${salesEvent.fromDate ? formatDateForInput(salesEvent.fromDate) : ''}
             readonly=${isReadOnly}
           />
           <label for="fromDate">From Date</label>
@@ -53,7 +53,7 @@ export function SalesEventCreateOrUpdateFormFields({
             placeholder=" "
             class="form-control"
             id="toDate"
-            value="${salesEvent.toDate ? formatDateForInput(salesEvent.toDate) : ''}"
+            value=${salesEvent.toDate ? formatDateForInput(salesEvent.toDate) : ''}
             readonly=${isReadOnly}
           />
           <label for="toDate">To Date</label>
@@ -66,7 +66,7 @@ export function SalesEventCreateOrUpdateFormFields({
             placeholder=" "
             class="form-control"
             id="landingPageUrl"
-            value="${salesEvent.landingPageUrl ?? ''}"
+            value=${salesEvent.landingPageUrl ?? ''}
             readonly=${isReadOnly}
           />
           <label for="landingPageUrl">Landing Page URL</label>
@@ -81,7 +81,7 @@ export function SalesEventCreateOrUpdateFormFields({
                     name="productsForSale[${i}]"
                     id="productsForSale-${i}_value"
                     type="hidden"
-                    value="${productForSaleId}"
+                    value=${productForSaleId}
                   />
                   <input
                     id="productsForSale-${i}"
@@ -116,7 +116,7 @@ export function SalesEventCreateOrUpdateFormFields({
     </div>
     <datalist id="products-list">
       ${products.map(
-        (p) => html`<option data-id="${p.id}" value="${generateItemTitle(p.id, p.name)}" />`,
+        (p) => html`<option data-id=${p.id} value=${generateItemTitle(p.id, p.name)} />`,
       )}
     </datalist>
   `

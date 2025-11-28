@@ -15,12 +15,14 @@ import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-int
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import {Temporal} from '@js-temporal/polyfill'
 import type {NowService} from '../../../commons/now-service.ts'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<SaleConnectionToStudent> | undefined
 
 export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
+  whatsappIntegration: WhatsAppIntegrationService,
   nowService: NowService,
 ) {
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<SaleConnectionToStudent>(
@@ -30,6 +32,7 @@ export async function initializeJobHandlers(
         payload,
         academyIntegration,
         smooveIntegration,
+        whatsappIntegration,
         nowService(),
         sql,
         logger,

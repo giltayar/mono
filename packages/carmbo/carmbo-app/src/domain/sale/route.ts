@@ -35,6 +35,7 @@ import {initializeJobHandlers as initializeStandingOrderJobHandlers} from './mod
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 export function apiRoute(
   app: FastifyInstance,
@@ -42,18 +43,25 @@ export function apiRoute(
     secret,
     smooveIntegration,
     academyIntegration,
+    whatsappIntegration,
     nowService,
   }: {
     secret: string | undefined
     smooveIntegration: SmooveIntegrationService
     academyIntegration: AcademyIntegrationService
+    whatsappIntegration: WhatsAppIntegrationService
     nowService: NowService
   },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   initializeSaleJobHandlers(academyIntegration, smooveIntegration)
-  initializeStandingOrderJobHandlers(academyIntegration, smooveIntegration, nowService)
+  initializeStandingOrderJobHandlers(
+    academyIntegration,
+    smooveIntegration,
+    whatsappIntegration,
+    nowService,
+  )
 
   for (const path of ['/cardcom/sale', '/cardcom/one-time-sale'])
     appWithTypes.post(

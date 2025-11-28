@@ -11,10 +11,17 @@ import type {
   CardcomDetailRecurringJson,
   CardcomMasterRecurringJson,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
+import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration, setTime} = setup(
-  import.meta.url,
-)
+const {
+  url,
+  sql,
+  smooveIntegration,
+  academyIntegration,
+  cardcomIntegration,
+  whatsappIntegration,
+  setTime,
+} = setup(import.meta.url)
 
 test.use({viewport: {width: 1280, height: 1280}})
 
@@ -288,6 +295,7 @@ test('cancelling a standing order subscription removes student from academy cour
       smooveCancelledListId,
       smooveCancellingListId,
       smooveRemovedListId,
+      whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
     },
     undefined,
     new Date(),
@@ -354,6 +362,23 @@ test('cancelling a standing order subscription removes student from academy cour
     expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
   }).toPass()
 
+  // Adding student to whatsapp group is done manually by the student
+  await whatsappIntegration().addParticipantToGroup(
+    '1@g.us',
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+  await whatsappIntegration().addParticipantToGroup(
+    '3@g.us',
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+  // Verify student was added to whatsapp groups
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('1@g.us')).toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('3@g.us')).toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+
   // Cancel the subscription via the API endpoint
   await page.goto(
     new URL(
@@ -390,6 +415,14 @@ test('cancelling a standing order subscription removes student from academy cour
     expect(cancelledContacts[0].lists_Linked).toContain(smooveCancelledListId)
   }).toPass()
 
+  // Verify student was NOT removed from whatsapp groups yet
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('1@g.us')).toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('3@g.us')).toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+
   setTime(new Date(Date.now() + 2 * 7 * 24 * 60 * 60 * 1000)) // Advance time by 2 weeks
 
   await fetchAsBuffer(new URL('/api/jobs/trigger-job-execution?secret=', url()), {method: 'POST'})
@@ -407,6 +440,14 @@ test('cancelling a standing order subscription removes student from academy cour
     const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveCancelledListId)
     expect(cancelledContacts.length).toBe(1)
   }).toPass()
+
+  // Verify student was NOT removed from whatsapp groups yet
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('1@g.us')).toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('3@g.us')).toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
 
   setTime(new Date(Date.now() + 5 * 7 * 24 * 60 * 60 * 1000)) // Advance time by 5 weeks
 
@@ -430,6 +471,14 @@ test('cancelling a standing order subscription removes student from academy cour
   expect(cancelledContacts.length).toBe(1)
   expect(cancelledContacts[0].email).toBe(customerEmail)
   expect(cancelledContacts[0].lists_Linked).toContain(smooveRemovedListId)
+
+  // Verify student WAS removed from whatsapp groups yet
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('1@g.us')).not.toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
+  expect(await whatsappIntegration()._test_listParticipantsInGroup('3@g.us')).not.toContain(
+    humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
+  )
 
   await page.reload()
 

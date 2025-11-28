@@ -28,7 +28,7 @@ export function ProductHistoryList({
               >
                 ${historyOperationToText(entry.operation)}</a
               >`}
-          <span class="d-block ms-auto" title="${date.toLocaleTimeString('he-IL')}"
+          <span class="d-block ms-auto" title=${date.toLocaleTimeString('he-IL')}
             >${date.toLocaleDateString('he-IL')}</span
           >
         </li>`

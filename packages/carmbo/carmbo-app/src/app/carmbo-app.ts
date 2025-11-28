@@ -189,6 +189,7 @@ export function makeApp({
     secret: auth0?.sessionSecret,
     academyIntegration,
     smooveIntegration,
+    whatsappIntegration,
     nowService,
   })
   app.register(jobsApiRoute, {
