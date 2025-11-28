@@ -24,6 +24,7 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
     listCourses: sBind(listCourses),
     addStudentToCourse: sBind(addStudentToCourse),
     removeStudentFromCourse: sBind(removeStudentFromCourse),
+    isStudentEnrolledInCourse: sBind(isStudentEnrolledInCourse),
     updateStudentEmail: sBind(updateStudentEmail),
   }
 }
@@ -98,4 +99,22 @@ export async function updateStudentEmail(
     email: oldEmail,
     new_email: newEmail,
   })
+}
+
+export async function isStudentEnrolledInCourse(
+  s: AcademyIntegrationServiceData,
+  studentEmail: string,
+  courseId: number,
+): Promise<boolean> {
+  const url = new URL(
+    `https://www.mypages.co.il/tasks/${s.context.accountApiKey}/${courseId}/student_data.json`,
+  )
+
+  url.searchParams.set('email', studentEmail)
+
+  const res = (await fetchAsJson(url)) as {
+    student_day_0: string
+  }[]
+
+  return res.length === 1 && !!res[0].student_day_0
 }

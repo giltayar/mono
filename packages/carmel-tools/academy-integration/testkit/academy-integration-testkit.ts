@@ -1,6 +1,6 @@
-import type {
-  AcademyCourse,
-  AcademyIntegrationService,
+import {
+  type AcademyCourse,
+  type AcademyIntegrationService,
 } from '@giltayar/carmel-tools-academy-integration/service'
 import {makeError} from '@giltayar/functional-commons'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
@@ -23,13 +23,12 @@ export function createFakeAcademyIntegrationService(context: {
     addStudentToCourse: sBind(addStudentToCourse),
     removeStudentFromCourse: sBind(removeStudentFromCourse),
     updateStudentEmail: sBind(updateStudentEmail),
+    isStudentEnrolledInCourse: sBind(isStudentEnrolledInCourse),
   }
 
   return {
     ...service,
     _test_getContact: (email: string) => state.enrolledContacts.get(email),
-    _test_isContactEnrolledInCourse: (email: string, courseId: number): boolean =>
-      state.enrolledContacts.get(email)?.enrolledInCourses.includes(courseId) ?? false,
   }
 }
 
@@ -89,4 +88,18 @@ async function updateStudentEmail(
 
   s.state.enrolledContacts.delete(oldEmail)
   s.state.enrolledContacts.set(newEmail, student)
+}
+
+async function isStudentEnrolledInCourse(
+  s: AcademyIntegrationServiceData,
+  studentEmail: string,
+  courseId: number,
+): Promise<boolean> {
+  const student = s.state.enrolledContacts.get(studentEmail)
+
+  if (!student) {
+    return false
+  }
+
+  return student.enrolledInCourses.includes(courseId)
 }
