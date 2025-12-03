@@ -26,6 +26,7 @@ import {
   renderSaleCreatePage,
   renderSaleFormFields,
   renderSalePaymentsPage,
+  renderSaleProvidersPage,
   renderSaleViewPage,
 } from './view/view.ts'
 import type {Sql} from 'postgres'
@@ -44,6 +45,10 @@ import {
   showErrorSubscriptionNotFound,
   showSubscriptionCancelled,
 } from './view/cancel-subscription.ts'
+import {querySaleWithProviders} from './model/model-external-providers.ts'
+import {listAcademyCourses} from '../../commons/external-provider/academy-courses.ts'
+import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
+import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -179,6 +184,35 @@ export async function showSalePayments(saleNumber: number, sql: Sql): Promise<Co
     return {status: 404, body: 'Sale not found'}
   }
   return finalHtml(renderSalePaymentsPage(saleWithPayments))
+}
+
+export async function showSaleProviders(saleNumber: number, sql: Sql): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const whatsappIntegration = requestContext.get('whatsappIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
+  const [academyCourses, whatsappGroups, smooveLists] = await Promise.all([
+    listAcademyCourses(academyIntegration, now),
+    listWhatsAppGroups(whatsappIntegration, now),
+    listSmooveLists(smooveIntegration, now),
+  ])
+
+  const saleWithProviders = await querySaleWithProviders(
+    saleNumber,
+    academyIntegration,
+    smooveIntegration,
+    whatsappIntegration,
+    academyCourses,
+    smooveLists,
+    whatsappGroups,
+    sql,
+  )
+
+  if (!saleWithProviders) {
+    return {status: 404, body: 'Sale not found'}
+  }
+  return finalHtml(renderSaleProvidersPage(saleWithProviders))
 }
 
 export async function showSaleInHistory(

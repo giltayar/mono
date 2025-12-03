@@ -13,7 +13,7 @@ export function Tabs({
   activeTab,
 }: {
   saleNumber: number
-  activeTab: 'details' | 'payments'
+  activeTab: 'details' | 'payments' | 'providers'
 }) {
   return html`
     <ul class="nav nav-tabs">
@@ -31,6 +31,14 @@ export function Tabs({
           aria-current=${activeTab === 'payments' ? 'page' : undefined}
           href=${`/sales/${saleNumber}/payments`}
           >Payments</a
+        >
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          aria-current=${activeTab === 'providers' ? 'page' : undefined}
+          href=${`/sales/${saleNumber}/providers`}
+          >External Providers</a
         >
       </li>
     </ul>

@@ -6,6 +6,7 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createSalePaymentsPageModel} from '../../page-model/sales/sale-payments-page.model.ts'
+import {createSaleProvidersPageModel} from '../../page-model/sales/sale-providers-page.model.ts'
 import {fetchAsBuffer, fetchAsTextWithJsonBody} from '@giltayar/http-commons'
 import type {
   CardcomDetailRecurringJson,
@@ -143,7 +144,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   expect(academyContact).toBeDefined()
   expect(academyContact?.name).toBe(customerName)
   expect(academyContact?.phone).toBe(customerPhone)
-  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
 
@@ -282,9 +283,9 @@ test('cancelling a standing order subscription removes student from academy cour
 }) => {
   const academyCourseId = 1
   const smooveListId = 2
-  const smooveCancelledListId = 3
   const smooveCancellingListId = 4
-  const smooveRemovedListId = 5
+  const smooveCancelledListId = 6
+  const smooveRemovedListId = 8
 
   const product1Number = await createProduct(
     {
@@ -350,7 +351,7 @@ test('cancelling a standing order subscription removes student from academy cour
     const academyContact = academyIntegration()._test_getContact(customerEmail)
     expect(academyContact).toBeDefined()
     expect(
-      academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId),
+      await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId),
     ).toBe(true)
   }).toPass()
 
@@ -379,6 +380,46 @@ test('cancelling a standing order subscription removes student from academy cour
     humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
   )
 
+  // Verify providers page shows everything connected
+  await page.goto(new URL('/sales/1/providers', url()).href)
+  await page.waitForURL(/\/sales\/1\/providers$/)
+
+  const providersPageModel = createSaleProvidersPageModel(page)
+  await expect(providersPageModel.pageTitle().locator).toContainText('Sale 1')
+
+  const productCards = providersPageModel.productCards()
+  await expect(productCards.locator).toHaveCount(1)
+
+  const productCard = productCards.card(0)
+  await expect(productCard.title().locator).toContainText('Product One')
+
+  // Verify academy course is connected
+  const academyCourses = productCard.academyCourses()
+  await expect(academyCourses.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
+  await expect(academyCourses.courseName(academyCourseId.toString()).locator).toHaveText(
+    '1: Course 1',
+  )
+
+  // Verify smoove main list is connected
+  const smooveLists = productCard.smooveLists()
+  await expect(smooveLists.mainListCheckbox().locator).toBeChecked()
+  await expect(smooveLists.mainListName().locator).toHaveText('Main list (Smoove List ID 1)')
+  await expect(smooveLists.cancelledListCheckbox().locator).not.toBeChecked()
+  await expect(smooveLists.cancelledListName().locator).toHaveText(
+    'Cancelled list (Smoove List Cancelled 3)',
+  )
+  await expect(smooveLists.removedListCheckbox().locator).not.toBeChecked()
+  await expect(smooveLists.removedListName().locator).toHaveText(
+    'Removed list (Smoove List Removed 4)',
+  )
+
+  // Verify whatsapp groups are connected
+  const whatsappGroups = productCard.whatsAppGroups()
+  await expect(whatsappGroups.groupCheckbox('1@g.us').locator).toBeChecked()
+  await expect(whatsappGroups.groupName('1@g.us').locator).toHaveText('1@g.us: Test Group 1')
+  await expect(whatsappGroups.groupCheckbox('3@g.us').locator).toBeChecked()
+  await expect(whatsappGroups.groupName('3@g.us').locator).toHaveText('3@g.us: Test Group 3')
+
   // Cancel the subscription via the API endpoint
   await page.goto(
     new URL(
@@ -400,7 +441,7 @@ test('cancelling a standing order subscription removes student from academy cour
   }).toPass()
 
   // Verify student was NOT removed from academy course
-  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
 
@@ -423,12 +464,35 @@ test('cancelling a standing order subscription removes student from academy cour
     humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
   )
 
+  // Verify providers page shows cancelled list is now connected
+  await page.goto(new URL('/sales/1/providers', url()).href)
+  await page.waitForURL(/\/sales\/1\/providers$/)
+
+  const providersPageModel2 = createSaleProvidersPageModel(page)
+  const productCards2 = providersPageModel2.productCards()
+  const productCard2 = productCards2.card(0)
+
+  // Academy course should still be connected
+  const academyCourses2 = productCard2.academyCourses()
+  await expect(academyCourses2.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
+
+  // Smoove cancelled list should now be connected
+  const smooveLists2 = productCard2.smooveLists()
+  await expect(smooveLists2.mainListCheckbox().locator).not.toBeChecked()
+  await expect(smooveLists2.cancelledListCheckbox().locator).toBeChecked()
+  await expect(smooveLists2.removedListCheckbox().locator).not.toBeChecked()
+
+  // WhatsApp groups should still be connected
+  const whatsappGroups2 = productCard2.whatsAppGroups()
+  await expect(whatsappGroups2.groupCheckbox('1@g.us').locator).toBeChecked()
+  await expect(whatsappGroups2.groupCheckbox('3@g.us').locator).toBeChecked()
+
   setTime(new Date(Date.now() + 2 * 7 * 24 * 60 * 60 * 1000)) // Advance time by 2 weeks
 
   await fetchAsBuffer(new URL('/api/jobs/trigger-job-execution?secret=', url()), {method: 'POST'})
 
   // Verify student was STILL not removed from academy course
-  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
 
@@ -456,7 +520,7 @@ test('cancelling a standing order subscription removes student from academy cour
   await expect
     .poll(async () =>
       // Verify student WAS removed from academy course
-      academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId),
+      academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId),
     )
     .toBe(false)
 
@@ -480,6 +544,30 @@ test('cancelling a standing order subscription removes student from academy cour
     humanIsraeliPhoneNumberToWhatsAppId(customerPhone),
   )
 
+  // Verify providers page shows everything is disconnected and moved to removed list
+  await page.goto(new URL('/sales/1/providers', url()).href)
+  await page.waitForURL(/\/sales\/1\/providers$/)
+
+  const providersPageModel3 = createSaleProvidersPageModel(page)
+  const productCards3 = providersPageModel3.productCards()
+  const productCard3 = productCards3.card(0)
+
+  // Academy course should now be disconnected
+  const academyCourses3 = productCard3.academyCourses()
+  await expect(academyCourses3.courseCheckbox(academyCourseId.toString()).locator).not.toBeChecked()
+
+  // Smoove removed list should now be connected
+  const smooveLists3 = productCard3.smooveLists()
+  await expect(smooveLists3.mainListCheckbox().locator).not.toBeChecked()
+  await expect(smooveLists3.cancelledListCheckbox().locator).not.toBeChecked()
+  await expect(smooveLists3.removedListCheckbox().locator).toBeChecked()
+
+  // WhatsApp groups should be disconnected
+  const whatsappGroups3 = productCard3.whatsAppGroups()
+  await expect(whatsappGroups3.groupCheckbox('1@g.us').locator).not.toBeChecked()
+  await expect(whatsappGroups3.groupCheckbox('3@g.us').locator).not.toBeChecked()
+
+  await page.goto(new URL('/sales/1', url()).href)
   await page.reload()
 
   await expect(saleHistory.items().locator).toHaveCount(3)

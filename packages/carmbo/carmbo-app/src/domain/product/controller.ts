@@ -1,5 +1,4 @@
 import type {Sql} from 'postgres'
-
 import type {NewProduct, Product} from './model.ts'
 import type {OngoingProduct} from './view/model.ts'
 import {
@@ -19,11 +18,11 @@ import {
 import {renderProductsPage} from './view/list.ts'
 import {finalHtml, type ControllerResult, retarget} from '../../commons/controller-result.ts'
 import type {ProductManipulations} from './view/product-manipulations.ts'
-import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 import {requestContext} from '@fastify/request-context'
-import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'
-import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/service'
 import {exceptionToBanner} from '../../layout/banner.ts'
+import {listAcademyCourses} from '../../commons/external-provider/academy-courses.ts'
+import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
+import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
 
 export async function showProducts(
   {
@@ -43,10 +42,16 @@ export async function showProductCreate(
   product: NewProduct | undefined,
   {error}: {error?: any},
 ): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const whatsappIntegration = requestContext.get('whatsappIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
+
   const [courses, whatsappGroups, smooveLists] = await Promise.all([
-    listCourses(),
-    listWhatsAppGroups(),
-    listSmooveLists(),
+    listAcademyCourses(academyIntegration, now),
+    listWhatsAppGroups(whatsappIntegration, now),
+    listSmooveLists(smooveIntegration, now),
   ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
@@ -62,10 +67,16 @@ export async function showProductUpdate(
   productWithError: {product: Product | undefined; error: any; operation: string} | undefined,
   sql: Sql,
 ): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const whatsappIntegration = requestContext.get('whatsappIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
+
   const [courses, whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
-    listCourses(),
-    listWhatsAppGroups(),
-    listSmooveLists(),
+    listAcademyCourses(academyIntegration, now),
+    listWhatsAppGroups(whatsappIntegration, now),
+    listSmooveLists(smooveIntegration, now),
     queryProductByNumber(productNumber, sql),
   ])
   requestContext.set('courses', courses)
@@ -94,10 +105,16 @@ export async function showOngoingProduct(
   product: OngoingProduct,
   {manipulations}: {manipulations: ProductManipulations},
 ): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const whatsappIntegration = requestContext.get('whatsappIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
+
   const [courses, whatsappGroups, smooveLists] = await Promise.all([
-    listCourses(),
-    listWhatsAppGroups(),
-    listSmooveLists(),
+    listAcademyCourses(academyIntegration, now),
+    listWhatsAppGroups(whatsappIntegration, now),
+    listSmooveLists(smooveIntegration, now),
   ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
@@ -111,10 +128,16 @@ export async function showProductInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const whatsappIntegration = requestContext.get('whatsappIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
+
   const [courses, whatsappGroups, smooveLists, product] = await Promise.all([
-    listCourses(),
-    listWhatsAppGroups(),
-    listSmooveLists(),
+    listAcademyCourses(academyIntegration, now),
+    listWhatsAppGroups(whatsappIntegration, now),
+    listSmooveLists(smooveIntegration, now),
     queryProductByHistoryId(productNumber, operationId, sql),
   ])
   requestContext.set('courses', courses)
@@ -187,67 +210,4 @@ export async function deleteProduct(
       'body',
     )
   }
-}
-
-const cachedCourses: {
-  courses: AcademyCourse[] | undefined
-  timestamp: number
-} = {
-  courses: undefined,
-  timestamp: 0,
-}
-
-async function listCourses() {
-  const academyIntegration = requestContext.get('academyIntegration')!
-  const nowService = requestContext.get('nowService')!
-  const now = nowService().getTime()
-
-  if (now - cachedCourses.timestamp > 1 * 60 * 1000 || !cachedCourses.courses) {
-    cachedCourses.courses = await academyIntegration.listCourses()
-    cachedCourses.timestamp = now
-  }
-
-  return cachedCourses.courses
-}
-
-const cachedWhatsAppGroups: {
-  groups: WhatsAppGroup[] | undefined
-  timestamp: number
-} = {
-  groups: undefined,
-  timestamp: 0,
-}
-
-async function listWhatsAppGroups() {
-  const whatsappIntegration = requestContext.get('whatsappIntegration')!
-  const nowService = requestContext.get('nowService')!
-  const now = nowService().getTime()
-
-  if (now - cachedWhatsAppGroups.timestamp > 1 * 60 * 1000 || !cachedWhatsAppGroups.groups) {
-    cachedWhatsAppGroups.groups = await whatsappIntegration.fetchWhatsAppGroups()
-    cachedWhatsAppGroups.timestamp = now
-  }
-
-  return cachedWhatsAppGroups.groups
-}
-
-const cachedSmooveLists: {
-  groups: SmooveList[] | undefined
-  timestamp: number
-} = {
-  groups: undefined,
-  timestamp: 0,
-}
-
-async function listSmooveLists() {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
-  const nowService = requestContext.get('nowService')!
-  const now = nowService().getTime()
-
-  if (now - cachedSmooveLists.timestamp > 1 * 60 * 1000 || !cachedSmooveLists.groups) {
-    cachedSmooveLists.groups = await smooveIntegration.fetchLists()
-    cachedSmooveLists.timestamp = now
-  }
-
-  return cachedSmooveLists.groups
 }

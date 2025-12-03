@@ -12,6 +12,8 @@ import {SaleCreateView} from './create-update.ts'
 import {SalesFormFields} from './form.ts'
 import type {Banner} from '../../../layout/banner.ts'
 import {SalePaymentsView} from './sale-payment.ts'
+import type {SaleWithProviders} from '../model/model-external-providers.ts'
+import {SaleProvidersView} from './sale-providers.ts'
 
 export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banner?: Banner} = {}) {
   const finalSale: NewSale = sale ?? {
@@ -67,6 +69,16 @@ export function renderSalePaymentsPage(sale: SaleWithPayments) {
     <${MainLayout} title="Sale Payments" activeNavItem="sales">
       <${Layout}>
         <${SalePaymentsView} sale=${sale} />
+      </${Layout}>
+    </${MainLayout}>
+  `
+}
+
+export function renderSaleProvidersPage(sale: SaleWithProviders) {
+  return html`
+    <${MainLayout} title="Sale Payments" activeNavItem="sales">
+      <${Layout}>
+        <${SaleProvidersView} sale=${sale} />
       </${Layout}>
     </${MainLayout}>
   `

@@ -6,6 +6,7 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
+import {createSaleProvidersPageModel} from '../../page-model/sales/sale-providers-page.model.ts'
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
@@ -142,7 +143,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   expect(academyContact).toBeDefined()
   expect(academyContact?.name).toBe(customerName)
   expect(academyContact?.phone).toBe(customerPhone)
-  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
 
@@ -214,6 +215,45 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
 
   await expect(saleDetailModel.history().items().item(0).locator).toHaveText(/created/)
 
+  // Navigate to the providers page to verify connections
+  await page.goto(new URL('/sales/1/providers', url()).href)
+  await page.waitForURL(/\/sales\/1\/providers$/)
+
+  const providersPageModel = createSaleProvidersPageModel(page)
+
+  // Verify page title
+  await expect(providersPageModel.pageTitle().locator).toContainText('Sale 1')
+
+  // Verify we have the expected product cards (2 products with integrations)
+  const productCards = providersPageModel.productCards()
+  await expect(productCards.locator).toHaveCount(2)
+
+  // Check first product (Product One) - has academy course and smoove list
+  const product1Card = productCards.card(0)
+  await expect(product1Card.title().locator).toContainText('Product One')
+
+  // Verify academy course connection
+  const product1Academies = product1Card.academyCourses()
+  await expect(product1Academies.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
+
+  // Verify smoove list connections
+  const product1Smoove = product1Card.smooveLists()
+  await expect(product1Smoove.mainListCheckbox().locator).toBeChecked()
+  await expect(product1Smoove.cancelledListCheckbox().locator).not.toBeChecked()
+  await expect(product1Smoove.removedListCheckbox().locator).not.toBeChecked()
+
+  // Check second product (Product Two) - has academy course
+  const product2Card = productCards.card(1)
+  await expect(product2Card.title().locator).toContainText('Product Two')
+
+  // Verify academy course connection
+  const product2Academies = product2Card.academyCourses()
+  await expect(product2Academies.courseCheckbox('33').locator).toBeChecked()
+
+  // Go back to sale detail page
+  await page.goto(new URL('/sales/1', url()).href)
+  await page.waitForURL(/\/sales\/1$/)
+
   const smooveId = (
     await smooveIntegration().fetchSmooveContact('test-customer@example.com', {by: 'email'})
   ).id!
@@ -224,9 +264,9 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   expect(await smooveIntegration().fetchContactsOfList(2)).toEqual([])
 
   await academyIntegration().removeContactFromAccount('test-customer@example.com')
-  expect(
-    await academyIntegration()._test_isContactEnrolledInCourse('test-customer@example.com', 1),
-  ).toBe(false)
+  expect(await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 1)).toBe(
+    false,
+  )
 
   await saleDetailModel.form().reconnectButton().locator.click()
 
@@ -260,11 +300,11 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await expect(product2x.quantity().locator).toHaveValue('2')
   await expect(product2x.unitPrice().locator).toHaveValue('50')
 
-  expect(academyIntegration()._test_isContactEnrolledInCourse('test-customer@example.com', 1)).toBe(
+  expect(await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 1)).toBe(
     true,
   )
   expect(
-    academyIntegration()._test_isContactEnrolledInCourse('test-customer@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 33),
   ).toBe(true)
 
   expect(
@@ -516,7 +556,7 @@ test('double call of cardcom webhook should create only one sale and one student
   expect(academyContact).toBeDefined()
   expect(academyContact?.name).toBe(customerName)
   expect(academyContact?.phone).toBe(customerPhone)
-  expect(academyIntegration()._test_isContactEnrolledInCourse(customerEmail, academyCourseId)).toBe(
+  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
 

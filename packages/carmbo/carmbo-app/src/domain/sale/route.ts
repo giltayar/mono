@@ -9,6 +9,7 @@ import {
   showSaleInHistory,
   showSaleCreate,
   showOngoingSale,
+  showSaleProviders,
   showSalesEventList,
   showStudentList,
   showProductList,
@@ -235,6 +236,14 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     {schema: {params: z.object({number: z.coerce.number().int()})}},
     async (request, reply) => {
       return dealWithControllerResult(reply, await showSalePayments(request.params.number, sql))
+    },
+  )
+  // View sale providers
+  appWithTypes.get(
+    '/:number/providers',
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showSaleProviders(request.params.number, sql))
     },
   )
 
