@@ -1,10 +1,10 @@
 ALTER TABLE sale_data_cardcom
 ADD COLUMN invoice_document_url TEXT;
 
-ALTER TABLE sale_data_manual
+ALTER TABLE sale_data_cardcom_manual
 ADD COLUMN invoice_document_url TEXT;
 
-ALTER TABLE sale_data_manual
+ALTER TABLE sale_data_cardcom_manual
 ADD COLUMN cardcom_customer_id INTEGER;
 
 ALTER TABLE sale
@@ -21,14 +21,14 @@ UPDATE sale_history
 SET
   data_manual_id = data_id;
 
-ALTER TABLE sale_data_manual
+ALTER TABLE sale_data_cardcom_manual
 ADD COLUMN data_manual_id UUID;
 
-UPDATE sale_data_manual
+UPDATE sale_data_cardcom_manual
 SET
   data_manual_id = data_id;
 
-ALTER TABLE sale_data_manual
+ALTER TABLE sale_data_cardcom_manual
 DROP COLUMN data_id;
 
 DROP TYPE SALE_OPERATION;

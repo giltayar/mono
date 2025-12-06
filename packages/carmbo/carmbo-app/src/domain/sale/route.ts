@@ -20,6 +20,7 @@ import {
   dealWithCardcomRecurringPayment,
   showSalePayments,
   cancelSubscription,
+  dealWithNoInvoiceSale,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -109,12 +110,19 @@ export function apiRoute(
     },
   )
 
-  appWithTypes.post(
-    '/cardcom/standing-order-sale',
+  appWithTypes.get(
+    '/no-invoice-sale',
     {
       schema: {
-        querystring: z.object({secret: z.string()}),
-        body: z.looseObject({}),
+        querystring: z.object({
+          secret: z.string(),
+          'sales-event': z.coerce.number().positive(),
+          email: z.email(),
+          phone: z.string().optional(),
+          cellPhone: z.string().optional(),
+          firstName: z.string().optional(),
+          lastName: z.string().optional(),
+        }),
       },
     },
     async (request, reply) => {
@@ -123,7 +131,19 @@ export function apiRoute(
         return reply.status(403).send({error: 'Forbidden'})
       }
 
-      request.log.info({body: request.body}, 'cardcom-standing-order-sale-webhook')
+      request.log.info({query: request.query}, 'no-invoice-sale-request')
+
+      return await dealWithControllerResult(
+        reply,
+        await dealWithNoInvoiceSale({
+          salesEventNumber: request.query['sales-event'],
+          email: request.query.email,
+          phone: request.query.phone,
+          cellPhone: request.query.cellPhone,
+          firstName: request.query.firstName,
+          lastName: request.query.lastName,
+        }),
+      )
     },
   )
 }

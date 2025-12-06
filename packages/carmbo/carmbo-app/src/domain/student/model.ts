@@ -421,7 +421,7 @@ FROM
       sale_data sd
       JOIN sale s ON s.last_data_id = sd.data_id
       LEFT JOIN sale_data_cardcom sdc ON sdc.data_cardcom_id = s.data_cardcom_id
-      LEFT JOIN sale_data_manual sdm ON sdm.data_manual_id = s.last_data_manual_id
+      LEFT JOIN sale_data_cardcom_manual sdm ON sdm.data_manual_id = s.last_data_manual_id
     WHERE
       sd.student_number = ${studentNumber}
       AND (sdc.customer_id IS NOT NULL OR sdm.cardcom_customer_id IS NOT NULL)

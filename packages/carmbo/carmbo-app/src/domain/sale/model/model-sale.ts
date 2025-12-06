@@ -1,7 +1,7 @@
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {makeError} from '@giltayar/functional-commons'
-import type {Sql} from 'postgres'
+import type {Sql, TransactionSql} from 'postgres'
 import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
@@ -41,7 +41,7 @@ export async function initializeJobHandlers(
   )
 }
 
-export async function handleCardcomSale(
+export async function addCardcomSale(
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
@@ -79,7 +79,12 @@ export async function handleCardcomSale(
     logger.info({studentId: student?.studentNumber}, 'finding-student-result')
     const finalStudent =
       student ??
-      (await createStudentFromCardcomSale(cardcomSaleWebhookJson, now, smooveIntegration, sql))
+      (await createStudentFromStudentInfo(
+        generateStudentInfoFromCardcomSale(cardcomSaleWebhookJson),
+        now,
+        smooveIntegration,
+        sql,
+      ))
     logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
 
     const {url} = await cardcomIntegration.createTaxInvoiceDocumentUrl(
@@ -87,11 +92,77 @@ export async function handleCardcomSale(
     )
     logger.info({url}, 'tax-invoice-document-url-created')
 
-    const saleNumber = await createSale(
+    const saleNumber = await createSaleFromCardcomData(
       finalStudent.studentNumber,
       salesEventNumber,
       cardcomSaleWebhookJson,
       url,
+      now,
+      sql,
+      logger,
+    )
+    logger.info({saleNumber}, 'sale-created')
+
+    if (!submitConnectionJob) throw new Error('Job handlers not initialized')
+
+    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, sql, {})
+
+    logger.info('sql-transaction-completed')
+  })
+
+  triggerJobsExecution(() => now)
+}
+
+interface StudentInfoForASale {
+  email: string
+  firstName: string | undefined
+  lastName: string | undefined
+  phone: string | undefined
+  cellPhone: string | undefined
+}
+
+export async function addNoInvoiceSale(
+  salesEventNumber: number,
+  studentInfo: StudentInfoForASale,
+  now: Date,
+  smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
+  loggerParent: FastifyBaseLogger,
+) {
+  const logger = loggerParent.child({
+    salesEventNumber,
+    jobId: crypto.randomUUID(),
+    job: 'handle-cardcom-sale',
+  })
+  logger.info('handle-no-invoice-sale-started')
+  await sql.begin(async (sql) => {
+    const hasSalesEvent = await doesSalesEventExist(salesEventNumber, sql, logger)
+    if (!hasSalesEvent) {
+      throw makeError(`Sales event not found: ${salesEventNumber}`, {httpStatus: 400})
+    }
+
+    logger.info({hasSalesEvent}, 'does-sales-event-exist')
+
+    const student = await findStudent(
+      studentInfo.email,
+      studentInfo.phone || studentInfo.cellPhone,
+      sql,
+    )
+    logger.info({studentId: student?.studentNumber}, 'finding-student-result')
+
+    logger.info({student}, 'searching-for-existing-sale')
+    if (student && (await hasSaleWithStudent(student.studentNumber, salesEventNumber, sql))) {
+      logger.info({studentId: student.studentNumber}, 'sale-already-exists-for-student')
+      return
+    }
+
+    const finalStudent =
+      student ?? (await createStudentFromStudentInfo(studentInfo, now, smooveIntegration, sql))
+    logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
+
+    const saleNumber = await createNoInvoiceSale(
+      finalStudent.studentNumber,
+      salesEventNumber,
       now,
       sql,
       logger,
@@ -164,8 +235,8 @@ async function findStudent(
   return resultByEmailAndPhone[0]
 }
 
-async function createStudentFromCardcomSale(
-  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+async function createStudentFromStudentInfo(
+  studentInfo: StudentInfoForASale,
   now: Date,
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
@@ -176,15 +247,12 @@ async function createStudentFromCardcomSale(
   lastName: string
   phone: string | undefined
 }> {
-  const email = normalizeEmail(cardcomSaleWebhookJson.UserEmail)
-  const phone = cardcomSaleWebhookJson.CardOwnerPhone
-    ? normalizePhoneNumber(cardcomSaleWebhookJson.CardOwnerPhone)
-    : undefined
+  const email = normalizeEmail(studentInfo.email)
+  const studentPhone = studentInfo.phone || studentInfo.cellPhone
+  const phone = studentPhone ? normalizePhoneNumber(studentPhone) : undefined
 
   const historyId = crypto.randomUUID()
   const dataId = crypto.randomUUID()
-  const {firstName, lastName} = generateNameFromCardcomSale(cardcomSaleWebhookJson)
-
   const studentNumberResult = await sql<{studentNumber: string}[]>`
       INSERT INTO student_history VALUES
         (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', 'Created from Cardcom sale')
@@ -195,8 +263,8 @@ async function createStudentFromCardcomSale(
   const result = await smooveIntegration.createSmooveContact({
     email,
     telephone: phone,
-    firstName,
-    lastName,
+    firstName: studentInfo.firstName ?? '',
+    lastName: studentInfo.lastName ?? '',
     birthday: undefined,
   })
 
@@ -207,9 +275,10 @@ async function createStudentFromCardcomSale(
         (${studentNumber}, ${historyId}, ${dataId})
     `)
 
-  ops = ops.concat(sql`
+  if (studentInfo.firstName || studentInfo.lastName)
+    ops = ops.concat(sql`
       INSERT INTO student_name VALUES
-        (${dataId}, 0, ${firstName}, ${lastName})
+        (${dataId}, 0, ${studentInfo.firstName ?? ''}, ${studentInfo.lastName ?? ''})
     `)
 
   ops = ops.concat(sql`
@@ -223,7 +292,8 @@ async function createStudentFromCardcomSale(
         (${dataId}, 0, ${phone})
     `)
 
-  const searchableText = `${studentNumber} ${firstName} ${lastName} ${email} ${phone}`.trim()
+  const searchableText =
+    `${studentNumber} ${studentInfo.firstName ?? ''} ${studentInfo.lastName ?? ''} ${email} ${phone}`.trim()
   ops = ops.concat(sql`
       INSERT INTO student_search VALUES
         (${dataId}, ${searchableText})
@@ -237,10 +307,16 @@ async function createStudentFromCardcomSale(
 
   await Promise.all(ops)
 
-  return {studentNumber, email, firstName, lastName, phone}
+  return {
+    studentNumber,
+    email,
+    firstName: studentInfo.firstName ?? '',
+    lastName: studentInfo.lastName ?? '',
+    phone,
+  }
 }
 
-async function createSale(
+async function createSaleFromCardcomData(
   studentNumber: number,
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
@@ -401,7 +477,121 @@ async function createSale(
   }
 
   logger.info('executing-sale-creation-operations')
-  await Promise.all(ops).catch(console.error)
+  await Promise.all(ops)
+  logger.info('executed-sale-creation-operations')
+
+  return saleNumber
+}
+
+async function createNoInvoiceSale(
+  studentNumber: number,
+  salesEventNumber: number,
+  now: Date,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+): Promise<number> {
+  const historyId = crypto.randomUUID()
+  const dataId = crypto.randomUUID()
+  const dataProductId = crypto.randomUUID()
+  const dataNoInvoiceId = crypto.randomUUID()
+  const dataActiveId = crypto.randomUUID()
+
+  logger.info(
+    {historyId, dataId, dataProductId, dataNoInvoiceId, dataActiveId},
+    'sale-ids-generated',
+  )
+
+  // Create sale history record and get sale number
+  const saleNumberResult = await sql<{saleNumber: string}[]>`
+      INSERT INTO sale_history ${sql({
+        id: historyId,
+        dataId,
+        dataProductId,
+        timestamp: now,
+        operation: 'create',
+        operationReason: 'Created from "No Invoice" sale',
+        dataActiveId,
+      })}
+      RETURNING sale_number
+    `
+  const saleNumber = parseInt(saleNumberResult[0].saleNumber)
+
+  logger.info({saleNumber}, 'sale-history-generated')
+
+  const saleTimestamp = now
+  const finalSaleRevenue = 0
+
+  logger.info({finalSaleRevenue, saleTimestamp}, 'final-sale-revenue-calculated')
+
+  const studentNameResult = await sql<{studentName: string}[]>`
+      SELECT first_name || ' ' || last_name as student_name
+      FROM student_name
+      JOIN student ON student.student_number = ${studentNumber ?? 0}
+      WHERE student_name.data_id = student.last_data_id
+    `
+  const salesEventNameResult = await sql<{salesEventName: string}[]>`
+      SELECT name as sales_event_name
+      FROM sales_event_data
+      JOIN sales_event ON sales_event.sales_event_number = ${salesEventNumber ?? 0}
+      WHERE sales_event_data.data_id = sales_event.last_data_id
+    `
+  const studentName = studentNameResult[0]?.studentName
+  const salesEventName = salesEventNameResult[0]?.salesEventName
+
+  logger.info({salesEventName, studentName}, 'names-determined')
+
+  let ops = [] as Promise<unknown>[]
+
+  ops = ops.concat(sql`
+    INSERT INTO sale ${sql({
+      saleNumber,
+      lastHistoryId: historyId,
+      lastDataId: dataId,
+      lastDataProductId: dataProductId,
+      dataNoInvoiceId,
+    })}
+  `)
+
+  ops = ops.concat(sql`
+      INSERT INTO sale_data ${sql({
+        dataId,
+        salesEventNumber,
+        studentNumber,
+        timestamp: now,
+        saleType: 'one-time',
+      })}
+    `)
+
+  ops = ops.concat(sql`
+      INSERT INTO sale_data_no_invoice ${sql({
+        dataNoInvoiceId,
+        saleRevenue: finalSaleRevenue,
+      })}
+  `)
+
+  ops = ops.concat(sql`
+    INSERT INTO sale_data_product (data_product_id, item_order, product_number, quantity, unit_price)
+    SELECT
+      ${dataProductId},
+      sepfs.item_order,
+      sepfs.product_number,
+      1,
+      0
+    FROM sales_event_product_for_sale sepfs
+    JOIN sales_event se ON se.sales_event_number = ${salesEventNumber}
+    WHERE sepfs.data_id = se.last_data_id
+  `)
+
+  const searchableText = `${saleNumber} ${studentName ?? ''} ${salesEventName ?? ''}`
+
+  ops = ops.concat(sql`
+    INSERT INTO sale_data_search VALUES
+        (${dataId}, ${searchableText})
+    `)
+
+  ops = ops.concat(sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`)
+  logger.info('executing-sale-creation-operations')
+  await Promise.all(ops)
   logger.info('executed-sale-creation-operations')
 
   return saleNumber
@@ -436,14 +626,22 @@ function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJs
 
   return products
 }
-function generateNameFromCardcomSale(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
+function generateStudentInfoFromCardcomSale(
+  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+): StudentInfoForASale {
   const cardcomSaleName = cardcomSaleWebhookJson.intTo || cardcomSaleWebhookJson.CardOwnerName
   const nameParts = cardcomSaleName.trim().split(/\s+/)
 
   const firstName = nameParts[0]
   const lastName = nameParts.slice(1).join(' ')
 
-  return {firstName, lastName}
+  return {
+    firstName,
+    lastName,
+    email: cardcomSaleWebhookJson.UserEmail,
+    phone: cardcomSaleWebhookJson.CardOwnerPhone,
+    cellPhone: undefined,
+  }
 }
 
 export async function connectSale(
@@ -542,7 +740,7 @@ export async function connectSale(
       sale.cardcomInvoiceDocumentUrl = cardcomDocumentLink
 
       await sql`
-        INSERT INTO sale_data_manual ${sql({
+        INSERT INTO sale_data_cardcom_manual ${sql({
           dataManualId,
           cardcomInvoiceNumber,
           invoiceDocumentUrl: cardcomDocumentLink,
@@ -560,7 +758,7 @@ export async function connectSale(
         await cardcomIntegration.createTaxInvoiceDocumentUrl(sale.cardcomInvoiceNumber)
       ).url
       await sql`
-        INSERT INTO sale_data_manual ${sql({
+        INSERT INTO sale_data_cardcom_manual ${sql({
           dataManualId,
           cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
           invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
@@ -583,7 +781,7 @@ export async function connectSale(
         'sale-already-connected-no-action-needed-creating-sale-data-manual-record',
       )
       await sql`
-        INSERT INTO sale_data_manual ${sql({
+        INSERT INTO sale_data_cardcom_manual ${sql({
           dataManualId,
           cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
           invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
@@ -655,19 +853,19 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
     SELECT
       COALESCE(
         sale_data_cardcom.customer_id,
-        sale_data_manual.cardcom_customer_id
+        sale_data_cardcom_manual.cardcom_customer_id
       ) AS student_cardcom_customer_id,
       COALESCE(
         sale_data_cardcom.invoice_document_url,
-        sale_data_manual.invoice_document_url
+        sale_data_cardcom_manual.invoice_document_url
       ) AS cardcom_invoice_document_url,
       COALESCE(
         sale_data_cardcom.invoice_number,
-        sale_data_manual.cardcom_invoice_number
+        sale_data_cardcom_manual.cardcom_invoice_number
       ) AS cardcom_invoice_number,
       COALESCE(
         sale_data_cardcom.customer_id,
-        sale_data_manual.cardcom_customer_id
+        sale_data_cardcom_manual.cardcom_customer_id
       ) AS cardcom_customer_id,
       student.student_number AS student_number,
       student_email.email AS student_email,
@@ -677,7 +875,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       sale_data.timestamp AS timestamp,
       COALESCE(
         sale_data_cardcom.cardcom_sale_revenue,
-        sale_data_manual.cardcom_sale_revenue
+        sale_data_cardcom_manual.cardcom_sale_revenue
       ) AS final_sale_revenue,
       COALESCE(products, json_build_array()) AS products
     FROM
@@ -685,7 +883,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       JOIN sale_history ON sale_history.id = sale.last_history_id
       JOIN sale_data ON sale_data.data_id = sale_history.data_id
       LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
-      LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale_history.data_manual_id
+      LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sale_history.data_manual_id
       JOIN student ON student.student_number = sale_data.student_number
       JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
       JOIN student_email ON student_email.data_id = student.last_data_id AND student_email.item_order = 0
@@ -734,6 +932,23 @@ async function hasSaleWithInvoiceNumber(
     {exists: result.length > 0, invoicenumber},
     'sale-with-invoice-number-existence-checked',
   )
+
+  return result.length > 0
+}
+async function hasSaleWithStudent(
+  studentNumber: number,
+  salesEventNumber: number,
+  sql: TransactionSql,
+): Promise<boolean> {
+  const result = await sql<{count: string}[]>`
+    SELECT 1
+    FROM sale
+    JOIN sale_history ON sale_history.id = sale.last_history_id
+    JOIN sale_data ON sale_data.data_id = sale_history.data_id
+    WHERE sale_data.student_number = ${studentNumber}
+      AND sale_data.sales_event_number = ${salesEventNumber}
+    LIMIT 1
+  `
 
   return result.length > 0
 }

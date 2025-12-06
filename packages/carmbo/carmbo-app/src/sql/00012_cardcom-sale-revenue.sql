@@ -1,7 +1,7 @@
 ALTER TABLE sale_data_cardcom ADD COLUMN cardcom_sale_revenue numeric(10, 2);
-ALTER TABLE sale_data_manual ADD COLUMN cardcom_sale_revenue numeric(10, 2);
+ALTER TABLE sale_data_cardcom_manual ADD COLUMN cardcom_sale_revenue numeric(10, 2);
 
-UPDATE sale_data_manual sdm
+UPDATE sale_data_cardcom_manual sdm
 SET cardcom_sale_revenue = sd.final_sale_revenue
 FROM sale_data sd
 JOIN sale_history sh ON sd.data_id = sh.data_id

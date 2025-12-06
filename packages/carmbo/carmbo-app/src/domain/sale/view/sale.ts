@@ -11,11 +11,11 @@ export function SaleUpdateView({
   sale: SaleWithHistoryInfo
   history: SaleHistory[]
 }) {
-  const isUnconnectedSale = !sale.cardcomInvoiceDocumentUrl
+  const isConnectedSale = sale.cardcomInvoiceDocumentUrl || sale.isNoInvoiceOrder
 
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      ${isUnconnectedSale ? 'Update' : ''} Sale ${sale.saleNumber}
+      ${!isConnectedSale ? 'Update' : ''} Sale ${sale.saleNumber}
       ${sale.historyOperation === 'delete'
         ? html` <small class="text-body-secondary">(archived)</small>`
         : ''}
@@ -31,7 +31,7 @@ export function SaleUpdateView({
       <input name="saleNumber" type="hidden" value=${sale.saleNumber} />
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          ${isUnconnectedSale
+          ${!isConnectedSale
             ? sale.historyOperation === 'delete'
               ? html`
                   <button
@@ -64,7 +64,7 @@ export function SaleUpdateView({
             class="button btn-primary"
             hx-post="/sales/${sale.saleNumber}/connect-manual-sale"
           >
-            ${!sale.cardcomInvoiceDocumentUrl ? 'Connect' : 'Reconnect'}
+            ${!isConnectedSale ? 'Connect' : 'Reconnect'}
           </button>
         </section>
       </div>

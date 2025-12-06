@@ -19,6 +19,7 @@ export const SaleSchema = z.object({
     z.number().optional(),
   ),
   isStandingOrder: z.coerce.boolean(),
+  isNoInvoiceOrder: z.coerce.boolean().default(false),
   recurringOrderId: z.string().optional(),
   products: z
     .array(
@@ -154,19 +155,26 @@ export async function listSales(
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
       COALESCE(
         sale_data_cardcom.cardcom_sale_revenue,
-        sale_data_manual.cardcom_sale_revenue) AS final_sale_revenue,
+        sale_data_cardcom_manual.cardcom_sale_revenue,
+        sale_data_no_invoice.sale_revenue) AS final_sale_revenue,
       COALESCE(products, json_build_array()) AS products
     FROM
       sale_history
     JOIN sale ON last_history_id = id
+
     LEFT JOIN sale_data_search ON sale_data_search.data_id = sale.last_data_id
     LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
+
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
-    LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sale_history.data_manual_id
+    LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = sale.data_no_invoice_id
+    LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sale_history.data_manual_id
+
     LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
     LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
+
     LEFT JOIN student ON student.student_number = sale_data.student_number
     LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
+
     LEFT JOIN LATERAL (
       SELECT
         json_agg(product_data.name ORDER BY item_order) AS products
@@ -438,12 +446,14 @@ function saleSelect(saleNumber: number, sql: Sql) {
       CONCAT(student_name.first_name, ' ', student_name.last_name) AS student_name,
       COALESCE(
         sale_data_cardcom.cardcom_sale_revenue,
-        sale_data_manual.cardcom_sale_revenue
+        sale_data_cardcom_manual.cardcom_sale_revenue,
+        sale_data_no_invoice.sale_revenue
       ) AS final_sale_revenue,
-      COALESCE(sale_data_cardcom.invoice_number, sale_data_manual.cardcom_invoice_number) AS cardcom_invoice_number,
-      COALESCE(sale_data_cardcom.invoice_document_url, sale_data_manual.invoice_document_url) AS cardcom_invoice_document_url,
-      CASE WHEN sale_data_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
+      COALESCE(sale_data_cardcom.invoice_number, sale_data_cardcom_manual.cardcom_invoice_number) AS cardcom_invoice_number,
+      COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
+      CASE WHEN sale_data_cardcom_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
       CASE WHEN sale_data_cardcom.recurring_order_id IS NOT NULL THEN true ELSE false END AS is_standing_order,
+      CASE WHEN sale_data_no_invoice.sale_revenue IS NOT NULL THEN true ELSE false END AS is_no_invoice_order,
       sale_data_cardcom.recurring_order_id,
       COALESCE(products, json_build_array()) AS products,
       sale_data_delivery.data_id IS NOT NULL OR sale_data_delivery.data_cardcom_id IS NOT NULL AS has_delivery_address,
@@ -467,7 +477,8 @@ function saleSelect(saleNumber: number, sql: Sql) {
     LEFT JOIN student ON student.student_number = sale_data.student_number
     LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
-    LEFT JOIN sale_data_manual ON sale_data_manual.data_manual_id = sh.data_manual_id
+    LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = s.data_no_invoice_id
+    LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sh.data_manual_id
     LEFT JOIN sale_data_delivery ON
         (sale_data_delivery.data_cardcom_id IS NULL AND sale_data_delivery.data_id = sh.data_id) OR
         (sale_data_delivery.data_id IS NULL AND sale_data_delivery.data_cardcom_id = s.data_cardcom_id)
@@ -591,7 +602,7 @@ export async function createSale(sale: NewSale, reason: string | undefined, now:
     )
 
     ops = ops.concat(sql`
-      INSERT INTO sale_data_manual ${sql({
+      INSERT INTO sale_data_cardcom_manual ${sql({
         dataManualId,
         cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
         cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
@@ -727,7 +738,7 @@ export async function updateSale(
     `)
 
     ops = ops.concat(sql`
-      INSERT INTO sale_data_manual ${sql({
+      INSERT INTO sale_data_cardcom_manual ${sql({
         dataManualId,
         cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
         cardcomSaleRevenue: sale.finalSaleRevenue ?? null,

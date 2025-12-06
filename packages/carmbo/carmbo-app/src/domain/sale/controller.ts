@@ -15,7 +15,11 @@ import {
   querySalePayments,
   findSalesEventAndStudentByEmail as findSaleAndStudentAndProductByEmail,
 } from './model/model.ts'
-import {handleCardcomSale, connectSale as model_connectSale} from './model/model-sale.ts'
+import {
+  addCardcomSale,
+  addNoInvoiceSale,
+  connectSale as model_connectSale,
+} from './model/model-sale.ts'
 import {
   handleCardcomRecurringPayment,
   cancelSubscription as model_cancelSubscription,
@@ -113,12 +117,45 @@ export async function dealWithCardcomOneTimeSale(
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
-  await handleCardcomSale(
+  await addCardcomSale(
     salesEventNumber,
     cardcomSaleWebhookJson,
     now,
     smooveIntegration,
     cardcomIntegration,
+    sql,
+    logger,
+  )
+
+  return 'ok'
+}
+
+export async function dealWithNoInvoiceSale({
+  salesEventNumber,
+  email,
+  phone,
+  cellPhone,
+  firstName,
+  lastName,
+}: {
+  salesEventNumber: number
+  email: string
+  phone: string | undefined
+  cellPhone: string | undefined
+  firstName: string | undefined
+  lastName: string | undefined
+}): Promise<ControllerResult> {
+  const nowService = requestContext.get('nowService')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const now = nowService()
+  const sql = requestContext.get('sql')!
+  const logger = requestContext.get('logger')!
+
+  await addNoInvoiceSale(
+    salesEventNumber,
+    {email, phone, cellPhone, firstName, lastName},
+    now,
+    smooveIntegration,
     sql,
     logger,
   )
