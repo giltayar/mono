@@ -97,7 +97,7 @@ export function SalesEventUpdateView({
       </div>
     </form>
     <div class="form-group col-md-6 mt-3">
-      <h3 class="mb-3">Cardcom Information</h3>
+      <h5 class="mb-3">Cardcom Information</h5>
       <label style="width: 100%">
         CardCom Webhook URL
         <input
@@ -106,6 +106,26 @@ export function SalesEventUpdateView({
           value=${addQueryParamsToUrl(new URL('/api/sales/cardcom/sale', appBaseUrl), {
             'sales-event': salesEvent.salesEventNumber.toString(),
             secret: apiSecret,
+          }).href}
+          readonly
+        />
+      </label>
+    </div>
+    <div class="form-group col-md-6 mt-3">
+      <h5 class="mb-3">Smoove Information</h5>
+      <label style="width: 100%">
+        Smoove Webhook URL
+        <input
+          class="form-control"
+          type="url"
+          value=${addQueryParamsToUrl(new URL('/api/sales/no-invoice-sale', appBaseUrl), {
+            'sales-event': salesEvent.salesEventNumber.toString(),
+            secret: apiSecret,
+            email: '[[email]]',
+            phone: '[[phone]]',
+            cellPhone: '[[mobile]]',
+            firstName: '[[first_name]]',
+            lastName: '[[last_name]]',
           }).href}
           readonly
         />

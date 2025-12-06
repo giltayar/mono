@@ -81,9 +81,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS sale_data_cardcom_idx ON sale_data_cardcom (da
 CREATE INDEX IF NOT EXISTS sale_data_cardcom_customer_id_idx ON sale_data_cardcom (customer_id);
 
 CREATE TABLE
-  IF NOT EXISTS sale_data_cardcom_manual (
+  IF NOT EXISTS sale_data_manual (
     data_id UUID NOT NULL,
     cardcom_invoice_number TEXT
   );
 
-CREATE UNIQUE INDEX IF NOT EXISTS sale_data_manual_idx ON sale_data_cardcom_manual (data_id);
+CREATE UNIQUE INDEX IF NOT EXISTS sale_data_manual_idx ON sale_data_manual (data_id);

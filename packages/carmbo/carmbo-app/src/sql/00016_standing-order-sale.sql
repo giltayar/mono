@@ -14,7 +14,7 @@ ALTER COLUMN sale_type
 SET
   NOT NULL;
 
--- final_sale_revenue should come from sale_data_cardcom and sale_data_cardcom_manual
+-- final_sale_revenue should come from sale_data_cardcom and sale_data_manual
 -----------------------------------------------------------------------------
 ALTER TABLE sale_data DROP COLUMN final_sale_revenue;
 
