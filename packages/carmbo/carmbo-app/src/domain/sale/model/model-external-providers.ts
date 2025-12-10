@@ -541,27 +541,24 @@ export async function disconnectStudentFromAcademyCourses(
 
   logger.info({courses}, 'academy-courses-to-disconnect')
 
-  const result = await Promise.allSettled(
-    courses.map(({courseId}) =>
-      retry(() => academyIntegration.removeStudentFromCourse(studentEmail, parseInt(courseId)), {
-        retries: 5,
-        minTimeout: 1000,
-        maxTimeout: 5000,
-      }),
-    ),
-  )
-
-  for (const [is, res] of Object.entries(result)) {
-    const i = parseInt(is)
-    if (res.status === 'rejected') {
-      logger.error(
-        {err: res.reason, courseId: courses[i].courseId, i, student: studentEmail},
-        'removing-student-from-academy-course-failed',
+  for (const {courseId} of courses) {
+    try {
+      await retry(
+        () => academyIntegration.removeStudentFromCourse(studentEmail, parseInt(courseId)),
+        {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 5000,
+        },
       )
-    } else {
       logger.info(
-        {courseId: courses[i].courseId, i, student: studentEmail},
+        {courseId, student: studentEmail},
         'removing-student-from-academy-course-succeeded',
+      )
+    } catch (err) {
+      logger.error(
+        {err, courseId, student: studentEmail},
+        'removing-student-from-academy-course-failed',
       )
     }
   }
@@ -652,7 +649,7 @@ export async function subscribeStudentInSmooveLists(
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number
     JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
-    WHERE s.sale_number = ${saleNumber};
+    WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0;
   `
 
   const smooveContactIdResult = await sql<{smooveContactId: string}[]>`
@@ -688,12 +685,12 @@ export async function subscribeStudentInSmooveLists(
     if (res.status === 'rejected') {
       logger.error(
         {err: res.reason, courseId: smooveProductsLists[i].listId, i, studentNumber},
-        'adding-student-to-academy-course-failed',
+        'adding-student-to-smoove-list-failed',
       )
     } else {
       logger.info(
         {courseId: smooveProductsLists[i].listId, i, studentNumber},
-        'adding-student-to-academy-course-succeeded',
+        'adding-student-to-smoove-list-succeeded',
       )
     }
   }
@@ -715,33 +712,26 @@ export async function connectStudentWithAcademyCourses(
     INNER JOIN sale s ON s.last_data_product_id = sip.data_product_id
     INNER JOIN product p ON p.product_number = sip.product_number
     INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
-    WHERE s.sale_number = ${saleNumber}
+    WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0
     ORDER BY pac.workshop_id
   `
 
   logger.info({courses}, 'academy-courses-to-connect')
 
-  const result = await Promise.allSettled(
-    courses.map(({courseId}) =>
-      retry(() => academyIntegration.addStudentToCourse(student, parseInt(courseId)), {
+  // This has to be done sequentially because the academy integration does not
+  // like concurrent requests for the same student
+  for (const {courseId} of courses) {
+    try {
+      await retry(() => academyIntegration.addStudentToCourse(student, parseInt(courseId)), {
         retries: 5,
         minTimeout: 1000,
         maxTimeout: 5000,
-      }),
-    ),
-  )
-
-  for (const [is, res] of Object.entries(result)) {
-    const i = parseInt(is)
-    if (res.status === 'rejected') {
+      })
+      logger.info({courseId, student: student.email}, 'adding-student-to-academy-course-succeeded')
+    } catch (err) {
       logger.error(
-        {err: res.reason, courseId: courses[i].courseId, i, student: student.email},
+        {err, courseId, student: student.email},
         'adding-student-to-academy-course-failed',
-      )
-    } else {
-      logger.info(
-        {courseId: courses[i].courseId, i, student: student.email},
-        'adding-student-to-academy-course-succeeded',
       )
     }
   }

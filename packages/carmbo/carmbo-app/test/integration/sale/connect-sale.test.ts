@@ -49,13 +49,25 @@ test('create sale then connect it', async ({page}) => {
     sql(),
   )
 
+  const product3Number = await createProduct(
+    {
+      name: 'Product Three',
+      productType: 'recorded',
+      smooveListId: 20,
+      academyCourses: [888],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
   const salesEventNumber = await createSalesEvent(
     {
       name: 'Test Sales Event',
       fromDate: new Date('2025-01-01'),
       toDate: new Date('2025-12-31'),
       landingPageUrl: 'https://example.com/test-sale',
-      productsForSale: [product1Number, product2Number],
+      productsForSale: [product1Number, product2Number, product3Number],
     },
     undefined,
     new Date(),
@@ -84,6 +96,8 @@ test('create sale then connect it', async ({page}) => {
   await newForm.products().product(0).unitPrice().locator.fill('1')
   await newForm.products().product(1).quantity().locator.fill('1')
   await newForm.products().product(1).unitPrice().locator.fill('3')
+  await newForm.products().product(2).quantity().locator.fill('0')
+  await newForm.products().product(2).unitPrice().locator.fill('5')
 
   await newForm.finalSaleRevenueInput().locator.fill('27')
 
@@ -132,6 +146,12 @@ test('create sale then connect it', async ({page}) => {
         quantity: 1,
         unitPriceInCents: 300,
       },
+      {
+        productId: product3Number.toString(),
+        productName: 'Product Three',
+        quantity: 0,
+        unitPriceInCents: 500,
+      },
     ],
     transactionRevenueInCents: 2700,
   } as Omit<TaxInvoiceInformation, 'transactionDate'>)
@@ -143,6 +163,9 @@ test('create sale then connect it', async ({page}) => {
   expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777)).toBe(
     true,
   )
+  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 888)).toBe(
+    false,
+  )
 
   expect(
     (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
@@ -150,6 +173,9 @@ test('create sale then connect it', async ({page}) => {
   expect(
     (await smooveIntegration().fetchContactsOfList(10)).map((contact) => contact.email),
   ).toEqual(['john.doe@example.com'])
+  expect(
+    (await smooveIntegration().fetchContactsOfList(20)).map((contact) => contact.email),
+  ).toEqual([])
 
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 

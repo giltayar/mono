@@ -64,6 +64,7 @@ export function setup(testUrl: string): {
         {id: 1, name: 'Course 1'},
         {id: 33, name: 'Course 2'},
         {id: 777, name: 'Course 3'},
+        {id: 888, name: 'Course 4'},
       ],
       enrolledContacts: new Map([
         [
