@@ -8,6 +8,7 @@ import {createUpdateStudentPageModel} from '../../page-model/students/update-stu
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createSaleProvidersPageModel} from '../../page-model/sales/sale-providers-page.model.ts'
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
+import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
 test('cardcom sale creates student, sale, and integrations', async ({page}) => {
@@ -65,7 +66,6 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const customerPhone = '0501234567'
 
   await cardcomIntegration()._test_simulateCardcomSale(
-    salesEventNumber,
     {
       productsSold: [
         {
@@ -89,10 +89,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       transactionRevenueInCents: 21 * 100,
     },
     undefined,
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
   )
 
   await page.goto(new URL('/students', url()).href)
@@ -349,7 +346,6 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
 
   // First sale with customer ID "11111"
   await cardcomIntegration()._test_simulateCardcomSale(
-    salesEventNumber,
     {
       productsSold: [
         {
@@ -367,10 +363,7 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       transactionRevenueInCents: 100 * 100,
     },
     undefined,
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
   )
 
   // Verify first student was created
@@ -397,7 +390,6 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
 
   // Second sale with same email/phone but different customer ID "22222"
   await cardcomIntegration()._test_simulateCardcomSale(
-    salesEventNumber,
     {
       productsSold: [
         {
@@ -415,10 +407,7 @@ test('student with multiple sales shows all different cardcom customer IDs', asy
       transactionRevenueInCents: 100 * 100,
     },
     undefined,
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
   )
 
   // Verify still only 1 student (same student, different payment method)
@@ -505,20 +494,17 @@ test('double call of cardcom webhook should create only one sale and one student
   }
 
   // First call - should create student and sale
-  await cardcomIntegration()._test_simulateCardcomSale(salesEventNumber, saleData, undefined, {
-    secret: 'secret',
-    baseUrl: url().href,
-  })
+  await cardcomIntegration()._test_simulateCardcomSale(
+    saleData,
+    undefined,
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+  )
 
   // Second call with same data and same invoice number - should NOT create duplicates
   await cardcomIntegration()._test_simulateCardcomSale(
-    salesEventNumber,
     saleData,
     undefined,
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
     {
       cardcomInvoiceNumberToSend: 1, // Use same invoice number as first call
     },

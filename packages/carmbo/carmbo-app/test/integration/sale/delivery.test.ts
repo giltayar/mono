@@ -5,6 +5,7 @@ import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
+import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 
 const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
 
@@ -206,7 +207,6 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
   const customerPhone = '0501234567'
 
   await cardcomIntegration()._test_simulateCardcomSale(
-    salesEventNumber,
     {
       productsSold: [
         {
@@ -238,10 +238,7 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
       street: 'Main St',
       notes: 'Leave at the front desk.',
     },
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
   )
 
   await page.goto(new URL('/sales/1', url()).href)

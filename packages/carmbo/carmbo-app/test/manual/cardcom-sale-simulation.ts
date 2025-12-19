@@ -2,6 +2,10 @@ import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integra
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import yargs from 'yargs'
 import {hideBin} from 'yargs/helpers'
+import {
+  cardcomRecurringPaymentWebhookUrl,
+  cardcomWebhookUrl,
+} from '../integration/sale/common/cardcom-webhook.ts'
 
 const argv = await yargs(hideBin(process.argv))
   .option('sales-event', {
@@ -72,7 +76,6 @@ console.log('Sending Cardcom webhook simulation to', argv.url, argv.salesEvent.t
 if (argv.recurring) {
   console.log(
     await cardcomIntegration._test_simulateCardcomStandingOrder(
-      argv.salesEvent,
       {
         cardcomCustomerId: undefined,
         customerName: argv.name,
@@ -84,14 +87,13 @@ if (argv.recurring) {
           100 * products.reduce((sum, p) => sum + p.unitPriceInCents * p.quantity, 0),
       } as TaxInvoiceInformation,
       undefined,
-      {secret: argv.secret, baseUrl: argv.url},
-      {cardcomInvoiceNumberToSend: (Math.random() * 1_000_000) | 0},
+      cardcomWebhookUrl(argv.salesEvent, new URL(argv.url), argv.secret),
+      cardcomRecurringPaymentWebhookUrl(new URL(argv.url), argv.secret),
     ),
   )
 } else {
   console.log(
     await cardcomIntegration._test_simulateCardcomSale(
-      argv.salesEvent,
       {
         cardcomCustomerId: undefined,
         customerName: argv.name,
@@ -102,8 +104,7 @@ if (argv.recurring) {
         transactionRevenueInCents: 4,
       } as TaxInvoiceInformation,
       undefined,
-      {secret: argv.secret, baseUrl: argv.url},
-      {cardcomInvoiceNumberToSend: (Math.random() * 1_000_000) | 0},
+      cardcomRecurringPaymentWebhookUrl(new URL(argv.url), 'secret'),
     ),
   )
 }

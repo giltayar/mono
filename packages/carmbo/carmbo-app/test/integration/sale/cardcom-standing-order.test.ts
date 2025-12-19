@@ -13,6 +13,7 @@ import type {
   CardcomMasterRecurringJson,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
+import {cardcomRecurringPaymentWebhookUrl, cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 
 const {
   url,
@@ -71,7 +72,6 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   const customerPhone = '0501234567'
 
   const {recurringOrderId} = await cardcomIntegration()._test_simulateCardcomStandingOrder(
-    salesEventNumber,
     {
       productsSold: [
         {
@@ -95,10 +95,8 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       transactionRevenueInCents: 200 * 100,
     },
     undefined,
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
   )
 
   // Navigate to students list and verify student was created
@@ -230,10 +228,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       transactionDate: new Date(),
       transactionRevenueInCents: 200 * 100,
     },
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
   )
 
   // Reload the payments page to verify the second payment was created
@@ -322,7 +317,6 @@ test('cancelling a standing order subscription removes student from academy cour
 
   // Create a standing order sale
   await cardcomIntegration()._test_simulateCardcomStandingOrder(
-    salesEventNumber,
     {
       productsSold: [
         {
@@ -340,10 +334,8 @@ test('cancelling a standing order subscription removes student from academy cour
       transactionRevenueInCents: 100 * 100,
     },
     undefined,
-    {
-      secret: 'secret',
-      baseUrl: url().href,
-    },
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
   )
 
   // Verify student was enrolled in academy course
