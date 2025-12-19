@@ -1,6 +1,5 @@
 import Chance from 'chance'
 import {fetchAsBufferWithJsonBody} from '@giltayar/http-commons'
-import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import type {
   CardcomDetailRecurringJson,
   CardcomMasterRecurringJson,
@@ -12,15 +11,11 @@ import type {DeliveryInformation} from './cardcom-integration-testkit.ts'
 const chance = new Chance()
 
 export async function simulateCardcomSale(
-  salesEventNumber: number,
+  webhook: URL,
   invoiceInformation: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
   standingOrderNumber: string | undefined,
-  serverInfo: {
-    secret: string
-    baseUrl: string
-  },
 ): Promise<void> {
   const webhookData = generateCardcomWebhookData(
     invoiceInformation,
@@ -29,42 +24,24 @@ export async function simulateCardcomSale(
     standingOrderNumber,
   )
 
-  const url = addQueryParamsToUrl(new URL('/api/sales/cardcom/sale', serverInfo.baseUrl), {
-    secret: serverInfo.secret ?? 'secret',
-    'sales-event': salesEventNumber.toString(),
-  })
-
-  await fetchAsBufferWithJsonBody(url, webhookData as any)
+  await fetchAsBufferWithJsonBody(webhook, webhookData as any)
 }
 
 export async function simulateMasterRecurring(
+  webhook: URL,
   invoiceInformation: TaxInvoiceInformation,
   standingOrderNumber: string,
-  serverInfo: {
-    secret: string
-    baseUrl: string
-  },
 ): Promise<void> {
   const webhookData = generateMasterRecurringWebhookData(invoiceInformation, standingOrderNumber)
 
-  const url = addQueryParamsToUrl(
-    new URL('/api/sales/cardcom/recurring-payment', serverInfo.baseUrl),
-    {
-      secret: serverInfo.secret ?? 'secret',
-    },
-  )
-
-  await fetchAsBufferWithJsonBody(url, webhookData as any)
+  await fetchAsBufferWithJsonBody(webhook, webhookData as any)
 }
 
 export async function simulateDetailRecurring(
   invoiceInformation: TaxInvoiceInformation,
   recurringOrderId: string,
   cardcomInvoiceDocumentNumber: number,
-  serverInfo: {
-    secret: string
-    baseUrl: string
-  },
+  webhook: URL,
 ): Promise<void> {
   const webhookData = generateDetailRecurringWebhookData(
     invoiceInformation,
@@ -72,14 +49,7 @@ export async function simulateDetailRecurring(
     cardcomInvoiceDocumentNumber,
   )
 
-  const url = addQueryParamsToUrl(
-    new URL('/api/sales/cardcom/recurring-payment', serverInfo.baseUrl),
-    {
-      secret: serverInfo.secret ?? 'secret',
-    },
-  )
-
-  await fetchAsBufferWithJsonBody(url, webhookData as any)
+  await fetchAsBufferWithJsonBody(webhook, webhookData as any)
 }
 
 function generateCardcomWebhookData(

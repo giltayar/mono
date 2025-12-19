@@ -21,6 +21,7 @@ export function createCardcomIntegrationService(context: CardcomIntegrationServi
 
   return {
     enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
+    refundTransaction: sBind(refundTransaction),
     fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
     fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
     fetchAccountInformation: sBind(fetchAccountInformation),
@@ -270,4 +271,29 @@ async function fetchAccountInformation(
     email: response.Email,
     phone: response.Mobile || response.Phone,
   }
+}
+
+async function refundTransaction(
+  service: CardcomIntegrationServiceData,
+  transactionId: string,
+): Promise<{refundTransactionId: string}> {
+  const url = new URL('https://secure.cardcom.solutions/api/v11/Transactions/RefundTransaction')
+
+  const response = (await fetchAsJsonWithJsonBody(url, {
+    ApiName: service.context.apiKey,
+    ApiPassword: service.context.apiKeyPassword,
+    TransactionId: transactionId,
+  })) as {
+    ResponseCode: number
+    Description: string
+    NewTranzactionId: string
+  }
+
+  if (response.ResponseCode !== 0) {
+    throw new Error(
+      `Failed to refund transaction ${transactionId}: ${response.ResponseCode}: ${response.Description}`,
+    )
+  }
+
+  return {refundTransactionId: response.NewTranzactionId}
 }

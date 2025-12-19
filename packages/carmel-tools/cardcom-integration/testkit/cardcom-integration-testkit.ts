@@ -17,7 +17,15 @@ import {
 
 type CardcomIntegrationServiceData = {
   state: Parameters<typeof createFakeCardcomIntegrationService>[0] & {
-    taxInvoiceDocuments: Record<string, TaxInvoiceInformation>
+    payments: Record<
+      string, // transaction id
+      {
+        invoiceNumber: number
+        isRecurring: boolean
+        invoiceInformation: TaxInvoiceInformation
+        refundTransactionId: string | undefined
+      }
+    >
   }
 }
 
@@ -29,6 +37,12 @@ export interface DeliveryInformation {
   floor: string | undefined
   entrance: string | undefined
   notes: string | undefined
+}
+
+export interface AccountInfo {
+  name: string
+  email?: string
+  phone?: string
 }
 
 export function createFakeCardcomIntegrationService(context: {
@@ -44,22 +58,19 @@ export function createFakeCardcomIntegrationService(context: {
         }
       >
       badPayments?: Record<string, BadPayment[]>
-      accountInfo: {
-        name: string
-        email?: string
-        phone?: string
-      }
+      accountInfo: AccountInfo
     }
   >
 }) {
   const state: CardcomIntegrationServiceData['state'] = {
     accounts: structuredClone(context.accounts),
-    taxInvoiceDocuments: {},
+    payments: {},
   }
   const sBind: ServiceBind<CardcomIntegrationServiceData> = (f) => bind(f, {state})
 
   const service: CardcomIntegrationService = {
     enableDisableRecurringPayment: sBind(enableDisableRecurringPayment),
+    refundTransaction: sBind(refundTransaction),
     fetchRecurringPaymentInformation: sBind(fetchRecurringPaymentInformation),
     fetchRecurringPaymentBadPayments: sBind(fetchRecurringPaymentBadPayments),
     fetchAccountInformation: sBind(fetchAccountInformation),
@@ -71,7 +82,7 @@ export function createFakeCardcomIntegrationService(context: {
     ...service,
     _test_reset_data: () => {
       state.accounts = structuredClone(context.accounts)
-      state.taxInvoiceDocuments = {}
+      state.payments = {}
     },
     _test_getRecurringPaymentStatus: async (
       accountId: string,
@@ -88,12 +99,26 @@ export function createFakeCardcomIntegrationService(context: {
     _test_getTaxInvoiceDocument: async (
       cardcomInvoiceNumber: string,
     ): Promise<TaxInvoiceInformation | undefined> => {
-      const invoiceDocument = state.taxInvoiceDocuments[cardcomInvoiceNumber]
-      return invoiceDocument
+      return Object.values(state.payments).find(
+        (inv) => inv.invoiceNumber === parseInt(cardcomInvoiceNumber, 10),
+      )?.invoiceInformation
     },
     _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
     _test_simulateCardcomStandingOrder: sBind(_test_simulateCardcomStandingOrder),
     _test_simulateCardcomStandingOrderPayment: sBind(_test_simulateCardcomStandingOrderPayment),
+    _test_getPaymentInfo: (transactionId: string) => {
+      if (!state.payments[transactionId]) {
+        throw new Error(`Payment ${transactionId} not found`)
+      }
+      return state.payments[transactionId]
+    },
+    _test_isPaymentRefunded: (transactionId: string) => {
+      const payment = state.payments[transactionId]
+      if (!payment) {
+        throw new Error(`Payment ${transactionId} not found`)
+      }
+      return payment.refundTransactionId !== undefined
+    },
   }
 }
 
@@ -183,6 +208,7 @@ async function createTaxInvoiceDocument(
     TEST_sendCardcomInvoiceNumber?: number
   },
 ): Promise<{cardcomInvoiceNumber: number; cardcomDocumentLink: string; cardcomCustomerId: string}> {
+  const transactionId = crypto.randomUUID()
   const generatedCustomerId = String(
     invoiceInformation.cardcomCustomerId ?? (Math.random() * 100000) | 0,
   )
@@ -200,10 +226,14 @@ async function createTaxInvoiceDocument(
   }
 
   const cardcomInvoiceNumber =
-    options.TEST_sendCardcomInvoiceNumber ??
-    Math.max(Math.max(...Object.keys(s.state.taxInvoiceDocuments).map(Number), 0) + 1, 1)
+    options.TEST_sendCardcomInvoiceNumber ?? Object.keys(s.state.payments).length + 1
 
-  s.state.taxInvoiceDocuments[cardcomInvoiceNumber] = invoiceToStore
+  s.state.payments[transactionId] = {
+    invoiceNumber: cardcomInvoiceNumber,
+    isRecurring: false,
+    invoiceInformation: invoiceToStore,
+    refundTransactionId: undefined,
+  }
 
   return {
     cardcomInvoiceNumber,
@@ -216,11 +246,13 @@ async function createTaxInvoiceDocumentUrl(
   s: CardcomIntegrationServiceData,
   cardcomInvoiceNumber: string,
 ) {
-  const invoiceDocument = s.state.taxInvoiceDocuments[cardcomInvoiceNumber]
+  const invoiceDocument = Object.values(s.state.payments).find(
+    (inv) => inv.invoiceNumber === parseInt(cardcomInvoiceNumber, 10),
+  )
 
   if (!invoiceDocument)
     throw new Error(
-      `Invoice Document ${cardcomInvoiceNumber} not found: ${JSON.stringify(s.state.taxInvoiceDocuments)}`,
+      `Invoice Document ${cardcomInvoiceNumber} not found: ${JSON.stringify(s.state.payments)}`,
     )
 
   return {url: `http://invoice-document.example.com/${cardcomInvoiceNumber}`}
@@ -234,108 +266,127 @@ export function assertTaxInvoiceDocumentUrl(url: string, cardcomInvoiceNumber: s
 
 export async function _test_simulateCardcomSale(
   s: CardcomIntegrationServiceData,
-  salesEventNumber: number,
   sale: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
-  serverInfo: {
-    secret: string
-    baseUrl: string
-  },
+  webhook: URL | undefined,
   options: {
     cardcomInvoiceNumberToSend?: number
   } = {},
 ) {
-  const {cardcomInvoiceNumber} =
-    options.cardcomInvoiceNumberToSend &&
-    s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend.toString()]
-      ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
-      : await createTaxInvoiceDocument(s, sale, {
-          sendInvoiceByMail: false,
-          TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
-        })
+  let cardcomInvoiceNumber: number
 
-  await simulateCardcomSale(
-    salesEventNumber,
-    sale,
-    delivery,
-    cardcomInvoiceNumber.toString(),
-    undefined,
-    serverInfo,
-  )
+  if (!options.cardcomInvoiceNumberToSend) {
+    const result = await createTaxInvoiceDocument(s, sale, {
+      sendInvoiceByMail: false,
+    })
+
+    cardcomInvoiceNumber = result.cardcomInvoiceNumber
+  } else {
+    cardcomInvoiceNumber = options.cardcomInvoiceNumberToSend
+  }
+
+  if (webhook) {
+    await simulateCardcomSale(webhook, sale, delivery, cardcomInvoiceNumber.toString(), undefined)
+  }
 }
 
 export async function _test_simulateCardcomStandingOrder(
   s: CardcomIntegrationServiceData,
-  salesEventNumber: number,
   sale: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
-  serverInfo: {
-    secret: string
-    baseUrl: string
-  },
+  saleWebhook: URL | undefined,
+  recurringPaymentWebhook: URL | undefined,
   options: {
     cardcomInvoiceNumberToSend?: number
   } = {},
 ) {
-  const {cardcomInvoiceNumber, cardcomCustomerId} =
-    options.cardcomInvoiceNumberToSend &&
-    s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend.toString()]
-      ? {
-          cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
-          cardcomCustomerId: String((Math.random() * 100000) | 0),
-        }
-      : await createTaxInvoiceDocument(s, sale, {
-          sendInvoiceByMail: false,
-          TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
-        })
+  let cardcomInvoiceNumber: number
+  let cardcomCustomerId = 'stam'
 
-  const recurringOrderId = (Math.random() * 1_000_000) | 0
+  if (!options.cardcomInvoiceNumberToSend) {
+    const result = await createTaxInvoiceDocument(s, sale, {
+      sendInvoiceByMail: false,
+    })
 
-  await simulateCardcomSale(
-    salesEventNumber,
-    sale,
-    delivery,
-    cardcomInvoiceNumber.toString(),
-    recurringOrderId.toString(),
-    serverInfo,
-  )
+    cardcomInvoiceNumber = result.cardcomInvoiceNumber
+    cardcomCustomerId = result.cardcomCustomerId
 
-  await simulateMasterRecurring(sale, recurringOrderId.toString(), serverInfo)
+    const r = Object.values(s.state.payments).find((p) => p.invoiceNumber === cardcomInvoiceNumber)
+
+    r!.isRecurring = true
+  } else {
+    cardcomInvoiceNumber = options.cardcomInvoiceNumberToSend
+  }
+
+  const recurringOrderId = String((Math.random() * 1_000_000) | 0)
+
+  if (saleWebhook && recurringPaymentWebhook) {
+    await simulateCardcomSale(
+      saleWebhook,
+      sale,
+      delivery,
+      cardcomInvoiceNumber.toString(),
+      recurringOrderId,
+    )
+
+    await simulateMasterRecurring(recurringPaymentWebhook, sale, recurringOrderId.toString())
+  }
 
   if (s.state.accounts[cardcomCustomerId] != undefined) {
     s.state.accounts[cardcomCustomerId].recurringPayments = {
       ...s.state.accounts[cardcomCustomerId].recurringPayments,
-      [recurringOrderId.toString()]: {
-        recurringPaymentId: recurringOrderId.toString(),
+      [recurringOrderId]: {
+        recurringPaymentId: recurringOrderId,
         name: `Test Recurring Payment ${recurringOrderId}`,
         isActive: true,
       },
     }
   }
 
-  return {recurringOrderId: recurringOrderId.toString()}
+  return {recurringOrderId}
 }
 
 export async function _test_simulateCardcomStandingOrderPayment(
   s: CardcomIntegrationServiceData,
   recurringOrderId: string,
   sale: TaxInvoiceInformation,
-  serverInfo: {
-    secret: string
-    baseUrl: string
-  },
+  webhook: URL | undefined,
   options: {
     cardcomInvoiceNumberToSend?: number
   } = {},
 ) {
-  const {cardcomInvoiceNumber} =
-    options.cardcomInvoiceNumberToSend &&
-    s.state.taxInvoiceDocuments[options.cardcomInvoiceNumberToSend.toString()]
-      ? {cardcomInvoiceNumber: options.cardcomInvoiceNumberToSend}
-      : await createTaxInvoiceDocument(s, sale, {
-          sendInvoiceByMail: false,
-          TEST_sendCardcomInvoiceNumber: options.cardcomInvoiceNumberToSend,
-        })
+  let cardcomInvoiceNumber: number
 
-  await simulateDetailRecurring(sale, recurringOrderId, cardcomInvoiceNumber, serverInfo)
+  if (!options.cardcomInvoiceNumberToSend) {
+    const result = await createTaxInvoiceDocument(s, sale, {
+      sendInvoiceByMail: false,
+    })
+
+    cardcomInvoiceNumber = result.cardcomInvoiceNumber
+  } else {
+    cardcomInvoiceNumber = options.cardcomInvoiceNumberToSend
+  }
+
+  if (webhook) {
+    await simulateDetailRecurring(sale, recurringOrderId, cardcomInvoiceNumber, webhook)
+  }
+}
+
+async function refundTransaction(service: CardcomIntegrationServiceData, transactionId: string) {
+  const paymentRecord = service.state.payments[transactionId]
+  if (!paymentRecord) {
+    throw new Error(`Transaction ${transactionId} not found`)
+  }
+
+  if (paymentRecord.refundTransactionId) {
+    throw new Error(`Transaction ${transactionId} has already been refunded`)
+  }
+
+  const refundTransactionId = `refund-${transactionId}`
+
+  paymentRecord.refundTransactionId = refundTransactionId
+
+  return {
+    refundTransactionId,
+  }
 }
