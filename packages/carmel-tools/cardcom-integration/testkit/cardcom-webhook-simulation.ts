@@ -15,12 +15,14 @@ export async function simulateCardcomSale(
   invoiceInformation: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
+  paymentTransactionId: string,
   standingOrderNumber: string | undefined,
 ): Promise<void> {
   const webhookData = generateCardcomWebhookData(
     invoiceInformation,
     delivery,
     invoiceNumber,
+    paymentTransactionId,
     standingOrderNumber,
   )
 
@@ -56,6 +58,7 @@ function generateCardcomWebhookData(
   invoiceInfo: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
   invoiceNumber: string,
+  paymentTransactionId: string,
   standingOrderNumber: string | undefined,
 ): CardcomSaleWebhookJson {
   const now = new Date()
@@ -71,7 +74,7 @@ function generateCardcomWebhookData(
       : undefined,
     DealDate: dealDate,
     DealTime: dealTime,
-    internaldealnumber: chance.integer({min: 10000000, max: 99999999}).toString(),
+    internaldealnumber: paymentTransactionId,
     invoicenumber: invoiceNumber,
     terminalnumber: chance.integer({min: 1000, max: 9999}).toString(),
     responsecode: '0',

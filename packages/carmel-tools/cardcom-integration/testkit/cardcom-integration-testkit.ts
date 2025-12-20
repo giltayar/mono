@@ -106,23 +106,9 @@ export function createFakeCardcomIntegrationService(context: {
     _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
     _test_simulateCardcomStandingOrder: sBind(_test_simulateCardcomStandingOrder),
     _test_simulateCardcomStandingOrderPayment: sBind(_test_simulateCardcomStandingOrderPayment),
-    _test_getPaymentInfo: (invoiceNumber: number) => {
-      const payment = Object.values(state.payments).find(
-        (inv) => inv.invoiceNumber === invoiceNumber,
-      )
-      if (!payment) {
-        throw new Error(`Payment with invoice  ${invoiceNumber} not found`)
-      }
-      return payment
-    },
+    _test_getPaymentInfo: sBind(_test_getPaymentInfo),
     _test_isPaymentRefunded: (invoiceNumber: number) => {
-      const payment = Object.values(state.payments).find(
-        (inv) => inv.invoiceNumber === invoiceNumber,
-      )
-      if (!payment) {
-        throw new Error(`Payment with invoice ${invoiceNumber} not found`)
-      }
-      return payment.refundTransactionId !== undefined
+      return _test_getPaymentInfo({state}, invoiceNumber).refundTransactionId !== undefined
     },
   }
 }
@@ -247,6 +233,14 @@ async function createTaxInvoiceDocument(
   }
 }
 
+function _test_getPaymentInfo(s: CardcomIntegrationServiceData, invoiceNumber: number) {
+  const payment = Object.values(s.state.payments).find((inv) => inv.invoiceNumber === invoiceNumber)
+  if (!payment) {
+    throw new Error(`Payment with invoice  ${invoiceNumber} not found`)
+  }
+  return payment
+}
+
 async function createTaxInvoiceDocumentUrl(
   s: CardcomIntegrationServiceData,
   cardcomInvoiceNumber: string,
@@ -290,8 +284,21 @@ export async function _test_simulateCardcomSale(
     cardcomInvoiceNumber = options.cardcomInvoiceNumberToSend
   }
 
+  const paymentTransactionId = Object.entries(s.state.payments).find(
+    ([, p]) => p.invoiceNumber === cardcomInvoiceNumber,
+  )?.[0]
+
+  assert(paymentTransactionId, 'payment transaction ID should be found')
+
   if (webhook) {
-    await simulateCardcomSale(webhook, sale, delivery, cardcomInvoiceNumber.toString(), undefined)
+    await simulateCardcomSale(
+      webhook,
+      sale,
+      delivery,
+      cardcomInvoiceNumber.toString(),
+      paymentTransactionId,
+      undefined,
+    )
   }
 }
 
@@ -324,6 +331,11 @@ export async function _test_simulateCardcomStandingOrder(
   }
 
   const recurringOrderId = String((Math.random() * 1_000_000) | 0)
+  const paymentTransactionId = Object.entries(s.state.payments).find(
+    ([, p]) => p.invoiceNumber === cardcomInvoiceNumber,
+  )?.[0]
+
+  assert(paymentTransactionId, 'payment transaction ID should be found')
 
   if (saleWebhook && recurringPaymentWebhook) {
     await simulateCardcomSale(
@@ -331,6 +343,7 @@ export async function _test_simulateCardcomStandingOrder(
       sale,
       delivery,
       cardcomInvoiceNumber.toString(),
+      paymentTransactionId,
       recurringOrderId,
     )
 
