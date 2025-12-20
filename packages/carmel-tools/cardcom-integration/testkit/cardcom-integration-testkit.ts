@@ -205,7 +205,7 @@ async function createTaxInvoiceDocument(
     TEST_sendCardcomInvoiceNumber?: number
   },
 ): Promise<{cardcomInvoiceNumber: number; cardcomDocumentLink: string; cardcomCustomerId: string}> {
-  const transactionId = crypto.randomUUID()
+  const transactionId = String((Math.random() * 100_000_000) | 0)
   const generatedCustomerId = String(
     invoiceInformation.cardcomCustomerId ?? (Math.random() * 100000) | 0,
   )
