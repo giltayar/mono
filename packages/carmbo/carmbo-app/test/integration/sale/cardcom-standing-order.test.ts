@@ -168,6 +168,9 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
     'http://invoice-document.example.com/1',
   )
 
+  // Verify that refund button is not visible for standing orders
+  await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
+
   // Verify products in the sale detail page
   const products = saleDetailModel.form().products()
   await expect(products.locator).toHaveCount(2)

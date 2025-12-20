@@ -27,6 +27,9 @@ export function createUpdateSalePageModel(page: Page) {
       reconnectButton: (btnLocator = page.getByRole('button', {name: 'Reconnect'})) => ({
         locator: btnLocator,
       }),
+      refundButton: (btnLocator = page.getByRole('button', {name: 'Refund'})) => ({
+        locator: btnLocator,
+      }),
 
       ...saleFormPageModel(page),
     }),

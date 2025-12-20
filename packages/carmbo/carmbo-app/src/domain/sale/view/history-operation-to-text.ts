@@ -13,6 +13,8 @@ export function saleHistoryOperationToText(operation: SaleHistoryOperation): str
       return 'restored'
     case 'connect-sale':
       return 'connected sale'
+    case 'refund-sale':
+      return 'refunded sale'
     case 'cancel-subscription':
       return 'canceled subscription'
     case 'removed-from-subscription':

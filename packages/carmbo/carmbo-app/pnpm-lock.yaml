@@ -24,8 +24,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       '@giltayar/carmel-tools-cardcom-integration':
-        specifier: ^6.0.0
-        version: 6.0.0
+        specifier: ^6.0.4
+        version: 6.0.4
       '@giltayar/carmel-tools-smoove-integration':
         specifier: ^5.1.0
         version: 5.1.0
@@ -100,8 +100,8 @@ importers:
         specifier: ^1.57.0
         version: 1.57.0
       '@railway/cli':
-        specifier: ^4.15.1
-        version: 4.15.1
+        specifier: ^4.16.1
+        version: 4.16.1
       '@types/chance':
         specifier: ^1.1.7
         version: 1.1.7
@@ -115,8 +115,8 @@ importers:
         specifier: ^2.2.9
         version: 2.2.9
       '@typescript/native-preview':
-        specifier: 7.0.0-dev.20251219.1
-        version: 7.0.0-dev.20251219.1
+        specifier: 7.0.0-dev.20251220.1
+        version: 7.0.0-dev.20251220.1
       eslint:
         specifier: ^9.39.2
         version: 9.39.2
@@ -231,8 +231,8 @@ packages:
     resolution: {integrity: sha512-wBcHU7wI6qy0p2mK6tKnRoLZim4cDiiLyJA8uK9JyZT58k3et4VcRqDesfjdmUdCNuet8Ff2g7nrtYCZqOe/Zw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/4.3.0/e39c065806aefeb893aec13c82ff968130618cd0}
     engines: {node: '>=24.9.0'}
 
-  '@giltayar/carmel-tools-cardcom-integration@6.0.0':
-    resolution: {integrity: sha512-2IuYRys3aaTIzeyyXVzNbFNDeQ5c13Y03kLKQeeGxt8JLkebym9Bc847+wrJPpXhIuhfIPvd21bxq6GTkDrrjQ==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/6.0.0/9301be030d9635e44705f62df96246c3d86a9b0c}
+  '@giltayar/carmel-tools-cardcom-integration@6.0.4':
+    resolution: {integrity: sha512-6+O1uyB/I7mpy6G4mzustllVXUBbMiUw+YZGK02Lm0FuUN8+vJLhOpZyaDS9mIkOKlIEqebymJwFom0Zz8t7Rg==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/6.0.4/6f443953019d6b392203b78ee807fd10796f09ef}
     engines: {node: '>=24.3.0'}
 
   '@giltayar/carmel-tools-smoove-integration@5.1.0':
@@ -334,8 +334,8 @@ packages:
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
-  '@railway/cli@4.15.1':
-    resolution: {integrity: sha512-Y4NRRXCfF1fqsZVsJd65Z3Vc+pim3jw/m4pq1mDA+AuoxzagHUGSkTg78UFNIG36Q0Ph9GoocbEq/rg7yDAc3Q==}
+  '@railway/cli@4.16.1':
+    resolution: {integrity: sha512-Ukwd8E0DJko6oFVoO7kLylvSCTIUgEXYQBhAi3hBaHmWzyPM+rYzYBhSEfuQ6dNczz5dkhKrdB7u6zH+Q/bX8A==}
     engines: {node: '>=16.0.0'}
     hasBin: true
 
@@ -429,43 +429,43 @@ packages:
     resolution: {integrity: sha512-Xzmnb58+Db78gT/CCj/PVCvK+zxbnsw6F+O1oheYszJbBSdEjVhQi3C/Xttzxgi/GLmpvOggRs1RFpiJ8+c34Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-hnEOHOmkrIZ0sjdGjvbYQJeynOQbe+Iwj7+7/y0AELbuusCGMmlw34nEz6m5Nkh1PO+OX+sgY2Hd5PO54mWdHA==}
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-kFdUHBL0f6tzZfgviBJm7SpX7NBMUIJvS7Gp0SsFbV72Lc/W5k7aFYG5cJScpdlNzG64dC0A5GBl3C/WkPe9Rg==}
     cpu: [arm64]
     os: [darwin]
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-liPn6XM7Cao0VnVWZTzWBAFMZQl+IheaR8A5pzy85wvWH+ztUdm7K3RsykkJXPpMed9gCv3o1kVXNONzPU8Xng==}
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-i2RNLjZaiskvqeNt9XBN/FdssB+i/PURqLkDP6mY6cLSOVClygBtha0qqBAmj+huTvpa64Nwb740a7uFMpVudw==}
     cpu: [x64]
     os: [darwin]
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-iekBmuViSqmMQRaYrcSv9Bd1gIDgWlrZA5ozpG6bQDe6ekg+QnJ1LNsaY05caXvm45UZTy02poM8BJRZLklK2g==}
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-iiRl8pG4tfImt0LM+M4sYnsdf39eFMGdK2ThgBhVWRUSKZfrtvkqM5odwwVuw9xPKF5hFbx3k9lx2s4mTSM6Gg==}
     cpu: [arm64]
     os: [linux]
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-ZUhxOj/t5JxFEveJmDlPFc3Y2OCv5lwPIA1otGqoUi7OhiHbzzFrVpYWAxASe9HXZqYQEqW7Hku7G04gPAHM6w==}
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-KRLhiLNEjWfWX9cu8/iXtsebQdfH43QVSmkwcnQJCD2lVodw9bAJRL6o7jVXJM4tofDP3i8dCk85SAiwaNiC+A==}
     cpu: [arm]
     os: [linux]
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-Fm+u4dTVpz0ruufnMGgqMzwZPH1rUvbg6XzC/jHgJGFy296tTKUrNpt+EomLShdlhmseAB+ledlVwNT9Ydv4xQ==}
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-Gq+YxQWFV5+gBuGv9J939Vw5vYB/ux+q2DLyTGXrgLcXrSCiNGAhf9j2F4DGs0aJOJZIsZN+emp2GTRCUXqdXg==}
     cpu: [x64]
     os: [linux]
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-GRadtoEGmWS4LZE8XlJUomEpNMnWJSd6JERVvBLcQo7Rs2hbPX+8h01hgnbw1xeYvQq1z56S5RnndmmsqszcxQ==}
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-7oBfrT5DalZPhmm4SMS0DzUxw5VEG+cq3Qh6Zgr09+QrAuKBHcuwyZNvbcWhHN7ERMY5xNAIMPILmXOpiarTKQ==}
     cpu: [arm64]
     os: [win32]
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-ogGZMdMeY8p2fVXFYDPcRpw0eYFGrGTzFhha5UbzAGPoKH6zRGAnfZOLbedzjbknx/MHFVAO0fy83xUXzdCdMw==}
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-Jvg2hAotYaRTp4z/6gJWDfvTZXAPOHQ4/81PsZC68asms8mUBrZT/xBy3rxTpWTKmebsGGRg4cUKHMZCEKNq1Q==}
     cpu: [x64]
     os: [win32]
 
-  '@typescript/native-preview@7.0.0-dev.20251219.1':
-    resolution: {integrity: sha512-NeNphyEomcL5/CtsJfv16PJ1jX3ot08JQVp0UUI7hHok4mabbFOGmaiIWa/ZVR+p0LeUwPoMEouSdJ15A850DQ==}
+  '@typescript/native-preview@7.0.0-dev.20251220.1':
+    resolution: {integrity: sha512-PmKa/JV9oVC+34VDVDj8fCnjtJKbcFXzPOOUtebsQhudnJN2L7cUvSUAvsPA36W3MwHA030rNUHaelcKG9bY3w==}
     hasBin: true
 
   abstract-logging@2.0.1:
@@ -2019,7 +2019,7 @@ snapshots:
       '@giltayar/http-commons': 3.1.1
       '@giltayar/service-commons': 1.1.3
 
-  '@giltayar/carmel-tools-cardcom-integration@6.0.0':
+  '@giltayar/carmel-tools-cardcom-integration@6.0.4':
     dependencies:
       '@giltayar/http-commons': 3.1.1
       '@giltayar/service-commons': 1.1.3
@@ -2118,7 +2118,7 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
-  '@railway/cli@4.15.1':
+  '@railway/cli@4.16.1':
     dependencies:
       '@napi-rs/triples': 1.2.0
       node-fetch: 3.3.2
@@ -2239,36 +2239,36 @@ snapshots:
       '@typescript-eslint/types': 8.50.0
       eslint-visitor-keys: 4.2.1
 
-  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview-linux-arm@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview-linux-x64@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview-win32-x64@7.0.0-dev.20251219.1':
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251220.1':
     optional: true
 
-  '@typescript/native-preview@7.0.0-dev.20251219.1':
+  '@typescript/native-preview@7.0.0-dev.20251220.1':
     optionalDependencies:
-      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20251219.1
-      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20251219.1
-      '@typescript/native-preview-linux-arm': 7.0.0-dev.20251219.1
-      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20251219.1
-      '@typescript/native-preview-linux-x64': 7.0.0-dev.20251219.1
-      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20251219.1
-      '@typescript/native-preview-win32-x64': 7.0.0-dev.20251219.1
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20251220.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20251220.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20251220.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20251220.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20251220.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20251220.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20251220.1
 
   abstract-logging@2.0.1: {}
 

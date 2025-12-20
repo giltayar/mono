@@ -63,7 +63,10 @@ export function SaleUpdateView({
           <button class="button btn-primary" hx-post="/sales/${sale.saleNumber}/connect">
             ${!isConnectedSale ? 'Connect' : 'Reconnect'}
           </button>
-          ${sale.isActive && !sale.cardcomRefundTransactionId
+          ${sale.isActive &&
+          !sale.cardcomRefundTransactionId &&
+          (sale.finalSaleRevenue ?? 0) > 0 &&
+          !sale.isStandingOrder
             ? html`<button
                 class="button"
                 hx-post="/sales/${sale.saleNumber}/refund"

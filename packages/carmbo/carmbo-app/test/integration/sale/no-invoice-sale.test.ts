@@ -152,6 +152,9 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
 
   await expect(saleDetailModel.form().viewInvoiceLink().locator).not.toBeVisible()
 
+  // Verify that refund button is not visible for no-invoice sales
+  await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
+
   // Verify products in the sale detail page
   const products = saleDetailModel.form().products()
   await expect(products.locator).toHaveCount(2)

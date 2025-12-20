@@ -662,6 +662,7 @@ export async function connectSale(
   return await sql.begin(async (sql) => {
     const historyId = crypto.randomUUID()
     const dataManualId = crypto.randomUUID()
+    const dataActiveId = crypto.randomUUID()
     const sale = await querySaleForConnectingSale(saleNumber, sql)
 
     if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
@@ -792,17 +793,20 @@ export async function connectSale(
       logger.info('sale-already-connected-no-action-needed')
     }
 
+    await sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`
+
     const dataIdResult = await sql<object[]>`
-      INSERT INTO sale_history (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id)
+      INSERT INTO sale_history (id, data_id, data_product_id, data_active_id, data_manual_id, sale_number, timestamp, operation, operation_reason)
       SELECT
         ${historyId},
         sale.last_data_id as last_data_id,
         sale.last_data_product_id as last_data_product_id,
+        ${dataActiveId} as data_active_id,
+        ${dataManualId},
         sale.sale_number,
         ${now},
         'connect-sale',
-        'manual connection of sale',
-        ${dataManualId}
+        'manual connection of sale'
       FROM sale_history
       INNER JOIN sale ON sale.sale_number = ${saleNumber}
       WHERE id = sale.last_history_id
@@ -850,7 +854,9 @@ export async function refundSale(
     if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
 
     if (!sale.isActive)
-      throw new Error(`Sale ${saleNumber} is already refunded or was never active`)
+      throw new Error(
+        `Sale ${saleNumber} is already refunded or was never active: ${sale.isActive}`,
+      )
 
     if (sale.dataCardcomId) {
       // Can only refund cardcom sales that are not manual because I cannot get the transaction id from  manual sales
@@ -864,8 +870,10 @@ export async function refundSale(
         WHERE data_cardcom_id = ${sale.dataCardcomId}
       `
 
-      if (result.length !== 1)
-        throw new Error(`Failed to update refund transaction ID for sale ${saleNumber}`)
+      if (result.count !== 1)
+        throw new Error(
+          `Failed to update refund transaction ID for sale ${saleNumber}. length: ${result.count}`,
+        )
 
       logger.info({result}, 'sale-data-cardcom-updated-with-refund-transaction-id')
     }
@@ -876,9 +884,9 @@ export async function refundSale(
         ${historyId},
         sale_history.data_id,
         sale_history.data_product_id,
-        sale_history.sale_number,
         sale_history.data_manual_id,
-        ${dataActiveId},
+        ${dataActiveId} as data_active_id,
+        sale_history.sale_number,
         ${now},
         'refund-sale',
         'manual refund of sale'
@@ -902,7 +910,7 @@ async function querySaleForRefund(saleNumber: number, sql: Sql) {
     SELECT
       sale_data_active.is_active AS is_active,
       sale_data_cardcom.internal_deal_number AS internal_deal_number,
-      sale.data_cardcom_id AS data_cardcom_id,
+      sale.data_cardcom_id AS data_cardcom_id
     FROM
       sale
     JOIN sale_history ON sale_history.id = sale.last_history_id

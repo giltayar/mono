@@ -96,6 +96,7 @@ export const SaleHistoryOperationSchema = z.enum([
   'delete',
   'restore',
   'connect-sale',
+  'refund-sale',
   'cancel-subscription',
   'removed-from-subscription',
 ])
@@ -454,7 +455,7 @@ export function saleSelect(saleNumber: number, sql: Sql) {
       COALESCE(sale_data_cardcom.invoice_number, sale_data_cardcom_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
       COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS cardcom_refund_transaction_id,
-      COALESCE(sale_data_active.is_active, true) AS is_active,
+      COALESCE(sale_data_active.is_active, false) AS is_active,
       CASE WHEN sale_data_cardcom_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
       CASE WHEN sale_data_cardcom.recurring_order_id IS NOT NULL THEN true ELSE false END AS is_standing_order,
       CASE WHEN sale_data_no_invoice.sale_revenue IS NOT NULL THEN true ELSE false END AS is_no_invoice_order,
