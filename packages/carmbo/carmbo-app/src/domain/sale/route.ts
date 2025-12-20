@@ -4,6 +4,7 @@ import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import {
   dealWithCardcomOneTimeSale,
+  refundSale,
   showSales,
   showSale,
   showSaleInHistory,
@@ -285,12 +286,21 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   appWithTypes.post(
-    '/:number/connect-manual-sale',
+    '/:number/connect',
     {schema: {body: SaleSchema, params: z.object({number: z.coerce.number()})}},
     async (request, reply) => {
       const saleNumber = request.params.number
 
       return dealWithControllerResultAsync(reply, () => connectSale(saleNumber, request.body))
+    },
+  )
+  appWithTypes.post(
+    '/:number/refund',
+    {schema: {params: z.object({number: z.coerce.number()})}},
+    async (request, reply) => {
+      const saleNumber = request.params.number
+
+      return dealWithControllerResultAsync(reply, () => refundSale(saleNumber))
     },
   )
 

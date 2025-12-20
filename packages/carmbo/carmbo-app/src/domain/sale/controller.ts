@@ -19,6 +19,7 @@ import {
   addCardcomSale,
   addNoInvoiceSale,
   connectSale as model_connectSale,
+  refundSale as model_refundSale,
 } from './model/model-sale.ts'
 import {
   handleCardcomRecurringPayment,
@@ -346,9 +347,28 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
     return {htmxRedirect: `/sales/${saleNumber}`}
   } catch (err) {
     const logger = requestContext.get('logger')!
-    logger.error({err}, 'connect-manual-sale')
+    logger.error({err}, 'connect-sale')
 
     return retarget(exceptionToBannerHtml('Error connecting sale: ', err), '#banner-container')
+  }
+}
+
+export async function refundSale(saleNumber: number): Promise<ControllerResult> {
+  try {
+    const sql = requestContext.get('sql')!
+    const cardcomIntegration = requestContext.get('cardcomIntegration')!
+    const nowService = requestContext.get('nowService')!
+    const logger = requestContext.get('logger')!
+    const now = nowService()
+
+    await model_refundSale(saleNumber, now, sql, cardcomIntegration, logger)
+
+    return {htmxRedirect: `/sales/${saleNumber}`}
+  } catch (err) {
+    const logger = requestContext.get('logger')!
+    logger.error({err}, 'refund-sale')
+
+    return retarget(exceptionToBannerHtml('Error refunding sale: ', err), '#banner-container')
   }
 }
 

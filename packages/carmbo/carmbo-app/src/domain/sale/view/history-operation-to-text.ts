@@ -11,8 +11,8 @@ export function saleHistoryOperationToText(operation: SaleHistoryOperation): str
       return 'archived'
     case 'restore':
       return 'restored'
-    case 'connect-manual-sale':
-      return 'connected manual sale'
+    case 'connect-sale':
+      return 'connected sale'
     case 'cancel-subscription':
       return 'canceled subscription'
     case 'removed-from-subscription':

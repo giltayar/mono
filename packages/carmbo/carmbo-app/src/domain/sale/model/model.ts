@@ -33,7 +33,9 @@ export const SaleSchema = z.object({
     .optional(),
   cardcomInvoiceNumber: z.string().optional(),
   cardcomInvoiceDocumentUrl: z.url().optional(),
+  cardcomRefundTransactionId: z.string().optional(),
   manualSaleType: z.enum(['manual']).optional(),
+  isActive: z.coerce.boolean(),
   hasDeliveryAddress: z.stringbool().optional(),
   deliveryAddress: z
     .object({
@@ -93,7 +95,7 @@ export const SaleHistoryOperationSchema = z.enum([
   'update',
   'delete',
   'restore',
-  'connect-manual-sale',
+  'connect-sale',
   'cancel-subscription',
   'removed-from-subscription',
 ])
@@ -433,7 +435,7 @@ export async function fillInSale(sale: NewSale, sql: Sql): Promise<NewSale> {
   }
 }
 
-function saleSelect(saleNumber: number, sql: Sql) {
+export function saleSelect(saleNumber: number, sql: Sql) {
   return sql<SaleWithHistoryInfo[]>`
     SELECT
       current_history_id as id,
@@ -451,6 +453,8 @@ function saleSelect(saleNumber: number, sql: Sql) {
       ) AS final_sale_revenue,
       COALESCE(sale_data_cardcom.invoice_number, sale_data_cardcom_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
+      COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS cardcom_refund_transaction_id,
+      COALESCE(sale_data_active.is_active, true) AS is_active,
       CASE WHEN sale_data_cardcom_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
       CASE WHEN sale_data_cardcom.recurring_order_id IS NOT NULL THEN true ELSE false END AS is_standing_order,
       CASE WHEN sale_data_no_invoice.sale_revenue IS NOT NULL THEN true ELSE false END AS is_no_invoice_order,
@@ -477,6 +481,7 @@ function saleSelect(saleNumber: number, sql: Sql) {
     LEFT JOIN student ON student.student_number = sale_data.student_number
     LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
+    LEFT JOIN sale_data_active ON sale_data_active.data_active_id = sh.data_active_id
     LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = s.data_no_invoice_id
     LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sh.data_manual_id
     LEFT JOIN sale_data_delivery ON

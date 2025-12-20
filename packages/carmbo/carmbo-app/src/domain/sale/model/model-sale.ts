@@ -800,7 +800,7 @@ export async function connectSale(
         sale.last_data_product_id as last_data_product_id,
         sale.sale_number,
         ${now},
-        'connect-manual-sale',
+        'connect-sale',
         'manual connection of sale',
         ${dataManualId}
       FROM sale_history
@@ -828,28 +828,105 @@ export async function connectSale(
   })
 }
 
+export async function refundSale(
+  saleNumber: number,
+  now: Date,
+  sql: Sql,
+  cardcomIntegration: CardcomIntegrationService,
+  loggerParent: FastifyBaseLogger,
+) {
+  const logger = loggerParent.child({
+    saleNumber,
+    jobId: crypto.randomUUID(),
+    job: 'refund-sale',
+  })
+  logger.info('refund-sale-started')
+
+  return await sql.begin(async (sql) => {
+    const historyId = crypto.randomUUID()
+    const dataActiveId = crypto.randomUUID()
+    const sale = await querySaleForRefund(saleNumber, sql)
+
+    if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
+
+    if (!sale.isActive)
+      throw new Error(`Sale ${saleNumber} is already refunded or was never active`)
+
+    if (sale.dataCardcomId) {
+      // Can only refund cardcom sales that are not manual because I cannot get the transaction id from  manual sales
+      const {refundTransactionId} = await cardcomIntegration.refundTransaction(
+        sale.internalDealNumber,
+      )
+      logger.info({refundTransactionId}, 'cardcom-transaction-refunded')
+      const result = await sql`
+        UPDATE sale_data_cardcom SET
+          refund_transaction_id = ${refundTransactionId}
+        WHERE data_cardcom_id = ${sale.dataCardcomId}
+      `
+
+      if (result.length !== 1)
+        throw new Error(`Failed to update refund transaction ID for sale ${saleNumber}`)
+
+      logger.info({result}, 'sale-data-cardcom-updated-with-refund-transaction-id')
+    }
+
+    const dataIdResult = await sql`
+      INSERT INTO sale_history (id, data_id, data_product_id, data_manual_id, data_active_id, sale_number, timestamp, operation, operation_reason)
+      SELECT
+        ${historyId},
+        sale_history.data_id,
+        sale_history.data_product_id,
+        sale_history.sale_number,
+        sale_history.data_manual_id,
+        ${dataActiveId},
+        ${now},
+        'refund-sale',
+        'manual refund of sale'
+      FROM sale_history
+      INNER JOIN sale ON sale.sale_number = ${saleNumber}
+      WHERE id = sale.last_history_id
+      RETURNING 1
+    `
+
+    if (dataIdResult.length !== 1)
+      throw new Error(`Zero or more than one sale with ID ${saleNumber}`)
+
+    logger.info({historyId, dataActiveId}, 'sale-history-record-created')
+
+    logger.info('refund-sale-completed')
+  })
+}
+
+async function querySaleForRefund(saleNumber: number, sql: Sql) {
+  const result = (await sql`
+    SELECT
+      sale_data_active.is_active AS is_active,
+      sale_data_cardcom.internal_deal_number AS internal_deal_number,
+      sale.data_cardcom_id AS data_cardcom_id,
+    FROM
+      sale
+    JOIN sale_history ON sale_history.id = sale.last_history_id
+    LEFT JOIN sale_data_active ON sale_data_active.data_active_id = sale_history.data_active_id
+    LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+    WHERE
+      sale.sale_number = ${saleNumber}
+  `) as {
+    isActive: boolean
+    internalDealNumber: string
+    dataCardcomId: string | null
+  }[]
+
+  if (result.length === 0) return undefined
+
+  if (result.length > 1) {
+    throw new Error(`found more than one ${saleNumber} sale`)
+  }
+
+  return result[0]
+}
+
 async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
-  const result = await sql<
-    {
-      studentCardcomCustomerId: string | null
-      studentNumber: string
-      studentEmail: string
-      studentPhone: string | null
-      studentFirstName: string
-      studentLastName: string
-      products: Array<{
-        productNumber: string
-        productName: string
-        quantity: number
-        unitPrice: number
-      }>
-      timestamp: Date | null
-      finalSaleRevenue: string | null
-      cardcomInvoiceDocumentUrl: string | null
-      cardcomCustomerId: string | null
-      cardcomInvoiceNumber: string | null
-    }[]
-  >`
+  const result = (await sql`
     SELECT
       COALESCE(
         sale_data_cardcom.customer_id,
@@ -909,7 +986,26 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
       ) products ON true
     WHERE
       sale.sale_number = ${saleNumber}
-  `
+  `) as {
+    studentCardcomCustomerId: string | null
+    studentNumber: string
+    studentEmail: string
+    studentPhone: string | null
+    studentFirstName: string
+    studentLastName: string
+    products: Array<{
+      productNumber: string
+      productName: string
+      quantity: number
+      unitPrice: number
+    }>
+    timestamp: Date | null
+    finalSaleRevenue: string | null
+    cardcomCustomerId: string | null
+    cardcomInvoiceDocumentUrl: string | null
+    cardcomInvoiceNumber: string | null
+  }[]
+
   if (result.length === 0) return undefined
 
   if (result.length > 1) {

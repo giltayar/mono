@@ -60,12 +60,20 @@ export function SaleUpdateView({
                   <button class="btn btn-primary" type="Submit" value="save">Update</button>
                 `
             : undefined}
-          <button
-            class="button btn-primary"
-            hx-post="/sales/${sale.saleNumber}/connect-manual-sale"
-          >
+          <button class="button btn-primary" hx-post="/sales/${sale.saleNumber}/connect">
             ${!isConnectedSale ? 'Connect' : 'Reconnect'}
           </button>
+          ${sale.isActive && !sale.cardcomRefundTransactionId
+            ? html`<button
+                class="button"
+                hx-post="/sales/${sale.saleNumber}/refund"
+                hx-confirm=${sale.manualSaleType === 'manual'
+                  ? 'This sale is manual! You MUST process the refund in Cardcom. Are you sure you want to proceed?'
+                  : undefined}
+              >
+                Refund
+              </button>`
+            : undefined}
         </section>
       </div>
       <div class="mt-3">
