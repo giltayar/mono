@@ -110,6 +110,12 @@ export function createFakeCardcomIntegrationService(context: {
     _test_isPaymentRefunded: (invoiceNumber: number) => {
       return _test_getPaymentInfo({state}, invoiceNumber).refundTransactionId !== undefined
     },
+    _test_getTransactionId: (invoiceNumber: number): string | undefined => {
+      const entry = Object.entries(state.payments).find(
+        ([, payment]) => payment.invoiceNumber === invoiceNumber,
+      )
+      return entry?.[0]
+    },
   }
 }
 

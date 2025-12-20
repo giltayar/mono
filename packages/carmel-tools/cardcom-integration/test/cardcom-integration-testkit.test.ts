@@ -504,6 +504,102 @@ describe('Cardcom Integration Testkit', () => {
     })
   })
 
+  describe('refundTransaction', () => {
+    it('should refund a transaction successfully', async () => {
+      const service = createTestService()
+
+      // Create an invoice which creates a transaction
+      const invoiceInformation = {
+        customerName: 'Test User',
+        customerEmail: 'test@example.com',
+        customerPhone: undefined,
+        cardcomCustomerId: 88888,
+        productsSold: [
+          {
+            productId: 'prod-test',
+            productName: 'Test Product',
+            quantity: 1,
+            unitPriceInCents: 5000,
+          },
+        ],
+        transactionDate: new Date('2024-09-01'),
+        transactionDescription: 'Test',
+        transactionRevenueInCents: 1100,
+      }
+
+      const created = await service.createTaxInvoiceDocument(invoiceInformation, {
+        sendInvoiceByMail: true,
+      })
+
+      // Get the transaction ID
+      const transactionId = service._test_getTransactionId(created.cardcomInvoiceNumber)
+      assert.ok(transactionId)
+
+      // Verify not refunded initially
+      assert.strictEqual(service._test_isPaymentRefunded(created.cardcomInvoiceNumber), false)
+
+      // Refund the transaction
+      const result = await service.refundTransaction(transactionId)
+
+      // Verify result
+      assert.ok(result.refundTransactionId)
+      assert.strictEqual(result.refundTransactionId, `refund-${transactionId}`)
+
+      // Verify refund status changed
+      assert.strictEqual(service._test_isPaymentRefunded(created.cardcomInvoiceNumber), true)
+    })
+
+    it('should throw error when refunding non-existent transaction', async () => {
+      const service = createTestService()
+      const nonExistentTransactionId = 'non-existent-transaction-id'
+
+      await assert.rejects(
+        () => service.refundTransaction(nonExistentTransactionId),
+        /Transaction .* not found/,
+      )
+    })
+
+    it('should throw error when refunding already refunded transaction', async () => {
+      const service = createTestService()
+
+      // Create a transaction
+      const invoiceInformation = {
+        customerName: 'Test User',
+        customerEmail: 'test@example.com',
+        customerPhone: undefined,
+        cardcomCustomerId: 77777,
+        productsSold: [
+          {
+            productId: 'prod-test',
+            productName: 'Test Product',
+            quantity: 1,
+            unitPriceInCents: 5000,
+          },
+        ],
+        transactionDate: new Date('2024-09-01'),
+        transactionDescription: 'Test',
+        transactionRevenueInCents: 1100,
+      }
+
+      const created = await service.createTaxInvoiceDocument(invoiceInformation, {
+        sendInvoiceByMail: true,
+      })
+
+      // Get the transaction ID
+      const transactionId = service._test_getTransactionId(created.cardcomInvoiceNumber)
+      assert.ok(transactionId)
+
+      // Refund the transaction once
+      await service.refundTransaction(transactionId)
+
+      // Try to refund again - should throw error
+      await assert.rejects(
+        () => service.refundTransaction(transactionId),
+        /Transaction .* has already been refunded/,
+      )
+    })
+  })
+
   describe('test helper methods', () => {
     describe('_test_getRecurringPaymentStatus', () => {
       it('should return the status of an existing recurring payment', async () => {
