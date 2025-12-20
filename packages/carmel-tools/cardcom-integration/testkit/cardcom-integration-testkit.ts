@@ -106,16 +106,21 @@ export function createFakeCardcomIntegrationService(context: {
     _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
     _test_simulateCardcomStandingOrder: sBind(_test_simulateCardcomStandingOrder),
     _test_simulateCardcomStandingOrderPayment: sBind(_test_simulateCardcomStandingOrderPayment),
-    _test_getPaymentInfo: (transactionId: string) => {
-      if (!state.payments[transactionId]) {
-        throw new Error(`Payment ${transactionId} not found`)
-      }
-      return state.payments[transactionId]
-    },
-    _test_isPaymentRefunded: (transactionId: string) => {
-      const payment = state.payments[transactionId]
+    _test_getPaymentInfo: (invoiceNumber: number) => {
+      const payment = Object.values(state.payments).find(
+        (inv) => inv.invoiceNumber === invoiceNumber,
+      )
       if (!payment) {
-        throw new Error(`Payment ${transactionId} not found`)
+        throw new Error(`Payment with invoice  ${invoiceNumber} not found`)
+      }
+      return payment
+    },
+    _test_isPaymentRefunded: (invoiceNumber: number) => {
+      const payment = Object.values(state.payments).find(
+        (inv) => inv.invoiceNumber === invoiceNumber,
+      )
+      if (!payment) {
+        throw new Error(`Payment with invoice ${invoiceNumber} not found`)
       }
       return payment.refundTransactionId !== undefined
     },
