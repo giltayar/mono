@@ -7,7 +7,7 @@ import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import {type StandingOrderPaymentResolution} from './model-sale.ts'
 import {moveStudentToSmooveCancelledSubscriptionList} from './model-external-providers.ts'
-import {disconnectSale, type SaleConnectionToStudent} from './model-connect.ts'
+import {disconnectSale, type DisconnectSalePayload} from './model-connect.ts'
 import {type SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
@@ -15,7 +15,7 @@ import {Temporal} from '@js-temporal/polyfill'
 import type {NowService} from '../../../commons/now-service.ts'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
-let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<SaleConnectionToStudent> | undefined
+let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<DisconnectSalePayload> | undefined
 
 export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService,
@@ -23,7 +23,7 @@ export async function initializeJobHandlers(
   whatsappIntegration: WhatsAppIntegrationService,
   nowService: NowService,
 ) {
-  createDisconnectSaleFromExternalProvidersJob = registerJobHandler<SaleConnectionToStudent>(
+  createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
     async (payload, _attempt, logger, sql) => {
       await disconnectSale(
@@ -218,9 +218,13 @@ export async function cancelSubscription(
       {saleNumber, studentNumber, disconnectTime: disconnectTime.toISOString()},
       'creating-disconnect-job',
     )
-    await createDisconnectSaleFromExternalProvidersJob!({saleNumber, studentNumber}, sql, {
-      scheduledAt: disconnectTime,
-    })
+    await createDisconnectSaleFromExternalProvidersJob!(
+      {saleNumber, reason: 'removed-from-subscription'},
+      sql,
+      {
+        scheduledAt: disconnectTime,
+      },
+    )
   })
 }
 

@@ -99,6 +99,7 @@ export const SaleHistoryOperationSchema = z.enum([
   'refund-sale',
   'cancel-subscription',
   'removed-from-subscription',
+  'disconnected-manually',
 ])
 
 export type SaleHistoryOperation = z.infer<typeof SaleHistoryOperationSchema>

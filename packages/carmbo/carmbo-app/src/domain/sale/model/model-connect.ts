@@ -19,6 +19,11 @@ export type SaleConnectionToStudent = {
   saleNumber: number
 }
 
+export type DisconnectSalePayload = {
+  saleNumber: number
+  reason: 'removed-from-subscription' | 'disconnected-manually'
+}
+
 export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent> | undefined
 
 export async function initializeJobHandlers(
@@ -76,7 +81,7 @@ export async function connectSale(
     await connectSaleToCardcom(sale, logger, cardcomIntegration, now, sql, dataManualId)
 
     await sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`
-    // await sql`INSERT INTO sale_data_connected ${sql({dataConnectedId: dataConnectedId, isConnected: true})}`
+    await sql`INSERT INTO sale_data_connected ${sql({dataConnectedId, isConnected: true})}`
 
     const dataIdResult = await sql<object[]>`
       INSERT INTO sale_history (id, data_id, data_product_id, data_active_id, data_manual_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
@@ -117,7 +122,7 @@ export async function connectSale(
 }
 
 export async function disconnectSale(
-  {studentNumber, saleNumber}: SaleConnectionToStudent,
+  {saleNumber, reason}: DisconnectSalePayload,
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   whatsappIntegration: WhatsAppIntegrationService,
@@ -125,18 +130,23 @@ export async function disconnectSale(
   sql: Sql,
   parentLogger: FastifyBaseLogger,
 ) {
-  const logger = parentLogger.child({saleNumber, studentNumber})
+  const dataConnectedId = crypto.randomUUID()
+  const logger = parentLogger.child({saleNumber})
 
   logger.info('disconnect-sale-from-external-providers-started')
-  const studentResult = await sql<{email: string; phone: string | null}[]>`
+  const studentResult = await sql<{studentNumber: number; email: string; phone: string | null}[]>`
     SELECT
+      s.student_number,
       se.email,
       sp.phone
     FROM student s
+    JOIN sale sl ON sl.sale_number = ${saleNumber}
+    JOIN sale_history slh ON slh.id = sl.last_history_id
+    JOIN sale_data sd ON sd.data_id = slh.data_id
     JOIN student_history sh ON sh.id = s.last_history_id
     JOIN student_email se ON se.data_id = sh.data_id AND se.item_order = 0
     LEFT JOIN student_phone sp ON sp.data_id = sh.data_id AND sp.item_order = 0
-    WHERE s.student_number = ${studentNumber}
+    WHERE s.student_number = sd.student_number
   `
 
   const student = studentResult[0]
@@ -154,7 +164,7 @@ export async function disconnectSale(
     logger,
   )
   const smooveConnectionP = moveStudentToSmooveRemovedSubscriptionList(
-    studentNumber,
+    student.studentNumber,
     saleNumber,
     smooveIntegration,
     sql,
@@ -163,7 +173,7 @@ export async function disconnectSale(
 
   const whatsappConnectionP = student.phone
     ? removeStudentFromWhatsAppGroups(
-        studentNumber,
+        student.studentNumber,
         student.phone,
         whatsappIntegration,
         sql,
@@ -209,20 +219,23 @@ export async function disconnectSale(
     throw new Error('Disconnecting sale from external providers failed')
   }
 
+  await sql`INSERT INTO sale_data_connected ${sql({dataConnectedId, isConnected: false})}`
+
   const historyId = crypto.randomUUID()
   await sql`
     INSERT INTO sale_history
-      (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id, data_active_id)
+      (id, data_id, data_product_id, data_manual_id, data_active_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
     SELECT
       ${historyId},
       sh.data_id,
       sh.data_product_id,
+      sh.data_manual_id,
+      sh.data_active_id,
+      ${dataConnectedId},
       sh.sale_number,
       ${now},
-      'removed-from-subscription',
-      null,
-      sh.data_manual_id,
-      sh.data_active_id
+      ${reason},
+      null
     FROM
       sale_history sh
     WHERE sh.id = (
@@ -330,23 +343,6 @@ async function connectSaleToCardcom(
       'created-cardcom-invoice-document-url',
     )
   } else {
-    logger.info(
-      {
-        cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
-        invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
-        cardcomCustomerId: sale.cardcomCustomerId,
-      },
-      'sale-already-connected-no-action-needed-creating-sale-data-manual-record',
-    )
-    await sql`
-        INSERT INTO sale_data_cardcom_manual ${sql({
-          dataManualId,
-          cardcomInvoiceNumber: sale.cardcomInvoiceNumber,
-          invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
-          cardcomCustomerId: sale.cardcomCustomerId,
-          cardcomSaleRevenue: parseFloat(sale.finalSaleRevenue ?? '0'),
-        })}
-      `
     logger.info('sale-already-connected-no-action-needed')
   }
 }
