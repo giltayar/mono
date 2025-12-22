@@ -5,11 +5,9 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
-import {type SaleConnectionToStudent, type StandingOrderPaymentResolution} from './model-sale.ts'
-import {
-  disconnectSaleFromExternalProviders,
-  moveStudentToSmooveCancelledSubscriptionList,
-} from './model-external-providers.ts'
+import {type StandingOrderPaymentResolution} from './model-sale.ts'
+import {moveStudentToSmooveCancelledSubscriptionList} from './model-external-providers.ts'
+import {disconnectSale, type SaleConnectionToStudent} from './model-connect.ts'
 import {type SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
@@ -28,7 +26,7 @@ export async function initializeJobHandlers(
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<SaleConnectionToStudent>(
     'disconnecting-sale-from-external-providers',
     async (payload, _attempt, logger, sql) => {
-      await disconnectSaleFromExternalProviders(
+      await disconnectSale(
         payload,
         academyIntegration,
         smooveIntegration,

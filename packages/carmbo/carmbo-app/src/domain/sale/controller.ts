@@ -18,9 +18,9 @@ import {
 import {
   addCardcomSale,
   addNoInvoiceSale,
-  connectSale as model_connectSale,
   refundSale as model_refundSale,
 } from './model/model-sale.ts'
+import {connectSale as model_connectSale} from './model/model-connect.ts'
 import {
   handleCardcomRecurringPayment,
   cancelSubscription as model_cancelSubscription,

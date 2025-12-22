@@ -34,7 +34,9 @@ export async function migrate({sql, path}: {sql: Sql; path: string | URL}) {
   const latest = migrations[migrations.length - 1]
 
   if (latest.migration_id !== migrations.length)
-    throw new Error('Inconsistency in migration numbering')
+    throw new Error(
+      `Inconsistency in migration numbering: latest is ${latest.migration_id} and there are ${migrations.length} migrations`,
+    )
 
   await ensureMigrationsTable()
 
