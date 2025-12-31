@@ -111,6 +111,10 @@ test('create sale then connect it', async ({page}) => {
 
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
 
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Disconnected from External Providers',
+  )
+
   await updateSaleModel.form().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
@@ -119,6 +123,9 @@ test('create sale then connect it', async ({page}) => {
   await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
 
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Connected to External Providers',
+  )
 
   await expect(updateSaleModel.form().viewInvoiceLink().locator).toHaveAttribute(
     'href',
@@ -478,6 +485,9 @@ test('connect sale then reconnect it', async ({page}) => {
 
   await updateSaleModel.form().reconnectButton().locator.click()
   await expect(updateSaleModel.history().items().locator).toHaveCount(5)
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Connected to External Providers',
+  )
 
   const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
 

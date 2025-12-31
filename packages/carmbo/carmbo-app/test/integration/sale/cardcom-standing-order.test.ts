@@ -153,6 +153,9 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   const saleDetailModel = createUpdateSalePageModel(page)
 
   await expect(saleDetailModel.pageTitle().locator).toHaveText('Sale 1')
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Subscription | Connected to External Providers',
+  )
 
   // Verify sale details
   await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
@@ -434,6 +437,11 @@ test('cancelling a standing order subscription removes student from academy cour
     await expect(saleHistory.items().item(0).locator).toContainText('canceled subscription')
     await expect(saleHistory.items().item(1).locator).toContainText('created')
   }).toPass()
+
+  // Verify sale status shows unsubscribed
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Subscription (unsubscribed) | Connected to External Providers',
+  )
 
   // Verify student was NOT removed from academy course
   expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(

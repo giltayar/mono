@@ -9,6 +9,8 @@ import {createSale} from '../../../src/domain/sale/model/model.ts'
 
 const {url, sql, smooveIntegration} = setup(import.meta.url)
 
+test.use({viewport: {width: 1024, height: 1024}})
+
 test('searching sales', async ({page}) => {
   // Setup: Create students, sales events, products, and sales
   const student1Number = await createStudent(

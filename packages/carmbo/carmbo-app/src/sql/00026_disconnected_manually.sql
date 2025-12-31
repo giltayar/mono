@@ -1,3 +1,1 @@
-ALTER TYPE SALE_HISTORY_OPERATION ADD VALUE 'disconnected-manually';
-
-COMMIT;
+-- do nothing

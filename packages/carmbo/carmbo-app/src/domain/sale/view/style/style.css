@@ -4,4 +4,19 @@
     bottom: 1rem;
     right: 1rem;
   }
+
+  .sale-title {
+    display: flex;
+    align-items: baseline;
+
+    h2 {
+      margin-right: auto;
+    }
+
+    div {
+      font-weight: bold;
+      text-transform: lowercase;
+      font-size: 0.8rem;
+    }
+  }
 }

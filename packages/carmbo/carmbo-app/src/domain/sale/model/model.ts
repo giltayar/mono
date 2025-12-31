@@ -20,6 +20,8 @@ export const SaleSchema = z.object({
   ),
   isStandingOrder: z.coerce.boolean(),
   isNoInvoiceOrder: z.coerce.boolean().default(false),
+  isActive: z.coerce.boolean().optional().default(false),
+  isConnected: z.coerce.boolean().optional().default(false),
   recurringOrderId: z.string().optional(),
   products: z
     .array(
@@ -35,7 +37,6 @@ export const SaleSchema = z.object({
   cardcomInvoiceDocumentUrl: z.url().optional(),
   cardcomRefundTransactionId: z.string().optional(),
   manualSaleType: z.enum(['manual']).optional(),
-  isActive: z.coerce.boolean(),
   hasDeliveryAddress: z.stringbool().optional(),
   deliveryAddress: z
     .object({
@@ -62,6 +63,8 @@ export const NewSaleSchema = z.object({
   ),
   isStandingOrder: z.literal(false).optional(),
   recurringOrderId: z.string().optional(),
+  isActive: z.literal(false).optional(),
+  isConnected: z.literal(false).optional(),
   products: z
     .array(
       z.object({
@@ -457,6 +460,7 @@ export function saleSelect(saleNumber: number, sql: Sql) {
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
       COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS cardcom_refund_transaction_id,
       COALESCE(sale_data_active.is_active, false) AS is_active,
+      COALESCE(sale_data_connected.is_connected, false) AS is_connected,
       CASE WHEN sale_data_cardcom_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
       CASE WHEN sale_data_cardcom.recurring_order_id IS NOT NULL THEN true ELSE false END AS is_standing_order,
       CASE WHEN sale_data_no_invoice.sale_revenue IS NOT NULL THEN true ELSE false END AS is_no_invoice_order,
@@ -484,6 +488,7 @@ export function saleSelect(saleNumber: number, sql: Sql) {
     LEFT JOIN student_name ON student_name.data_id = student.last_data_id AND student_name.item_order = 0
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = s.data_cardcom_id
     LEFT JOIN sale_data_active ON sale_data_active.data_active_id = sh.data_active_id
+    LEFT JOIN sale_data_connected ON sale_data_connected.data_connected_id = sh.data_connected_id
     LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = s.data_no_invoice_id
     LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sh.data_manual_id
     LEFT JOIN sale_data_delivery ON
@@ -526,7 +531,12 @@ function saleHistorySelect(saleNumber: number, sql: Sql) {
   `
 }
 
-export async function createSale(sale: NewSale, reason: string | undefined, now: Date, sql: Sql) {
+export async function createSale(
+  sale: Omit<NewSale, 'isActive' | 'isConnected'>,
+  reason: string | undefined,
+  now: Date,
+  sql: Sql,
+) {
   await TEST_executeHook('createSale')
 
   // Validate required fields
@@ -543,10 +553,12 @@ export async function createSale(sale: NewSale, reason: string | undefined, now:
     const dataId = crypto.randomUUID()
     const dataProductId = crypto.randomUUID()
     const dataManualId = crypto.randomUUID()
+    const dataActiveId = crypto.randomUUID()
+    const dataConnectedId = crypto.randomUUID()
 
     const saleNumberResult = await sql<{saleNumber: number}[]>`
       INSERT INTO sale_history VALUES
-        (${historyId}, ${dataId}, ${dataProductId}, DEFAULT, ${now}, 'create', ${reason ?? null}, ${dataManualId})
+        (${historyId}, ${dataId}, ${dataProductId}, DEFAULT, ${now}, 'create', ${reason ?? null}, ${dataManualId}, ${dataActiveId}, ${dataConnectedId})
       RETURNING sale_number
     `
 
@@ -654,6 +666,24 @@ export async function createSale(sale: NewSale, reason: string | undefined, now:
       }) ?? [],
     )
 
+    ops = ops.concat(
+      sql`
+        INSERT INTO sale_data_active ${sql({
+          dataActiveId,
+          isActive: false,
+        })}
+      `,
+    )
+
+    ops = ops.concat(
+      sql`
+        INSERT INTO sale_data_connected ${sql({
+          dataConnectedId,
+          isConnected: false,
+        })}
+      `,
+    )
+
     await Promise.all(ops)
 
     return saleNumber
@@ -680,10 +710,12 @@ export async function updateSale(
     const dataId = crypto.randomUUID()
     const dataProductId = crypto.randomUUID()
     const dataManualId = crypto.randomUUID()
+    const dataActiveId = crypto.randomUUID()
+    const dataConnectedId = crypto.randomUUID()
 
     await sql`
       INSERT INTO sale_history VALUES
-        (${historyId}, ${dataId}, ${dataProductId}, ${sale.saleNumber}, ${now}, 'update', ${reason ?? null}, ${dataManualId})
+        (${historyId}, ${dataId}, ${dataProductId}, ${sale.saleNumber}, ${now}, 'update', ${reason ?? null}, ${dataManualId}, ${dataActiveId}, ${dataConnectedId})
     `
 
     const updateResult = await sql`
@@ -787,6 +819,24 @@ export async function updateSale(
             (${dataProductId}, ${index}, ${productNumber}, ${quantity}, ${unitPrice})
         `
       }) ?? [],
+    )
+
+    ops = ops.concat(
+      sql`
+        INSERT INTO sale_data_active ${sql({
+          dataActiveId,
+          isActive: sale.isActive ?? false,
+        })}
+      `,
+    )
+
+    ops = ops.concat(
+      sql`
+        INSERT INTO sale_data_connected ${sql({
+          dataConnectedId,
+          isConnected: sale.isConnected ?? false,
+        })}
+      `,
     )
 
     await Promise.all(ops)

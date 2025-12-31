@@ -184,7 +184,7 @@ export async function cancelSubscription(
 
     await sql`
       INSERT INTO sale_history
-        (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id, data_active_id)
+        (id, data_id, data_product_id, sale_number, timestamp, operation, operation_reason, data_manual_id, data_active_id, data_connected_id)
       SELECT
         ${historyId},
         sh.data_id,
@@ -194,7 +194,8 @@ export async function cancelSubscription(
         'cancel-subscription',
         null,
         sh.data_manual_id,
-        ${saleDataActiveId}
+        ${saleDataActiveId},
+        sh.data_connected_id
       FROM
         sale_history sh
       WHERE sh.id = (

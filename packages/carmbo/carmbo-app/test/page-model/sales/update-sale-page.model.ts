@@ -8,6 +8,7 @@ export function createUpdateSalePageModel(page: Page) {
     ...createAllPagesPageModel(page),
     urlRegex: /\/sales\/\d+$/,
     pageTitle: (locator = page.getByRole('heading', {level: 2})) => ({locator}),
+    saleStatus: (locator = page.locator('.sale-title > div').last()) => ({locator}),
     form: () => ({
       updateButton: (btnLocator = page.getByRole('button', {name: 'Update'})) => ({
         locator: btnLocator,

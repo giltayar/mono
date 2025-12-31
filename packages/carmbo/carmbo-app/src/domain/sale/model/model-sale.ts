@@ -299,6 +299,7 @@ async function createSaleFromCardcomData(
   const dataProductId = crypto.randomUUID()
   const dataCardcomId = crypto.randomUUID()
   const dataActiveId = crypto.randomUUID()
+  const dataConnectedId = crypto.randomUUID()
 
   logger.info({historyId, dataId, dataProductId, dataCardcomId}, 'sale-ids-generated')
 
@@ -316,6 +317,7 @@ async function createSaleFromCardcomData(
         operation: 'create',
         operationReason: 'Created from Cardcom sale',
         dataActiveId,
+        dataConnectedId,
       })}
       RETURNING sale_number
     `
@@ -419,6 +421,9 @@ async function createSaleFromCardcomData(
   }
 
   ops = ops.concat(sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`)
+  ops = ops.concat(
+    sql`INSERT INTO sale_data_connected ${sql({dataConnectedId, isConnected: true})}`,
+  )
 
   if (cardcomSaleWebhookJson.RecurringOrderID) {
     const standOrderPaymentId = crypto.randomUUID()
@@ -464,6 +469,7 @@ async function createNoInvoiceSale(
   const dataProductId = crypto.randomUUID()
   const dataNoInvoiceId = crypto.randomUUID()
   const dataActiveId = crypto.randomUUID()
+  const dataConnectedId = crypto.randomUUID()
 
   logger.info(
     {historyId, dataId, dataProductId, dataNoInvoiceId, dataActiveId},
@@ -480,6 +486,7 @@ async function createNoInvoiceSale(
         operation: 'create',
         operationReason: 'Created from "No Invoice" sale',
         dataActiveId,
+        dataConnectedId,
       })}
       RETURNING sale_number
     `
@@ -559,6 +566,10 @@ async function createNoInvoiceSale(
     `)
 
   ops = ops.concat(sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`)
+  ops = ops.concat(
+    sql`INSERT INTO sale_data_connected ${sql({dataConnectedId, isConnected: true})}`,
+  )
+
   logger.info('executing-sale-creation-operations')
   await Promise.all(ops)
   logger.info('executed-sale-creation-operations')
@@ -629,7 +640,7 @@ export async function refundSale(
 
   return await sql.begin(async (sql) => {
     const historyId = crypto.randomUUID()
-    const dataActiveId = crypto.randomUUID()
+    const dataManualId = crypto.randomUUID()
     const sale = await querySaleForRefund(saleNumber, sql)
 
     if (sale === undefined) throw makeError(`Sale ${saleNumber} does not exist`, {httpStatus: 404})
@@ -657,16 +668,37 @@ export async function refundSale(
         )
 
       logger.info({result}, 'sale-data-cardcom-updated-with-refund-transaction-id')
+    } else if (sale.dataManualId) {
+      logger.info('cardcom-manual-transaction-refunded-with-dummy-id')
+      const result = await sql`
+        INSERT INTO sale_data_cardcom_manual (cardcom_invoice_number, invoice_document_url, cardcom_customer_id, data_manual_id, cardcom_sale_revenue, refund_transaction_id)
+        SELECT
+          cardcom_invoice_number,
+          invoice_document_url,
+          cardcom_customer_id,
+          ${dataManualId} AS data_manual_id,
+          cardcom_sale_revenue,
+          'EXTERNAL-MANUAL-REFUND'
+        FROM sale_data_cardcom_manual
+        WHERE data_manual_id = ${sale.dataManualId}
+      `
+      if (result.count !== 1)
+        throw new Error(
+          `Failed to update refund transaction ID for sale ${saleNumber}. length: ${result.count}`,
+        )
+
+      logger.info({result}, 'sale-data-cardcom-updated-with-refund-transaction-id')
     }
 
     const dataIdResult = await sql`
-      INSERT INTO sale_history (id, data_id, data_product_id, data_manual_id, data_active_id, sale_number, timestamp, operation, operation_reason)
+      INSERT INTO sale_history (id, data_id, data_product_id, data_manual_id, data_active_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
       SELECT
         ${historyId},
         sale_history.data_id,
         sale_history.data_product_id,
-        sale_history.data_manual_id,
-        ${dataActiveId} as data_active_id,
+        ${dataManualId},
+        sale_history.data_active_id,
+        sale_history.data_connected_id,
         sale_history.sale_number,
         ${now},
         'refund-sale',
@@ -677,10 +709,16 @@ export async function refundSale(
       RETURNING 1
     `
 
+    await sql`
+      UPDATE sale SET
+        last_history_id = ${historyId}
+      WHERE sale_number = ${saleNumber}
+    `
+
     if (dataIdResult.length !== 1)
       throw new Error(`Zero or more than one sale with ID ${saleNumber}`)
 
-    logger.info({historyId, dataActiveId}, 'sale-history-record-created')
+    logger.info('sale-history-record-created')
 
     logger.info('refund-sale-completed')
   })
@@ -691,18 +729,21 @@ async function querySaleForRefund(saleNumber: number, sql: Sql) {
     SELECT
       sale_data_active.is_active AS is_active,
       sale_data_cardcom.internal_deal_number AS internal_deal_number,
-      sale.data_cardcom_id AS data_cardcom_id
+      sale.data_cardcom_id AS data_cardcom_id,
+      sale_data_cardcom_manual.data_manual_id AS data_manual_id
     FROM
       sale
     JOIN sale_history ON sale_history.id = sale.last_history_id
     LEFT JOIN sale_data_active ON sale_data_active.data_active_id = sale_history.data_active_id
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+    LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sale_history.data_manual_id
     WHERE
       sale.sale_number = ${saleNumber}
   `) as {
     isActive: boolean
     internalDealNumber: string
     dataCardcomId: string | null
+    dataManualId: string | null
   }[]
 
   if (result.length === 0) return undefined

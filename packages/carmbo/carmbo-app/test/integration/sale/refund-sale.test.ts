@@ -87,6 +87,13 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
 
   // Wait for the refund to be processed (the button should disappear)
   await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().updateButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().discardButton().locator).not.toBeVisible()
+
+  // Verify sale status shows refunded
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Refunded | Connected to External Providers',
+  )
 
   // Verify the payment is now refunded in cardcom
   expect(await cardcomIntegration()._test_isPaymentRefunded(parseInt(cardcomInvoiceNumber))).toBe(
@@ -198,4 +205,9 @@ test('refund manual sale shows confirmation and only adds history row', async ({
   const historyList = saleDetailModel.history()
   await expect(historyList.items().locator).toHaveCount(3) // create + connect-sale + refund-sale
   await expect(historyList.items().item(0).locator).toContainText('refunded sale')
+
+  // Verify sale status shows refunded
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Refunded | Connected to External Providers',
+  )
 })

@@ -86,8 +86,8 @@ export async function querySaleWithProviders(
 
     JOIN student st ON st.student_number = sd.student_number
     JOIN student_history sth ON sth.id = st.last_history_id
-    JOIN student_email ste ON ste.data_id = sth.data_id AND ste.item_order = 0
-    JOIN student_phone stp ON stp.data_id = sth.data_id AND stp.item_order = 0
+    LEFT JOIN student_email ste ON ste.data_id = sth.data_id AND ste.item_order = 0
+    LEFT JOIN student_phone stp ON stp.data_id = sth.data_id AND stp.item_order = 0
     LEFT JOIN student_integration_smoove sis ON sis.data_id = sth.data_id
 
     JOIN product p ON p.product_number = sdp.product_number
@@ -105,15 +105,18 @@ export async function querySaleWithProviders(
     return undefined
   }
   const saleRow = saleResult[0]
+  const email = saleRow.email
 
   const academyCoursesInSale = saleRow.products.flatMap((product) => product.academyCourses ?? [])
   const whatsAppGroupsInSale = saleRow.products.flatMap((product) => product.whatsAppGroups ?? [])
 
-  const academyConnnectionsP = Promise.all(
-    academyCoursesInSale.map(async (courseId) =>
-      academyIntegration.isStudentEnrolledInCourse(saleRow.email, parseInt(courseId)),
-    ),
-  )
+  const academyConnnectionsP = email
+    ? Promise.all(
+        academyCoursesInSale.map(async (courseId) =>
+          academyIntegration.isStudentEnrolledInCourse(email, parseInt(courseId)),
+        ),
+      )
+    : Promise.resolve([])
   const smooveContactP = saleRow.smooveContactId
     ? smooveIntegration.fetchSmooveContact(saleRow.smooveContactId)
     : undefined
@@ -534,7 +537,7 @@ export async function connectStudentWithAcademyCourses(
 
 type SaleWithProvidersResult = {
   saleNumber: number
-  email: string
+  email: string | null
   phone: string | null
   smooveContactId: string | null
   products: {

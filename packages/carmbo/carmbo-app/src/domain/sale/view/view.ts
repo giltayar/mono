@@ -25,6 +25,8 @@ export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banne
     products: [],
     cardcomInvoiceNumber: undefined,
     manualSaleType: 'manual',
+    isActive: false,
+    isConnected: false,
   }
 
   return html`
@@ -45,6 +47,8 @@ export function renderSaleFormFields(sale: NewSale | undefined) {
     products: [],
     cardcomInvoiceNumber: undefined,
     manualSaleType: 'manual',
+    isActive: false,
+    isConnected: false,
   }
 
   return html`<${SalesFormFields} sale=${finalSale} operation="write" saleNumber=${undefined} />`

@@ -16,7 +16,7 @@ export function Tabs({
   activeTab: 'details' | 'payments' | 'providers'
 }) {
   return html`
-    <ul class="nav nav-tabs">
+    <ul class="nav nav-tabs col-md-6">
       <li class="nav-item">
         <a
           class="nav-link"

@@ -12,6 +12,8 @@ import {createUpdateProductPageModel} from '../../page-model/products/update-pro
 
 const {url, sql, TEST_hooks, smooveIntegration} = setup(import.meta.url)
 
+test.use({viewport: {width: 1024, height: 1024}})
+
 test('create sale then update it', async ({page}) => {
   // Setup: Create a student, sales event, and products
   const studentNumber = await createStudent(
@@ -101,6 +103,9 @@ test('create sale then update it', async ({page}) => {
   const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
 
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Disconnected from External Providers',
+  )
 
   const updateForm = updateSaleModel.form()
   await expect(updateForm.salesEventInput().locator).toHaveValue(
