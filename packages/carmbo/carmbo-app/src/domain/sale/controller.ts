@@ -20,7 +20,10 @@ import {
   addNoInvoiceSale,
   refundSale as model_refundSale,
 } from './model/model-sale.ts'
-import {connectSale as model_connectSale} from './model/model-connect.ts'
+import {
+  connectSale as model_connectSale,
+  disconnectSale as model_disconnectSale,
+} from './model/model-connect.ts'
 import {
   handleCardcomRecurringPayment,
   cancelSubscription as model_cancelSubscription,
@@ -369,6 +372,35 @@ export async function refundSale(saleNumber: number): Promise<ControllerResult> 
     logger.error({err}, 'refund-sale')
 
     return retarget(exceptionToBannerHtml('Error refunding sale: ', err), '#banner-container')
+  }
+}
+
+export async function disconnectSale(saleNumber: number): Promise<ControllerResult> {
+  try {
+    const sql = requestContext.get('sql')!
+    const academyIntegration = requestContext.get('academyIntegration')!
+    const smooveIntegration = requestContext.get('smooveIntegration')!
+    const whatsappIntegration = requestContext.get('whatsappIntegration')!
+    const nowService = requestContext.get('nowService')!
+    const logger = requestContext.get('logger')!
+    const now = nowService()
+
+    await model_disconnectSale(
+      {saleNumber, reason: 'disconnected-manually'},
+      academyIntegration,
+      smooveIntegration,
+      whatsappIntegration,
+      now,
+      sql,
+      logger,
+    )
+
+    return {htmxRedirect: `/sales/${saleNumber}`}
+  } catch (err) {
+    const logger = requestContext.get('logger')!
+    logger.error({err}, 'disconnect-sale')
+
+    return retarget(exceptionToBannerHtml('Error disconnecting sale: ', err), '#banner-container')
   }
 }
 

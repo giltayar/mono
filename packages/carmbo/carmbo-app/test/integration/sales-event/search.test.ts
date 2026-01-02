@@ -64,7 +64,7 @@ test('searching sales events', async ({page}) => {
   )
 
   // test search by date
-  await salesEventListModel.search().queryInput().locator.fill('2118')
+  await salesEventListModel.search().queryInput().locator.fill('2119')
 
   await expect(salesEventListModel.list().rows().locator).toHaveCount(7)
   await expect(salesEventListModel.list().rows().row(3).nameCell().locator).toHaveText('jiv me')

@@ -142,6 +142,8 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   await expect(saleDetailModel.form().restoreButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().deleteButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().discardButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().updateButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
 
   // Verify sale details
   await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
@@ -151,9 +153,6 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('0')
 
   await expect(saleDetailModel.form().viewInvoiceLink().locator).not.toBeVisible()
-
-  // Verify that refund button is not visible for no-invoice sales
-  await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
 
   // Verify products in the sale detail page
   const products = saleDetailModel.form().products()

@@ -11,10 +11,12 @@ export function SaleUpdateView({
   sale: SaleWithHistoryInfo
   history: SaleHistory[]
 }) {
+  const isReadOnlySale = sale.isActive || sale.cardcomRefundTransactionId
+
   return html`
     <div class="sale-title border-bottom col-md-6 mt-3">
       <h2>
-        ${!sale.isConnected ? 'Update' : ''} Sale ${sale.saleNumber}
+        ${!isReadOnlySale ? 'Update' : ''} Sale ${sale.saleNumber}
         ${sale.historyOperation === 'delete'
           ? html` <small class="text-body-secondary">(archived)</small>`
           : ''}
@@ -32,8 +34,9 @@ export function SaleUpdateView({
       <input name="saleNumber" type="hidden" value=${sale.saleNumber} />
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          ${!sale.isConnected
-            ? sale.historyOperation === 'delete'
+          ${isReadOnlySale
+            ? undefined
+            : sale.historyOperation === 'delete'
               ? html`
                   <button
                     class="btn btn-danger"
@@ -59,8 +62,7 @@ export function SaleUpdateView({
                     Archive
                   </button>
                   <button class="btn btn-primary" type="Submit" value="save">Update</button>
-                `
-            : undefined}
+                `}
           <button class="button btn-primary" hx-post="/sales/${sale.saleNumber}/connect">
             ${!sale.isConnected ? 'Connect' : 'Reconnect'}
           </button>
@@ -76,6 +78,11 @@ export function SaleUpdateView({
                   : undefined}
               >
                 Refund
+              </button>`
+            : undefined}
+          ${sale.isConnected
+            ? html`<button class="button" hx-post="/sales/${sale.saleNumber}/disconnect">
+                Disconnect
               </button>`
             : undefined}
         </section>

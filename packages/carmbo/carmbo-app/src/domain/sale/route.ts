@@ -5,6 +5,7 @@ import type {Sql} from 'postgres'
 import {
   dealWithCardcomOneTimeSale,
   refundSale,
+  disconnectSale,
   showSales,
   showSale,
   showSaleInHistory,
@@ -301,6 +302,16 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       const saleNumber = request.params.number
 
       return dealWithControllerResultAsync(reply, () => refundSale(saleNumber))
+    },
+  )
+
+  appWithTypes.post(
+    '/:number/disconnect',
+    {schema: {params: z.object({number: z.coerce.number()})}},
+    async (request, reply) => {
+      const saleNumber = request.params.number
+
+      return dealWithControllerResultAsync(reply, () => disconnectSale(saleNumber))
     },
   )
 
