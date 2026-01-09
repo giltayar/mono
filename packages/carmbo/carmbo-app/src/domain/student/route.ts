@@ -3,6 +3,7 @@ import {
   showStudentInHistory,
   showStudents,
   showStudentUpdate,
+  showStudentSales,
   createStudent,
   updateStudent,
   showOngoingStudent,
@@ -117,6 +118,15 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
         reply,
         await showStudentInHistory(request.params.number, request.params.operationId, sql),
       )
+    },
+  )
+
+  // View student sales
+  appWithTypes.get(
+    '/:number/sales',
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showStudentSales(request.params.number, sql))
     },
   )
 

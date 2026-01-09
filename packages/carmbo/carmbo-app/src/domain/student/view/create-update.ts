@@ -2,6 +2,7 @@ import {html} from '../../../commons/html-templates.ts'
 import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import {StudentCreateOrUpdateFormFields} from './form.ts'
 import {StudentHistoryList, historyOperationToText} from './history.ts'
+import {Tabs} from './layout.ts'
 
 export function StudentCreateView({student}: {student: Student}) {
   return html`
@@ -43,6 +44,7 @@ export function StudentUpdateView({
         : ''}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
+    <${Tabs} studentNumber=${student.studentNumber} activeTab="details" />
     <form
       hx-put="/students/${student.studentNumber}"
       hx-target="form"

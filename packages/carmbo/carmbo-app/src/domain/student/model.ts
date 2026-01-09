@@ -552,3 +552,50 @@ function normalizeStudent<TStudent extends Student | NewStudent>(student: TStude
     phones: student.phones?.map(normalizePhoneNumber),
   }
 }
+
+export interface StudentSaleForGrid {
+  saleNumber: number
+  salesEventNumber: number
+  salesEventName: string
+  products: {productNumber: number; productName: string}[]
+  timestamp: Date
+}
+
+export async function listSalesForStudent(
+  studentNumber: number,
+  sql: Sql,
+): Promise<StudentSaleForGrid[]> {
+  return await sql<StudentSaleForGrid[]>`
+    SELECT
+      sale.sale_number AS sale_number,
+      sale_data.sales_event_number AS sales_event_number,
+      sales_event_data.name AS sales_event_name,
+      sale_data.timestamp AS timestamp,
+      COALESCE(products, json_build_array()) AS products
+    FROM
+      sale_history
+    JOIN sale ON last_history_id = id
+
+    LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
+
+    LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
+    LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
+
+    LEFT JOIN LATERAL (
+      SELECT
+        json_agg(json_build_object(
+          'productNumber', product.product_number,
+          'productName', product_data.name
+        ) ORDER BY item_order) AS products
+      FROM
+        sale_data_product
+        JOIN product ON product.product_number = sale_data_product.product_number
+        JOIN product_data ON product_data.data_id = product.last_data_id
+      WHERE
+        sale_data_product.data_product_id = sale.last_data_product_id
+    ) products ON true
+    WHERE sale_data.student_number = ${studentNumber}
+      AND operation <> 'delete'
+    ORDER BY sale_data.timestamp DESC
+  `
+}

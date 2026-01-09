@@ -4,10 +4,15 @@ import {createStudentHistoryPageModel} from './student-history.model.ts'
 import {createAllPagesPageModel} from '../common/all-pages.model.ts'
 
 export function createUpdateStudentPageModel(page: Page) {
+  const tabsNav = page.locator('.nav-tabs')
   return {
     ...createAllPagesPageModel(page),
     urlRegex: /\/students\/\d+$/,
     pageTitle: (locator = page.getByRole('heading', {name: /Update Student \d+/})) => ({locator}),
+    tabs: () => ({
+      detailsTab: (locator = tabsNav.getByRole('link', {name: 'Details'})) => ({locator}),
+      salesTab: (locator = tabsNav.getByRole('link', {name: 'Sales'})) => ({locator}),
+    }),
     form: () => ({
       updateButton: (btnLocator = page.getByRole('button', {name: 'Update'})) => ({
         locator: btnLocator,

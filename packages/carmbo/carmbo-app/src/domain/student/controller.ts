@@ -8,6 +8,7 @@ import {
   createStudent as model_createStudent,
   updateStudent as model_updateStudent,
   deleteStudent as model_deleteStudent,
+  listSalesForStudent,
 } from './model.ts'
 import {
   renderStudentsCreatePage,
@@ -16,6 +17,7 @@ import {
   renderStudentViewInHistoryPage,
 } from './view/view.ts'
 import {renderStudentsPage} from './view/list.ts'
+import {renderStudentSalesPage} from './view/student-sales.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import type {StudentManipulations} from './view/student-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
@@ -177,4 +179,16 @@ export async function deleteStudent(
       'body',
     )
   }
+}
+
+export async function showStudentSales(studentNumber: number, sql: Sql): Promise<ControllerResult> {
+  const studentWithHistory = await queryStudentByNumber(studentNumber, sql)
+
+  if (!studentWithHistory) {
+    return {status: 404, body: 'Student not found'}
+  }
+
+  const sales = await listSalesForStudent(studentNumber, sql)
+
+  return finalHtml(renderStudentSalesPage(studentNumber, sales))
 }
