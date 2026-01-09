@@ -63,6 +63,13 @@
 - You can run fakes for all thes services by defining `FAKE=-fake` and what will run is `src/app/index-fake.ts`
   which uses fakes of all these services, so usually I run using `FAKE=-fake pnpm start`
 
+## The database schema
+
+- The database schema can be found in `src/sql`. It is a set of sql migration files and Typescript migration files,
+  which the app uses to migrate the database from its current schema to the latest schema.
+
+- The code for this can be found in `sq/migration.ts`
+
 ## The tests
 
 - Most of the tests of the app are integration tests. These are Playwright tests
