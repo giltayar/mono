@@ -11,6 +11,7 @@ import {
   deleteSalesEvent as model_deleteSalesEvent,
   listProductsForChoosing as model_listProductsForChoosing,
 } from './model.ts'
+import {propagateSalesEventProductChangesToSales} from '../sale/model/model-external-providers.ts'
 import {
   renderSalesEventsCreatePage,
   renderSalesEventFormFields,
@@ -196,13 +197,29 @@ export async function updateSalesEvent(
 ): Promise<ControllerResult> {
   try {
     const nowService = requestContext.get('nowService')!
-    const salesEventNumber = await model_updateSalesEvent(salesEvent, undefined, nowService(), sql)
+    const logger = requestContext.get('logger')!
+    const academyIntegration = requestContext.get('academyIntegration')!
+    const now = nowService()
+    const updateResult = await model_updateSalesEvent(salesEvent, undefined, now, sql)
 
-    if (!salesEventNumber) {
+    if (!updateResult) {
       return {status: 404, body: 'Sales event not found'}
     }
 
-    return {htmxRedirect: `/sales-events/${salesEventNumber}`}
+    // Propagate product changes to connected sales
+    if (updateResult.addedProducts.length > 0 || updateResult.removedProducts.length > 0) {
+      await propagateSalesEventProductChangesToSales(
+        updateResult.salesEventNumber,
+        updateResult.addedProducts,
+        updateResult.removedProducts,
+        academyIntegration,
+        sql,
+        logger,
+        now,
+      )
+    }
+
+    return {htmxRedirect: `/sales-events/${updateResult.salesEventNumber}`}
   } catch (error) {
     const logger = requestContext.get('logger')!
     logger.error({err: error}, 'update-sales-event')

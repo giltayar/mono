@@ -116,15 +116,32 @@ export async function createSalesEvent(
   })
 }
 
+export interface UpdateSalesEventResult {
+  salesEventNumber: number
+  addedProducts: number[]
+  removedProducts: number[]
+}
+
 export async function updateSalesEvent(
   salesEvent: SalesEvent,
   reason: string | undefined,
   now: Date,
   sql: Sql,
-): Promise<number | undefined> {
+): Promise<UpdateSalesEventResult | undefined> {
   await TEST_executeHook('updateSalesEvent')
 
   return await sql.begin(async (sql) => {
+    // Query current products BEFORE update
+    const oldProductsResult = await sql<{productNumber: number}[]>`
+      SELECT product_number
+      FROM sales_event_product_for_sale
+      WHERE data_id = (
+        SELECT last_data_id FROM sales_event WHERE sales_event_number = ${salesEvent.salesEventNumber}
+      )
+    `
+    const oldProducts = new Set(oldProductsResult.map((r) => r.productNumber))
+    const newProducts = new Set((salesEvent.productsForSale ?? []).filter((p) => p !== undefined))
+
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -152,7 +169,15 @@ export async function updateSalesEvent(
 
     await addSalesEventStuff(salesEvent.salesEventNumber, salesEvent, dataId, sql)
 
-    return salesEvent.salesEventNumber
+    // Compute added/removed products using Set methods
+    const addedProducts = [...newProducts.difference(oldProducts)]
+    const removedProducts = [...oldProducts.difference(newProducts)]
+
+    return {
+      salesEventNumber: salesEvent.salesEventNumber,
+      addedProducts,
+      removedProducts,
+    }
   })
 }
 

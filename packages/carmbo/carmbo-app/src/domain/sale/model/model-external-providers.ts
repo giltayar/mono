@@ -703,3 +703,205 @@ export async function propagateAcademyCourseChangesToSales(
 
   logger.info({productNumber}, 'propagating-academy-course-changes-completed')
 }
+
+/**
+ * Propagates product additions from a sales event to all connected sales.
+ * When products are added to a sales event:
+ * - Updates each sale's products (creates new sale_history with new data_product_id)
+ * - Enrolls students in academy courses for added products
+ *
+ * Note: When products are removed from a sales event, we do NOT remove them from existing sales,
+ * since the student already purchased those products.
+ */
+export async function propagateSalesEventProductChangesToSales(
+  salesEventNumber: number,
+  addedProducts: number[],
+  _removedProducts: number[],
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+  now: Date,
+): Promise<void> {
+  // We only propagate added products - removed products stay with the sale since the student already purchased them
+  if (addedProducts.length === 0) {
+    return
+  }
+
+  logger.info(
+    {salesEventNumber, addedProducts},
+    'propagating-sales-event-product-additions-to-sales',
+  )
+
+  // Get academy courses for the added products
+  const addedProductCourses = await sql<{productNumber: number; courseId: number}[]>`
+    SELECT p.product_number, pac.workshop_id as course_id
+    FROM product p
+    JOIN product_academy_course pac ON pac.data_id = p.last_data_id
+    WHERE p.product_number IN ${sql(addedProducts)}
+  `
+
+  // Query all connected sales for this sales event
+  const affectedSales = await sql<
+    {
+      saleNumber: number
+      studentEmail: string
+      studentName: string
+      studentPhone: string
+      currentProducts: Array<{productNumber: number; quantity: number; unitPrice: number}> | null
+    }[]
+  >`
+    SELECT
+      s.sale_number,
+      ste.email as student_email,
+      CONCAT(sn.first_name, ' ', sn.last_name) as student_name,
+      stp.phone as student_phone,
+      COALESCE(current_products.products, '[]') as current_products
+    FROM sale s
+    JOIN sale_history sh ON sh.id = s.last_history_id
+    JOIN sale_data sd ON sd.data_id = sh.data_id
+    JOIN sale_data_connected sdc ON sdc.data_connected_id = sh.data_connected_id
+
+    JOIN student st ON st.student_number = sd.student_number
+    JOIN student_history sth ON sth.id = st.last_history_id
+    LEFT JOIN student_name sn ON sn.data_id = sth.data_id AND sn.item_order = 0
+    LEFT JOIN student_email ste ON ste.data_id = sth.data_id AND ste.item_order = 0
+    LEFT JOIN student_phone stp ON stp.data_id = sth.data_id AND stp.item_order = 0
+
+    LEFT JOIN LATERAL (
+      SELECT
+        json_agg(
+          json_build_object(
+            'productNumber', sdp.product_number,
+            'quantity', sdp.quantity,
+            'unitPrice', sdp.unit_price
+          )
+          ORDER BY sdp.item_order
+        ) AS products
+      FROM sale_data_product sdp
+      WHERE sdp.data_product_id = s.last_data_product_id
+    ) current_products ON true
+
+    WHERE sdc.is_connected = true
+      AND sd.sales_event_number = ${salesEventNumber}
+  `
+
+  logger.info({affectedSalesCount: affectedSales.length}, 'found-affected-sales-for-sales-event')
+
+  // Process each sale independently (errors logged but don't block other sales)
+  for (const saleInfo of affectedSales) {
+    const saleLogger = logger.child({
+      saleNumber: saleInfo.saleNumber,
+      studentEmail: saleInfo.studentEmail,
+    })
+
+    try {
+      // 1. Update sale products (add new products only)
+      const currentProductNumbers = new Set(
+        (saleInfo.currentProducts ?? []).map((p) => p.productNumber),
+      )
+      const productsToAdd = addedProducts.filter((p) => !currentProductNumbers.has(p))
+
+      // Skip if no products to add
+      if (productsToAdd.length === 0) {
+        saleLogger.info('no-new-products-to-add-skipping')
+        continue
+      }
+
+      // Build updated product list
+      const updatedProducts = [
+        // Keep all existing products
+        ...(saleInfo.currentProducts ?? []),
+        // Add new products with quantity=1, unit_price=0
+        ...productsToAdd.map((productNumber) => ({
+          productNumber,
+          quantity: 1,
+          unitPrice: 0,
+        })),
+      ]
+
+      // Create new sale history with updated products
+      const historyId = crypto.randomUUID()
+      const dataProductId = crypto.randomUUID()
+
+      // Insert new sale_data_product entries
+      await Promise.all(
+        updatedProducts.map(
+          (product, index) =>
+            sql`
+          INSERT INTO sale_data_product (data_product_id, item_order, product_number, quantity, unit_price)
+          VALUES (${dataProductId}, ${index}, ${product.productNumber}, ${product.quantity}, ${product.unitPrice})
+        `,
+        ),
+      )
+
+      // Create new sale_history row that copies existing data but with new data_product_id
+      await sql`
+        INSERT INTO sale_history (id, data_id, data_product_id, data_active_id, data_manual_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
+        SELECT
+          ${historyId},
+          sh.data_id,
+          ${dataProductId},
+          sh.data_active_id,
+          sh.data_manual_id,
+          sh.data_connected_id,
+          s.sale_number,
+          ${now},
+          'update',
+          'sales event product update'
+        FROM sale s
+        JOIN sale_history sh ON sh.id = s.last_history_id
+        WHERE s.sale_number = ${saleInfo.saleNumber}
+      `
+
+      // Update sale to point to new history
+      await sql`
+        UPDATE sale SET
+          last_history_id = ${historyId},
+          last_data_product_id = ${dataProductId}
+        WHERE sale_number = ${saleInfo.saleNumber}
+      `
+
+      saleLogger.info(
+        {historyId, dataProductId, productsAdded: productsToAdd.length},
+        'sale-products-updated',
+      )
+
+      // 2. Handle academy course enrollments
+      if (!saleInfo.studentEmail) {
+        saleLogger.warn('skipping-academy-operations-no-student-email')
+        continue
+      }
+
+      // Enroll in courses for added products
+      for (const {courseId} of addedProductCourses.filter((pc) =>
+        productsToAdd.includes(pc.productNumber),
+      )) {
+        try {
+          await retry(
+            () =>
+              academyIntegration.addStudentToCourse(
+                {
+                  email: saleInfo.studentEmail,
+                  name: saleInfo.studentName,
+                  phone: saleInfo.studentPhone,
+                },
+                courseId,
+              ),
+            {
+              retries: 5,
+              minTimeout: 1000,
+              maxTimeout: 5000,
+            },
+          )
+          saleLogger.info({courseId}, 'propagate-added-product-course-succeeded')
+        } catch (err) {
+          saleLogger.error({err, courseId}, 'propagate-added-product-course-failed')
+        }
+      }
+    } catch (err) {
+      saleLogger.error({err}, 'propagate-sales-event-products-sale-failed')
+    }
+  }
+
+  logger.info({salesEventNumber}, 'propagating-sales-event-product-additions-completed')
+}
