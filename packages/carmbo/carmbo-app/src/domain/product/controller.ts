@@ -23,6 +23,7 @@ import {exceptionToBanner} from '../../layout/banner.ts'
 import {listAcademyCourses} from '../../commons/external-provider/academy-courses.ts'
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {propagateAcademyCourseChangesToSales} from '../sale/model/model-external-providers.ts'
 
 export async function showProducts(
   {
@@ -167,13 +168,30 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
 export async function updateProduct(product: Product, sql: Sql): Promise<ControllerResult> {
   try {
     const nowService = requestContext.get('nowService')!
-    const productNumber = await model_updateProduct(product, undefined, nowService(), sql)
+    const logger = requestContext.get('logger')!
+    const academyIntegration = requestContext.get('academyIntegration')!
+    const updateResult = await model_updateProduct(product, undefined, nowService(), sql)
 
-    if (!productNumber) {
+    if (!updateResult) {
       return {status: 404, body: 'Product not found'}
     }
 
-    return {htmxRedirect: `/products/${productNumber}`}
+    // Propagate academy course changes to connected sales
+    if (
+      updateResult.addedAcademyCourses.length > 0 ||
+      updateResult.removedAcademyCourses.length > 0
+    ) {
+      await propagateAcademyCourseChangesToSales(
+        updateResult.productNumber,
+        updateResult.addedAcademyCourses,
+        updateResult.removedAcademyCourses,
+        academyIntegration,
+        sql,
+        logger,
+      )
+    }
+
+    return {htmxRedirect: `/products/${updateResult.productNumber}`}
   } catch (error) {
     const logger = requestContext.get('logger')!
     logger.error({err: error}, 'update-product')

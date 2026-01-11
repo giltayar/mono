@@ -552,3 +552,154 @@ type SaleWithProvidersResult = {
     whatsAppGroups: string[] | null
   }[]
 }
+
+/**
+ * Propagates academy course changes from a product update to all connected sales.
+ * For each affected sale:
+ * - Enrolls student in added courses
+ * - Unenrolls student from removed courses (only if no other product in the sale has that course)
+ */
+export async function propagateAcademyCourseChangesToSales(
+  productNumber: number,
+  addedCourses: number[],
+  removedCourses: number[],
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+): Promise<void> {
+  if (addedCourses.length === 0 && removedCourses.length === 0) {
+    return
+  }
+
+  logger.info(
+    {productNumber, addedCourses, removedCourses},
+    'propagating-academy-course-changes-to-sales',
+  )
+
+  // Query all connected sales with this product, returning for each sale:
+  // - sale info (saleNumber, student email/name/phone)
+  // - all (productNumber, academyCourseId) tuples for ALL products in that sale as a JSON array
+  const affectedSales = await sql<
+    {
+      saleNumber: number
+      studentEmail: string
+      studentName: string
+      studentPhone: string
+      productCourses: Array<{productNumber: number; academyCourseId: number}> | null
+    }[]
+  >`
+    SELECT
+      s.sale_number,
+      ste.email as student_email,
+      CONCAT(sn.first_name, ' ', sn.last_name) as student_name,
+      stp.phone as student_phone,
+      COALESCE(product_courses.courses, '[]') as product_courses
+    FROM sale s
+    JOIN sale_history sh ON sh.id = s.last_history_id
+    JOIN sale_data sd ON sd.data_id = sh.data_id
+    JOIN sale_data_connected sdc ON sdc.data_connected_id = sh.data_connected_id
+
+    JOIN student st ON st.student_number = sd.student_number
+    JOIN student_history sth ON sth.id = st.last_history_id
+    LEFT JOIN student_name sn ON sn.data_id = sth.data_id AND sn.item_order = 0
+    LEFT JOIN student_email ste ON ste.data_id = sth.data_id AND ste.item_order = 0
+    LEFT JOIN student_phone stp ON stp.data_id = sth.data_id AND stp.item_order = 0
+
+    LEFT JOIN LATERAL (
+      SELECT
+        json_agg(
+          json_build_object(
+            'productNumber', sdp.product_number,
+            'academyCourseId', pac.workshop_id
+          )
+        ) AS courses
+      FROM sale_data_product sdp
+      JOIN product p ON p.product_number = sdp.product_number
+      LEFT JOIN product_academy_course pac ON pac.data_id = p.last_data_id
+      WHERE sdp.data_product_id = s.last_data_product_id
+        AND pac.workshop_id IS NOT NULL
+    ) product_courses ON true
+
+    WHERE sdc.is_connected = true
+      AND s.sale_number IN (
+        SELECT s2.sale_number FROM sale s2
+        JOIN sale_data_product sdp2 ON sdp2.data_product_id = s2.last_data_product_id
+        WHERE sdp2.product_number = ${productNumber}
+      )
+  `
+
+  logger.info({affectedSalesCount: affectedSales.length}, 'found-affected-sales')
+
+  // Process each sale independently (errors logged but don't block other sales)
+  for (const saleInfo of affectedSales) {
+    const saleLogger = logger.child({
+      saleNumber: saleInfo.saleNumber,
+      studentEmail: saleInfo.studentEmail,
+    })
+
+    try {
+      if (!saleInfo.studentEmail) {
+        saleLogger.warn('skipping-sale-no-student-email')
+        continue
+      }
+
+      // Determine courses from OTHER products in this sale (excluding the updated product)
+      const coursesFromOtherProducts = new Set(
+        (saleInfo.productCourses ?? [])
+          .filter((pc) => pc.productNumber !== productNumber)
+          .map((pc) => pc.academyCourseId),
+      )
+
+      // For added courses: always enroll
+      for (const courseId of addedCourses) {
+        try {
+          await retry(
+            () =>
+              academyIntegration.addStudentToCourse(
+                {
+                  email: saleInfo.studentEmail,
+                  name: saleInfo.studentName,
+                  phone: saleInfo.studentPhone,
+                },
+                courseId,
+              ),
+            {
+              retries: 5,
+              minTimeout: 1000,
+              maxTimeout: 5000,
+            },
+          )
+          saleLogger.info({courseId}, 'propagate-added-course-succeeded')
+        } catch (err) {
+          saleLogger.error({err, courseId}, 'propagate-added-course-failed')
+        }
+      }
+
+      // For removed courses: only unenroll if no other product has that course
+      for (const courseId of removedCourses) {
+        if (coursesFromOtherProducts.has(courseId)) {
+          saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-product')
+          continue
+        }
+
+        try {
+          await retry(
+            () => academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, courseId),
+            {
+              retries: 5,
+              minTimeout: 1000,
+              maxTimeout: 5000,
+            },
+          )
+          saleLogger.info({courseId}, 'propagate-removed-course-succeeded')
+        } catch (err) {
+          saleLogger.error({err, courseId}, 'propagate-removed-course-failed')
+        }
+      }
+    } catch (err) {
+      saleLogger.error({err}, 'propagate-academy-courses-sale-failed')
+    }
+  }
+
+  logger.info({productNumber}, 'propagating-academy-course-changes-completed')
+}

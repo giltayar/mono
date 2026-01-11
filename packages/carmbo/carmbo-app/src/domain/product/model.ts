@@ -115,14 +115,34 @@ export async function createProduct(
   })
 }
 
+export interface UpdateProductResult {
+  productNumber: number
+  addedAcademyCourses: number[]
+  removedAcademyCourses: number[]
+}
+
 export async function updateProduct(
   product: Product,
   reason: string | undefined,
   now: Date,
   sql: Sql,
-): Promise<number | undefined> {
+): Promise<UpdateProductResult | undefined> {
   await TEST_executeHook('updateProduct')
   return await sql.begin(async (sql) => {
+    // Query current academy courses before update
+    const oldCoursesResult = await sql<{workshopId: number}[]>`
+      SELECT workshop_id as workshop_id
+      FROM product_academy_course
+      WHERE data_id = (
+        SELECT ph.data_id
+        FROM product p
+        JOIN product_history ph ON ph.id = p.last_history_id
+        WHERE p.product_number = ${product.productNumber}
+      )
+    `
+    const oldCourses = new Set(oldCoursesResult.map((r) => r.workshopId))
+    const newCourses = new Set(product.academyCourses ?? [])
+
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
@@ -147,7 +167,15 @@ export async function updateProduct(
 
     await addProductStuff(product.productNumber, product, dataId, sql)
 
-    return product.productNumber
+    // Compute diff using Set methods
+    const addedAcademyCourses = [...newCourses.difference(oldCourses)]
+    const removedAcademyCourses = [...oldCourses.difference(newCourses)]
+
+    return {
+      productNumber: product.productNumber,
+      addedAcademyCourses,
+      removedAcademyCourses,
+    }
   })
 }
 
