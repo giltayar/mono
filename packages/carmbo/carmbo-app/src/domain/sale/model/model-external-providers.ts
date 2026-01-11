@@ -819,47 +819,49 @@ export async function propagateSalesEventProductChangesToSales(
         })),
       ]
 
-      // Create new sale history with updated products
+      // Create new sale history with updated products - in a transaction
       const historyId = crypto.randomUUID()
       const dataProductId = crypto.randomUUID()
 
-      // Insert new sale_data_product entries
-      await Promise.all(
-        updatedProducts.map(
-          (product, index) =>
-            sql`
-          INSERT INTO sale_data_product (data_product_id, item_order, product_number, quantity, unit_price)
-          VALUES (${dataProductId}, ${index}, ${product.productNumber}, ${product.quantity}, ${product.unitPrice})
-        `,
-        ),
-      )
+      await sql.begin(async (sql) => {
+        // Insert new sale_data_product entries
+        await Promise.all(
+          updatedProducts.map(
+            (product, index) =>
+              sql`
+            INSERT INTO sale_data_product (data_product_id, item_order, product_number, quantity, unit_price)
+            VALUES (${dataProductId}, ${index}, ${product.productNumber}, ${product.quantity}, ${product.unitPrice})
+          `,
+          ),
+        )
 
-      // Create new sale_history row that copies existing data but with new data_product_id
-      await sql`
-        INSERT INTO sale_history (id, data_id, data_product_id, data_active_id, data_manual_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
-        SELECT
-          ${historyId},
-          sh.data_id,
-          ${dataProductId},
-          sh.data_active_id,
-          sh.data_manual_id,
-          sh.data_connected_id,
-          s.sale_number,
-          ${now},
-          'update',
-          'sales event product update'
-        FROM sale s
-        JOIN sale_history sh ON sh.id = s.last_history_id
-        WHERE s.sale_number = ${saleInfo.saleNumber}
-      `
+        // Create new sale_history row that copies existing data but with new data_product_id
+        await sql`
+          INSERT INTO sale_history (id, data_id, data_product_id, data_active_id, data_manual_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
+          SELECT
+            ${historyId},
+            sh.data_id,
+            ${dataProductId},
+            sh.data_active_id,
+            sh.data_manual_id,
+            sh.data_connected_id,
+            s.sale_number,
+            ${now},
+            'update',
+            'sales event product update'
+          FROM sale s
+          JOIN sale_history sh ON sh.id = s.last_history_id
+          WHERE s.sale_number = ${saleInfo.saleNumber}
+        `
 
-      // Update sale to point to new history
-      await sql`
-        UPDATE sale SET
-          last_history_id = ${historyId},
-          last_data_product_id = ${dataProductId}
-        WHERE sale_number = ${saleInfo.saleNumber}
-      `
+        // Update sale to point to new history
+        await sql`
+          UPDATE sale SET
+            last_history_id = ${historyId},
+            last_data_product_id = ${dataProductId}
+          WHERE sale_number = ${saleInfo.saleNumber}
+        `
+      })
 
       saleLogger.info(
         {historyId, dataProductId, productsAdded: productsToAdd.length},
