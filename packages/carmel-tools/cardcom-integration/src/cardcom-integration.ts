@@ -277,7 +277,7 @@ async function refundTransaction(
   service: CardcomIntegrationServiceData,
   transactionId: string,
 ): Promise<{refundTransactionId: string}> {
-  const url = new URL('https://secure.cardcom.solutions/api/v11/Transactions/RefundTransaction')
+  const url = new URL('https://secure.cardcom.solutions/api/v11/Transactions/RefundByTransactionId')
 
   const response = (await fetchAsJsonWithJsonBody(url, {
     ApiName: service.context.apiKey,
