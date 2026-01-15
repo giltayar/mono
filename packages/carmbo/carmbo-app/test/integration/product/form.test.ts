@@ -6,6 +6,8 @@ import {setup} from '../common/setup.ts'
 
 const {url} = setup(import.meta.url)
 
+test.use({viewport: {width: 1024, height: 1280}})
+
 test('create product and update multiple fields', async ({page}) => {
   await page.goto(new URL('/products', url()).href)
 
@@ -138,6 +140,7 @@ test('create product and update multiple fields', async ({page}) => {
   await updateForm.facebookGroups().trashButton(0).locator.click()
 
   await updateForm.updateButton().locator.click()
+  await expect(updateProductModel.history().items().locator).toHaveCount(2)
 
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('challenge')
@@ -307,8 +310,7 @@ test('remove all array fields', async ({page}) => {
   await updateForm.facebookGroups().trashButton(0).locator.click()
 
   await updateForm.updateButton().locator.click()
-
-  await expect(page.url()).toMatch(updateProductModel.urlRegex)
+  await expect(updateProductModel.history().items().locator).toHaveCount(2)
 
   // Verify they're gone
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).not.toBeVisible()

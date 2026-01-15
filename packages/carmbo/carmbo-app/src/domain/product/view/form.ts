@@ -344,9 +344,11 @@ function AddButton({
       aria-label="Add"
       style=${isOnItsOwn || i === l.length - 1 ? '' : 'visibility: hidden'}
     >
-      <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/src/layout/style/plus-circle.svg" />
-      </svg>
+      <object
+        type="image/svg+xml"
+        class="feather pe-none"
+        data="/src/layout/style/plus-circle.svg"
+      ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
   `
@@ -362,9 +364,11 @@ function RemoveButton() {
       hx-trigger="click delay:1ms"
       aria-label="Remove"
     >
-      <svg class="feather pe-none" viewbox="0 0 24 24">
-        <use href="/src/layout/style/minus-circle.svg" />
-      </svg>
+      <object
+        type="image/svg+xml"
+        class="feather pe-none"
+        data="/src/layout/style/minus-circle.svg"
+      ></object>
     </button>
   `
 }

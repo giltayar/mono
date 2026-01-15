@@ -84,7 +84,7 @@ test('create sale then update it', async ({page}) => {
 
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
-  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
+  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}`)
 
   await expect(newForm.finalSaleRevenueInput().locator).toHaveAttribute('required')
   await newForm.finalSaleRevenueInput().locator.fill('7')

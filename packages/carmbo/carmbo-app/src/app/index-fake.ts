@@ -65,6 +65,12 @@ const {app, sql} = await makeApp({
   appBaseUrl: 'http://localhost:3000',
 })
 
+await prepareDatabase(sql)
+
+await app.listen({port: 3000, host: 'localhost'})
+
+await createTestData()
+
 const countCardcomSalesResult = await sql<{count: string}[]>`
   SELECT
   count(*) as count
@@ -87,12 +93,6 @@ for (const _ of range(0, parseInt(countCardcomSalesResult[0].count))) {
     {sendInvoiceByMail: false},
   )
 }
-
-await prepareDatabase(sql)
-
-await app.listen({port: 3000, host: 'localhost'})
-
-await createTestData()
 
 async function createTestData() {
   // await fakeCardcomIntegrationService._test_simulateCardcomStandingOrder(

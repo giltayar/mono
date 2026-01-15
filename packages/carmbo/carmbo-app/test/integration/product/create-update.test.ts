@@ -221,14 +221,18 @@ test('optional fields can be empty', async ({page}) => {
   await updateProductModel.form().productTypeSelect().locator.selectOption('club')
 
   await updateProductModel.form().updateButton().locator.click()
+  await expect(updateProductModel.history().items().locator).toHaveCount(2)
 
   await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue('')
 
-  await updateProductModel.form().smooveListIdInput().locator.fill('12345')
+  await updateProductModel.form().smooveListIdInput().locator.fill('2')
 
   await updateProductModel.form().updateButton().locator.click()
+  await expect(updateProductModel.history().items().locator).toHaveCount(3)
 
-  await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue('12345')
+  await expect(updateProductModel.form().smooveListIdInput().locator).toHaveValue(
+    '2: Smoove List ID 1',
+  )
 })
 
 test('creation/update error shows alert', async ({page}) => {

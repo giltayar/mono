@@ -43,9 +43,12 @@ export function SalesFormFields({
           <div class="col-auto link">
             ${sale.salesEventNumber
               ? html`<a href="/sales-events/${sale.salesEventNumber}" title="View sales event"
-                  ><svg class="feather feather-small pe-none" viewbox="0 0 24 24">
-                    <use href="/src/layout/style/link.svg" /></svg
-                ></a>`
+                  ><object
+                    type="image/svg+xml"
+                    class="feather feather-small pe-none"
+                    data="/src/layout/style/link.svg"
+                  ></object>
+                </a>`
               : ''}
           </div>
         </div>
@@ -77,9 +80,12 @@ export function SalesFormFields({
             <div class="col-auto link">
               ${sale.studentNumber
                 ? html`<a href="/students/${sale.studentNumber}" title="View student"
-                    ><svg class="feather feather-small pe-none" viewbox="0 0 24 24">
-                      <use href="/src/layout/style/link.svg" /></svg
-                  ></a>`
+                    ><object
+                      type="image/svg+xml"
+                      class="feather feather-small pe-none"
+                      data="/src/layout/style/link.svg"
+                    ></object>
+                  </a>`
                 : ''}
             </div>
           </div>
@@ -117,9 +123,12 @@ export function SalesFormFields({
                           <h6>
                             ${index + 1}: ${product.productName}
                             <a href="/products/${product.productNumber}" title="View product"
-                              ><svg class="feather feather-small pe-none" viewbox="0 0 24 24">
-                                <use href="/src/layout/style/link.svg" /></svg
-                            ></a>
+                              ><object
+                                type="image/svg+xml"
+                                class="feather feather-small pe-none"
+                                data="/src/layout/style/link.svg"
+                              ></object>
+                            </a>
                           </h6>
                         </legend>
                         <input
@@ -318,7 +327,9 @@ ${sale.deliveryAddress?.notesToDeliveryPerson ?? ''}</textarea
 
 function InvoiceDocumentUrlLink({url}: {url: string}) {
   return html`<a target="_blank" href=${url}>View Invoice </a
-    ><svg class="feather" viewbox="0 0 24 24">
-      <use href="/src/layout/style/external-link.svg" />
-    </svg>`
+    ><object
+      type="image/svg+xml"
+      class="feather feather-small pe-none"
+      data="/src/layout/style/external-link.svg"
+    ></object>`
 }

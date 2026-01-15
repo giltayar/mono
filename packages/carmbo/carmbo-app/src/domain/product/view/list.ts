@@ -99,9 +99,11 @@ function ProductsView({
       </table>
       <section class="add-new">
         <a role="button" class="btn float-end" href="/products/new" aria-label="new product">
-          <svg class="feather feather-large" viewbox="0 0 24 24">
-            <use href="/src/layout/style/plus-circle.svg" />
-          </svg>
+          <object
+            type="image/svg+xml"
+            class="feather feather-large"
+            data="/src/layout/style/plus-circle.svg"
+          ></object>
         </a>
       </section>
     </div>

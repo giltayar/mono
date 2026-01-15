@@ -122,7 +122,9 @@ export function setup(testUrl: string): {
 
     const {port, address} = app.server.address() as AddressInfo
 
-    url = new URL(`http://${address}:${port}`)
+    const httpAddress = address.includes('::') ? `[${address}]` : address
+
+    url = new URL(`http://${httpAddress}:${port}`)
   })
 
   test.beforeEach(async () => {

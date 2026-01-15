@@ -1,10 +1,10 @@
 FROM node:24.11-slim
 
 # Update system packages to patch vulnerabilities
-RUN apt update && apt upgrade
+RUN apt update -y && apt upgrade -y
 
 # Add Tini
-RUN apt install tini
+RUN apt install tini -y
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Install pnpm
