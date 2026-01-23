@@ -21,8 +21,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       '@giltayar/carmel-tools-academy-integration':
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^5.0.0
+        version: 5.0.0
       '@giltayar/carmel-tools-cardcom-integration':
         specifier: ^6.0.6
         version: 6.0.6
@@ -68,6 +68,9 @@ importers:
       htmx.org:
         specifier: ^2.0.8
         version: 2.0.8
+      p-map-series:
+        specifier: ^3.0.0
+        version: 3.0.0
       p-retry:
         specifier: ^7.1.1
         version: 7.1.1
@@ -97,11 +100,11 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@playwright/test':
-        specifier: ^1.57.0
-        version: 1.57.0
+        specifier: ^1.58.0
+        version: 1.58.0
       '@railway/cli':
-        specifier: ^4.26.0
-        version: 4.26.0
+        specifier: ^4.27.0
+        version: 4.27.0
       '@types/chance':
         specifier: ^1.1.7
         version: 1.1.7
@@ -227,8 +230,8 @@ packages:
   '@fastify/swagger@9.5.2':
     resolution: {integrity: sha512-8e8w/LItg/cF6IR/hYKtnt+E0QImees5o3YWJsTLxaIk+tzNUEc6Z2Ursi4oOHWwUlKjUCnV6yh5z5ZdxvlsWA==}
 
-  '@giltayar/carmel-tools-academy-integration@4.3.0':
-    resolution: {integrity: sha512-wBcHU7wI6qy0p2mK6tKnRoLZim4cDiiLyJA8uK9JyZT58k3et4VcRqDesfjdmUdCNuet8Ff2g7nrtYCZqOe/Zw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/4.3.0/e39c065806aefeb893aec13c82ff968130618cd0}
+  '@giltayar/carmel-tools-academy-integration@5.0.0':
+    resolution: {integrity: sha512-q/1BGMss+CPenes77z5ZJW0LTdBojSi6wd7sf1G+X9FzqrSWvDZA59+LUtczMNEXdVHQc3G3BEit02BDTrG/og==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-academy-integration/5.0.0/8069165ddcf3e00abdb181f51c77ca967654c5d6}
     engines: {node: '>=24.9.0'}
 
   '@giltayar/carmel-tools-cardcom-integration@6.0.6':
@@ -322,16 +325,16 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.57.0':
-    resolution: {integrity: sha512-6TyEnHgd6SArQO8UO2OMTxshln3QMWBtPGrOCgs3wVEmQmwyuNtB10IZMfmYDE0riwNR1cu4q+pPcxMVtaG3TA==}
+  '@playwright/test@1.58.0':
+    resolution: {integrity: sha512-fWza+Lpbj6SkQKCrU6si4iu+fD2dD3gxNHFhUPxsfXBPhnv3rRSQVd0NtBUT9Z/RhF/boCBcuUaMUSTRTopjZg==}
     engines: {node: '>=18'}
     hasBin: true
 
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
-  '@railway/cli@4.26.0':
-    resolution: {integrity: sha512-LonTfpeyzy7Bt72dcH4SkXi/gpCqo8vmtSpmc8jU6hrhTs+CfgVIHfjnzpH8q7u4JfWMlQsaT+S9kpBFj7Rpaw==}
+  '@railway/cli@4.27.0':
+    resolution: {integrity: sha512-q3s3Ek4R6VrmqlVKofYGHYM9qPXZ7KP0vKyS3FyCAKGWmyJqU/baJ9tXpLfNMaN7yKmG/vI93n46WGw59kId5w==}
     engines: {node: '>=16.0.0'}
     hasBin: true
 
@@ -1339,6 +1342,10 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  p-map-series@3.0.0:
+    resolution: {integrity: sha512-/oSZlzK3Chrlrx+LFkiuMzWi2k2aEfIP8V5LandUN3/XRhUlxM1R0Th/xM6SKgjTXnIbZR9GkexTLiar2nKUeg==}
+    engines: {node: '>=12'}
+
   p-retry@7.1.1:
     resolution: {integrity: sha512-J5ApzjyRkkf601HpEeykoiCvzHQjWxPAHhyjFcEUP2SWq0+35NKh8TLhpLw+Dkq5TZBFvUM6UigdE9hIVYTl5w==}
     engines: {node: '>=20'}
@@ -1401,17 +1408,17 @@ packages:
   pino-std-serializers@7.1.0:
     resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
 
-  pino@10.2.1:
-    resolution: {integrity: sha512-Tjyv76gdUe2460dEhtcnA4fU/+HhGq2Kr7OWlo2R/Xxbmn/ZNKWavNWTD2k97IE+s755iVU7WcaOEIl+H3cq8w==}
+  pino@10.3.0:
+    resolution: {integrity: sha512-0GNPNzHXBKw6U/InGe79A3Crzyk9bcSyObF9/Gfo9DLEf5qj5RF50RSjsu0W1rZ6ZqRGdzDFCRBQvi9/rSGPtA==}
     hasBin: true
 
-  playwright-core@1.57.0:
-    resolution: {integrity: sha512-agTcKlMw/mjBWOnD6kFZttAAGHgi/Nw0CZ2o6JqWSbMlI219lAFLZZCyqByTsvVAJq5XA5H8cA6PrvBRpBWEuQ==}
+  playwright-core@1.58.0:
+    resolution: {integrity: sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.57.0:
-    resolution: {integrity: sha512-ilYQj1s8sr2ppEJ2YVadYBN0Mb3mdo9J0wQ+UuDhzYqURwSoW4n1Xs5vs7ORwgDGmyEh33tRMeS8KhdkMoLXQw==}
+  playwright@1.58.0:
+    resolution: {integrity: sha512-2SVA0sbPktiIY/MCOPX8e86ehA/e+tDNq+e5Y8qjKYti2Z/JG7xnronT/TXTIkKbYGWlCbuucZ6dziEgkoEjQQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -1959,7 +1966,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@giltayar/carmel-tools-academy-integration@4.3.0':
+  '@giltayar/carmel-tools-academy-integration@5.0.0':
     dependencies:
       '@giltayar/functional-commons': 2.1.0
       '@giltayar/http-commons': 3.1.1
@@ -2049,13 +2056,13 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@playwright/test@1.57.0':
+  '@playwright/test@1.58.0':
     dependencies:
-      playwright: 1.57.0
+      playwright: 1.58.0
 
   '@popperjs/core@2.11.8': {}
 
-  '@railway/cli@4.26.0':
+  '@railway/cli@4.27.0':
     dependencies:
       '@napi-rs/triples': 1.2.0
       node-fetch: 3.3.2
@@ -2672,7 +2679,7 @@ snapshots:
       fast-json-stringify: 6.2.0
       find-my-way: 9.4.0
       light-my-request: 6.6.0
-      pino: 10.2.1
+      pino: 10.3.0
       process-warning: 5.0.0
       rfdc: 1.4.1
       secure-json-parse: 4.1.0
@@ -3177,6 +3184,8 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  p-map-series@3.0.0: {}
+
   p-retry@7.1.1:
     dependencies:
       is-network-error: 1.3.0
@@ -3223,7 +3232,7 @@ snapshots:
 
   pino-std-serializers@7.1.0: {}
 
-  pino@10.2.1:
+  pino@10.3.0:
     dependencies:
       '@pinojs/redact': 0.4.0
       atomic-sleep: 1.0.0
@@ -3237,11 +3246,11 @@ snapshots:
       sonic-boom: 4.2.0
       thread-stream: 4.0.0
 
-  playwright-core@1.57.0: {}
+  playwright-core@1.58.0: {}
 
-  playwright@1.57.0:
+  playwright@1.58.0:
     dependencies:
-      playwright-core: 1.57.0
+      playwright-core: 1.58.0
     optionalDependencies:
       fsevents: 2.3.2
 

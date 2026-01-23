@@ -58,6 +58,7 @@ const {app, sql} = await makeApp({
   services: {
     academyIntegration: createAcademyIntegrationService({
       accountApiKey: env.ACADEMY_CARMEL_ACCOUNT_API_KEY,
+      accountSubdomain: 'carmel',
     }),
     whatsappIntegration: createWhatsAppIntegrationService({
       greenApiKey: env.GREEN_API_KEY,

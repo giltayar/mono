@@ -95,6 +95,19 @@ export function StudentUpdateView({
         />
       </div>
     </form>
+    <div class="form-group col-md-6 mt-3">
+      <h5 class="mb-3">Adacemy Magic Link</h5>
+      <label style="width: 100%">
+        <button
+          hx-get="/students/${student.studentNumber}/academy-magic-link"
+          hx-swap="outerHTML"
+          hx-target="this"
+        >
+          Fetch link
+        </button>
+      </label>
+    </div>
+
     <${StudentHistoryList} student=${student} history=${history} />
   `
 }

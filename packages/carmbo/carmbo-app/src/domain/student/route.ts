@@ -1,4 +1,5 @@
 import {
+  showMagicLink,
   showStudentCreate,
   showStudentInHistory,
   showStudents,
@@ -103,6 +104,17 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
       return dealWithControllerResult(reply, await updateStudent(request.body, sql))
     },
+  )
+
+  appWithTypes.get(
+    '/:number/academy-magic-link',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int()}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showMagicLink(request.params.number, sql)),
   )
 
   // View student in history

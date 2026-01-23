@@ -1,5 +1,6 @@
 import type {Sql} from 'postgres'
-import type {NewStudent, Student} from './model.ts'
+import {fetchMagicLinksForStudent,
+type NewStudent, type Student} from './model.ts'
 import type {OngoingStudent} from './view/model.ts'
 import {
   listStudents,
@@ -11,6 +12,7 @@ import {
   listSalesForStudent,
 } from './model.ts'
 import {
+renderMagicLinks,
   renderStudentsCreatePage,
   renderStudentFormFields,
   renderStudentUpdatePage,
@@ -21,7 +23,7 @@ import {renderStudentSalesPage} from './view/student-sales.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import type {StudentManipulations} from './view/student-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner} from '../../layout/banner.ts'
+import {exceptionToBanner, exceptionToBannerHtml} from '../../layout/banner.ts'
 
 export async function showStudents(
   {
@@ -191,4 +193,22 @@ export async function showStudentSales(studentNumber: number, sql: Sql): Promise
   const sales = await listSalesForStudent(studentNumber, sql)
 
   return finalHtml(renderStudentSalesPage(studentNumber, sales))
+}
+
+export async function showMagicLink(studentNumber: number, sql: Sql): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')!
+
+  try {
+    const magicLinks = await fetchMagicLinksForStudent(studentNumber, academyIntegration, sql)
+
+    return finalHtml(renderMagicLinks(magicLinks))
+  } catch (error) {
+    const logger = requestContext.get('logger')!
+
+    logger.error({err: error}, 'fetch-magic-link')
+    return retarget(
+      exceptionToBannerHtml('Error fetching magic link: ', error),
+      '#banner-container',
+    )
+  }
 }

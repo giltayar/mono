@@ -70,3 +70,28 @@ export function renderStudentFormFields(
     />
   `
 }
+
+export function renderMagicLinks(magicLinks: {email: string; link: string}[]) {
+  if (magicLinks.length === 1) {
+    return html`
+      <a href=${magicLinks[0].link} target="_blank" rel="noopener noreferrer"
+        >${magicLinks[0].link}</a
+      >
+    `
+  } else if (magicLinks.length === 0) {
+    return html`<p>No magic links found for this student.</p>`
+  } else {
+    return html`
+      <ul>
+        ${magicLinks.map(
+          (el) => html`
+            <li>
+              ${el.email}:
+              <a href=${el.link} target="_blank" rel="noopener noreferrer">${el.link}</a>
+            </li>
+          `,
+        )}
+      </ul>
+    `
+  }
+}

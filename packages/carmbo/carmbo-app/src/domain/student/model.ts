@@ -9,6 +9,7 @@ import {assertNever} from '@giltayar/functional-commons'
 import {normalizeEmail, normalizePhoneNumber, normalizeName} from '../../commons/normalize-input.ts'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import pMapSeries from 'p-map-series'
 
 export const StudentSchema = z.object({
   studentNumber: z.coerce.number().int().positive(),
@@ -598,4 +599,31 @@ export async function listSalesForStudent(
       AND operation <> 'delete'
     ORDER BY sale_data.timestamp DESC
   `
+}
+
+export async function fetchMagicLinksForStudent(
+  studentNumber: number,
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+): Promise<{email: string; link: string}[]> {
+  const allEmailsFromHistory = (await sql`
+    SELECT
+      email
+    FROM
+      student_email
+    JOIN student_history ON student_history.data_id = student_email.data_id AND student_history.student_number = ${studentNumber}
+    ORDER BY student_history.timestamp DESC, student_email.item_order ASC
+  `) as {email: string}[]
+
+  return (
+    await pMapSeries(allEmailsFromHistory, async ({email}) => {
+      const link = await academyIntegration.fetchMagicLink(email)
+
+      if (link) {
+        return {email, link: link.link}
+      } else {
+        return undefined
+      }
+    })
+  ).filter((l) => !!l)
 }
