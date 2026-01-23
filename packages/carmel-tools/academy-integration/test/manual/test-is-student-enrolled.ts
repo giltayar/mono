@@ -5,6 +5,7 @@ const service = createAcademyIntegrationService({
   accountApiKey:
     process.env.ACADEMY_CARMEL_ACCOUNT_API_KEY ??
     throw_(new Error('Missing ACADEMY_CARMEL_ACCOUNT_API_KEY')),
+  accountSubdomain: 'carmel',
 })
 
 console.log(await service.isStudentEnrolledInCourse('gil@tayar.org', 17031))

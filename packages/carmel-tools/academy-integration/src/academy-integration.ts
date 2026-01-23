@@ -1,10 +1,16 @@
 // https://inspiredlivingdaily.incontrol.co.il/api/academy
 
-import {fetchAsBuffer, fetchAsJson, fetchAsTextWithJsonBody} from '@giltayar/http-commons'
+import {
+  fetchAsBuffer,
+  fetchAsJson,
+  fetchAsJsonWithJsonBody,
+  fetchAsTextWithJsonBody,
+} from '@giltayar/http-commons'
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
 
 export interface AcademyIntegrationServiceContext {
   accountApiKey: string
+  accountSubdomain: string
 }
 
 export interface AcademyCourse {
@@ -26,6 +32,7 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
     removeStudentFromCourse: sBind(removeStudentFromCourse),
     isStudentEnrolledInCourse: sBind(isStudentEnrolledInCourse),
     updateStudentEmail: sBind(updateStudentEmail),
+    fetchMagicLink: sBind(fetchMagicLink),
   }
 }
 
@@ -117,4 +124,33 @@ export async function isStudentEnrolledInCourse(
   }[]
 
   return res.length === 1 && !!res[0].student_day_0
+}
+
+export async function fetchMagicLink(
+  s: AcademyIntegrationServiceData,
+  studentEmail: string,
+): Promise<{link: string} | undefined> {
+  const url = new URL(`https://www.mypages.co.il/api/v1/academy/magic_link`)
+
+  const response = (await fetchAsJsonWithJsonBody(
+    url,
+    {
+      email: studentEmail,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${s.context.accountApiKey}`,
+      },
+    },
+  )) as {magic_links: Array<{subdomain: string; magic_link: string}>}
+
+  const magicLinkEntry = response.magic_links.find(
+    (m) => m.subdomain === s.context.accountSubdomain,
+  )
+
+  if (!magicLinkEntry) {
+    return undefined
+  }
+
+  return {link: magicLinkEntry.magic_link}
 }

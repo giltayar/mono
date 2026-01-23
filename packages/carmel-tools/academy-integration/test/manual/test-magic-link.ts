@@ -8,4 +8,4 @@ const service = createAcademyIntegrationService({
   accountSubdomain: 'carmel',
 })
 
-await service.updateStudentEmail('giltayar@gmail.com', 'gil@tayar.org')
+console.log(await service.fetchMagicLink('gil@tayar.org'))

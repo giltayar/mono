@@ -24,6 +24,7 @@ export function createFakeAcademyIntegrationService(context: {
     removeStudentFromCourse: sBind(removeStudentFromCourse),
     updateStudentEmail: sBind(updateStudentEmail),
     isStudentEnrolledInCourse: sBind(isStudentEnrolledInCourse),
+    fetchMagicLink: sBind(fetchMagicLink),
   }
 
   return {
@@ -102,4 +103,16 @@ async function isStudentEnrolledInCourse(
   }
 
   return student.enrolledInCourses.includes(courseId)
+}
+
+async function fetchMagicLink(
+  s: AcademyIntegrationServiceData,
+  studentEmail: string,
+): Promise<{link: string} | undefined> {
+  const student = s.state.enrolledContacts.get(studentEmail)
+  if (!student) {
+    return undefined
+  }
+
+  return {link: `https://fake-magic-link.com/login?email=${encodeURIComponent(studentEmail)}`}
 }

@@ -348,4 +348,26 @@ describe('Academy Integration Testkit', () => {
       assert.deepStrictEqual(updatedContact.enrolledInCourses, [testCourseId]) // Original testEmail data
     })
   })
+
+  describe('fetchMagicLink', () => {
+    it('should return a magic link for the student', async () => {
+      const service = createTestService()
+
+      const magicLink = await service.fetchMagicLink(testEmail)
+
+      assert.strictEqual(
+        magicLink?.link,
+        `https://fake-magic-link.com/login?email=${encodeURIComponent(testEmail)}`,
+      )
+    })
+
+    it('should return undefined for non-existent student', async () => {
+      const service = createTestService()
+      const nonExistentEmail = 'foo@sldafhj.com'
+
+      const magicLink = await service.fetchMagicLink(nonExistentEmail)
+
+      assert.strictEqual(magicLink, undefined)
+    })
+  })
 })
