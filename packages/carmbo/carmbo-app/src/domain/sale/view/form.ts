@@ -18,28 +18,28 @@ export function SalesFormFields({
         <div class="row">
           <div class="col form-floating mb-3">
             <input
-              type="hidden"
-              id="salesEventNumber_value"
-              name="salesEventNumber"
-              value=${sale.salesEventNumber}
-            />
-            <input
-              class="form-control pick-item-title-async"
+              class="form-control"
               type="text"
               id="salesEventNumber"
+              name="salesEventNumber"
               hx-post=""
               hx-target="closest .sales-view_form-fields"
               hx-swap="outerHTML"
               hx-trigger="change delay:1ms"
               value=${generateItemTitle(sale.salesEventNumber, sale.salesEventName)}
               list="sales-event-list"
-              data-list-fetch="/sales/query/sales-event-list"
               placeholder=" "
               required
               readonly=${isReadOnly}
             />
             <label for="salesEventNumber" class="form-label">Sales Event</label>
-            <datalist id="sales-event-list"> </datalist>
+            <datalist
+              id="sales-event-list"
+              hx-trigger="input changed from:#salesEventNumber"
+              hx-target="this"
+              hx-vals='js:{q: document.getElementById("salesEventNumber").value}'
+              hx-get="/sales/query/sales-event-list"
+            ></datalist>
           </div>
           <div class="col-auto link">
             ${sale.salesEventNumber
@@ -60,12 +60,11 @@ export function SalesFormFields({
                 class="form-control"
                 id="studentNumber"
                 name="studentNumber"
-                zlist="student-list"
+                list="student-list"
                 hx-post=""
                 hx-target="closest .sales-view_form-fields"
                 hx-swap="outerHTML"
                 hx-trigger="change"
-                data-list-fetch="/sales/query/student-list"
                 value=${generateItemTitle(sale.studentNumber, sale.studentName)}
                 required
                 placeholder=" "
