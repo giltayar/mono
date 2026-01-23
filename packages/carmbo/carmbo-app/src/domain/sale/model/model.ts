@@ -12,7 +12,14 @@ export const SaleSchema = z.object({
   timestamp: z.date().optional(),
   salesEventNumber: z.coerce.number().int().positive(),
   salesEventName: z.string().optional(),
-  studentNumber: z.coerce.number().int().positive(),
+  studentNumber: z
+    .string()
+    .transform((val) => val.split(':')[0])
+    .transform((val) => {
+      const parsed = parseInt(val, 10)
+      return isNaN(parsed) ? undefined : parsed
+    })
+    .optional(),
   studentName: z.string().optional(),
   finalSaleRevenue: z.preprocess(
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
@@ -55,7 +62,14 @@ export const SaleSchema = z.object({
 export const NewSaleSchema = z.object({
   salesEventNumber: z.coerce.number().int().optional(),
   salesEventName: z.string().optional(),
-  studentNumber: z.coerce.number().int().optional(),
+  studentNumber: z
+    .string()
+    .transform((val) => val.split(':')[0])
+    .transform((val) => {
+      const parsed = parseInt(val, 10)
+      return isNaN(parsed) ? undefined : parsed
+    })
+    .optional(),
   studentName: z.string().optional(),
   finalSaleRevenue: z.preprocess(
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),

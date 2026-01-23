@@ -81,11 +81,11 @@ test('create sale then update it', async ({page}) => {
   const newForm = newSaleModel.form()
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
+  await page.waitForLoadState('networkidle')
 
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
-  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}`)
-
+  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
   await expect(newForm.finalSaleRevenueInput().locator).toHaveAttribute('required')
   await newForm.finalSaleRevenueInput().locator.fill('7')
 
@@ -142,6 +142,7 @@ test('create sale then update it', async ({page}) => {
 
   // Save the sale and verify data
   await updateForm.updateButton().locator.click()
+  await page.waitForLoadState('networkidle')
 
   await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('7')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('54321')

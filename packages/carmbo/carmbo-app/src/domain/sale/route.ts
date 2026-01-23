@@ -215,32 +215,29 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     dealWithControllerResult(reply, await showOngoingSale(request.body)),
   )
 
-  appWithTypes.post('/', {schema: {body: NewSaleSchema}}, async (request, reply) => {
-    return dealWithControllerResult(reply, await createSale(request.body, sql))
-  })
+  appWithTypes.post('/', {schema: {body: NewSaleSchema}}, async (request, reply) =>
+    dealWithControllerResult(reply, await createSale(request.body, sql)),
+  )
 
   appWithTypes.get(
     '/query/sales-event-list',
     {schema: {querystring: z.object({q: z.string().optional()})}},
-    async (request, reply) => {
-      return dealWithControllerResult(reply, await showSalesEventList(request.query.q))
-    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showSalesEventList(request.query.q)),
   )
 
   appWithTypes.get(
     '/query/student-list',
     {schema: {querystring: z.object({q: z.string().optional()})}},
-    async (request, reply) => {
-      return dealWithControllerResult(reply, await showStudentList(request.query.q))
-    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showStudentList(request.query.q)),
   )
 
   appWithTypes.get(
     '/query/product-list',
     {schema: {querystring: z.object({q: z.string().optional()})}},
-    async (request, reply) => {
-      return dealWithControllerResult(reply, await showProductList(request.query.q))
-    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showProductList(request.query.q)),
   )
 
   // View sale
