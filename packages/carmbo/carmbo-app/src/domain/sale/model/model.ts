@@ -7,19 +7,23 @@ import assert from 'node:assert'
 import {TEST_executeHook} from '../../../commons/TEST_hooks.ts'
 import type {StandingOrderPaymentResolution} from './model-sale.ts'
 
-export const SaleSchema = z.object({
-  saleNumber: z.coerce.number().int().positive(),
-  timestamp: z.date().optional(),
-  salesEventNumber: z.coerce.number().int().positive(),
-  salesEventName: z.string().optional(),
-  studentNumber: z
+function itemPickerSchema() {
+  return z
     .string()
     .transform((val) => val.split(':')[0])
     .transform((val) => {
       const parsed = parseInt(val, 10)
       return isNaN(parsed) ? undefined : parsed
     })
-    .optional(),
+    .optional()
+}
+
+export const SaleSchema = z.object({
+  saleNumber: z.coerce.number().int().positive(),
+  timestamp: z.date().optional(),
+  salesEventNumber: itemPickerSchema(),
+  salesEventName: z.string().optional(),
+  studentNumber: itemPickerSchema(),
   studentName: z.string().optional(),
   finalSaleRevenue: z.preprocess(
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
@@ -60,16 +64,9 @@ export const SaleSchema = z.object({
 })
 
 export const NewSaleSchema = z.object({
-  salesEventNumber: z.coerce.number().int().optional(),
+  salesEventNumber: itemPickerSchema(),
   salesEventName: z.string().optional(),
-  studentNumber: z
-    .string()
-    .transform((val) => val.split(':')[0])
-    .transform((val) => {
-      const parsed = parseInt(val, 10)
-      return isNaN(parsed) ? undefined : parsed
-    })
-    .optional(),
+  studentNumber: itemPickerSchema(),
   studentName: z.string().optional(),
   finalSaleRevenue: z.preprocess(
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
