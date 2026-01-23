@@ -76,12 +76,21 @@ test('create sales event and update multiple fields', async ({page}) => {
   // Fill the products for sale
   await newForm.productsForSale().addButton().locator.click()
   await newForm.productsForSale().productInput(0).locator.fill('1')
+  await newForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.productsForSale().addButton().locator.click()
+  await page.waitForLoadState('networkidle')
   await newForm.productsForSale().productInput(1).locator.fill('2')
+  await newForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.productsForSale().addButton().locator.click()
+  await page.waitForLoadState('networkidle')
   await newForm.productsForSale().productInput(2).locator.fill('3')
+  await newForm.productsForSale().productInput(2).locator.blur()
+  await page.waitForLoadState('networkidle')
 
   await newForm.productsForSale().trashButton(1).locator.click()
+  await page.waitForLoadState('networkidle')
 
   await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
   await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3: ghi')

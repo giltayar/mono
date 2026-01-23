@@ -152,12 +152,20 @@ test('refund manual sale shows confirmation and only adds history row', async ({
 
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
+  await page.waitForLoadState('networkidle')
 
   await newForm.products().product(0).quantity().locator.fill('1')
+  await newForm.products().product(0).quantity().locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.products().product(0).unitPrice().locator.fill('100')
+  await newForm.products().product(0).unitPrice().locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.finalSaleRevenueInput().locator.fill('100')
+  await newForm.finalSaleRevenueInput().locator.blur()
+  await page.waitForLoadState('networkidle')
 
   await newForm.createButton().locator.click()
 

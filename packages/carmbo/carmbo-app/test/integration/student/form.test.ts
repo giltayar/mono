@@ -114,6 +114,7 @@ test('create student and update multiple fields', async ({page}) => {
   await updateForm.facebookNames().trashButton(0).locator.click()
 
   await updateForm.updateButton().locator.click()
+  await page.waitForLoadState('networkidle')
 
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('first3')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('last3')

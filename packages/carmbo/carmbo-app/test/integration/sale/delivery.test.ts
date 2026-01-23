@@ -69,8 +69,10 @@ test('create sale with delivery address then update it', async ({page}) => {
   const newForm = newSaleModel.form()
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
+  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
 
   await expect(newForm.deliveryAddress().locator).toBeHidden()
 
@@ -103,6 +105,8 @@ test('create sale with delivery address then update it', async ({page}) => {
   )
 
   await newForm.finalSaleRevenueInput().locator.fill('200')
+  await newForm.finalSaleRevenueInput().locator.blur()
+  await page.waitForLoadState('networkidle')
 
   // Save the sale
   await newForm.createButton().locator.click()

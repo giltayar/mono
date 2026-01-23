@@ -170,14 +170,17 @@ test('updating product to remove academy course unenrolls students from connecte
   const newForm = newSaleModel.form()
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
-  await Promise.all([
-    newForm.studentInput().locator.fill(`${studentNumber}`),
-    page.waitForLoadState('networkidle'),
-  ])
+  await page.waitForLoadState('networkidle')
+  await newForm.studentInput().locator.fill(`${studentNumber}`)
+  await newForm.studentInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+
   await newForm.studentInput().locator.blur()
   await newForm.products().product(0).quantity().locator.fill('1')
   await newForm.products().product(0).unitPrice().locator.fill('100')
   await newForm.finalSaleRevenueInput().locator.fill('100')
+  await newForm.finalSaleRevenueInput().locator.blur()
+  await page.waitForLoadState('networkidle')
 
   await newForm.createButton().locator.click()
   await page.waitForURL(updateSaleModel.urlRegex)
@@ -285,11 +288,11 @@ test('removing course from product does NOT unenroll if another product in same 
   const newForm = newSaleModel.form()
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
-  await Promise.all([
-    newForm.studentInput().locator.fill(`${studentNumber}`),
-    page.waitForLoadState('networkidle'),
-  ])
+  await page.waitForLoadState('networkidle')
+  await newForm.studentInput().locator.fill(`${studentNumber}`)
   await newForm.studentInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+
   await newForm.products().product(0).quantity().locator.fill('1')
   await newForm.products().product(0).unitPrice().locator.fill('100')
   await newForm.products().product(1).quantity().locator.fill('1')
@@ -389,14 +392,17 @@ test('disconnected sales are not affected by product academy course updates', as
   const newForm = newSaleModel.form()
   await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
   await newForm.salesEventInput().locator.blur()
-  await Promise.all([
-    newForm.studentInput().locator.fill(`${studentNumber}`),
-    page.waitForLoadState('networkidle'),
-  ])
+  await page.waitForLoadState('networkidle')
+  await newForm.studentInput().locator.fill(`${studentNumber}`)
+  await newForm.studentInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+
   await newForm.studentInput().locator.blur()
   await newForm.products().product(0).quantity().locator.fill('1')
   await newForm.products().product(0).unitPrice().locator.fill('100')
   await newForm.finalSaleRevenueInput().locator.fill('100')
+  await newForm.finalSaleRevenueInput().locator.blur()
+  await page.waitForLoadState('networkidle')
 
   await newForm.createButton().locator.click()
   await page.waitForURL(updateSaleModel.urlRegex)

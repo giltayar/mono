@@ -53,8 +53,12 @@ test('searching products', async ({page}) => {
   await productListModel.search().queryInput().locator.fill('recorded')
   await productListModel.search().queryInput().locator.press('Enter')
 
-  const rowCountAfterTypeSearch = await productListModel.list().rows().locator.count()
-  expect(rowCountAfterTypeSearch).toBeGreaterThan(0)
+  await expect
+    .poll(async () => {
+      return await productListModel.list().rows().locator.count()
+    })
+    .toBeGreaterThan(0)
+
   await expect(productListModel.list().rows().row(0).typeCell().locator).toContainText('recorded')
 
   // test archived products

@@ -130,7 +130,9 @@ test('restoring a student', async ({page}) => {
 
   await newForm1.emails().emailInput(0).locator.fill('alice.johnson@example.com')
   await newForm1.phones().trashButton(0).locator.click()
+  await page.waitForLoadState('networkidle')
   await newForm1.facebookNames().trashButton(0).locator.click()
+  await page.waitForLoadState('networkidle')
 
   await newForm1.createButton().locator.click()
   await page.waitForURL(updateStudentModel.urlRegex)
