@@ -165,6 +165,7 @@ export interface TaxInvoiceInformation {
   }[]
   transactionRevenueInCents: number
   transactionDate: Date
+  transactionDescription: string | undefined
 }
 
 // More information here: https://cardcomapi.zendesk.com/hc/he/articles/25360043043602-%D7%99%D7%A6%D7%99%D7%A8%D7%AA-%D7%97%D7%A9%D7%91%D7%95%D7%A0%D7%99%D7%95%D7%AA-Create-Tax-invoice
@@ -200,6 +201,9 @@ export async function createTaxInvoiceDocument(
     CustomLines: [
       {
         TranDate: invoiceInformation.transactionDate.toISOString(),
+        ...(invoiceInformation.transactionDescription !== undefined
+          ? {Description: invoiceInformation.transactionDescription}
+          : {}),
         Sum: invoiceInformation.transactionRevenueInCents / 100,
       },
     ],
