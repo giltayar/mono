@@ -54,12 +54,21 @@ a object[type='image/svg+xml'] {
   opacity: 0;
 }
 
+.spinner-border {
+  display: none;
+  opacity: 0;
+}
+
 .htmx-request.operation-spinner {
   display: inline-block;
   margin-left: 10px;
   opacity: 1;
   transition: opacity 0.3s ease-in;
   transition-delay: 200ms;
+}
+
+.htmx-reguest.spinner-border {
+  display: inline-block;
 }
 
 form .row .form-floating label {

@@ -19,8 +19,8 @@ export function MainLayout({
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <link rel="stylesheet" href="/src/layout/style/style.css" />
           <link rel="stylesheet" href="/dist/bootstrap.min.css" />
+          <link rel="stylesheet" href="/src/layout/style/style.css" />
           <script src="/dist/htmx.min.js"></script>
           <script src="/dist/bootstrap.bundle.min.js" defer></script>
           <script src="/src/layout/js/scripts.js" type="module"></script>

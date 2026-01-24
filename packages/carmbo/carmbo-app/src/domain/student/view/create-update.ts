@@ -95,14 +95,20 @@ export function StudentUpdateView({
         />
       </div>
     </form>
-    <section class="form-group col-md-6 mt-3" aria-labelledby="magic-link-label">
+    <section
+      id="magic-link-section"
+      class="form-group col-md-6 mt-3"
+      aria-labelledby="magic-link-label"
+    >
       <h5 id="magic-link-label" class="mb-3">Academy Magic Link</h5>
       <button
         hx-get="/students/${student.studentNumber}/academy-magic-link"
         hx-swap="outerHTML"
         hx-target="this"
+        hx-indicator="#magic-link-section .operation-spinner"
       >
         Fetch link
+        <div class="operation-spinner spinner-border spinner-border-sm" role="status"></div>
       </button>
     </section>
 
