@@ -40,7 +40,7 @@ export function setup(testUrl: string): {
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
       new URL('../docker-compose.yaml', import.meta.url),
-      {variation: testUrl},
+      {variation: testUrl, containerCleanup: !!process.env.CI, forceRecreate: !!process.env.CI},
     ))
 
     const host = await findAddress('carmbo-postgres', 5432, {healthCheck: postgresHealthCheck})
@@ -70,6 +70,14 @@ export function setup(testUrl: string): {
         [
           'john.already-enrolled@example.com',
           {name: 'John Already-Enrolled', phone: '123-456-7890', enrolledInCourses: [1, 33]},
+        ],
+        [
+          'jane.already-enrolled@example.com',
+          {name: 'Jane Already-Enrolled', phone: '234-567-8901', enrolledInCourses: [1]},
+        ],
+        [
+          'bob.already-enrolled@example.com',
+          {name: 'Bob Already-Enrolled', phone: '345-678-9012', enrolledInCourses: [33]},
         ],
       ]),
     })

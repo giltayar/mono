@@ -49,7 +49,9 @@ export async function migrate({sql, path}: {sql: Sql; path: string | URL}) {
     const current = needed.shift()
     if (!current) return
 
-    console.log('running migration', basename(current.path))
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('running migration', basename(current.path))
+    }
     await run(sql, current)
     await next(sql)
   }

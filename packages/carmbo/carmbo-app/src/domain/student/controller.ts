@@ -1,6 +1,5 @@
 import type {Sql} from 'postgres'
-import {fetchMagicLinksForStudent,
-type NewStudent, type Student} from './model.ts'
+import {fetchMagicLinksForStudent, type NewStudent, type Student} from './model.ts'
 import type {OngoingStudent} from './view/model.ts'
 import {
   listStudents,
@@ -12,7 +11,7 @@ import {
   listSalesForStudent,
 } from './model.ts'
 import {
-renderMagicLinks,
+  renderMagicLinks,
   renderStudentsCreatePage,
   renderStudentFormFields,
   renderStudentUpdatePage,

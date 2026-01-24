@@ -611,7 +611,8 @@ export async function fetchMagicLinksForStudent(
       email
     FROM
       student_email
-    JOIN student_history ON student_history.data_id = student_email.data_id AND student_history.student_number = ${studentNumber}
+    JOIN student_history ON student_history.data_id = student_email.data_id
+    WHERE student_history.student_number = ${studentNumber}
     ORDER BY student_history.timestamp DESC, student_email.item_order ASC
   `) as {email: string}[]
 

@@ -4,12 +4,32 @@ import {createStudentHistoryPageModel} from './student-history.model.ts'
 import {createAllPagesPageModel} from '../common/all-pages.model.ts'
 
 export function createUpdateStudentPageModel(page: Page) {
-  const tabsNav = page.locator('.nav-tabs')
   return {
     ...createAllPagesPageModel(page),
     urlRegex: /\/students\/\d+$/,
     pageTitle: (locator = page.getByRole('heading', {name: /Update Student \d+/})) => ({locator}),
-    tabs: () => ({
+    magicLink: (magicLinkSection = page.getByLabel('Academy Magic Link')) => ({
+      fetchButton: (locator = magicLinkSection.getByRole('button', {name: 'Fetch link'})) => ({
+        locator,
+      }),
+      noLinksMessage: (
+        locator = magicLinkSection.locator('p:has-text("No magic links found")'),
+      ) => ({
+        locator,
+      }),
+      singleLink: (locator = magicLinkSection.locator('a')) => ({locator}),
+      linksList: (locator = magicLinkSection.locator('ul')) => ({
+        locator,
+        items: (itemsLocator = locator.locator('li')) => ({
+          locator: itemsLocator,
+          item: (i: number, itemLocator = itemsLocator.nth(i)) => ({
+            locator: itemLocator,
+            link: (linkLocator = itemLocator.locator('a')) => ({locator: linkLocator}),
+          }),
+        }),
+      }),
+    }),
+    tabs: (tabsNav = page.locator('.nav-tabs')) => ({
       detailsTab: (locator = tabsNav.getByRole('link', {name: 'Details'})) => ({locator}),
       salesTab: (locator = tabsNav.getByRole('link', {name: 'Sales'})) => ({locator}),
     }),
