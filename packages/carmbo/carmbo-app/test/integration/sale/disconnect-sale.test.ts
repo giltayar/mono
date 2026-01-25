@@ -65,6 +65,7 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
       customerPhone,
       cardcomCustomerId: 5555,
       transactionDate: new Date(),
+      transactionDescription: undefined,
       transactionRevenueInCents: 100 * 100,
     },
     undefined,

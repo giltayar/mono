@@ -268,6 +268,7 @@ async function connectSaleToCardcom(
     }>
     timestamp: Date | null
     finalSaleRevenue: string | null
+    cardcomTransactionDescription: string | null
     cardcomCustomerId: string | null
     cardcomInvoiceDocumentUrl: string | null
     cardcomInvoiceNumber: string | null
@@ -298,6 +299,7 @@ async function connectSaleToCardcom(
               unitPriceInCents: p.unitPrice * 100,
             })) ?? [],
           transactionDate: sale.timestamp ?? now,
+          transactionDescription: sale.cardcomTransactionDescription ?? undefined,
           transactionRevenueInCents,
         },
         {sendInvoiceByMail: true},
@@ -317,6 +319,7 @@ async function connectSaleToCardcom(
           invoiceDocumentUrl: cardcomDocumentLink,
           cardcomCustomerId,
           cardcomSaleRevenue: transactionRevenueInCents / 100,
+          transactionDescription: sale.cardcomTransactionDescription ?? null,
         })}
       `
     logger.info({cardcomInvoiceNumber}, 'cardcom-invoice-document-updated-in-sale')
@@ -335,6 +338,7 @@ async function connectSaleToCardcom(
           invoiceDocumentUrl: sale.cardcomInvoiceDocumentUrl,
           cardcomCustomerId: sale.cardcomCustomerId,
           cardcomSaleRevenue: parseFloat(sale.finalSaleRevenue ?? '0'),
+          transactionDescription: sale.cardcomTransactionDescription ?? null,
         })}
       `
 
@@ -366,6 +370,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
         sale_data_cardcom.customer_id,
         sale_data_cardcom_manual.cardcom_customer_id
       ) AS cardcom_customer_id,
+      sale_data_cardcom_manual.transaction_description as cardcom_transaction_description,
       student.student_number AS student_number,
       student_email.email AS student_email,
       student_phone.phone AS student_phone,
@@ -426,6 +431,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
     cardcomCustomerId: string | null
     cardcomInvoiceDocumentUrl: string | null
     cardcomInvoiceNumber: string | null
+    cardcomTransactionDescription: string | null
   }[]
 
   if (result.length === 0) return undefined

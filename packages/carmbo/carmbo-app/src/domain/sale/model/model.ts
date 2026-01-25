@@ -47,6 +47,7 @@ export const SaleSchema = z.object({
   cardcomInvoiceNumber: z.string().optional(),
   cardcomInvoiceDocumentUrl: z.url().optional(),
   cardcomRefundTransactionId: z.string().optional(),
+  transactionDescription: z.string().optional(),
   manualSaleType: z.enum(['manual']).optional(),
   hasDeliveryAddress: z.stringbool().optional(),
   deliveryAddress: z
@@ -88,6 +89,7 @@ export const NewSaleSchema = z.object({
     .optional(),
   cardcomInvoiceNumber: z.string().optional(),
   cardcomInvoiceDocumentUrl: z.url().optional(),
+  transactionDescription: z.string().optional(),
   manualSaleType: z.enum(['manual']).optional(),
   hasDeliveryAddress: z.stringbool().optional(),
   deliveryAddress: z
@@ -470,6 +472,7 @@ export function saleSelect(saleNumber: number, sql: Sql) {
       COALESCE(sale_data_cardcom.invoice_number, sale_data_cardcom_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
       COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS cardcom_refund_transaction_id,
+      sale_data_cardcom_manual.transaction_description AS transaction_description,
       COALESCE(sale_data_active.is_active, false) AS is_active,
       COALESCE(sale_data_connected.is_connected, false) AS is_connected,
       CASE WHEN sale_data_cardcom_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
@@ -636,6 +639,7 @@ export async function createSale(
         dataManualId,
         cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
         cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
+        transactionDescription: sale.transactionDescription || null,
       })}
     `)
 
@@ -792,6 +796,7 @@ export async function updateSale(
         dataManualId,
         cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
         cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
+        transactionDescription: sale.transactionDescription || null,
       })}
     `)
 

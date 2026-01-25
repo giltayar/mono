@@ -21,6 +21,9 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
     cardcomInvoiceNumberInput: (inputLocator = locator.getByLabel('Cardcom Invoice Number')) => ({
       locator: inputLocator,
     }),
+    transactionDescriptionInput: (inputLocator = locator.getByLabel('Description')) => ({
+      locator: inputLocator,
+    }),
     viewInvoiceLink: (linkLocator = locator.getByRole('link', {name: 'View Invoice'})) => ({
       locator: linkLocator,
     }),

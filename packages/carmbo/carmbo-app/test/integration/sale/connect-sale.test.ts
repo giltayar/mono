@@ -180,6 +180,8 @@ test('create sale then connect it', async ({page}) => {
     transactionRevenueInCents: 2700,
   } as Omit<TaxInvoiceInformation, 'transactionDate'>)
 
+  expect(taxInvoiceDocument?.transactionDescription).toBeUndefined()
+
   expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1)).toBe(true)
   expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33)).toBe(
     true,
@@ -256,6 +258,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       customerName: 'John Doe',
       customerPhone: '1234567890',
       transactionDate: new Date(),
+      transactionDescription: undefined,
       transactionRevenueInCents: 100,
       productsSold: [
         {
@@ -579,4 +582,105 @@ test('connect sale then reconnect it', async ({page}) => {
 
   const studentForm = updateStudentModel.form()
   await expect(studentForm.cardcomCustomerIdsInput().locator).toBeHidden()
+})
+
+test('create sale with transaction description then connect it', async ({page}) => {
+  // Setup: Create a student, sales event, and products
+  const studentNumber = await createStudent(
+    {
+      names: [{firstName: 'Jane', lastName: 'Doe'}],
+      emails: ['jane.doe@example.com'],
+      phones: ['0501234567'],
+      facebookNames: [],
+    },
+    undefined,
+    smooveIntegration(),
+    new Date(),
+    sql(),
+  )
+
+  const productNumber = await createProduct(
+    {
+      name: 'Test Product',
+      productType: 'recorded',
+      smooveListId: 5,
+      academyCourses: [100],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const newSaleModel = createNewSalePageModel(page)
+  const updateSaleModel = createUpdateSalePageModel(page)
+
+  // Navigate to create new sale page
+  await page.goto(new URL('/sales/new', url()).href)
+
+  await expect(newSaleModel.pageTitle().locator).toHaveText('New Sale')
+
+  // Fill the new sale form with transaction description
+  const newForm = newSaleModel.form()
+  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+  await newForm.salesEventInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+  await newForm.studentInput().locator.fill(`${studentNumber}`)
+  await newForm.studentInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+
+  await newForm.products().product(0).quantity().locator.fill('1')
+  await newForm.products().product(0).quantity().locator.blur()
+  await page.waitForLoadState('networkidle')
+  await newForm.products().product(0).unitPrice().locator.fill('50')
+  await newForm.products().product(0).unitPrice().locator.blur()
+  await page.waitForLoadState('networkidle')
+
+  await newForm.finalSaleRevenueInput().locator.fill('50')
+  await newForm.transactionDescriptionInput().locator.fill('שולם בהעברה בנקאית')
+
+  // Save the sale
+  await newForm.createButton().locator.click()
+
+  // Wait for navigation to update page
+  await page.waitForURL(updateSaleModel.urlRegex)
+
+  const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
+
+  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
+  await expect(updateSaleModel.form().transactionDescriptionInput().locator).toHaveValue(
+    'שולם בהעברה בנקאית',
+  )
+
+  // Connect the sale
+  await updateSaleModel.form().connectButton().locator.click()
+
+  // Verify sale is now connected and in view mode
+  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Connected to External Providers',
+  )
+
+  // Verify the description is still visible in view mode
+  await expect(updateSaleModel.form().transactionDescriptionInput().locator).toHaveValue(
+    'שולם בהעברה בנקאית',
+  )
+  await expect(updateSaleModel.form().transactionDescriptionInput().locator).toBeVisible()
+
+  // Verify the transaction description was passed to Cardcom
+  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  expect(taxInvoiceDocument).toBeDefined()
+  expect(taxInvoiceDocument?.transactionDescription).toBe('שולם בהעברה בנקאית')
 })

@@ -186,6 +186,27 @@ export function SalesFormFields({
             ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
             : undefined}
         </div>
+        <div
+          class="mb-3"
+          style=${operation === 'write' || sale.transactionDescription ? '' : 'display: none'}
+        >
+          <label for="transactionDescription" class="form-label">Description</label>
+          <input
+            type="text"
+            class="form-control"
+            id="transactionDescription"
+            name="transactionDescription"
+            value=${sale.transactionDescription ?? ''}
+            list="description-options"
+            readonly=${isReadOnly}
+          />
+          <datalist id="description-options">
+            <option value="שולם בביט" />
+            <option value="שולם בפייבוקס" />
+            <option value="שולם במזומן" />
+            <option value="שולם בהעברה בנקאית" />
+          </datalist>
+        </div>
         <div class="mb-3">
           <label for="finalSaleRevenue" class="form-label">Final Sale Revenue</label>
           <input

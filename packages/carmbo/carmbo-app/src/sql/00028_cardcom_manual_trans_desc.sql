@@ -1,0 +1,1 @@
+ALTER TABLE sale_data_cardcom_manual ADD COLUMN transaction_description TEXT;

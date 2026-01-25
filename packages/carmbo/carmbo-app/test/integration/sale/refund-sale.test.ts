@@ -56,6 +56,7 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
       customerPhone,
       cardcomCustomerId: 5555,
       transactionDate: new Date(),
+      transactionDescription: undefined,
       transactionRevenueInCents: 100 * 100,
     },
     undefined,

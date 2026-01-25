@@ -307,6 +307,78 @@ test('optional fields', async ({page}) => {
   await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
 })
 
+test('transaction description field', async ({page}) => {
+  // Setup: Create a student, sales event, and products
+  const studentNumber = await createStudent(
+    {
+      names: [{firstName: 'Jane', lastName: 'Smith'}],
+      emails: ['jane.smith@example.com'],
+      phones: [],
+      facebookNames: [],
+    },
+    undefined,
+    smooveIntegration(),
+    new Date(),
+    sql(),
+  )
+
+  const productNumber = await createProduct(
+    {
+      name: 'Test Product',
+      productType: 'recorded',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const newSaleModel = createNewSalePageModel(page)
+  const updateSaleModel = createUpdateSalePageModel(page)
+
+  // Test 1: Create sale with description using free text
+  await page.goto(new URL('/sales/new', url()).href)
+  await page.waitForURL(newSaleModel.urlRegex)
+
+  const newForm = newSaleModel.form()
+  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+  await newForm.salesEventInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+  await newForm.studentInput().locator.fill(`${studentNumber}`)
+  await newForm.studentInput().locator.blur()
+  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: Jane Smith`)
+
+  await newForm.finalSaleRevenueInput().locator.fill('100')
+  await newForm.transactionDescriptionInput().locator.fill('שולם בביט')
+
+  await newForm.createButton().locator.click()
+  await page.waitForURL(updateSaleModel.urlRegex)
+
+  // Verify description is saved
+  await expect(updateSaleModel.form().transactionDescriptionInput().locator).toHaveValue(
+    'שולם בביט',
+  )
+
+  // Test 3: Clear description (should result in null, field hidden in view mode)
+  await updateSaleModel.form().transactionDescriptionInput().locator.clear()
+  await updateSaleModel.form().updateButton().locator.click()
+  await page.waitForLoadState('networkidle')
+
+  await expect(updateSaleModel.form().transactionDescriptionInput().locator).toHaveValue('')
+})
+
 test('creation/update error shows alert', async ({page}) => {
   // Setup: Create a student, sales event, and products
   const studentNumber = await createStudent(

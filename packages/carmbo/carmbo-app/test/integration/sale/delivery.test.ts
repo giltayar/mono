@@ -231,6 +231,7 @@ test('cardcom sale with delivery creates delivery address in sale', async ({page
       customerPhone,
       cardcomCustomerId: 1776,
       transactionDate: new Date(),
+      transactionDescription: undefined,
       transactionRevenueInCents: 21 * 100,
     },
     {

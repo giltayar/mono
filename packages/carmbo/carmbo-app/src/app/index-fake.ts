@@ -88,6 +88,7 @@ for (const _ of range(0, parseInt(countCardcomSalesResult[0].count))) {
         {productId: '1', productName: 'Product 1', unitPriceInCents: 10_000, quantity: 2},
       ],
       transactionDate: new Date(),
+      transactionDescription: undefined,
       transactionRevenueInCents: 100,
     },
     {sendInvoiceByMail: false},
