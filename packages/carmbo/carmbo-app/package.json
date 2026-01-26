@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "6.13.0",
+  "version": "6.13.1",
   "description": "",
   "type": "module",
   "exports": {
@@ -28,7 +28,7 @@
     "stop:docker-compose": "docker compose down",
     "postgres:clean": "docker compose down && sudo rm -rf /tmp/carmbo-app/.db-data",
     "build": "mkdir -p dist && rm -rf dist/* && FORCE_COLOR=1 run-p 'build:*'",
-    "build:htmx": "cp node_modules/htmx.org/dist/htmx.min.js dist/htmx.min.js",
+    "build:htmx": "cp node_modules/htmx.org/dist/htmx.js dist/htmx.min.js",
     "build:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css dist/ && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dist/",
     "postbuild": "run-p 'postbuild:*'",
     "postbuild:docker": "docker build --platform linux/amd64 -t giltayar/carmbo-app:$npm_package_version . --secret id=npmrc,src=$HOME/.npmrc",
