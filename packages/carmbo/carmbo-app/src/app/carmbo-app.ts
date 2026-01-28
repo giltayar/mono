@@ -3,6 +3,7 @@ import formbody from '@fastify/formbody'
 import fastifystatic from '@fastify/static'
 import qs from 'qs'
 import Auth0 from '@auth0/auth0-fastify'
+import fastifyCompress from '@fastify/compress'
 import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
 import productRoutes from '../domain/product/route.ts'
@@ -29,6 +30,7 @@ import type {
 import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {registerGlobalHelpersForJobExecution} from '../domain/job/job-executor.ts'
+import {version} from '../commons/version.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -152,15 +154,21 @@ export function makeApp({
     app.register(Auth0, {...auth0, appBaseUrl})
   }
 
+  app.register(fastifyCompress)
+
   app.register(fastifystatic, {
     root: new URL('../../dist', import.meta.url),
-    prefix: '/dist/',
+    prefix: '/dist/' + version + '/',
     decorateReply: false,
+    immutable: true,
+    maxAge: '1y',
   })
   app.register(fastifystatic, {
     root: new URL('../../src', import.meta.url),
-    prefix: '/src/',
+    prefix: '/src/' + version + '/',
     decorateReply: false,
+    immutable: true,
+    maxAge: '1y',
     allowedPath: (pathName) =>
       pathName.endsWith('scripts.js') ||
       pathName.endsWith('.css') ||

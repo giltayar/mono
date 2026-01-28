@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "6.13.1",
+  "version": "6.13.2",
   "description": "",
   "type": "module",
   "exports": {
@@ -32,7 +32,7 @@
     "build:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css dist/ && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dist/",
     "postbuild": "run-p 'postbuild:*'",
     "postbuild:docker": "docker build --platform linux/amd64 -t giltayar/carmbo-app:$npm_package_version . --secret id=npmrc,src=$HOME/.npmrc",
-    "test": "FORCE_COLOR=1 run-p --aggregate-output 'test:*'",
+    "test": "FORCE_COLOR=1 run-p 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
     "test:playwright": "NODE_ENV=test playwright test --config=test/integration",
@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@auth0/auth0-fastify": "^1.2.0",
+    "@fastify/compress": "^8.3.1",
     "@fastify/formbody": "^8.0.2",
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^9.0.0",

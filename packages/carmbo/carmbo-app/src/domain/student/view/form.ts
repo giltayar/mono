@@ -1,6 +1,7 @@
 import {html} from '../../../commons/html-templates.ts'
 import type {Student} from '../model.ts'
 import type {OngoingStudent} from './model.ts'
+import {version} from '../../../commons/version.ts'
 
 export function StudentCreateOrUpdateFormFields({
   student,
@@ -209,7 +210,7 @@ function AddButton({
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data="/src/layout/style/plus-circle.svg"
+        data=${`/src/${version}/layout/style/plus-circle.svg`}
       ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -229,7 +230,7 @@ function RemoveButton() {
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data="/src/layout/style/minus-circle.svg"
+        data=${`/src/${version}/layout/style/minus-circle.svg`}
       ></object>
     </button>
   `

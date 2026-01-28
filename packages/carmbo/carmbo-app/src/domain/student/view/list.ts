@@ -2,6 +2,7 @@ import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {StudentForGrid} from '../model.ts'
+import {version} from '../../../commons/version.ts'
 
 export function renderStudentsPage(
   flash: string | undefined,
@@ -106,7 +107,7 @@ function StudentsView({
           <object
             type="image/svg+xml"
             class="feather feather-large"
-            data="/src/layout/style/plus-circle.svg"
+            data=${`/src/${version}/layout/style/plus-circle.svg`}
           ></object>
         </a>
       </section>

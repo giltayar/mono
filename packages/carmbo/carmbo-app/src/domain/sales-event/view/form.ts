@@ -3,6 +3,7 @@ import {html} from '../../../commons/html-templates.ts'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {SalesEvent} from '../model.ts'
 import type {OngoingSalesEvent} from './model.ts'
+import {version} from '../../../commons/version.ts'
 
 export function SalesEventCreateOrUpdateFormFields({
   salesEvent,
@@ -148,7 +149,7 @@ function AddButton({
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data="/src/layout/style/plus-circle.svg"
+        data=${`/src/${version}/layout/style/plus-circle.svg`}
       ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -168,7 +169,7 @@ function RemoveButton() {
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data="/src/layout/style/minus-circle.svg"
+        data=${`/src/${version}/layout/style/minus-circle.svg`}
       ></object>
     </button>
   `

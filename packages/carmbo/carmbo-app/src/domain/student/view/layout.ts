@@ -1,9 +1,10 @@
 import {html} from '../../../commons/html-templates.ts'
+import {version} from '../../../commons/version.ts'
 
 export function Layout({children}: {children: string | string[]}) {
   return html`
-    <script src="/src/domain/student/view/js/scripts.js" defer></script>
-    <link rel="stylesheet" href="/src/domain/student/view/style/style.css" />
+    <script src=${`/src/${version}/domain/student/view/js/scripts.js`} defer></script>
+    <link rel="stylesheet" href=${`/src/${version}/domain/student/view/style/style.css`} />
     <div class="students-view">${children}</div>
   `
 }

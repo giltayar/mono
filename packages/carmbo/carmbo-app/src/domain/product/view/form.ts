@@ -3,6 +3,7 @@ import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
+import {version} from '../../../commons/version.ts'
 
 export function ProductCreateOrUpdateFormFields({
   product,
@@ -347,7 +348,7 @@ function AddButton({
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data="/src/layout/style/plus-circle.svg"
+        data=${`/src/${version}/layout/style/plus-circle.svg`}
       ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -367,7 +368,7 @@ function RemoveButton() {
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data="/src/layout/style/minus-circle.svg"
+        data=${`/src/${version}/layout/style/minus-circle.svg`}
       ></object>
     </button>
   `

@@ -1,5 +1,6 @@
 import {BannerComponent, type Banner} from './banner.ts'
 import {html} from '../commons/html-templates.ts'
+import {version} from '../commons/version.ts'
 
 export function MainLayout({
   title,
@@ -19,11 +20,11 @@ export function MainLayout({
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <link rel="stylesheet" href="/dist/bootstrap.min.css" />
-          <link rel="stylesheet" href="/src/layout/style/style.css" />
-          <script src="/dist/htmx.min.js"></script>
-          <script src="/dist/bootstrap.bundle.min.js" defer></script>
-          <script src="/src/layout/js/scripts.js" type="module"></script>
+          <link rel="stylesheet" href=${`/dist/${version}/bootstrap.min.css`} />
+          <link rel="stylesheet" href=${`/src/${version}/layout/style/style.css`} />
+          <script src=${`/dist/${version}/htmx.min.js`}></script>
+          <script src=${`/dist/${version}/bootstrap.bundle.min.js`} defer></script>
+          <script src=${`/src/${version}/layout/js/scripts.js`} type="module"></script>
           <title>${title}</title>
         </head>
         <body>
@@ -52,7 +53,7 @@ function NavBar({
       <div class="container-fluid">
         <a class="navbar-brand" href="/"
           ><img
-            src="/src/layout/style/carmel-egger-icon.png"
+            src=${`/src/${version}/layout/style/carmel-egger-icon.png`}
             width="30"
             height="30"
             alt="Carmel Egger Logo"
