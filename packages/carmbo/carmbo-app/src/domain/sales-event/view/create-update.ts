@@ -130,6 +130,16 @@ export function SalesEventUpdateView({
           readonly
         />
       </label>
+      <button
+        type="button"
+        class="btn btn-secondary mt-2"
+        hx-get="/sales-events/${salesEvent.salesEventNumber}/import-smoove-dialog"
+        hx-target="#import-smoove-dialog-container"
+        hx-swap="innerHTML"
+      >
+        Import from Smoove
+      </button>
+      <div id="import-smoove-dialog-container"></div>
     </div>
     <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
   `

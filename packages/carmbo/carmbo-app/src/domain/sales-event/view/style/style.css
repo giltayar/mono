@@ -27,3 +27,25 @@
     right: 1rem;
   }
 }
+
+/* Import Smoove Dialog */
+.import-smoove-dialog {
+  max-width: 600px;
+  width: 90%;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.import-smoove-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.import-smoove-dialog .progress {
+  height: 1.5rem;
+}
+
+.import-smoove-dialog .list-group-flush .list-group-item {
+  padding: 0.5rem 0;
+}

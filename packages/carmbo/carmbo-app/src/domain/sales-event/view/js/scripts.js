@@ -25,3 +25,13 @@ document.addEventListener('htmx:configRequest', (/** @type {any} */ event) => {
     }
   }
 })
+
+// Show dialog when import-smoove-dialog is loaded
+document.addEventListener('htmx:afterSwap', (/** @type {any} */ event) => {
+  if (event.detail.target.id === 'import-smoove-dialog-container') {
+    const dialog = document.getElementById('import-smoove-dialog')
+    if (dialog && dialog instanceof HTMLDialogElement) {
+      dialog.showModal()
+    }
+  }
+})

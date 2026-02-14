@@ -7,6 +7,8 @@ import {
   updateSalesEvent,
   showOngoingSalesEvent,
   deleteSalesEvent,
+  showImportSmooveDialog,
+  executeImportFromSmooveList,
 } from './controller.ts'
 import {NewSalesEventSchema, SalesEventSchema} from './model.ts'
 import {OngoingSalesEventSchema} from './view/model.ts'
@@ -160,6 +162,34 @@ export default function (
           appBaseUrl,
           apiSecret,
         }),
+      ),
+  )
+
+  // Import from Smoove
+  appWithTypes.get(
+    '/:number/import-smoove-dialog',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number()}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showImportSmooveDialog(request.params.number)),
+  )
+
+  // Import from Smoove
+  appWithTypes.post(
+    '/:number/import-smoove',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number()}),
+        body: z.object({smooveListId: z.coerce.number()}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await executeImportFromSmooveList(request.params.number, request.body.smooveListId, sql),
       ),
   )
 }

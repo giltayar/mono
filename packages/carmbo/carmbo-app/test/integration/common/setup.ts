@@ -14,7 +14,22 @@ import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hook
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
 
-export function setup(testUrl: string): {
+export type SmooveContact = {
+  id: number
+  email: string
+  firstName: string
+  lastName: string
+  telephone: string
+  lists: number[]
+  signupDate: Date
+  birthday?: Date
+  isDeleted?: boolean
+}
+
+export function setup(
+  testUrl: string,
+  options?: {smooveContacts?: Record<number, SmooveContact>},
+): {
   url: () => URL
   sql: () => Sql
   smooveIntegration: () => ReturnType<typeof createFakeSmooveIntegrationService>
@@ -57,7 +72,7 @@ export function setup(testUrl: string): {
         {id: 16, name: 'Smoove List Removed D'},
         {id: 20, name: 'Smoove List ID Alpha'},
       ],
-      contacts: {},
+      contacts: options?.smooveContacts ?? {},
     })
     academyIntegration = createFakeAcademyIntegrationService({
       courses: [

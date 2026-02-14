@@ -132,6 +132,7 @@ export async function addNoInvoiceSale(
     const saleNumber = await createNoInvoiceSale(
       finalStudent.studentNumber,
       salesEventNumber,
+      'Created from "No Invoice" sale',
       now,
       sql,
       logger,
@@ -457,9 +458,10 @@ async function createSaleFromCardcomData(
   return saleNumber
 }
 
-async function createNoInvoiceSale(
+export async function createNoInvoiceSale(
   studentNumber: number,
   salesEventNumber: number,
+  operationReason: string,
   now: Date,
   sql: Sql,
   logger: FastifyBaseLogger,
@@ -472,7 +474,7 @@ async function createNoInvoiceSale(
   const dataConnectedId = crypto.randomUUID()
 
   logger.info(
-    {historyId, dataId, dataProductId, dataNoInvoiceId, dataActiveId},
+    {historyId, dataId, dataProductId, dataNoInvoiceId, dataActiveId, operationReason},
     'sale-ids-generated',
   )
 
@@ -484,7 +486,7 @@ async function createNoInvoiceSale(
         dataProductId,
         timestamp: now,
         operation: 'create',
-        operationReason: 'Created from "No Invoice" sale',
+        operationReason,
         dataActiveId,
         dataConnectedId,
       })}

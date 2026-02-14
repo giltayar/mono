@@ -1,6 +1,6 @@
 import fastify, {type FastifyBaseLogger, type FastifyInstance} from 'fastify'
 import formbody from '@fastify/formbody'
-import fastifystatic from '@fastify/static'
+import fastifyStatic from '@fastify/static'
 import qs from 'qs'
 import Auth0 from '@auth0/auth0-fastify'
 import fastifyCompress from '@fastify/compress'
@@ -156,14 +156,14 @@ export function makeApp({
 
   app.register(fastifyCompress)
 
-  app.register(fastifystatic, {
+  app.register(fastifyStatic, {
     root: new URL('../../dist', import.meta.url),
     prefix: '/dist/' + version + '/',
     decorateReply: false,
     immutable: true,
     maxAge: '1y',
   })
-  app.register(fastifystatic, {
+  app.register(fastifyStatic, {
     root: new URL('../../src', import.meta.url),
     prefix: '/src/' + version + '/',
     decorateReply: false,

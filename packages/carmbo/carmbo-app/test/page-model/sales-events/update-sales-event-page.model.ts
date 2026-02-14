@@ -31,6 +31,43 @@ export function createUpdateSalesEventPageModel(page: Page) {
         locator: inputLocator,
       }),
     }),
+    smooveInformation: () => ({
+      webhookUrlInput: (inputLocator = page.getByLabel('Smoove Webhook URL')) => ({
+        locator: inputLocator,
+      }),
+      importFromSmooveButton: (
+        btnLocator = page.getByRole('button', {name: 'Import from Smoove'}),
+      ) => ({
+        locator: btnLocator,
+      }),
+    }),
+    importSmooveDialog: () => ({
+      dialog: (dialogLocator = page.locator('#import-smoove-dialog')) => ({
+        locator: dialogLocator,
+      }),
+      smooveListInput: (inputLocator = page.locator('#import-smooveListId')) => ({
+        locator: inputLocator,
+      }),
+      smooveListHiddenInput: (inputLocator = page.locator('#import-smooveListId_value')) => ({
+        locator: inputLocator,
+      }),
+      cancelButton: (
+        btnLocator = page.locator('#import-smoove-dialog button', {hasText: 'Cancel'}),
+      ) => ({
+        locator: btnLocator,
+      }),
+      startImportButton: (btnLocator = page.locator('#import-smoove-start-btn')) => ({
+        locator: btnLocator,
+      }),
+      resultsContainer: (containerLocator = page.locator('#import-smoove-results')) => ({
+        locator: containerLocator,
+      }),
+      closeButton: (
+        btnLocator = page.locator('#import-smoove-results button', {hasText: 'Close'}),
+      ) => ({
+        locator: btnLocator,
+      }),
+    }),
     history: () => createSalesEventHistoryPageModel(page),
   }
 }

@@ -23,6 +23,9 @@ import {finalHtml, retarget, type ControllerResult} from '../../commons/controll
 import type {SalesEventManipulations} from './view/sales-event-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
 import {exceptionToBanner, type Banner} from '../../layout/banner.ts'
+import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {renderImportSmooveDialog, renderImportResults} from './view/import-smoove.ts'
+import {importFromSmooveList} from './model/model-import-smoove.ts'
 
 export async function showSalesEvents(
   {
@@ -250,4 +253,34 @@ async function listProductsForChoosing(sql: Sql) {
   }
 
   return cachedProductsForChoosing.groups
+}
+
+export async function showImportSmooveDialog(salesEventNumber: number): Promise<ControllerResult> {
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+
+  const smooveLists = await listSmooveLists(smooveIntegration, nowService())
+
+  return finalHtml(renderImportSmooveDialog(salesEventNumber, smooveLists))
+}
+
+export async function executeImportFromSmooveList(
+  salesEventNumber: number,
+  smooveListId: number,
+  sql: Sql,
+): Promise<ControllerResult> {
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const logger = requestContext.get('logger')!
+
+  const result = await importFromSmooveList(
+    salesEventNumber,
+    smooveListId,
+    nowService(),
+    smooveIntegration,
+    sql,
+    logger,
+  )
+
+  return finalHtml(renderImportResults(result))
 }
