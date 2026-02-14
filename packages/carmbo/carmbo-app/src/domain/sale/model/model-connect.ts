@@ -29,18 +29,14 @@ export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent> | undefine
 export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
 ) {
   submitConnectionJob = registerJobHandler<SaleConnectionToStudent>(
     'connecting-cardcom-one-time-sale',
-    async (payload, _attempt, logger, sql) => {
-      await connectSaleToExternalProviders(
-        payload,
-        academyIntegration,
-        smooveIntegration,
-        sql,
-        logger,
-      )
-    },
+    async (payload, _attempt, logger) =>
+      sql.begin((sql) =>
+        connectSaleToExternalProviders(payload, academyIntegration, smooveIntegration, sql, logger),
+      ),
   )
 }
 

@@ -45,12 +45,14 @@ export function apiRoute(
   app: FastifyInstance,
   {
     secret,
+    sql,
     smooveIntegration,
     academyIntegration,
     whatsappIntegration,
     nowService,
   }: {
     secret: string | undefined
+    sql: Sql
     smooveIntegration: SmooveIntegrationService
     academyIntegration: AcademyIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
@@ -59,8 +61,9 @@ export function apiRoute(
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  initializeSaleJobHandlers(academyIntegration, smooveIntegration)
+  initializeSaleJobHandlers(academyIntegration, smooveIntegration, sql)
   initializeStandingOrderJobHandlers(
+    sql,
     academyIntegration,
     smooveIntegration,
     whatsappIntegration,

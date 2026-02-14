@@ -18,6 +18,7 @@ import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-i
 let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<DisconnectSalePayload> | undefined
 
 export async function initializeJobHandlers(
+  sql: Sql,
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   whatsappIntegration: WhatsAppIntegrationService,
@@ -25,17 +26,18 @@ export async function initializeJobHandlers(
 ) {
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
-    async (payload, _attempt, logger, sql) => {
-      await disconnectSale(
-        payload,
-        academyIntegration,
-        smooveIntegration,
-        whatsappIntegration,
-        nowService(),
-        sql,
-        logger,
-      )
-    },
+    async (payload, _attempt, logger) =>
+      sql.begin((sql) =>
+        disconnectSale(
+          payload,
+          academyIntegration,
+          smooveIntegration,
+          whatsappIntegration,
+          nowService(),
+          sql,
+          logger,
+        ),
+      ),
   )
 }
 

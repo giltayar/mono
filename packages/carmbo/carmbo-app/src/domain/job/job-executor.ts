@@ -4,6 +4,28 @@ import type {Sql} from 'postgres'
 import {jobHandlers} from './job-handlers.ts'
 import type {NowService} from '../../commons/now-service.ts'
 
+export async function triggerJobsExecution(nowService: NowService) {
+  if (!globalSql || !globalLogger)
+    throw new Error('Global helpers for job execution not registered')
+
+  await setTimeout(0)
+  await executeJobs(nowService).catch((err) => {
+    globalLogger.error({err}, 'execute-jobs-under-trigger-failed')
+  })
+}
+
+let globalSql: Sql
+let globalLogger: FastifyBaseLogger
+
+export function initializeJobExecutor(sql: Sql, logger: FastifyBaseLogger) {
+  globalLogger = logger
+  globalSql = sql
+}
+
+export function TEST_resetJobHandlers() {
+  jobHandlers.clear()
+}
+
 type JobToExecute = {
   id: string
   type: string
@@ -63,7 +85,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
   const numberOfRetries = parseInt(job.numberOfRetries)
 
   await sql
-    .begin(async (sql) => {
+    .begin(async () => {
       const handler = jobHandlers.get(job.type)
 
       if (!handler)
@@ -72,7 +94,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
         )
 
       logger.info({attempts, numberOfRetries}, 'executing-job-handler')
-      await handler(job.payload, attempts, logger, sql)
+      await handler(job.payload, attempts, logger)
     })
     .then(
       async () => {
@@ -94,26 +116,4 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
         throw err
       },
     )
-}
-
-export async function triggerJobsExecution(nowService: NowService) {
-  if (!globalSql || !globalLogger)
-    throw new Error('Global helpers for job execution not registered')
-
-  await setTimeout(0)
-  await executeJobs(nowService).catch((err) => {
-    globalLogger.error({err}, 'execute-jobs-under-trigger-failed')
-  })
-}
-
-let globalSql: Sql
-let globalLogger: FastifyBaseLogger
-
-export function registerGlobalHelpersForJobExecution(sql: Sql, logger: FastifyBaseLogger) {
-  globalLogger = logger
-  globalSql = sql
-}
-
-export function TEST_resetJobHandlers() {
-  jobHandlers.clear()
 }

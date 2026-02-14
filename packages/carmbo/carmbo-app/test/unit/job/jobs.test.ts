@@ -4,10 +4,7 @@ import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import postgres from 'postgres'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
-import {
-  registerGlobalHelpersForJobExecution,
-  triggerJobsExecution,
-} from '../../../src/domain/job/job-executor.ts'
+import {initializeJobExecutor, triggerJobsExecution} from '../../../src/domain/job/job-executor.ts'
 import {registerJobHandler, jobHandlers} from '../../../src/domain/job/job-handlers.ts'
 import type {FastifyBaseLogger} from 'fastify'
 import {setTimeout} from 'node:timers/promises'
@@ -78,7 +75,7 @@ describe('Job Executor', () => {
 
     await migrate({sql, path: new URL('../../../src/sql', import.meta.url)})
 
-    registerGlobalHelpersForJobExecution(sql, logger)
+    initializeJobExecutor(sql, logger)
   })
 
   after(() => teardown?.())
@@ -228,38 +225,6 @@ describe('Job Executor', () => {
 
     const jobs = await sql`SELECT * FROM jobs`
     assert.strictEqual(jobs.length, 0)
-  })
-
-  test('should use transaction for job handler execution', async () => {
-    const submitJob = registerJobHandler(
-      'transaction-job',
-      async (payload: {value: string}, _attempt, _logger, sql) => {
-        // Create a test table and insert data within the transaction
-        await sql`CREATE TABLE IF NOT EXISTS test_transaction (value TEXT)`
-        await sql`INSERT INTO test_transaction VALUES (${payload.value})`
-
-        // Throw an error to rollback the transaction
-        throw new Error('Force rollback')
-      },
-    )
-
-    await submitJob({value: 'test-value'}, sql, {retries: 1})
-    void triggerJobsExecution(() => new Date())
-    await waitForJobsToComplete(sql, 1)
-
-    void triggerJobsExecution(() => new Date())
-
-    await waitForJobsToComplete(sql)
-
-    // Check if the transaction was rolled back
-    const tables = await sql`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = 'test_transaction'
-    `
-
-    // Table should not exist because transaction was rolled back
-    assert.strictEqual(tables.length, 0)
   })
 
   test('should handle job handler that throws an error', async () => {

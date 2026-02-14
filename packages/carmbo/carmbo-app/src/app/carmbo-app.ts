@@ -29,7 +29,7 @@ import type {
 } from '@giltayar/carmel-tools-smoove-integration/service'
 import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
-import {registerGlobalHelpersForJobExecution} from '../domain/job/job-executor.ts'
+import {initializeJobExecutor} from '../domain/job/job-executor.ts'
 import {version} from '../commons/version.ts'
 
 declare module '@fastify/request-context' {
@@ -128,7 +128,7 @@ export function makeApp({
         ssl: host.includes('neon') ? 'require' : undefined,
         ...postgresJsOptions,
       })
-  registerGlobalHelpersForJobExecution(sql, app.log)
+  initializeJobExecutor(sql, app.log)
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
   app.setValidatorCompiler(validatorCompiler)
@@ -195,6 +195,7 @@ export function makeApp({
   app.register(salesApiRoute, {
     prefix: '/api/sales',
     secret: auth0?.sessionSecret,
+    sql,
     academyIntegration,
     smooveIntegration,
     whatsappIntegration,

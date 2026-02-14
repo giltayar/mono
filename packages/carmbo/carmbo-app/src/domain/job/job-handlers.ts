@@ -10,7 +10,6 @@ type JobHandler<TPayload = unknown> = (
   payload: TPayload,
   attempt: number,
   logger: FastifyBaseLogger,
-  sql: Sql,
 ) => Promise<void>
 
 export const jobHandlers = new Map<string, JobHandler<unknown>>()
