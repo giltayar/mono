@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import type {OngoingSalesEvent} from './model.ts'
-import type {SalesEvent} from '../model.ts'
+import type {SalesEvent} from '../model/model.ts'
 
 export type SalesEventManipulations = {
   addItem: string | string[] | undefined

@@ -5,7 +5,7 @@ import type {
   SalesEvent,
   SalesEventHistory,
   SalesEventWithHistoryInfo,
-} from '../model.ts'
+} from '../model/model.ts'
 import type {OngoingSalesEvent} from './model.ts'
 import {manipulateSalesEvent, type SalesEventManipulations} from './sales-event-manipulations.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'

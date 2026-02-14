@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import type {SalesEventHistory, SalesEventWithHistoryInfo} from '../model.ts'
+import type {SalesEventHistory, SalesEventWithHistoryInfo} from '../model/model.ts'
 import type {HistoryOperation} from '../../../commons/operation-type.ts'
 
 export function SalesEventHistoryList({

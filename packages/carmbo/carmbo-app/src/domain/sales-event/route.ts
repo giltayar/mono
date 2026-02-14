@@ -10,7 +10,7 @@ import {
   showImportSmooveDialog,
   executeImportFromSmooveList,
 } from './controller.ts'
-import {NewSalesEventSchema, SalesEventSchema} from './model.ts'
+import {NewSalesEventSchema, SalesEventSchema} from './model/model.ts'
 import {OngoingSalesEventSchema} from './view/model.ts'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'

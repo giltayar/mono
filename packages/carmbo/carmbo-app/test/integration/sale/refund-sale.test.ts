@@ -1,7 +1,7 @@
 import {test, expect} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
-import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
+import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'

@@ -1,7 +1,7 @@
 import {test, expect} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
-import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
+import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 
 // Define test contacts for import testing

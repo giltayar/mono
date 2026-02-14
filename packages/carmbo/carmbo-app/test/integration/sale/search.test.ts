@@ -3,7 +3,7 @@ import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.mod
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
-import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
+import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 

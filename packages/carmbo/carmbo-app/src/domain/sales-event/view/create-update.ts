@@ -1,6 +1,6 @@
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import {html} from '../../../commons/html-templates.ts'
-import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model.ts'
+import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model/model.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'
 import {SalesEventHistoryList, historyOperationToText} from './history.ts'
 

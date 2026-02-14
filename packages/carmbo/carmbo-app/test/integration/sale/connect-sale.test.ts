@@ -3,7 +3,7 @@ import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
-import {createSalesEvent} from '../../../src/domain/sales-event/model.ts'
+import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'

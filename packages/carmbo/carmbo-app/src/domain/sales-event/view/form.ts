@@ -1,7 +1,7 @@
 import {requestContext} from '@fastify/request-context'
 import {html} from '../../../commons/html-templates.ts'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
-import type {SalesEvent} from '../model.ts'
+import type {SalesEvent} from '../model/model.ts'
 import type {OngoingSalesEvent} from './model.ts'
 import {version} from '../../../commons/version.ts'
 

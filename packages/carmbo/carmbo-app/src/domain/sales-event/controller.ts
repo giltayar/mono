@@ -1,6 +1,6 @@
 import type {Sql} from 'postgres'
 
-import type {NewSalesEvent, SalesEvent} from './model.ts'
+import type {NewSalesEvent, SalesEvent} from './model/model.ts'
 import type {OngoingSalesEvent} from './view/model.ts'
 import {
   listSalesEvents,
@@ -10,7 +10,7 @@ import {
   updateSalesEvent as model_updateSalesEvent,
   deleteSalesEvent as model_deleteSalesEvent,
   listProductsForChoosing as model_listProductsForChoosing,
-} from './model.ts'
+} from './model/model.ts'
 import {propagateSalesEventProductChangesToSales} from '../sale/model/model-external-providers.ts'
 import {
   renderSalesEventsCreatePage,

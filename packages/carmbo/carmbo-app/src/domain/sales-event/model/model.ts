@@ -1,9 +1,9 @@
 import type {PendingQuery, Row, Sql} from 'postgres'
-import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
+import {HistoryOperationEnumSchema, type HistoryOperation} from '../../../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
-import {sqlTextSearch} from '../../commons/sql-commons.ts'
-import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
+import {sqlTextSearch} from '../../../commons/sql-commons.ts'
+import {TEST_executeHook} from '../../../commons/TEST_hooks.ts'
 
 export const SalesEventSchema = z.object({
   salesEventNumber: z.coerce.number().int().positive(),

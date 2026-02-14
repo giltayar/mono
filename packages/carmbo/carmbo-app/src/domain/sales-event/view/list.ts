@@ -1,7 +1,7 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
-import type {SalesEventForGrid} from '../model.ts'
+import type {SalesEventForGrid} from '../model/model.ts'
 import {version} from '../../../commons/version.ts'
 
 export function renderSalesEventsPage(
