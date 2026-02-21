@@ -3,7 +3,7 @@ import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {triggerJobsExecution} from './job-executor.ts'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
-import {showJobs} from './controller.ts'
+import {showJob, showJobs} from './controller.ts'
 import type {Sql} from 'postgres'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
@@ -21,12 +21,12 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     async (request, reply) =>
       dealWithControllerResult(reply, await showJobs(sql, {page: request.query.page ?? 0})),
   )
-  // appWithTypes.get(
-  //   '/:jobId',
-  //   {schema: {params: z.object({jobId: z.coerce.number().int()})}},
-  //   async (request, reply) =>
-  //     dealWithControllerResult(reply, await showJob(request.params.jobId, sql)),
-  // )
+  appWithTypes.get(
+    '/:jobId',
+    {schema: {params: z.object({jobId: z.coerce.number().int()})}},
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showJob(request.params.jobId, sql)),
+  )
 }
 
 export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undefined}) {

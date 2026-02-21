@@ -1,13 +1,26 @@
 import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
-import type {JobForGrid} from '../model.ts'
+import type {JobForGrid, JobView} from '../model.ts'
 
 export function renderJobsPage(jobs: JobForGrid[], {page}: {page: number}) {
   return html`
     <${MainLayout} title="Jobs" activeNavItem="jobs">
       <${Layout}>
         <${JobsView} jobs=${jobs} page=${page} />
+      </${Layout}>
+    </${MainLayout}>
+  `
+}
+
+export function renderJobPage(job: JobView, subjobs: JobForGrid[]) {
+  return html`
+    <${MainLayout} title="Job details" activeNavItem="jobs">
+      <${Layout}>
+        <h2>Job ${job.id} (${job.description}): ${job.error ? html`<span class="error" title=${job.error}>❌ ${job.errorMessage}</span>` : '✔'}</h2>
+        <p>Created: ${job.createdAt}</p>
+        <p>Finished: ${job.finishedAt ?? 'still working...'}</p>
+        ${subjobs.length > 0 && html` <${JobsView} jobs=${subjobs} page=${0} /> `}
       </${Layout}>
     </${MainLayout}>
   `

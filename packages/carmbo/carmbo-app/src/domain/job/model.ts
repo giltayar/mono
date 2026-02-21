@@ -56,3 +56,46 @@ export async function listJobs(
     }
   })
 }
+
+export type JobView = {
+  id: number
+  description: string
+  createdAt: Date
+  finishedAt: Date | undefined
+  errorMessage: string | undefined
+  error: string | undefined
+}
+
+export async function queryJobById(jobId: number, sql: Sql): Promise<JobView | undefined> {
+  const jobs = (await sql`
+    SELECT
+      job.id,
+      job.description,
+      job.created_at,
+      job.finished_at,
+      job.error,
+      job.error_message
+    FROM job
+    LEFT JOIN job as subjobs ON subjobs.parent_job_id = job.id
+    WHERE job.id = ${jobId}
+    GROUP BY job.id
+  `) as {
+    id: string
+    description: string | null
+    createdAt: Date
+    finishedAt: Date | null
+    errorMessage: string | null
+    error: string | null
+  }[]
+
+  return jobs.length > 0
+    ? {
+        id: parseInt(jobs[0].id, 10),
+        description: jobs[0].description ?? '',
+        createdAt: jobs[0].createdAt,
+        finishedAt: jobs[0].finishedAt ?? undefined,
+        errorMessage: jobs[0].errorMessage ?? undefined,
+        error: jobs[0].error ?? undefined,
+      }
+    : undefined
+}
