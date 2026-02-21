@@ -70,7 +70,7 @@ async function executeJobs(nowService: NowService) {
       SELECT
         id, type, payload, number_of_retries, attempts
       FROM
-        jobs
+        job
       WHERE
         (scheduled_at IS NULL OR scheduled_at <= ${now}) AND
         finished_at IS NULL
@@ -114,7 +114,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
 
   if (!handler) {
     await sql`
-      UPDATE jobs SET ${sql({
+      UPDATE job SET ${sql({
         updatedAt: now,
         finishedAt: now,
         errorMessage: 'no handler found for job type ' + job.type,
@@ -132,7 +132,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
     const result = await handler({payload: job.payload, jobId: job.id}, attempts, logger)
 
     await sql`
-      UPDATE jobs SET ${sql({
+      UPDATE job SET ${sql({
         updatedAt: now,
         finishedAt: now,
         description: result ? result.description : null,
@@ -141,7 +141,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
     `
   } catch (err) {
     await sql`
-      UPDATE jobs SET ${sql({
+      UPDATE job SET ${sql({
         attempts: attempts + 1,
         updatedAt: now,
         finishedAt: attempts >= numberOfRetries ? now : null,
@@ -159,7 +159,7 @@ async function garbageCollectJobs(nowService: NowService) {
   const sql = globalSql
 
   await sql`
-    DELETE FROM jobs
+    DELETE FROM job
     WHERE finished_at IS NOT NULL AND finished_at < ${new Date(
       now.getTime() - 7 * 24 * 60 * 60 * 1000,
     )}

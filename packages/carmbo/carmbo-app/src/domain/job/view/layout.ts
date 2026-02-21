@@ -7,4 +7,3 @@ export function Layout({children}: {children: string | string[]}) {
     <div class="jobs-view">${children}</div>
   `
 }
-

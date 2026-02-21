@@ -16,19 +16,19 @@ export async function listJobs(
 ): Promise<JobForGrid[]> {
   const jobs = (await sql`
     SELECT
-      jobs.id,
-      jobs.description,
-      jobs.created_at,
-      jobs.finished_at,
+      job.id,
+      job.description,
+      job.created_at,
+      job.finished_at,
       COUNT(subjobs.*) FILTER (WHERE subjobs.finished_at IS NOT NULL) AS subjobs_progress_count,
       COUNT(subjobs.*) AS subjobs_total,
-      jobs.error,
-      jobs.error_message
-    FROM jobs
-    LEFT JOIN jobs as subjobs ON subjobs.parent_job_id = jobs.id
-    WHERE jobs.parent_job_id ${parentJobId !== undefined ? sql`= ${parentJobId}` : sql`IS NULL`}
-    GROUP BY jobs.id
-    ORDER BY jobs.created_at DESC
+      job.error,
+      job.error_message
+    FROM job
+    LEFT JOIN job as subjobs ON subjobs.parent_job_id = job.id
+    WHERE job.parent_job_id ${parentJobId !== undefined ? sql`= ${parentJobId}` : sql`IS NULL`}
+    GROUP BY job.id
+    ORDER BY job.created_at DESC
     LIMIT ${limit} OFFSET ${page * limit}
   `) as {
     id: string
@@ -53,6 +53,6 @@ export async function listJobs(
       progressTotal: progressTotal === 0 ? 1 : progressTotal,
       errorMessage: job.errorMessage,
       error: job.error,
-    };
+    }
   })
 }

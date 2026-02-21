@@ -25,7 +25,7 @@ export function registerJobHandler<TPayload extends JSONValue>(
 
   return async function (payload: TPayload, {scheduledAt, parentJobId, retries = 3}) {
     await globalSql`
-      INSERT INTO jobs ${globalSql({
+      INSERT INTO job ${globalSql({
         parentJobId: parentJobId ?? null,
         type,
         payload,

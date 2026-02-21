@@ -82,7 +82,7 @@ describe('Job Executor', () => {
 
   beforeEach(async () => {
     // Clear the jobs table and reset job handlers
-    await sql`TRUNCATE TABLE jobs RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE job RESTART IDENTITY CASCADE`
     jobHandlers.clear()
   })
 
@@ -275,7 +275,7 @@ describe('Job Executor', () => {
     assert.ok(executedJobs.includes('job2'))
     assert.ok(executedJobs.includes('job3'))
 
-    const jobs = await sql`SELECT * FROM jobs WHERE finished_at IS NULL`
+    const jobs = await sql`SELECT * FROM job WHERE finished_at IS NULL`
     assert.strictEqual(jobs.length, 0)
   })
 
@@ -294,7 +294,7 @@ describe('Job Executor', () => {
   test('should not execute jobs without registered handler', async () => {
     // Insert a job directly without registering a handler
     await sql`
-      INSERT INTO jobs (type, payload, number_of_retries, scheduled_at, attempts)
+      INSERT INTO job (type, payload, number_of_retries, scheduled_at, attempts)
       VALUES ('unregistered-job', '{"data": "test"}', 2, NOW(), 0)
     `
     await triggerJobsExecution(() => new Date())
@@ -357,7 +357,7 @@ async function waitForJobsToComplete(sql: Sql, numberOfJobsLeftInQueue: number =
   await retry(
     async () =>
       assert.strictEqual(
-        (await sql`SELECT * FROM jobs WHERE finished_at IS NULL`).length,
+        (await sql`SELECT * FROM job WHERE finished_at IS NULL`).length,
         numberOfJobsLeftInQueue,
       ),
     {
@@ -372,7 +372,7 @@ async function waitForJobsToComplete(sql: Sql, numberOfJobsLeftInQueue: number =
     SELECT
       id, error_message, error, parent_job_id, description
     FROM
-      jobs
+      job
     WHERE
       finished_at IS NOT NULL
   `) as Array<{

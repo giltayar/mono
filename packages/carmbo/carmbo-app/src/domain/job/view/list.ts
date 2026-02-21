@@ -2,7 +2,6 @@ import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {JobForGrid} from '../model.ts'
-import {version} from '../../../commons/version.ts'
 
 export function renderJobsPage(jobs: JobForGrid[], {page}: {page: number}) {
   return html`

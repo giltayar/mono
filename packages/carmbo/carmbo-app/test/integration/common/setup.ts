@@ -171,7 +171,7 @@ export function setup(
     await sql`TRUNCATE TABLE sale_data_delivery RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_data_active RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_data_cardcom RESTART IDENTITY CASCADE`
-    await sql`TRUNCATE TABLE jobs RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE job RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_standing_order_payments RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE sale_standing_order_cardcom_recurring_payment RESTART IDENTITY CASCADE`
   })
