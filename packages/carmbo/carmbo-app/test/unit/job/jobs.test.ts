@@ -86,101 +86,150 @@ describe('Job Executor', () => {
     jobHandlers.clear()
   })
 
-  test('should execute a job successfully and delete it from the database', async () => {
-    const executedJobs: Array<{payload: unknown; attempt: number}> = []
+  test('should execute two jobs successfully and delete them from the database', async () => {
+    const executedJobs: Array<{
+      data: {payload: unknown; jobId: number}
+      attempt: number
+    }> = []
 
-    const submitJob = registerJobHandler('test-job', async (payload, attempt) => {
-      executedJobs.push({payload, attempt})
+    const submitJob = registerJobHandler('test-job', async (data, attempt) => {
+      executedJobs.push({data, attempt})
+
+      return {description: `job ${(data.payload as any)?.message}`}
     })
 
-    await submitJob({message: 'Hello World'}, sql, {retries: 3})
+    await submitJob({message: 'Hello World'}, {retries: 3})
+    await submitJob({message: 'Goodbye World'}, {retries: 3})
 
     triggerJobsExecution(() => new Date())
 
-    await waitForJobsToComplete(sql)
+    const completedJobs = await waitForJobsToComplete(sql)
 
-    assert.strictEqual(executedJobs.length, 1)
-    assert.deepStrictEqual(executedJobs[0].payload, {message: 'Hello World'})
-    assert.strictEqual(executedJobs[0].attempt, 0)
+    assert.deepStrictEqual(executedJobs, [
+      {data: {payload: {message: 'Hello World'}, jobId: 1}, attempt: 0},
+      {data: {payload: {message: 'Goodbye World'}, jobId: 2}, attempt: 0},
+    ])
+
+    assert.partialDeepStrictEqual(completedJobs, [
+      {id: 1, error: null, errorMessage: null, parentJobId: null, description: 'job Hello World'},
+      {id: 2, error: null, errorMessage: null, parentJobId: null, description: 'job Goodbye World'},
+    ])
+  })
+
+  test('should execute a job and a sub job successfully and delete them from the database', async () => {
+    const executedJobs: Array<{
+      data: {payload: unknown; jobId: number}
+      attempt: number
+    }> = []
+
+    let once = false
+
+    const submitJob = registerJobHandler('test-job', async (data, attempt) => {
+      executedJobs.push({data, attempt})
+      if (!once) {
+        await submitJob({message: 'Sub Job'}, {parentJobId: data.jobId, retries: 3})
+        once = true
+      }
+    })
+
+    await submitJob({message: 'Hello World'}, {retries: 3})
+
+    triggerJobsExecution(() => new Date())
+
+    const completedJobs = await waitForJobsToComplete(sql)
+
+    assert.deepStrictEqual(executedJobs, [
+      {data: {payload: {message: 'Hello World'}, jobId: 1}, attempt: 0},
+      {data: {payload: {message: 'Sub Job'}, jobId: 2}, attempt: 0},
+    ])
+    assert.partialDeepStrictEqual(completedJobs, [
+      {id: 1, error: null, errorMessage: null, parentJobId: null},
+      {id: 2, error: null, errorMessage: null, parentJobId: 1},
+    ])
   })
 
   test('should retry a failed job up to the specified number of retries', async () => {
-    const executedJobs: Array<{payload: unknown; attempt: number}> = []
+    const executedJobs: Array<{
+      data: {payload: unknown; jobId: number}
+      attempt: number
+    }> = []
     let callCount = 0
 
-    const submitJob = registerJobHandler('failing-job', async (payload, attempt) => {
-      executedJobs.push({payload, attempt})
+    const submitJob = registerJobHandler('failing-job', async (data, attempt) => {
+      executedJobs.push({data, attempt})
       ++callCount
       if (callCount < 3) {
         throw new Error('Job failed')
       }
     })
 
-    await submitJob({data: 'test'}, sql, {retries: 3})
-
-    await triggerJobsExecution(() => new Date())
-
-    await waitForJobsToComplete(sql, 1)
-
-    await triggerJobsExecution(() => new Date())
-
-    await waitForJobsToComplete(sql, 1)
+    await submitJob({data: 'test'}, {retries: 3})
 
     await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
 
     assert.partialDeepStrictEqual(executedJobs, [
-      {payload: {data: 'test'}, attempt: 0},
-      {payload: {data: 'test'}, attempt: 1},
-      {payload: {data: 'test'}, attempt: 2},
+      {data: {payload: {data: 'test'}, jobId: 1}, attempt: 0},
+      {data: {payload: {data: 'test'}, jobId: 1}, attempt: 1},
+      {data: {payload: {data: 'test'}, jobId: 1}, attempt: 2},
     ])
   })
 
   test('should delete job after exhausting all retries', async () => {
-    const executedJobs: Array<{payload: unknown; attempt: number}> = []
+    const executedJobs: Array<{
+      data: {payload: unknown; jobId: number}
+      attempt: number
+    }> = []
 
-    const submitJob = registerJobHandler('always-failing-job', async (payload, attempt) => {
-      executedJobs.push({payload, attempt})
+    const submitJob = registerJobHandler('always-failing-job', async (data, attempt) => {
+      executedJobs.push({data, attempt})
       throw new Error('Job always fails')
     })
 
-    await submitJob({data: 'test'}, sql, {retries: 2})
-
-    // First execution (attempt 0)
-    await triggerJobsExecution(() => new Date())
-
-    await waitForJobsToComplete(sql, 1)
+    await submitJob({data: 'test'}, {retries: 2})
 
     await triggerJobsExecution(() => new Date())
-    await waitForJobsToComplete(sql, 1)
-    await triggerJobsExecution(() => new Date())
-    await waitForJobsToComplete(sql)
+
+    const completedJobs = await waitForJobsToComplete(sql)
 
     assert.partialDeepStrictEqual(executedJobs, [
-      {payload: {data: 'test'}, attempt: 0},
-      {payload: {data: 'test'}, attempt: 1},
-      {payload: {data: 'test'}, attempt: 2},
+      {data: {payload: {data: 'test'}, jobId: 1}, attempt: 0},
+      {data: {payload: {data: 'test'}, jobId: 1}, attempt: 1},
+      {data: {payload: {data: 'test'}, jobId: 1}, attempt: 2},
     ])
+
+    assert.partialDeepStrictEqual(completedJobs, [
+      {
+        id: 1,
+        errorMessage: 'Job always fails',
+        parentJobId: null,
+      },
+    ])
+
+    assert.ok(completedJobs[0].error?.includes('Error: Job always fails'))
   })
 
   test('should only execute jobs scheduled in the past or now', async () => {
     const now = Date.now()
     const executedJobs: string[] = []
 
-    const submitJob = registerJobHandler('scheduled-job', async (payload: {id: string}) => {
-      executedJobs.push(payload.id)
-    })
+    const submitJob = registerJobHandler(
+      'scheduled-job',
+      async ({payload}: {payload: {id: string}}) => {
+        executedJobs.push(payload.id)
+      },
+    )
 
     // Job scheduled in the past
-    await submitJob({id: 'past'}, sql, {scheduledAt: new Date(now - 5000), retries: 3})
+    await submitJob({id: 'past'}, {scheduledAt: new Date(now - 5000), retries: 3})
 
     // Job scheduled now
-    await submitJob({id: 'now'}, sql, {scheduledAt: new Date(now), retries: 3})
+    await submitJob({id: 'now'}, {scheduledAt: new Date(now), retries: 3})
 
     // Job scheduled in the future
     const future = now + 700_000
-    await submitJob({id: 'future'}, sql, {scheduledAt: new Date(future), retries: 3})
+    await submitJob({id: 'future'}, {scheduledAt: new Date(future), retries: 3})
 
     triggerJobsExecution(() => new Date(now))
 
@@ -207,13 +256,16 @@ describe('Job Executor', () => {
   test('should handle multiple jobs in sequence', async () => {
     const executedJobs: string[] = []
 
-    const submitJob = registerJobHandler('multi-job', async (payload: {id: string}) => {
-      executedJobs.push(payload.id)
-    })
+    const submitJob = registerJobHandler(
+      'multi-job',
+      async ({payload}: {payload: {id: string}}) => {
+        executedJobs.push(payload.id)
+      },
+    )
 
-    await submitJob({id: 'job1'}, sql, {retries: 3})
-    await submitJob({id: 'job2'}, sql, {retries: 3})
-    await submitJob({id: 'job3'}, sql, {retries: 3})
+    await submitJob({id: 'job1'}, {retries: 3})
+    await submitJob({id: 'job2'}, {retries: 3})
+    await submitJob({id: 'job3'}, {retries: 3})
     triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
@@ -223,7 +275,7 @@ describe('Job Executor', () => {
     assert.ok(executedJobs.includes('job2'))
     assert.ok(executedJobs.includes('job3'))
 
-    const jobs = await sql`SELECT * FROM jobs`
+    const jobs = await sql`SELECT * FROM jobs WHERE finished_at IS NULL`
     assert.strictEqual(jobs.length, 0)
   })
 
@@ -232,7 +284,7 @@ describe('Job Executor', () => {
       throw new Error('Handler error')
     })
 
-    await submitJob({data: 'test'}, sql, {retries: 1})
+    await submitJob({data: 'test'}, {retries: 1})
     await triggerJobsExecution(() => new Date())
     await triggerJobsExecution(() => new Date())
 
@@ -261,13 +313,16 @@ describe('Job Executor', () => {
   test('should handle concurrent job execution with mutex', async () => {
     const executedJobs: string[] = []
 
-    const submitJob = registerJobHandler('mutex-job', async (payload: {id: string}) => {
-      executedJobs.push(payload.id)
-      // Simulate long-running job
-      await setTimeout(50)
-    })
+    const submitJob = registerJobHandler(
+      'mutex-job',
+      async ({payload}: {payload: {id: string}}) => {
+        executedJobs.push(payload.id)
+        // Simulate long-running job
+        await setTimeout(50)
+      },
+    )
 
-    await submitJob({id: 'job1'}, sql, {retries: 3})
+    await submitJob({id: 'job1'}, {retries: 3})
 
     // Trigger multiple times quickly - mutex should prevent concurrent execution
     triggerJobsExecution(() => new Date())
@@ -279,15 +334,53 @@ describe('Job Executor', () => {
     // Job should only be executed once despite multiple triggers
     assert.strictEqual(executedJobs.length, 1)
   })
+
+  test('should garbage collect old jobs', async () => {
+    const submitJob = registerJobHandler('simple-job', async () => {})
+
+    await submitJob({data: 'test'}, {retries: 1})
+    await triggerJobsExecution(() => new Date())
+
+    assert.strictEqual((await waitForJobsToComplete(sql)).length, 1)
+
+    await triggerJobsExecution(() => new Date(Date.now() + 6 * 24 * 60 * 60 * 1000)) // Trigger after 6 days
+
+    assert.strictEqual((await waitForJobsToComplete(sql)).length, 1)
+
+    await triggerJobsExecution(() => new Date(Date.now() + 8 * 24 * 60 * 60 * 1000)) // Trigger after 7 days
+
+    assert.strictEqual((await waitForJobsToComplete(sql)).length, 0)
+  })
 })
 
 async function waitForJobsToComplete(sql: Sql, numberOfJobsLeftInQueue: number = 0) {
   await retry(
-    async () => assert.strictEqual((await sql`SELECT * FROM jobs`).length, numberOfJobsLeftInQueue),
+    async () =>
+      assert.strictEqual(
+        (await sql`SELECT * FROM jobs WHERE finished_at IS NULL`).length,
+        numberOfJobsLeftInQueue,
+      ),
     {
       retries: 10,
       minTimeout: 100,
       maxTimeout: 200,
     },
   )
+
+  return [
+    ...((await sql`
+    SELECT
+      id, error_message, error, parent_job_id, description
+    FROM
+      jobs
+    WHERE
+      finished_at IS NOT NULL
+  `) as Array<{
+      id: number
+      errorMessage: string | null
+      error: string | null
+      parentJobId: number | null
+      description: string | null
+    }>),
+  ]
 }

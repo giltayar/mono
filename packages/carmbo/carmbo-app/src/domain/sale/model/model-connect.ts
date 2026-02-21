@@ -33,7 +33,7 @@ export async function initializeJobHandlers(
 ) {
   submitConnectionJob = registerJobHandler<SaleConnectionToStudent>(
     'connecting-cardcom-one-time-sale',
-    async (payload, _attempt, logger) =>
+    async ({payload}, _attempt, logger) =>
       sql.begin((sql) =>
         connectSaleToExternalProviders(payload, academyIntegration, smooveIntegration, sql, logger),
       ),

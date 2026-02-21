@@ -1,16 +1,17 @@
 import type {FastifyBaseLogger} from 'fastify'
-import type {JSONValue, Sql} from 'postgres'
+import type {JSONValue} from 'postgres'
+import {globalSql} from './job-executor.ts'
 
 export type JobSubmitter<TPayload = unknown> = (
   payload: TPayload,
-  sql: Sql,
-  options: {scheduledAt?: Date; retries?: number},
+  options: {parentJobId?: number; scheduledAt?: Date; retries?: number},
 ) => Promise<void>
+
 type JobHandler<TPayload = unknown> = (
-  payload: TPayload,
+  data: {payload: TPayload; jobId: number},
   attempt: number,
   logger: FastifyBaseLogger,
-) => Promise<void>
+) => Promise<{description: string} | void>
 
 export const jobHandlers = new Map<string, JobHandler<unknown>>()
 
@@ -22,14 +23,15 @@ export function registerJobHandler<TPayload extends JSONValue>(
 
   jobHandlers.set(type, handler as JobHandler<unknown>)
 
-  return async function (payload: TPayload, sql: Sql, {scheduledAt, retries = 3}) {
-    await sql`
-      INSERT INTO jobs ${sql({
+  return async function (payload: TPayload, {scheduledAt, parentJobId, retries = 3}) {
+    await globalSql`
+      INSERT INTO jobs ${globalSql({
+        parentJobId: parentJobId ?? null,
         type,
         payload,
         numberOfRetries: retries,
         scheduledAt: scheduledAt ?? null,
       })}
     `
-  } satisfies JobSubmitter<TPayload>
+  }
 }

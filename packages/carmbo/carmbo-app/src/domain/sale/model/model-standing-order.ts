@@ -26,7 +26,7 @@ export async function initializeJobHandlers(
 ) {
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
-    async (payload, _attempt, logger) =>
+    async ({payload}, _attempt, logger) =>
       sql.begin((sql) =>
         disconnectSale(
           payload,
@@ -223,10 +223,7 @@ export async function cancelSubscription(
     )
     await createDisconnectSaleFromExternalProvidersJob!(
       {saleNumber, reason: 'removed-from-subscription'},
-      sql,
-      {
-        scheduledAt: disconnectTime,
-      },
+      {scheduledAt: disconnectTime},
     )
   })
 }

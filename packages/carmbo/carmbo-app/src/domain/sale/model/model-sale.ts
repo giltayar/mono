@@ -74,7 +74,7 @@ export async function addCardcomSale(
 
     if (!submitConnectionJob) throw new Error('Job handlers not initialized')
 
-    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, sql, {})
+    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
 
     logger.info('sql-transaction-completed')
   })
@@ -141,7 +141,7 @@ export async function addNoInvoiceSale(
 
     if (!submitConnectionJob) throw new Error('Job handlers not initialized')
 
-    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, sql, {})
+    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
 
     logger.info('sql-transaction-completed')
   })

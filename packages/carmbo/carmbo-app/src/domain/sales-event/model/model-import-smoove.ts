@@ -140,7 +140,7 @@ async function importSingleContact(
       if (saleNumber && submitConnectionJob) {
         const isConnected = await isSaleConnected(saleNumber, txSql)
         if (!isConnected) {
-          await submitConnectionJob({studentNumber: student.studentNumber, saleNumber}, txSql, {})
+          await submitConnectionJob({studentNumber: student.studentNumber, saleNumber}, {})
           logger.info({saleNumber}, 'connection-job-submitted-for-existing-sale')
         }
       }
@@ -148,12 +148,10 @@ async function importSingleContact(
       return 'skipped'
     }
 
-    // Create student if doesn't exist
     const finalStudent = student ?? (await createStudentFromSmooveContact(contact, now, txSql))
 
     logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
 
-    // Create sale with zero revenue
     const saleNumber = await createNoInvoiceSale(
       finalStudent.studentNumber,
       salesEventNumber,
@@ -165,9 +163,8 @@ async function importSingleContact(
 
     logger.info({saleNumber}, 'sale-created-from-smoove-import')
 
-    // Submit connection job
     if (submitConnectionJob) {
-      await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, txSql, {})
+      await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     }
 
     return 'created'
