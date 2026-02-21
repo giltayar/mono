@@ -11,7 +11,7 @@ export function MainLayout({
   title: string
   banner?: Banner
   children: string[]
-  activeNavItem: 'students' | 'products' | 'sales-events' | 'sales'
+  activeNavItem: 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }) {
   return (
     '<!DOCTYPE html>' +
@@ -46,7 +46,7 @@ export function MainLayout({
 function NavBar({
   activeNavItem,
 }: {
-  activeNavItem: 'students' | 'products' | 'sales-events' | 'sales'
+  activeNavItem: 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }) {
   return html`
     <nav class="navbar navbar-expand-sm bg-body-tertiary">
@@ -95,6 +95,9 @@ function NavBar({
               <a class="nav-link ${activeNavItem === 'sales' ? 'active' : ''}" href="/sales"
                 >Sales</a
               >
+            </li>
+            <li class="nav-item" role="menuitem">
+              <a class="nav-link ${activeNavItem === 'jobs' ? 'active' : ''}" href="/jobs">Jobs</a>
             </li>
           </ul>
         </div>

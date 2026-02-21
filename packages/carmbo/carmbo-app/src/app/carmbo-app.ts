@@ -12,7 +12,7 @@ import salesRoutes, {
   landingPageApiRoute as salesLandingPageApiRoute,
   apiRoute as salesApiRoute,
 } from '../domain/sale/route.ts'
-import {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
+import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
   AcademyCourse,
@@ -190,6 +190,7 @@ export function makeApp({
       apiSecret: auth0?.sessionSecret,
     })
     app.register(salesRoutes, {prefix: '/sales', sql})
+    app.register(jobsRoute, {prefix: '/jobs', sql})
   })
 
   app.register(salesApiRoute, {

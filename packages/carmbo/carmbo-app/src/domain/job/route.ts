@@ -2,6 +2,31 @@ import type {FastifyInstance} from 'fastify'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {triggerJobsExecution} from './job-executor.ts'
+import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {showJobs} from './controller.ts'
+
+export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
+  const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
+  appWithTypes.get(
+    '/',
+    {
+      schema: {
+        querystring: z
+          .object({page: z.coerce.number().int().min(0).default(0).optional()})
+          .partial(),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showJobs(sql, {page: request.query.page ?? 0})),
+  )
+  appWithTypes.get(
+    '/:jobId',
+    {schema: {params: z.object({jobId: z.coerce.number().int()})}},
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showJob(request.params.jobId, sql)),
+  )
+}
 
 export function apiRoute(app: FastifyInstance, {secret}: {secret: string | undefined}) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
