@@ -17,12 +17,29 @@ import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
+import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 
 export default function (
   app: FastifyInstance,
-  {sql, appBaseUrl, apiSecret}: {sql: Sql; appBaseUrl: string; apiSecret: string | undefined},
+  {
+    sql,
+    smooveIntegration,
+    academyIntegration,
+    appBaseUrl,
+    apiSecret,
+  }: {
+    sql: Sql
+    appBaseUrl: string
+    apiSecret: string | undefined
+    smooveIntegration: SmooveIntegrationService
+    academyIntegration: AcademyIntegrationService
+  },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
+  initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql)
 
   // List sales events
   appWithTypes.get(
@@ -189,7 +206,7 @@ export default function (
     async (request, reply) =>
       dealWithControllerResult(
         reply,
-        await executeImportFromSmooveList(request.params.number, request.body.smooveListId, sql),
+        await executeImportFromSmooveList(request.params.number, request.body.smooveListId),
       ),
   )
 }

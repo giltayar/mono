@@ -24,8 +24,9 @@ import type {SalesEventManipulations} from './view/sales-event-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
 import {exceptionToBanner, type Banner} from '../../layout/banner.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
-import {renderImportSmooveDialog, renderImportResults} from './view/import-smoove.ts'
-import {importFromSmooveList} from './model/model-import-smoove.ts'
+import {renderImportSmooveDialog, renderImportJob} from './view/import-smoove.ts'
+import {submitImportFromSmooveListJob} from './model/model-import-smoove.ts'
+import {triggerJobsExecution} from '../job/job-executor.ts'
 
 export async function showSalesEvents(
   {
@@ -267,20 +268,10 @@ export async function showImportSmooveDialog(salesEventNumber: number): Promise<
 export async function executeImportFromSmooveList(
   salesEventNumber: number,
   smooveListId: number,
-  sql: Sql,
 ): Promise<ControllerResult> {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
-  const nowService = requestContext.get('nowService')!
-  const logger = requestContext.get('logger')!
+  const jobId = await submitImportFromSmooveListJob({salesEventNumber, smooveListId}, {})
 
-  const result = await importFromSmooveList(
-    salesEventNumber,
-    smooveListId,
-    nowService(),
-    smooveIntegration,
-    sql,
-    logger,
-  )
+  triggerJobsExecution(requestContext.get('nowService')!)
 
-  return finalHtml(renderImportResults(result))
+  return finalHtml(renderImportJob(jobId))
 }

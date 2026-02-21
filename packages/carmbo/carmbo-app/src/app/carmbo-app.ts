@@ -186,6 +186,8 @@ export function makeApp({
     app.register(salesEvents, {
       prefix: '/sales-events',
       sql,
+      smooveIntegration,
+      academyIntegration,
       appBaseUrl,
       apiSecret: auth0?.sessionSecret,
     })

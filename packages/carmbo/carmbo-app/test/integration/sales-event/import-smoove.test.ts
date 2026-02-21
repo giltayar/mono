@@ -3,6 +3,7 @@ import {setup} from '../common/setup.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
+import {createJobPageModel} from '../../page-model/jobs/job-page.model.ts'
 
 // Define test contacts for import testing
 const testContacts = {
@@ -53,10 +54,11 @@ test.beforeEach(async () => {
   )
 })
 
-test('import from Smoove list creates sales for each contact', async ({page}) => {
+test('import from Smoove list creates a job that imports contacts as sales', async ({page}) => {
   await page.goto(new URL('/sales-events/1', url()).href)
 
   const updateModel = createUpdateSalesEventPageModel(page)
+  const jobPageModel = createJobPageModel(page)
 
   // Click the Import from Smoove button
   await updateModel.smooveInformation().importFromSmooveButton().locator.click()
@@ -75,17 +77,24 @@ test('import from Smoove list creates sales for each contact', async ({page}) =>
   // Start the import
   await updateModel.importSmooveDialog().startImportButton().locator.click()
 
-  // Wait for results to appear (this may take a while due to rate limiting)
+  // Wait for results to show the job was submitted
   const results = updateModel.importSmooveDialog().resultsContainer().locator
-  await expect(results).toContainText('Import Complete', {timeout: 15000})
+  await expect(results).toContainText('Import Job Submitted')
+  await expect(results).toContainText('Track import job')
 
-  // Check the results shows correct counts
-  await expect(results).toContainText('Total contacts: 2')
-  await expect(results).toContainText('Successfully created: 2')
-  await expect(results).toContainText('Skipped (already exist): 0')
+  // Navigate to the job page via the link
+  await results.locator('a').click()
+  await page.waitForURL(jobPageModel.urlRegex)
 
-  // Close the dialog
-  await updateModel.importSmooveDialog().closeButton().locator.click()
+  // Reload the job page and verify subjobs completed
+  await expect(async () => {
+    await page.reload()
+    const subjobRows = jobPageModel.subjobsList().rows()
+    await expect(subjobRows.locator).toHaveCount(2)
+
+    await expect(subjobRows.row(0).statusCell().locator).toHaveText('✔')
+    await expect(subjobRows.row(1).statusCell().locator).toHaveText('✔')
+  }).toPass()
 
   // Verify sales were created - check the database
   const sales = await sql()`SELECT * FROM sale ORDER BY sale_number`
@@ -104,6 +113,7 @@ test('import is idempotent - skips contacts with existing sales', async ({page})
   await page.goto(new URL('/sales-events/1', url()).href)
 
   const updateModel = createUpdateSalesEventPageModel(page)
+  const jobPageModel = createJobPageModel(page)
 
   // First import
   await updateModel.smooveInformation().importFromSmooveButton().locator.click()
@@ -113,17 +123,15 @@ test('import is idempotent - skips contacts with existing sales', async ({page})
   await smooveListInput.dispatchEvent('change')
   await updateModel.importSmooveDialog().startImportButton().locator.click()
 
-  // Wait for results
+  // Wait for job submission
   const results = updateModel.importSmooveDialog().resultsContainer().locator
-  await expect(results).toContainText('Import Complete', {timeout: 15000})
+  await expect(results).toContainText('Import Job Submitted', {timeout: 15000})
 
-  // Verify first import results
-  await expect(results).toContainText('Successfully created: 2')
-  await expect(results).toContainText('Skipped (already exist): 0')
-
-  // Close and reload
-  await updateModel.importSmooveDialog().closeButton().locator.click()
-  await page.waitForTimeout(500)
+  // Verify first import created 2 sales
+  await expect(async () => {
+    const sales = await sql()`SELECT * FROM sale ORDER BY sale_number`
+    expect(sales.length).toBe(2)
+  }).toPass()
 
   // Navigate away and back to get a fresh page
   await page.goto(new URL('/sales-events/1', url()).href)
@@ -136,13 +144,22 @@ test('import is idempotent - skips contacts with existing sales', async ({page})
   await smooveListInput2.dispatchEvent('change')
   await updateModel.importSmooveDialog().startImportButton().locator.click()
 
-  // Wait for results
+  // Wait for job submission
   const results2 = updateModel.importSmooveDialog().resultsContainer().locator
-  await expect(results2).toContainText('Import Complete', {timeout: 15000})
+  await expect(results2).toContainText('Import Job Submitted', {timeout: 15000})
 
-  // Verify second import results - all skipped
-  await expect(results2).toContainText('Successfully created: 0')
-  await expect(results2).toContainText('Skipped (already exist): 2')
+  // Navigate to the job page
+  await results2.locator('a').click()
+  await page.waitForURL(jobPageModel.urlRegex)
+
+  // Verify subjobs completed (showing skipped descriptions)
+  await expect(async () => {
+    await page.reload()
+    const subjobRows = jobPageModel.subjobsList().rows()
+    await expect(subjobRows.locator).toHaveCount(2)
+    await expect(subjobRows.row(0).statusCell().locator).toHaveText('✔')
+    await expect(subjobRows.row(1).statusCell().locator).toHaveText('✔')
+  }).toPass()
 
   // Verify only 2 sales exist (not 4)
   const sales = await sql()`SELECT * FROM sale ORDER BY sale_number`

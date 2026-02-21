@@ -5,7 +5,7 @@ import {globalSql} from './job-executor.ts'
 export type JobSubmitter<TPayload = unknown> = (
   payload: TPayload,
   options: {parentJobId?: number; scheduledAt?: Date; retries?: number},
-) => Promise<void>
+) => Promise<number>
 
 type JobHandler<TPayload = unknown> = (
   data: {payload: TPayload; jobId: number},
@@ -24,7 +24,7 @@ export function registerJobHandler<TPayload extends JSONValue>(
   jobHandlers.set(type, handler as JobHandler<unknown>)
 
   return async function (payload: TPayload, {scheduledAt, parentJobId, retries = 3}) {
-    await globalSql`
+    const result = await globalSql`
       INSERT INTO job ${globalSql({
         parentJobId: parentJobId ?? null,
         type,
@@ -32,6 +32,9 @@ export function registerJobHandler<TPayload extends JSONValue>(
         numberOfRetries: retries,
         scheduledAt: scheduledAt ?? null,
       })}
+      RETURNING id
     `
+
+    return parseInt(result[0].id, 10)
   }
 }

@@ -3,10 +3,13 @@ import type {SmooveContactInList} from '@giltayar/carmel-tools-smoove-integratio
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql, TransactionSql} from 'postgres'
 import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
-import {submitConnectionJob} from '../../sale/model/model-connect.ts'
-import {triggerJobsExecution} from '../../job/job-executor.ts'
+import {
+  connectSaleToExternalProviders,
+  submitConnectionJob,
+} from '../../sale/model/model-connect.ts'
 import {createNoInvoiceSale} from '../../sale/model/model-sale.ts'
-import {delay} from '@giltayar/promise-commons'
+import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
+import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 
 export type ImportResult = {
   total: number
@@ -15,18 +18,76 @@ export type ImportResult = {
   errors: Array<{contact: {email: string; firstName: string; lastName: string}; error: string}>
 }
 
-export async function importFromSmooveList(
+export type ImportFromSmooveListJobPayload = {
+  salesEventNumber: number
+  smooveListId: number
+}
+
+type ImportSingeContactFromSmooveListJobPayload = {
+  salesEventNumber: number
+  contact: {
+    id: number
+    firstName: string
+    lastName: string
+    email: string
+    telephone: string | undefined
+  }
+}
+
+export let submitImportFromSmooveListJob: JobSubmitter<ImportFromSmooveListJobPayload>
+let submitImportSingleContactJob: JobSubmitter<ImportSingeContactFromSmooveListJobPayload>
+
+export async function initialzeImportSmooveJobHandlers(
+  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+) {
+  submitImportFromSmooveListJob = registerJobHandler<ImportFromSmooveListJobPayload>(
+    'import-from-smoove-list',
+    async ({payload, jobId}, _attempt, logger) => {
+      await importFromSmooveList(
+        payload.salesEventNumber,
+        payload.smooveListId,
+        smooveIntegration,
+        sql,
+        logger,
+        jobId,
+      )
+
+      return {
+        description: `Import from Smoove list ${payload.smooveListId} for sales event ${payload.salesEventNumber}`,
+      }
+    },
+  )
+
+  submitImportSingleContactJob = registerJobHandler<ImportSingeContactFromSmooveListJobPayload>(
+    'import-single-contact-from-smoove-list',
+    async ({payload, jobId}, _attempt, logger) => {
+      return await importSingleContact(
+        payload.salesEventNumber,
+        payload.contact,
+        new Date(),
+        sql,
+        academyIntegration,
+        smooveIntegration,
+        logger.child({jobId, contactEmail: payload.contact.email}),
+      )
+    },
+  )
+}
+
+async function importFromSmooveList(
   salesEventNumber: number,
   smooveListId: number,
-  now: Date,
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
   loggerParent: FastifyBaseLogger,
+  jobId: number,
 ): Promise<ImportResult> {
   const logger = loggerParent.child({
     salesEventNumber,
     smooveListId,
-    jobId: crypto.randomUUID(),
+    jobId,
     job: 'import-from-smoove-list',
   })
 
@@ -65,8 +126,8 @@ export async function importFromSmooveList(
   }
 
   const total = contacts.length
-  let successful = 0
-  let skipped = 0
+  const successful = 0
+  const skipped = 0
   const errors: Array<{
     contact: {email: string; firstName: string; lastName: string}
     error: string
@@ -74,49 +135,39 @@ export async function importFromSmooveList(
 
   for (let i = 0; i < contacts.length; i++) {
     const contact = contacts[i]
-    const contactInfo = {
-      email: contact.email,
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-    }
-
-    try {
-      const result = await importSingleContact(salesEventNumber, contact, now, sql, logger)
-
-      if (result === 'created') {
-        successful++
-      } else if (result === 'skipped') {
-        skipped++
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      logger.error({err: error, contact: contactInfo}, 'import-contact-failed')
-      errors.push({contact: contactInfo, error: errorMessage})
-    }
-
-    // Rate limiting: 300ms delay between contacts
-    if (i < contacts.length - 1) {
-      await delay(300)
-    }
+    submitImportSingleContactJob(
+      {
+        salesEventNumber,
+        contact: {
+          id: contact.id,
+          email: contact.email,
+          firstName: contact.firstName,
+          lastName: contact.lastName,
+          telephone: contact.telephone,
+        },
+      },
+      {parentJobId: jobId},
+    )
   }
-
-  triggerJobsExecution(() => now)
-
-  logger.info(
-    {total, successful, skipped, errorCount: errors.length},
-    'import-from-smoove-list-completed',
-  )
 
   return {total, successful, skipped, errors}
 }
 
 async function importSingleContact(
   salesEventNumber: number,
-  contact: SmooveContactInList,
+  contact: {
+    id: number
+    firstName: string
+    lastName: string
+    email: string
+    telephone: string | undefined
+  },
   now: Date,
   sql: Sql,
+  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
   logger: FastifyBaseLogger,
-): Promise<'created' | 'skipped'> {
+): Promise<{description: string}> {
   return await sql.begin(async (txSql) => {
     const email = normalizeEmail(contact.email)
     const phone = contact.telephone ? normalizePhoneNumber(contact.telephone) : undefined
@@ -145,7 +196,9 @@ async function importSingleContact(
         }
       }
 
-      return 'skipped'
+      return {
+        description: `Skipped contact ${contact.email} - sale already exists for this student and sales event`,
+      }
     }
 
     const finalStudent = student ?? (await createStudentFromSmooveContact(contact, now, txSql))
@@ -163,11 +216,15 @@ async function importSingleContact(
 
     logger.info({saleNumber}, 'sale-created-from-smoove-import')
 
-    if (submitConnectionJob) {
-      await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
-    }
+    await connectSaleToExternalProviders(
+      {studentNumber: finalStudent.studentNumber, saleNumber},
+      academyIntegration,
+      smooveIntegration,
+      txSql,
+      logger,
+    )
 
-    return 'created'
+    return {description: `Import ${contact.email}`}
   })
 }
 
@@ -265,7 +322,13 @@ async function isSaleConnected(saleNumber: number, sql: TransactionSql): Promise
 }
 
 async function createStudentFromSmooveContact(
-  contact: SmooveContactInList,
+  contact: {
+    id: number
+    firstName: string
+    lastName: string
+    email: string
+    telephone: string | undefined
+  },
   now: Date,
   sql: TransactionSql,
 ): Promise<StudentInfoFound> {

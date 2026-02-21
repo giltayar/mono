@@ -442,7 +442,7 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
   return result[0]
 }
 
-async function connectSaleToExternalProviders(
+export async function connectSaleToExternalProviders(
   {studentNumber, saleNumber}: SaleConnectionToStudent,
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,

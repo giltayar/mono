@@ -73,44 +73,12 @@ export type ImportResult = {
   errors: Array<{contact: {email: string; firstName: string; lastName: string}; error: string}>
 }
 
-export function renderImportResults(result: ImportResult) {
-  const hasErrors = result.errors.length > 0
-
+export function renderImportJob(jobId: number) {
   return html`
     <div class="mt-3">
-      <h5>Import Complete</h5>
-      <div class="alert ${hasErrors ? 'alert-warning' : 'alert-success'}">
-        <p class="mb-1"><strong>Total contacts:</strong> ${String(result.total)}</p>
-        <p class="mb-1"><strong>Successfully created:</strong> ${String(result.successful)}</p>
-        <p class="mb-1"><strong>Skipped (already exist):</strong> ${String(result.skipped)}</p>
-        ${hasErrors
-          ? html`<p class="mb-0"><strong>Errors:</strong> ${result.errors.length}</p>`
-          : ''}
-      </div>
-      ${hasErrors
-        ? html`
-            <div class="mt-2">
-              <h6 class="text-danger">Failed imports:</h6>
-              <ul class="list-group list-group-flush small">
-                ${result.errors.map(
-                  (e) => html`
-                    <li class="list-group-item list-group-item-danger">
-                      <strong>${e.contact.email || 'Unknown contact'}</strong>
-                      ${e.contact.firstName || e.contact.lastName
-                        ? ` (${e.contact.firstName} ${e.contact.lastName})`
-                        : ''}:
-                      ${e.error}
-                    </li>
-                  `,
-                )}
-              </ul>
-            </div>
-          `
-        : ''}
-      <div class="d-flex justify-content-end mt-3">
-        <button type="button" class="btn btn-primary" onclick="this.closest('dialog').close()">
-          Close
-        </button>
+      <h5>Import Job Submitted</h5>
+      <div class="alert alert-info">
+        <p class="mb-1"><a href="/jobs/${jobId}">Track import job</a></p>
       </div>
     </div>
   `
