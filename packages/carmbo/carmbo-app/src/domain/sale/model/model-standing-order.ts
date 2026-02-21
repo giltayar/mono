@@ -26,8 +26,8 @@ export async function initializeJobHandlers(
 ) {
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
-    async ({payload}, _attempt, logger) =>
-      sql.begin((sql) =>
+    async ({payload}, _attempt, logger) => {
+      await sql.begin((sql) =>
         disconnectSale(
           payload,
           academyIntegration,
@@ -37,7 +37,12 @@ export async function initializeJobHandlers(
           sql,
           logger,
         ),
-      ),
+      )
+
+      return {
+        description: `Disconnecting sale ${payload.saleNumber} from external providers because ${payload.reason}`,
+      }
+    },
   )
 }
 
