@@ -170,7 +170,8 @@ export async function updateProduct(
 
     // Compute diff using Set methods
     const addedAcademyCourses = [...newCourses.difference(oldCourses)]
-    const removedAcademyCourses = [...oldCourses.difference(newCourses)]
+    const removedAcademyCourses =
+      product.productType === 'club' ? [...oldCourses.difference(newCourses)] : []
 
     return {
       productNumber: product.productNumber,

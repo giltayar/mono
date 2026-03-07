@@ -570,6 +570,7 @@ type PropagateAcademyCourseChangesSingleSalePayload = {
   studentName: string
   studentPhone: string
   productCourses: Array<{productNumber: number; academyCourseId: number}> | null
+  coursesFromOtherSales: number[]
 }
 
 export let submitPropagateAcademyCourseChangesJob: JobSubmitter<PropagateAcademyCourseChangesPayload>
@@ -646,6 +647,7 @@ async function propagateAcademyCourseChangesToSales(
       studentName: string
       studentPhone: string
       productCourses: Array<{productNumber: number; academyCourseId: number}> | null
+      coursesFromOtherSales: number[]
     }[]
   >`
     SELECT
@@ -653,11 +655,13 @@ async function propagateAcademyCourseChangesToSales(
       ste.email as student_email,
       CONCAT(sn.first_name, ' ', sn.last_name) as student_name,
       stp.phone as student_phone,
-      COALESCE(product_courses.courses, '[]') as product_courses
+      COALESCE(product_courses.courses, '[]') as product_courses,
+      COALESCE(other_sales_courses.course_ids, '[]') as courses_from_other_sales
     FROM sale s
     JOIN sale_history sh ON sh.id = s.last_history_id
     JOIN sale_data sd ON sd.data_id = sh.data_id
     JOIN sale_data_connected sdc ON sdc.data_connected_id = sh.data_connected_id
+    LEFT JOIN sale_data_active sda ON sda.data_active_id = sh.data_active_id
 
     JOIN student st ON st.student_number = sd.student_number
     JOIN student_history sth ON sth.id = st.last_history_id
@@ -680,7 +684,25 @@ async function propagateAcademyCourseChangesToSales(
         AND pac.workshop_id IS NOT NULL
     ) product_courses ON true
 
+    LEFT JOIN LATERAL (
+      SELECT
+        json_agg(DISTINCT pac2.workshop_id) AS course_ids
+      FROM sale other_sale
+      JOIN sale_history osh ON osh.id = other_sale.last_history_id
+      JOIN sale_data osd ON osd.data_id = osh.data_id
+      JOIN sale_data_connected osdc ON osdc.data_connected_id = osh.data_connected_id
+      LEFT JOIN sale_data_active osda ON osda.data_active_id = osh.data_active_id
+      JOIN sale_data_product osdp ON osdp.data_product_id = other_sale.last_data_product_id
+      JOIN product op ON op.product_number = osdp.product_number
+      JOIN product_academy_course pac2 ON pac2.data_id = op.last_data_id
+      WHERE osd.student_number = sd.student_number
+        AND osdc.is_connected = true
+        AND COALESCE(osda.is_active, false) = true
+        AND other_sale.sale_number != s.sale_number
+    ) other_sales_courses ON true
+
     WHERE sdc.is_connected = true
+      AND COALESCE(sda.is_active, false) = true
       AND s.sale_number IN (
         SELECT s2.sale_number FROM sale s2
         JOIN sale_data_product sdp2 ON sdp2.data_product_id = s2.last_data_product_id
@@ -701,6 +723,7 @@ async function propagateAcademyCourseChangesToSales(
         studentName: saleInfo.studentName,
         studentPhone: saleInfo.studentPhone,
         productCourses: saleInfo.productCourses,
+        coursesFromOtherSales: saleInfo.coursesFromOtherSales,
       },
       {parentJobId: jobId},
     )
@@ -731,6 +754,9 @@ async function propagateAcademyCourseChangesForSingleSale(
       .map((pc) => pc.academyCourseId),
   )
 
+  // Also consider courses from the student's other connected sales
+  const coursesFromOtherSales = new Set(saleInfo.coursesFromOtherSales ?? [])
+
   // For added courses: always enroll
   for (const courseId of saleInfo.addedCourses) {
     try {
@@ -756,10 +782,15 @@ async function propagateAcademyCourseChangesForSingleSale(
     }
   }
 
-  // For removed courses: only unenroll if no other product has that course
+  // For removed courses: only unenroll if no other product in this sale or other sales has that course
   for (const courseId of saleInfo.removedCourses) {
     if (coursesFromOtherProducts.has(courseId)) {
       saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-product')
+      continue
+    }
+
+    if (coursesFromOtherSales.has(courseId)) {
+      saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-sale')
       continue
     }
 

@@ -6,6 +6,7 @@ import {createStudent} from '../../../src/domain/student/model.ts'
 import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
+import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
 
 const {url, sql, smooveIntegration, academyIntegration} = setup(import.meta.url)
 
@@ -123,15 +124,16 @@ test('adding product to sales event enrolls students from connected sales', asyn
     new RegExp(`^${product2Number}:`),
   )
 
-  await expect(async () => {
-    // Verify student is now enrolled in both courses
-    expect(
-      await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
-    ).toBe(true)
-    expect(
-      await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
-    ).toBe(true)
-  }).toPass()
+  // Wait for all background jobs to finish before asserting
+  await waitForAllJobsToBeDone(page, url())
+
+  // Verify student is now enrolled in both courses
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
+  ).toBe(true)
 })
 
 test('removing product from sales event does NOT unenroll students (they already purchased)', async ({
@@ -245,17 +247,18 @@ test('removing product from sales event does NOT unenroll students (they already
   // Wait for the page refresh to complete after the update
   await page.waitForLoadState('networkidle')
 
+  // Wait for all background jobs to finish before asserting
+  await waitForAllJobsToBeDone(page, url())
+
   // Verify student is STILL enrolled in BOTH courses
   // We don't unenroll students when products are removed from sales event
   // because the student already purchased those products
-  await expect(async () => {
-    expect(
-      await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1),
-    ).toBe(true)
-    expect(
-      await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33),
-    ).toBe(true)
-  }).toPass()
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33),
+  ).toBe(true)
 })
 
 test('disconnected sales are not affected by sales event product updates', async ({page}) => {
@@ -368,7 +371,8 @@ test('disconnected sales are not affected by sales event product updates', async
     new RegExp(`^${product2Number}:`),
   )
 
-  await page.waitForTimeout(3000)
+  // Wait for all background jobs to finish before asserting
+  await waitForAllJobsToBeDone(page, url())
 
   // Verify student is STILL NOT enrolled in any course (sale was not connected)
   expect(
