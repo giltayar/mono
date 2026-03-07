@@ -18,6 +18,7 @@ import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
+import {initializePropagateSalesEventProductChangesJobHandlers} from '../sale/model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
@@ -43,6 +44,7 @@ export default function (
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql, nowService)
+  initializePropagateSalesEventProductChangesJobHandlers(academyIntegration, sql, nowService)
 
   // List sales events
   appWithTypes.get(

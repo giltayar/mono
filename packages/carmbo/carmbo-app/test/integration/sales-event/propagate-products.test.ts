@@ -123,13 +123,15 @@ test('adding product to sales event enrolls students from connected sales', asyn
     new RegExp(`^${product2Number}:`),
   )
 
-  // Verify student is now enrolled in both courses
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
-  ).toBe(true)
+  await expect(async () => {
+    // Verify student is now enrolled in both courses
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
+    ).toBe(true)
+  }).toPass()
 })
 
 test('removing product from sales event does NOT unenroll students (they already purchased)', async ({
@@ -246,12 +248,14 @@ test('removing product from sales event does NOT unenroll students (they already
   // Verify student is STILL enrolled in BOTH courses
   // We don't unenroll students when products are removed from sales event
   // because the student already purchased those products
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33),
-  ).toBe(true)
+  await expect(async () => {
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33),
+    ).toBe(true)
+  }).toPass()
 })
 
 test('disconnected sales are not affected by sales event product updates', async ({page}) => {
@@ -363,6 +367,8 @@ test('disconnected sales are not affected by sales event product updates', async
   await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue(
     new RegExp(`^${product2Number}:`),
   )
+
+  await page.waitForTimeout(3000)
 
   // Verify student is STILL NOT enrolled in any course (sale was not connected)
   expect(

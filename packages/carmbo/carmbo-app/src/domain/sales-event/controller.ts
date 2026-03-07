@@ -11,7 +11,7 @@ import {
   deleteSalesEvent as model_deleteSalesEvent,
   listProductsForChoosing as model_listProductsForChoosing,
 } from './model/model.ts'
-import {propagateSalesEventProductChangesToSales} from '../sale/model/model-external-providers.ts'
+import {submitPropagateSalesEventProductChangesJob} from '../sale/model/model-external-providers.ts'
 import {
   renderSalesEventsCreatePage,
   renderSalesEventFormFields,
@@ -201,8 +201,6 @@ export async function updateSalesEvent(
 ): Promise<ControllerResult> {
   try {
     const nowService = requestContext.get('nowService')!
-    const logger = requestContext.get('logger')!
-    const academyIntegration = requestContext.get('academyIntegration')!
     const now = nowService()
     const updateResult = await model_updateSalesEvent(salesEvent, undefined, now, sql)
 
@@ -210,16 +208,14 @@ export async function updateSalesEvent(
       return {status: 404, body: 'Sales event not found'}
     }
 
-    // Propagate product changes to connected sales
+    // Propagate product changes to connected sales via job system
     if (updateResult.addedProducts.length > 0 || updateResult.removedProducts.length > 0) {
-      await propagateSalesEventProductChangesToSales(
-        updateResult.salesEventNumber,
-        updateResult.addedProducts,
-        updateResult.removedProducts,
-        academyIntegration,
-        sql,
-        logger,
-        now,
+      await submitPropagateSalesEventProductChangesJob(
+        {
+          salesEventNumber: updateResult.salesEventNumber,
+          addedProducts: updateResult.addedProducts,
+        },
+        {},
       )
     }
 
