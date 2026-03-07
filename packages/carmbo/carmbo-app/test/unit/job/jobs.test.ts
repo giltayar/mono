@@ -31,6 +31,7 @@ function createTestLogger(): FastifyBaseLogger {
 }
 
 const logger = createTestLogger()
+const nowService = () => new Date()
 
 describe('Job Executor', () => {
   let sql: Sql
@@ -92,7 +93,7 @@ describe('Job Executor', () => {
       attempt: number
     }> = []
 
-    const submitJob = registerJobHandler('test-job', async (data, attempt) => {
+    const submitJob = registerJobHandler('test-job', nowService, async (data, attempt) => {
       executedJobs.push({data, attempt})
 
       return {description: `job ${(data.payload as any)?.message}`}
@@ -124,12 +125,14 @@ describe('Job Executor', () => {
 
     let once = false
 
-    const submitJob = registerJobHandler('test-job', async (data, attempt) => {
+    const submitJob = registerJobHandler('test-job', nowService, async (data, attempt) => {
       executedJobs.push({data, attempt})
       if (!once) {
         await submitJob({message: 'Sub Job'}, {parentJobId: data.jobId, retries: 3})
         once = true
       }
+
+      return {description: ''}
     })
 
     await submitJob({message: 'Hello World'}, {retries: 3})
@@ -155,16 +158,20 @@ describe('Job Executor', () => {
     }> = []
     let callCount = 0
 
-    const submitJob = registerJobHandler('failing-job', async (data, attempt) => {
+    const submitJob = registerJobHandler('failing-job', nowService, async (data, attempt) => {
       executedJobs.push({data, attempt})
       ++callCount
       if (callCount < 3) {
         throw new Error('Job failed')
       }
+
+      return {description: ''}
     })
 
     await submitJob({data: 'test'}, {retries: 3})
 
+    await triggerJobsExecution(() => new Date())
+    await triggerJobsExecution(() => new Date())
     await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
@@ -182,13 +189,18 @@ describe('Job Executor', () => {
       attempt: number
     }> = []
 
-    const submitJob = registerJobHandler('always-failing-job', async (data, attempt) => {
-      executedJobs.push({data, attempt})
-      throw new Error('Job always fails')
-    })
+    const submitJob = registerJobHandler(
+      'always-failing-job',
+      nowService,
+      async (data, attempt) => {
+        executedJobs.push({data, attempt})
+        throw new Error('Job always fails')
+      },
+    )
 
     await submitJob({data: 'test'}, {retries: 2})
 
+    await triggerJobsExecution(() => new Date())
     await triggerJobsExecution(() => new Date())
 
     const completedJobs = await waitForJobsToComplete(sql)
@@ -216,8 +228,10 @@ describe('Job Executor', () => {
 
     const submitJob = registerJobHandler(
       'scheduled-job',
+      nowService,
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
+        return {description: ''}
       },
     )
 
@@ -258,34 +272,32 @@ describe('Job Executor', () => {
 
     const submitJob = registerJobHandler(
       'multi-job',
+      nowService,
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
+        return {description: ''}
       },
     )
 
-    await submitJob({id: 'job1'}, {retries: 3})
-    await submitJob({id: 'job2'}, {retries: 3})
-    await submitJob({id: 'job3'}, {retries: 3})
-    triggerJobsExecution(() => new Date())
+    await submitJob({id: 'zjob1'}, {retries: 3})
+    await submitJob({id: 'zjob2'}, {retries: 3})
+    await submitJob({id: 'zjob3'}, {retries: 3})
 
     await waitForJobsToComplete(sql)
 
-    assert.strictEqual(executedJobs.length, 3)
-    assert.ok(executedJobs.includes('job1'))
-    assert.ok(executedJobs.includes('job2'))
-    assert.ok(executedJobs.includes('job3'))
+    assert.deepStrictEqual(executedJobs, ['zjob1', 'zjob2', 'zjob3'])
 
     const jobs = await sql`SELECT * FROM job WHERE finished_at IS NULL`
     assert.strictEqual(jobs.length, 0)
   })
 
   test('should handle job handler that throws an error', async () => {
-    const submitJob = registerJobHandler('error-job', async () => {
+    const submitJob = registerJobHandler('error-job', nowService, async () => {
       throw new Error('Handler error')
     })
 
     await submitJob({data: 'test'}, {retries: 1})
-    await triggerJobsExecution(() => new Date())
+
     await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
@@ -297,8 +309,6 @@ describe('Job Executor', () => {
       INSERT INTO job (type, payload, number_of_retries, scheduled_at, attempts)
       VALUES ('unregistered-job', '{"data": "test"}', 2, NOW(), 0)
     `
-    await triggerJobsExecution(() => new Date())
-    await triggerJobsExecution(() => new Date())
     await triggerJobsExecution(() => new Date())
 
     await waitForJobsToComplete(sql)
@@ -315,10 +325,12 @@ describe('Job Executor', () => {
 
     const submitJob = registerJobHandler(
       'mutex-job',
+      nowService,
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
         // Simulate long-running job
         await setTimeout(50)
+        return {description: ''}
       },
     )
 
@@ -336,10 +348,9 @@ describe('Job Executor', () => {
   })
 
   test('should garbage collect old jobs', async () => {
-    const submitJob = registerJobHandler('simple-job', async () => {})
+    const submitJob = registerJobHandler('simple-job', nowService, async () => ({description: ''}))
 
     await submitJob({data: 'test'}, {retries: 1})
-    await triggerJobsExecution(() => new Date())
 
     assert.strictEqual((await waitForJobsToComplete(sql)).length, 1)
 

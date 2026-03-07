@@ -36,6 +36,7 @@ import {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {initializeJobHandlers as initializeSaleJobHandlers} from './model/model-connect.ts'
 import {initializeJobHandlers as initializeStandingOrderJobHandlers} from './model/model-standing-order.ts'
+import {initializePropagateAcademyCourseChangesJobHandlers} from './model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
@@ -61,7 +62,7 @@ export function apiRoute(
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  initializeSaleJobHandlers(academyIntegration, smooveIntegration, sql)
+  initializeSaleJobHandlers(academyIntegration, smooveIntegration, sql, nowService)
   initializeStandingOrderJobHandlers(
     sql,
     academyIntegration,
@@ -69,6 +70,7 @@ export function apiRoute(
     whatsappIntegration,
     nowService,
   )
+  initializePropagateAcademyCourseChangesJobHandlers(academyIntegration, sql, nowService)
 
   for (const path of ['/cardcom/sale', '/cardcom/one-time-sale'])
     appWithTypes.post(

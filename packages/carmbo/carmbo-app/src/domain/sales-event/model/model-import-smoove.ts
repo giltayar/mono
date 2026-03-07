@@ -10,6 +10,7 @@ import {
 import {createNoInvoiceSale} from '../../sale/model/model-sale.ts'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {NowService} from '../../../commons/now-service.ts'
 
 export type ImportResult = {
   total: number
@@ -41,9 +42,11 @@ export async function initialzeImportSmooveJobHandlers(
   smooveIntegration: SmooveIntegrationService,
   academyIntegration: AcademyIntegrationService,
   sql: Sql,
+  nowService: NowService,
 ) {
   submitImportFromSmooveListJob = registerJobHandler<ImportFromSmooveListJobPayload>(
     'import-from-smoove-list',
+    nowService,
     async ({payload, jobId}, _attempt, logger) => {
       await importFromSmooveList(
         payload.salesEventNumber,
@@ -62,6 +65,7 @@ export async function initialzeImportSmooveJobHandlers(
 
   submitImportSingleContactJob = registerJobHandler<ImportSingeContactFromSmooveListJobPayload>(
     'import-single-contact-from-smoove-list',
+    nowService,
     async ({payload, jobId}, _attempt, logger) => {
       return await importSingleContact(
         payload.salesEventNumber,

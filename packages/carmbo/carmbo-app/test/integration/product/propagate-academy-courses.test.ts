@@ -106,19 +106,22 @@ test('updating product to add academy course enrolls students from connected sal
   await updateForm.academyCourses().addButton().locator.click()
   await updateForm.academyCourses().academyCourseInput(1).locator.fill('33')
 
+  console.log('****** saving the product update')
   // Save the product update (this triggers propagation)
   await updateForm.updateButton().locator.click()
 
   // Wait for the update to complete by checking the form reflects the new values
   await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue(/^33:/)
 
-  // Verify student is now enrolled in both courses
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
-  ).toBe(true)
+  await expect(async () => {
+    // Verify student is now enrolled in both courses
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
+    ).toBe(true)
+  }).toPass()
 })
 
 test('updating product to remove academy course unenrolls students from connected sales', async ({

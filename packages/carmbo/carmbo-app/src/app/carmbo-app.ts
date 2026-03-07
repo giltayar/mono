@@ -190,6 +190,7 @@ export function makeApp({
       academyIntegration,
       appBaseUrl,
       apiSecret: auth0?.sessionSecret,
+      nowService,
     })
     app.register(salesRoutes, {prefix: '/sales', sql})
     app.register(jobsRoute, {prefix: '/jobs', sql})

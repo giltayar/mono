@@ -11,14 +11,20 @@ let submitTestJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>
 let submitFailingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 let submitParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 
+const nowService = () => new Date()
+
 test.beforeAll(() => {
-  submitTestJob = registerJobHandler<{name: string}>('test-job', async ({payload}) => {
+  submitTestJob = registerJobHandler<{name: string}>('test-job', nowService, async ({payload}) => {
     return {description: `Processed: ${payload.name}`}
   })
-  submitFailingJob = registerJobHandler<{name: string}>('test-failing-job', async ({payload}) => {
-    throw new Error(`Failed: ${payload.name}`)
-  })
-  submitParentJob = registerJobHandler<number>('test-parent-job', async ({jobId}) => {
+  submitFailingJob = registerJobHandler<{name: string}>(
+    'test-failing-job',
+    nowService,
+    async ({payload}) => {
+      throw new Error(`Failed: ${payload.name}`)
+    },
+  )
+  submitParentJob = registerJobHandler<number>('test-parent-job', nowService, async ({jobId}) => {
     await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
     await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
     await submitTestJob({name: 'Sub 3'}, {parentJobId: jobId, retries: 1})
@@ -29,8 +35,6 @@ test.beforeAll(() => {
 test('job page shows details for a simple job and a job with subjobs', async ({page}) => {
   await submitTestJob({name: 'Simple Job'}, {retries: 1})
   await submitParentJob(1, {retries: 1})
-
-  await triggerJobsExecution(() => new Date())
 
   await page.goto(new URL('/jobs', url()).href)
 
@@ -85,7 +89,9 @@ test('job page shows details for a simple job and a job with subjobs', async ({p
 test('job page shows error details for a failed job', async ({page}) => {
   await submitFailingJob({name: 'Bad Job'}, {retries: 1})
 
-  await triggerJobsExecution(() => new Date())
+  // Because it's a failing job, it will retry once, and so we need to trigger the job execution
+  // so it can do the retry
+  await triggerJobsExecution(nowService)
 
   const jobListModel = createJobListPageModel(page)
   const jobPageModel = createJobPageModel(page)

@@ -5,6 +5,7 @@ import {jobHandlers} from './job-handlers.ts'
 import type {NowService} from '../../commons/now-service.ts'
 import {AsyncLocalStorage} from 'async_hooks'
 import {presult, unwrapPresult} from '@giltayar/promise-commons'
+import {Mutex} from 'async-mutex'
 
 export async function triggerJobsExecution(nowService: NowService) {
   if (!globalSql || !globalLogger)
@@ -52,21 +53,17 @@ type JobToExecute = {
   attempts: string
 }
 
-let jobMutex = 0
+const jobMutex = new Mutex()
 
 async function executeJobs(nowService: NowService) {
-  ++jobMutex
-  const now = nowService()
-  const jobExecutionId = crypto.randomUUID()
-  const jobLogger = globalLogger.child({jobExecutionId})
-  jobLogger.info({jobMutex, now: now.toISOString()}, 'execute-jobs-started')
-  if (jobMutex > 1) {
-    jobLogger.info({jobMutex}, 'execute-jobs-already-running')
-    return
-  }
-  const sql = globalSql
-  const jobsToExecute = async () =>
-    (await sql`
+  await jobMutex.runExclusive(async () => {
+    const now = nowService()
+    const jobExecutionId = crypto.randomUUID()
+    const jobLogger = globalLogger.child({jobExecutionId})
+    jobLogger.info({jobMutex, now: now.toISOString()}, 'execute-jobs-started')
+    const sql = globalSql
+    const jobsToExecute = async () =>
+      (await sql`
       SELECT
         id, type, payload, number_of_retries, attempts
       FROM
@@ -76,7 +73,6 @@ async function executeJobs(nowService: NowService) {
         finished_at IS NULL
     `) as JobToExecute[]
 
-  try {
     jobLogger.info('finding-jobs-to-execute')
 
     const currentJobs = await jobsToExecute()
@@ -92,18 +88,7 @@ async function executeJobs(nowService: NowService) {
         childLogger.error({err}, 'executing-job-failed')
       }
     }
-  } finally {
-    jobLogger.info({jobMutex}, 'ending-jobs-execution')
-    --jobMutex
-
-    if (jobMutex > 0 || (await jobsToExecute()).length > 0) {
-      jobLogger.info({jobMutex}, 'retriggering-jobs-execution')
-
-      jobMutex = 0
-
-      triggerJobsExecution(nowService)
-    }
-  }
+  })
 }
 
 async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: FastifyBaseLogger) {

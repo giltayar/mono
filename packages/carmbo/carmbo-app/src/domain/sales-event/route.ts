@@ -20,6 +20,7 @@ import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {NowService} from '../../commons/now-service.ts'
 
 export default function (
   app: FastifyInstance,
@@ -29,17 +30,19 @@ export default function (
     academyIntegration,
     appBaseUrl,
     apiSecret,
+    nowService,
   }: {
     sql: Sql
     appBaseUrl: string
     apiSecret: string | undefined
     smooveIntegration: SmooveIntegrationService
     academyIntegration: AcademyIntegrationService
+    nowService: NowService
   },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql)
+  initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql, nowService)
 
   // List sales events
   appWithTypes.get(

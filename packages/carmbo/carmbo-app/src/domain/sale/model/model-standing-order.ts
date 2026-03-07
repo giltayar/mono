@@ -26,6 +26,7 @@ export async function initializeJobHandlers(
 ) {
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
+    nowService,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>
         disconnectSale(

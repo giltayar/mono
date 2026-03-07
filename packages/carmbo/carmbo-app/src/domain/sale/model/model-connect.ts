@@ -13,6 +13,7 @@ import {
 } from './model-external-providers.ts'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
+import type {NowService} from '../../../commons/now-service.ts'
 
 export type SaleConnectionToStudent = {
   studentNumber: number
@@ -30,9 +31,11 @@ export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   sql: Sql,
+  nowService: NowService,
 ) {
   submitConnectionJob = registerJobHandler<SaleConnectionToStudent>(
     'connecting-cardcom-one-time-sale',
+    nowService,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>
         connectSaleToExternalProviders(payload, academyIntegration, smooveIntegration, sql, logger),

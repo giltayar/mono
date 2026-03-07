@@ -1,6 +1,6 @@
 import type {FastifyBaseLogger} from 'fastify'
 import type {JSONValue} from 'postgres'
-import {globalSql} from './job-executor.ts'
+import {globalSql, triggerJobsExecution} from './job-executor.ts'
 
 export type JobSubmitter<TPayload = unknown> = (
   payload: TPayload,
@@ -11,12 +11,13 @@ type JobHandler<TPayload = unknown> = (
   data: {payload: TPayload; jobId: number},
   attempt: number,
   logger: FastifyBaseLogger,
-) => Promise<{description: string} | void>
+) => Promise<{description: string}>
 
 export const jobHandlers = new Map<string, JobHandler<unknown>>()
 
 export function registerJobHandler<TPayload extends JSONValue>(
   type: string,
+  nowService: () => Date,
   handler: JobHandler<TPayload>,
 ): JobSubmitter<TPayload> {
   if (jobHandlers.has(type)) throw new Error(`Job Handler for ${type} already registered`)
@@ -34,6 +35,8 @@ export function registerJobHandler<TPayload extends JSONValue>(
       })}
       RETURNING id
     `
+
+    triggerJobsExecution(nowService)
 
     return parseInt(result[0].id, 10)
   }

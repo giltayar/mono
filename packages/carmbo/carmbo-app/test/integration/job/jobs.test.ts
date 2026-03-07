@@ -12,17 +12,27 @@ let submitParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitPartialParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitPendingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 
+const nowService = () => new Date()
+
 test.beforeAll(() => {
-  submitTestJob = registerJobHandler<{name: string}>('test-job', async ({payload}) => {
+  submitTestJob = registerJobHandler<{name: string}>('test-job', nowService, async ({payload}) => {
     return {description: `Processed: ${payload.name}`}
   })
-  submitFailingJob = registerJobHandler<{name: string}>('test-failing-job', async ({payload}) => {
-    throw new Error(`Failed: ${payload.name}`)
-  })
-  submitPendingJob = registerJobHandler<{name: string}>('test-pending-job', async ({payload}) => {
-    return {description: `Processed: ${payload.name}`}
-  })
-  submitParentJob = registerJobHandler<number>('test-parent-job', async ({jobId}) => {
+  submitFailingJob = registerJobHandler<{name: string}>(
+    'test-failing-job',
+    nowService,
+    async ({payload}) => {
+      throw new Error(`Failed: ${payload.name}`)
+    },
+  )
+  submitPendingJob = registerJobHandler<{name: string}>(
+    'test-pending-job',
+    nowService,
+    async ({payload}) => {
+      return {description: `Processed: ${payload.name}`}
+    },
+  )
+  submitParentJob = registerJobHandler<number>('test-parent-job', nowService, async ({jobId}) => {
     await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
     await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
     await submitTestJob({name: 'Sub 3'}, {parentJobId: jobId, retries: 1})
@@ -30,6 +40,7 @@ test.beforeAll(() => {
   })
   submitPartialParentJob = registerJobHandler<number>(
     'test-partial-parent-job',
+    nowService,
     async ({jobId}) => {
       await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
       await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})

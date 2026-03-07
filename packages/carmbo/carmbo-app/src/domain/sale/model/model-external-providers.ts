@@ -9,12 +9,14 @@ import type {
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
+import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import type {
   WhatsAppGroup,
   WhatsAppIntegrationService,
 } from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
+import type {NowService} from '../../../commons/now-service.ts'
 
 export type SaleWithProviders = {
   saleNumber: number
@@ -553,19 +555,77 @@ type SaleWithProvidersResult = {
   }[]
 }
 
+type PropagateAcademyCourseChangesPayload = {
+  productNumber: number
+  addedCourses: number[]
+  removedCourses: number[]
+}
+
+type PropagateAcademyCourseChangesSingleSalePayload = {
+  productNumber: number
+  addedCourses: number[]
+  removedCourses: number[]
+  saleNumber: number
+  studentEmail: string
+  studentName: string
+  studentPhone: string
+  productCourses: Array<{productNumber: number; academyCourseId: number}> | null
+}
+
+export let submitPropagateAcademyCourseChangesJob: JobSubmitter<PropagateAcademyCourseChangesPayload>
+let submitPropagateAcademyCourseChangesSingleSaleJob: JobSubmitter<PropagateAcademyCourseChangesSingleSalePayload>
+
+export function initializePropagateAcademyCourseChangesJobHandlers(
+  academyIntegration: AcademyIntegrationService,
+  sql: Sql,
+  nowService: NowService,
+) {
+  submitPropagateAcademyCourseChangesJob = registerJobHandler<PropagateAcademyCourseChangesPayload>(
+    'propagate-academy-course-changes',
+    nowService,
+    async ({payload, jobId}, _attempt, logger) => {
+      await propagateAcademyCourseChangesToSales(
+        payload.productNumber,
+        payload.addedCourses,
+        payload.removedCourses,
+        sql,
+        logger,
+        jobId,
+      )
+
+      return {
+        description: `Propagate academy course changes for product ${payload.productNumber}`,
+      }
+    },
+  )
+
+  submitPropagateAcademyCourseChangesSingleSaleJob =
+    registerJobHandler<PropagateAcademyCourseChangesSingleSalePayload>(
+      'propagate-academy-course-changes-single-sale',
+      nowService,
+      async ({payload}, _attempt, logger) => {
+        await propagateAcademyCourseChangesForSingleSale(payload, academyIntegration, logger)
+
+        return {
+          description: `Propagate academy course changes for sale ${payload.saleNumber}`,
+        }
+      },
+    )
+}
+
 /**
  * Propagates academy course changes from a product update to all connected sales.
- * For each affected sale:
+ * For each affected sale, submits a subjob that:
  * - Enrolls student in added courses
  * - Unenrolls student from removed courses (only if no other product in the sale has that course)
  */
-export async function propagateAcademyCourseChangesToSales(
+async function propagateAcademyCourseChangesToSales(
   productNumber: number,
   addedCourses: number[],
   removedCourses: number[],
-  academyIntegration: AcademyIntegrationService,
   sql: Sql,
   logger: FastifyBaseLogger,
+  jobId: number,
 ): Promise<void> {
   if (addedCourses.length === 0 && removedCourses.length === 0) {
     return
@@ -630,78 +690,93 @@ export async function propagateAcademyCourseChangesToSales(
 
   logger.info({affectedSalesCount: affectedSales.length}, 'found-affected-sales')
 
-  // Process each sale independently (errors logged but don't block other sales)
   for (const saleInfo of affectedSales) {
-    const saleLogger = logger.child({
-      saleNumber: saleInfo.saleNumber,
-      studentEmail: saleInfo.studentEmail,
-    })
-
-    try {
-      if (!saleInfo.studentEmail) {
-        saleLogger.warn('skipping-sale-no-student-email')
-        continue
-      }
-
-      // Determine courses from OTHER products in this sale (excluding the updated product)
-      const coursesFromOtherProducts = new Set(
-        (saleInfo.productCourses ?? [])
-          .filter((pc) => pc.productNumber !== productNumber)
-          .map((pc) => pc.academyCourseId),
-      )
-
-      // For added courses: always enroll
-      for (const courseId of addedCourses) {
-        try {
-          await retry(
-            () =>
-              academyIntegration.addStudentToCourse(
-                {
-                  email: saleInfo.studentEmail,
-                  name: saleInfo.studentName,
-                  phone: saleInfo.studentPhone,
-                },
-                courseId,
-              ),
-            {
-              retries: 5,
-              minTimeout: 1000,
-              maxTimeout: 5000,
-            },
-          )
-          saleLogger.info({courseId}, 'propagate-added-course-succeeded')
-        } catch (err) {
-          saleLogger.error({err, courseId}, 'propagate-added-course-failed')
-        }
-      }
-
-      // For removed courses: only unenroll if no other product has that course
-      for (const courseId of removedCourses) {
-        if (coursesFromOtherProducts.has(courseId)) {
-          saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-product')
-          continue
-        }
-
-        try {
-          await retry(
-            () => academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, courseId),
-            {
-              retries: 5,
-              minTimeout: 1000,
-              maxTimeout: 5000,
-            },
-          )
-          saleLogger.info({courseId}, 'propagate-removed-course-succeeded')
-        } catch (err) {
-          saleLogger.error({err, courseId}, 'propagate-removed-course-failed')
-        }
-      }
-    } catch (err) {
-      saleLogger.error({err}, 'propagate-academy-courses-sale-failed')
-    }
+    submitPropagateAcademyCourseChangesSingleSaleJob(
+      {
+        productNumber,
+        addedCourses,
+        removedCourses,
+        saleNumber: saleInfo.saleNumber,
+        studentEmail: saleInfo.studentEmail,
+        studentName: saleInfo.studentName,
+        studentPhone: saleInfo.studentPhone,
+        productCourses: saleInfo.productCourses,
+      },
+      {parentJobId: jobId},
+    )
   }
 
   logger.info({productNumber}, 'propagating-academy-course-changes-completed')
+}
+
+async function propagateAcademyCourseChangesForSingleSale(
+  saleInfo: PropagateAcademyCourseChangesSingleSalePayload,
+  academyIntegration: AcademyIntegrationService,
+  logger: FastifyBaseLogger,
+): Promise<void> {
+  const saleLogger = logger.child({
+    saleNumber: saleInfo.saleNumber,
+    studentEmail: saleInfo.studentEmail,
+  })
+
+  if (!saleInfo.studentEmail) {
+    saleLogger.warn('skipping-sale-no-student-email')
+    return
+  }
+
+  // Determine courses from OTHER products in this sale (excluding the updated product)
+  const coursesFromOtherProducts = new Set(
+    (saleInfo.productCourses ?? [])
+      .filter((pc) => pc.productNumber !== saleInfo.productNumber)
+      .map((pc) => pc.academyCourseId),
+  )
+
+  // For added courses: always enroll
+  for (const courseId of saleInfo.addedCourses) {
+    try {
+      await retry(
+        () =>
+          academyIntegration.addStudentToCourse(
+            {
+              email: saleInfo.studentEmail,
+              name: saleInfo.studentName,
+              phone: saleInfo.studentPhone,
+            },
+            courseId,
+          ),
+        {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 5000,
+        },
+      )
+      saleLogger.info({courseId}, 'propagate-added-course-succeeded')
+    } catch (err) {
+      saleLogger.error({err, courseId}, 'propagate-added-course-failed')
+    }
+  }
+
+  // For removed courses: only unenroll if no other product has that course
+  for (const courseId of saleInfo.removedCourses) {
+    if (coursesFromOtherProducts.has(courseId)) {
+      saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-product')
+      continue
+    }
+
+    try {
+      await retry(
+        () => academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, courseId),
+        {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 5000,
+        },
+      )
+      saleLogger.info({courseId}, 'propagate-removed-course-succeeded')
+    } catch (err) {
+      saleLogger.error({err, courseId}, 'propagate-removed-course-failed')
+    }
+  }
 }
 
 /**
