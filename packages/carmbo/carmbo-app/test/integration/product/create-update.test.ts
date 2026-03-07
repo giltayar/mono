@@ -43,6 +43,7 @@ test('create product then update it', async ({page}) => {
   await newForm.smooveCancellingListIdInput().locator.fill('4')
   await newForm.smooveCancelledListIdInput().locator.fill('6')
   await newForm.smooveRemovedListIdInput().locator.fill('8')
+  await newForm.notesInput().locator.fill('Initial product notes')
 
   // Save the product
   await newForm.createButton().locator.click()
@@ -78,6 +79,7 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '8: Smoove List Removed 4',
   )
+  await expect(updateForm.notesInput().locator).toHaveValue('Initial product notes')
 
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
@@ -94,6 +96,7 @@ test('create product then update it', async ({page}) => {
   await updateForm.smooveCancellingListIdInput().locator.fill('12')
   await updateForm.smooveCancelledListIdInput().locator.fill('14')
   await updateForm.smooveRemovedListIdInput().locator.fill('16')
+  await updateForm.notesInput().locator.fill('Updated product notes')
 
   // Save the product and verify data
 
@@ -122,6 +125,7 @@ test('create product then update it', async ({page}) => {
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '16: Smoove List Removed D',
   )
+  await expect(updateForm.notesInput().locator).toHaveValue('Updated product notes')
 
   // Back to list
   await page.goto(new URL('/products', url()).href)

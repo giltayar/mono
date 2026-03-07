@@ -55,6 +55,9 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
     smooveRemovedListIdInput: (inputLocator = locator.getByLabel('Smoove Removed List ID')) => ({
       locator: inputLocator,
     }),
+    notesInput: (inputLocator = locator.getByLabel('Notes')) => ({
+      locator: inputLocator,
+    }),
   }
 }
 

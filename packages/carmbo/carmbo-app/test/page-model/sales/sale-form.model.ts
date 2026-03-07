@@ -24,6 +24,9 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
     transactionDescriptionInput: (inputLocator = locator.getByLabel('Description')) => ({
       locator: inputLocator,
     }),
+    notesInput: (inputLocator = locator.locator('#sale-notes')) => ({
+      locator: inputLocator,
+    }),
     viewInvoiceLink: (linkLocator = locator.getByRole('link', {name: 'View Invoice'})) => ({
       locator: linkLocator,
     }),

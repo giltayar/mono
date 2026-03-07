@@ -220,6 +220,19 @@ export function SalesFormFields({
             required
           />
         </div>
+        <div class="mb-3 form-floating">
+          <textarea
+            class="form-control"
+            id="sale-notes"
+            name="notes"
+            placeholder=" "
+            style="height: 120px"
+            readonly=${isReadOnly}
+          >
+${sale.notes ?? ''}</textarea
+          >
+          <label for="sale-notes">Notes</label>
+        </div>
         <div class="mb-3">
           <div class="form-check">
             <input

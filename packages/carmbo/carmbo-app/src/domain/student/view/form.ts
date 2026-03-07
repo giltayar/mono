@@ -162,6 +162,20 @@ export function StudentCreateOrUpdateFormFields({
           <label for="birthday">Birthday</label>
         </div>
 
+        <div class="mt-3 form-floating">
+          <textarea
+            name="notes"
+            placeholder=" "
+            class="form-control"
+            id="notes"
+            style="height: 120px"
+            readonly=${isReadOnly}
+          >
+${student.notes ?? ''}</textarea
+          >
+          <label for="notes">Notes</label>
+        </div>
+
         ${'cardcomCustomerIds' in student &&
         student.cardcomCustomerIds &&
         student.cardcomCustomerIds.length > 0

@@ -299,6 +299,20 @@ export function ProductCreateOrUpdateFormFields({
           />
           <label for="smooveRemovedListId">Smoove Removed List ID</label>
         </div>
+
+        <div class="mt-3 form-floating">
+          <textarea
+            name="notes"
+            placeholder=" "
+            class="form-control"
+            id="notes"
+            style="height: 120px"
+            readonly=${isReadOnly}
+          >
+${product.notes ?? ''}</textarea
+          >
+          <label for="notes">Notes</label>
+        </div>
       </div>
     </div>
     <datalist id="academy-courses-list">

@@ -26,6 +26,7 @@ export const ProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
+  notes: z.string().optional(),
 })
 
 export const NewProductSchema = ProductSchema.omit({productNumber: true})
@@ -284,6 +285,7 @@ SELECT
   ${productNumber} as product_number,
   product_data.name AS name,
   product_data.product_type AS product_type,
+  product_data.notes AS notes,
   product_integration_smoove.list_id AS smoove_list_id,
   product_integration_smoove.cancelling_list_id AS smoove_cancelling_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
@@ -368,7 +370,7 @@ async function addProductStuff(
 
   ops = ops.concat(sql`
     INSERT INTO product_data VALUES
-      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'})
+      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'}, ${product.notes ?? null})
   `)
 
   ops = ops.concat(
@@ -435,7 +437,9 @@ function searchableProductText(productNumber: number, product: Product | NewProd
     .map((x) => x.toString())
     .join(' ')
 
-  return `${productNumber} ${name} ${productType} ${whatsappGroups} ${facebookGroups} ${smoveListIds}`.trim()
+  const notes = product.notes ?? ''
+
+  return `${productNumber} ${name} ${productType} ${whatsappGroups} ${facebookGroups} ${smoveListIds} ${notes}`.trim()
 }
 
 export async function TEST_seedProducts(sql: Sql, count: number) {

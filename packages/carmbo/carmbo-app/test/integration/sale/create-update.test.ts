@@ -94,6 +94,8 @@ test('create sale then update it', async ({page}) => {
   await newForm.products().product(1).quantity().locator.fill('1')
   await newForm.products().product(1).unitPrice().locator.fill('3')
 
+  await newForm.notesInput().locator.fill('Initial sale notes')
+
   // Save the sale
   await newForm.createButton().locator.click()
 
@@ -114,6 +116,7 @@ test('create sale then update it', async ({page}) => {
   await expect(updateForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
   await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('7')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('')
+  await expect(updateForm.notesInput().locator).toHaveValue('Initial sale notes')
 
   await updateForm.salesEventInput().link().locator.click()
 
@@ -140,12 +143,15 @@ test('create sale then update it', async ({page}) => {
   await updateForm.products().product(0).quantity().locator.fill('3')
   await updateForm.products().product(0).unitPrice().locator.fill('100')
 
+  await updateForm.notesInput().locator.fill('Updated sale notes')
+
   // Save the sale and verify data
   await updateForm.updateButton().locator.click()
   await page.waitForLoadState('networkidle')
 
   await expect(updateForm.finalSaleRevenueInput().locator).toHaveValue('7')
   await expect(updateForm.cardcomInvoiceNumberInput().locator).toHaveValue('54321')
+  await expect(updateForm.notesInput().locator).toHaveValue('Updated sale notes')
 
   // Back to list
   await updateSaleModel.header().menu().salesMenuItem().locator.click()

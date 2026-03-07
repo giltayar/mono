@@ -6,5 +6,6 @@ export const OngoingSalesEventSchema = z.object({
   toDate: z.coerce.date().optional(),
   landingPageUrl: z.string().optional(),
   productsForSale: z.array(z.coerce.number().int().positive().optional()).optional(),
+  notes: z.string().optional(),
 })
 export type OngoingSalesEvent = z.infer<typeof OngoingSalesEventSchema>

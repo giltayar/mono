@@ -21,6 +21,7 @@ export const StudentSchema = z.object({
   emails: z.array(z.email()).min(1),
   phones: z.array(z.string().min(1)).optional(),
   facebookNames: z.array(z.string()).optional(),
+  notes: z.string().optional(),
   cardcomCustomerIds: z.array(z.number().int()).optional(),
 })
 
@@ -354,6 +355,7 @@ SELECT
   student_history.operation as history_operation,
   ${studentNumber} as student_number,
   birthday,
+  notes,
   COALESCE(names, json_build_array()) AS names,
   COALESCE(facebook_names, json_build_array()) AS facebook_names,
   COALESCE(emails, json_build_array()) AS emails,
@@ -461,7 +463,7 @@ async function addStudentStuff(
 
   ops = ops.concat(sql`
     INSERT INTO student_data VALUES
-      (${dataId}, ${student.birthday ?? null})
+      (${dataId}, ${student.birthday ?? null}, ${student.notes ?? null})
   `)
 
   ops = ops.concat(
@@ -510,8 +512,9 @@ function searchableStudentText(studentNumber: number, student: Student | NewStud
   const emails = student.emails?.join(' ') ?? ''
   const phones = student.phones?.join(' ') ?? ''
   const facebookNames = student.facebookNames?.join(' ') ?? ''
+  const notes = student.notes ?? ''
 
-  return `${studentNumber} ${names} ${emails} ${phones} ${facebookNames}`.trim()
+  return `${studentNumber} ${names} ${emails} ${phones} ${facebookNames} ${notes}`.trim()
 }
 
 export async function TEST_seedStudents(

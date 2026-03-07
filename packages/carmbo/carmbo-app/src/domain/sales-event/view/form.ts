@@ -113,6 +113,20 @@ export function SalesEventCreateOrUpdateFormFields({
             l=${salesEvent.productsForSale}
           />`}
         </fieldset>
+
+        <div class="mt-3 form-floating">
+          <textarea
+            name="notes"
+            placeholder=" "
+            class="form-control"
+            id="notes"
+            style="height: 120px"
+            readonly=${isReadOnly}
+          >
+${salesEvent.notes ?? ''}</textarea
+          >
+          <label for="notes">Notes</label>
+        </div>
       </div>
     </div>
     <datalist id="products-list">

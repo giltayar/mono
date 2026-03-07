@@ -18,5 +18,6 @@ export const OngoingProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
+  notes: z.string().optional(),
 })
 export type OngoingProduct = z.infer<typeof OngoingProductSchema>

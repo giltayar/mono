@@ -24,6 +24,9 @@ export function salesEventFormPageModel(page: Page, locator = page.locator('form
       }),
       ...addAndTrashButtons(productsLocator),
     }),
+    notesInput: (inputLocator = locator.getByLabel('Notes')) => ({
+      locator: inputLocator,
+    }),
   }
 }
 

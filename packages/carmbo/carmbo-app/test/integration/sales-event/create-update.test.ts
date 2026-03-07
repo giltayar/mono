@@ -73,6 +73,7 @@ test('create sales event then update it', async ({page}) => {
 
   await newForm.productsForSale().productInput(1).locator.fill('2')
   await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('2')
+  await newForm.notesInput().locator.fill('Initial sales event notes')
 
   // Save the sales event
   await newForm.createButton().locator.click()
@@ -95,6 +96,7 @@ test('create sales event then update it', async ({page}) => {
   )
   await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
   await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('2: def')
+  await expect(updateForm.notesInput().locator).toHaveValue('Initial sales event notes')
 
   await expect(updateSalesEventModel.cardcomInformation().webhookUrlInput().locator).toHaveValue(
     'http://localhost/api/sales/cardcom/sale?sales-event=1',
@@ -107,6 +109,7 @@ test('create sales event then update it', async ({page}) => {
   await updateForm.landingPageUrlInput().locator.fill('https://example.com/updated-sale')
   await updateForm.productsForSale().productInput(0).locator.fill('3')
   await updateForm.productsForSale().productInput(1).locator.fill('4')
+  await updateForm.notesInput().locator.fill('Updated sales event notes')
 
   // Save the sales event and verify data
   await updateForm.updateButton().locator.click()
@@ -118,6 +121,7 @@ test('create sales event then update it', async ({page}) => {
   )
   await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('3: ghi')
   await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('4: jkl')
+  await expect(updateForm.notesInput().locator).toHaveValue('Updated sales event notes')
 
   // Back to list
   await page.goto(new URL('/sales-events', url()).href)

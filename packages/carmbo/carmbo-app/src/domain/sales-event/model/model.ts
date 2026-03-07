@@ -12,6 +12,7 @@ export const SalesEventSchema = z.object({
   toDate: z.coerce.date().optional(),
   landingPageUrl: z.url().optional(),
   productsForSale: z.array(z.coerce.number().int().positive().optional()).optional(),
+  notes: z.string().optional(),
 })
 
 export const NewSalesEventSchema = SalesEventSchema.omit({salesEventNumber: true})
@@ -289,6 +290,7 @@ function salesEventSelect(salesEventNumber: number, sql: Sql) {
       sales_event_data.from_date AS from_date,
       sales_event_data.to_date AS to_date,
       sales_event_data.landing_page_url AS landing_page_url,
+      sales_event_data.notes AS notes,
       COALESCE(products_for_sale, json_build_array()) AS products_for_sale
     FROM
       parameters
@@ -341,7 +343,7 @@ async function addSalesEventStuff(
 
   ops = ops.concat(sql`
     INSERT INTO sales_event_data VALUES
-      (${dataId}, ${salesEvent.name ?? ''}, ${salesEvent.fromDate ?? null}, ${salesEvent.toDate ?? null}, ${salesEvent.landingPageUrl ?? null})
+      (${dataId}, ${salesEvent.name ?? ''}, ${salesEvent.fromDate ?? null}, ${salesEvent.toDate ?? null}, ${salesEvent.landingPageUrl ?? null}, ${salesEvent.notes ?? null})
   `)
 
   ops = ops.concat(
@@ -367,7 +369,9 @@ function searchableSalesEventText(
   const fromDate = salesEvent.fromDate?.toISOString() ?? ''
   const toDate = salesEvent.toDate?.toISOString() ?? ''
 
-  return `${salesEventNumber} ${name} ${landingPageUrl} ${fromDate} ${toDate}`.trim()
+  const notes = salesEvent.notes ?? ''
+
+  return `${salesEventNumber} ${name} ${landingPageUrl} ${fromDate} ${toDate} ${notes}`.trim()
 }
 
 export async function TEST_seedSalesEvents(sql: Sql, count: number, productCount: number) {

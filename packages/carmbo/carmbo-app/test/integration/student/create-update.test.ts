@@ -6,6 +6,8 @@ import {setup} from '../common/setup.ts'
 
 const {url, smooveIntegration, academyIntegration, TEST_hooks} = setup(import.meta.url)
 
+test.use({viewport: {width: 1280, height: 1200}})
+
 test('create student then update her', async ({page}) => {
   await page.goto(new URL('/students', url()).href)
 
@@ -26,6 +28,7 @@ test('create student then update her', async ({page}) => {
   await newForm.phones().phoneInput(0).locator.fill('+972-54-6344457')
   await newForm.birthdayInput().locator.fill('2000-01-01')
   await newForm.facebookNames().facebookNameInput(0).locator.fill('johnfb')
+  await newForm.notesInput().locator.fill('Initial notes about John')
 
   // Save the student
   await newForm.createButton().locator.click()
@@ -58,12 +61,15 @@ test('create student then update her', async ({page}) => {
   await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('0546344457')
   await expect(updateForm.birthdayInput().locator).toHaveValue('2000-01-01')
 
+  await expect(updateForm.notesInput().locator).toHaveValue('Initial notes about John')
+
   // Update the student data
   await updateForm.names().firstNameInput(0).locator.fill('Jane')
   await updateForm.names().lastNameInput(0).locator.fill('Smith')
   await updateForm.emails().emailInput(0).locator.fill('Jane.Smith@example.com')
   await updateForm.phones().phoneInput(0).locator.fill('546344456')
   await updateForm.birthdayInput().locator.fill('2001-02-02')
+  await updateForm.notesInput().locator.fill('Updated notes about Jane')
 
   // Save the student and verify data
 
@@ -73,6 +79,7 @@ test('create student then update her', async ({page}) => {
   await expect(updateForm.emails().emailInput(0).locator).toHaveValue('jane.smith@example.com')
   await expect(updateForm.phones().phoneInput(0).locator).toHaveValue('0546344456')
   await expect(updateForm.birthdayInput().locator).toHaveValue('2001-02-02')
+  await expect(updateForm.notesInput().locator).toHaveValue('Updated notes about Jane')
 
   expect(
     await smooveIntegration().fetchSmooveContact('jane.smith@example.com', {
