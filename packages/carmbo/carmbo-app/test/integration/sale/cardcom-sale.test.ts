@@ -318,6 +318,16 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
 
   const studentForm = updateStudentModel.form()
   await expect(studentForm.cardcomCustomerIdsInput().locator).toHaveValue('1776')
+
+  // Verify notes can be updated on a connected cardcom sale
+  await page.goto(new URL('/sales/1', url()).href)
+  await page.waitForURL(/\/sales\/1$/)
+
+  await saleDetailModel.form().notesInput().locator.fill('Notes on a cardcom sale')
+  await saleDetailModel.form().updateButton().locator.click()
+
+  await page.waitForURL(/\/sales\/1$/)
+  await expect(saleDetailModel.form().notesInput().locator).toHaveValue('Notes on a cardcom sale')
 })
 
 test('student with multiple sales shows all different cardcom customer IDs', async ({page}) => {

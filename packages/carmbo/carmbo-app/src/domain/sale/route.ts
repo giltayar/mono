@@ -17,6 +17,7 @@ import {
   showProductList,
   createSale,
   updateSale,
+  updateSaleNotes,
   deleteSale,
   connectSale,
   dealWithCardcomRecurringPayment,
@@ -285,6 +286,25 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       assert(saleNumber === request.body.saleNumber, 'sale number in URL must match ID in body')
 
       return dealWithControllerResult(reply, await updateSale(request.body, sql))
+    },
+  )
+
+  // Update sale notes only
+  appWithTypes.put(
+    '/:number/notes',
+    {
+      schema: {
+        body: z.object({notes: z.string().optional()}),
+        params: z.object({number: z.coerce.number().int()}),
+      },
+    },
+    async (request, reply) => {
+      const saleNumber = request.params.number
+
+      return dealWithControllerResult(
+        reply,
+        await updateSaleNotes(saleNumber, request.body.notes, sql),
+      )
     },
   )
 

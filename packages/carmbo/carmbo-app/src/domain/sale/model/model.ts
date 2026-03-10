@@ -477,7 +477,7 @@ export function saleSelect(saleNumber: number, sql: Sql) {
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
       COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS cardcom_refund_transaction_id,
       sale_data_cardcom_manual.transaction_description AS transaction_description,
-      sale_data_cardcom_manual.notes AS notes,
+      sale_data.notes AS notes,
       COALESCE(sale_data_active.is_active, false) AS is_active,
       COALESCE(sale_data_connected.is_connected, false) AS is_connected,
       CASE WHEN sale_data_cardcom_manual.cardcom_invoice_number IS NOT NULL THEN 'manual' ELSE null END AS manual_sale_type,
@@ -635,6 +635,7 @@ export async function createSale(
         studentNumber,
         timestamp: now,
         saleType: sale.isStandingOrder ? 'standing-order' : 'one-time',
+        notes: sale.notes ?? null,
       })}
     `,
     )
@@ -645,7 +646,6 @@ export async function createSale(
         cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
         cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
         transactionDescription: sale.transactionDescription || null,
-        notes: sale.notes ?? null,
       })}
     `)
 
@@ -785,6 +785,7 @@ export async function updateSale(
         studentNumber,
         timestamp: now,
         saleType: sale.isStandingOrder ? 'standing-order' : 'one-time',
+        notes: sale.notes ?? null,
       })}
     `)
 
@@ -803,7 +804,6 @@ export async function updateSale(
         cardcomInvoiceNumber: sale.cardcomInvoiceNumber ?? null,
         cardcomSaleRevenue: sale.finalSaleRevenue ?? null,
         transactionDescription: sale.transactionDescription || null,
-        notes: sale.notes ?? null,
       })}
     `)
 
@@ -865,6 +865,76 @@ export async function updateSale(
     await Promise.all(ops)
 
     return sale.saleNumber
+  })
+}
+
+export async function updateSaleNotes(
+  saleNumber: number,
+  notes: string | undefined,
+  now: Date,
+  sql: Sql,
+): Promise<number | undefined> {
+  return await sql.begin(async (sql) => {
+    const historyId = crypto.randomUUID()
+    const dataId = crypto.randomUUID()
+
+    const prevResult = await sql<
+      {
+        lastDataId: string
+        dataProductId: string
+        dataManualId: string
+        dataActiveId: string
+        dataConnectedId: string
+      }[]
+    >`
+      SELECT
+        sh.data_id AS last_data_id,
+        sh.data_product_id AS data_product_id,
+        sh.data_manual_id AS data_manual_id,
+        sh.data_active_id AS data_active_id,
+        sh.data_connected_id AS data_connected_id
+      FROM sale s
+      JOIN sale_history sh ON sh.id = s.last_history_id
+      WHERE s.sale_number = ${saleNumber}
+    `
+
+    if (prevResult.length === 0) {
+      return undefined
+    }
+
+    const prev = prevResult[0]
+
+    await sql`
+      INSERT INTO sale_data (data_id, sales_event_number, student_number, timestamp, sale_type, notes)
+      SELECT ${dataId}, sales_event_number, student_number, timestamp, sale_type, ${notes ?? null}
+      FROM sale_data WHERE data_id = ${prev.lastDataId}
+    `
+
+    await sql`
+      INSERT INTO sale_data_search (data_id, searchable_text)
+      SELECT ${dataId}, searchable_text
+      FROM sale_data_search WHERE data_id = ${prev.lastDataId}
+    `
+
+    await sql`
+      INSERT INTO sale_data_delivery (data_id, data_cardcom_id, city, street, street_number, entrance, floor, apartment_number, contact_phone, notes_to_delivery_person)
+      SELECT ${dataId}, data_cardcom_id, city, street, street_number, entrance, floor, apartment_number, contact_phone, notes_to_delivery_person
+      FROM sale_data_delivery WHERE data_id = ${prev.lastDataId}
+    `
+
+    await sql`
+      INSERT INTO sale_history (id, data_id, data_product_id, data_manual_id, data_active_id, data_connected_id, sale_number, timestamp, operation, operation_reason)
+      VALUES (${historyId}, ${dataId}, ${prev.dataProductId}, ${prev.dataManualId}, ${prev.dataActiveId}, ${prev.dataConnectedId}, ${saleNumber}, ${now}, 'update', null)
+    `
+
+    await sql`
+      UPDATE sale SET
+        last_history_id = ${historyId},
+        last_data_id = ${dataId}
+      WHERE sale_number = ${saleNumber}
+    `
+
+    return saleNumber
   })
 }
 

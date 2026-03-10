@@ -12,6 +12,7 @@ export function SalesFormFields({
   operation: 'read' | 'write'
 }) {
   const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceDocumentUrl
+  const isNotesReadOnly = operation === 'read'
 
   return html`
     <div class="sales-view_form-fields card">
@@ -227,7 +228,7 @@ export function SalesFormFields({
             name="notes"
             placeholder=" "
             style="height: 120px"
-            readonly=${isReadOnly}
+            readonly=${isNotesReadOnly}
           >
 ${sale.notes ?? ''}</textarea
           >

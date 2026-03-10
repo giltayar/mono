@@ -89,7 +89,7 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
 
   // Wait for the refund to be processed (the button should disappear)
   await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
-  await expect(saleDetailModel.form().updateButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().updateButton().locator).toBeVisible()
   await expect(saleDetailModel.form().discardButton().locator).not.toBeVisible()
 
   // Verify sale status shows refunded

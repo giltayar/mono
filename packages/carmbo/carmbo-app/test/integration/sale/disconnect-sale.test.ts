@@ -89,7 +89,7 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
   // Wait for the disconnect to be processed (the button should disappear)
   await expect(saleDetailModel.form().reconnectButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().disconnectButton().locator).not.toBeVisible()
-  await expect(saleDetailModel.form().updateButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().updateButton().locator).toBeVisible()
   await expect(saleDetailModel.form().connectButton().locator).toBeVisible()
 
   // Verify sale status shows disconnected from external providers
@@ -278,7 +278,7 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   // Verify the reconnect button is visible after disconnecting
   await expect(saleDetailModel.form().reconnectButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().disconnectButton().locator).not.toBeVisible()
-  await expect(saleDetailModel.form().updateButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().updateButton().locator).toBeVisible()
   await expect(saleDetailModel.form().connectButton().locator).toBeVisible()
 
   await saleDetailModel.form().connectButton().locator.click()

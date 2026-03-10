@@ -135,7 +135,7 @@ test('create sale then connect it', async ({page}) => {
   await updateSaleModel.form().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().updateButton().locator).not.toBeVisible()
+  await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
   await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
   await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
 
@@ -211,6 +211,16 @@ test('create sale then connect it', async ({page}) => {
   await expect(studentForm.cardcomCustomerIdsInput().locator).toHaveValue(
     taxInvoiceDocument?.cardcomCustomerId?.toString() ?? '',
   )
+
+  // Verify notes can be updated on a connected manual sale
+  await page.goto(new URL(`/sales/${saleNumber}`, url()).href)
+  await page.waitForURL(updateSaleModel.urlRegex)
+
+  await updateSaleModel.form().notesInput().locator.fill('Notes on a connected sale')
+  await updateSaleModel.form().updateButton().locator.click()
+
+  await page.waitForURL(updateSaleModel.urlRegex)
+  await expect(updateSaleModel.form().notesInput().locator).toHaveValue('Notes on a connected sale')
 })
 
 test('create sale with existing cardcom invoice id, then connect it', async ({page}) => {
@@ -342,7 +352,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
   await updateSaleModel.form().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().updateButton().locator).not.toBeVisible()
+  await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
   await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
   await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
 
@@ -512,7 +522,7 @@ test('connect sale then reconnect it', async ({page}) => {
 
   await expect(updateSaleModel.form().reconnectButton().locator).toBeVisible()
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().updateButton().locator).not.toBeVisible()
+  await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
   await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
   await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
 

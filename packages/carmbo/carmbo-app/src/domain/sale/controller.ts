@@ -8,6 +8,7 @@ import {
   searchProducts,
   createSale as model_createSale,
   updateSale as model_updateSale,
+  updateSaleNotes as model_updateSaleNotes,
   deleteSale as model_deleteSale,
   type NewSale,
   type Sale,
@@ -284,6 +285,27 @@ export async function updateSale(sale: Sale, sql: Sql): Promise<ControllerResult
   } catch (error) {
     logger.error({err: error}, 'update-sale')
     return showSale(sale.saleNumber, {sale, error, operation: 'Updating'}, sql)
+  }
+}
+
+export async function updateSaleNotes(
+  saleNumber: number,
+  notes: string | undefined,
+  sql: Sql,
+): Promise<ControllerResult> {
+  const logger = requestContext.get('logger')!
+  try {
+    const nowService = requestContext.get('nowService')!
+    const result = await model_updateSaleNotes(saleNumber, notes, nowService(), sql)
+
+    if (!result) {
+      return {status: 404, body: 'Sale not found'}
+    }
+
+    return {htmxRedirect: `/sales/${saleNumber}`}
+  } catch (error) {
+    logger.error({err: error}, 'update-sale-notes')
+    return retarget(exceptionToBannerHtml('Error updating notes: ', error), '#banner-container')
   }
 }
 

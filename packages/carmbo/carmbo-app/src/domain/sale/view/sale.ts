@@ -35,7 +35,17 @@ export function SaleUpdateView({
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
           ${isReadOnlySale
-            ? undefined
+            ? sale.historyOperation !== 'delete'
+              ? html`<button
+                  class="btn btn-primary"
+                  type="button"
+                  hx-put="/sales/${sale.saleNumber}/notes"
+                  hx-include="#sale-notes"
+                  hx-indicator=".operation-spinner"
+                >
+                  Update
+                </button>`
+              : undefined
             : sale.historyOperation === 'delete'
               ? html`
                   <button

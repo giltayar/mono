@@ -142,7 +142,7 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   await expect(saleDetailModel.form().restoreButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().deleteButton().locator).not.toBeVisible()
   await expect(saleDetailModel.form().discardButton().locator).not.toBeVisible()
-  await expect(saleDetailModel.form().updateButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.form().updateButton().locator).toBeVisible()
   await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
 
   // Verify sale details
