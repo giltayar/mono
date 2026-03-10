@@ -98,7 +98,11 @@ function SalesView({
                 <td>
                   <a href="/students/${sale.studentNumber}">${sale.studentName}</a>
                 </td>
-                <td>${sale.finalSaleRevenue ? `₪${sale.finalSaleRevenue.toFixed(2)}` : '-'}</td>
+                <td>
+                  ${sale.finalSaleRevenue
+                    ? `₪${sale.finalSaleRevenue.toFixed(2)}${sale.isRefunded ? ' (refunded)' : ''}`
+                    : '-'}
+                </td>
                 <td>${sale.products.join(', ')}</td>
               </tr>
             `,

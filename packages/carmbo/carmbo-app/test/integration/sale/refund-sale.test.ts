@@ -3,6 +3,7 @@ import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
+import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model.ts'
@@ -105,6 +106,12 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
   const historyList = saleDetailModel.history()
   await expect(historyList.items().locator).toHaveCount(2) // create + refund
   await expect(historyList.items().item(0).locator).toContainText('refunded sale')
+
+  // Verify the sales list page shows "(refunded)" in the revenue cell
+  await page.goto(new URL('/sales', url()).href)
+  const saleListModel = createSaleListPageModel(page)
+  const firstRow = saleListModel.list().rows().row(0)
+  await expect(firstRow.revenueCell().locator).toContainText('(refunded)')
 })
 
 test('refund manual sale shows confirmation and only adds history row', async ({page}) => {

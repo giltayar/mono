@@ -139,6 +139,7 @@ export interface SaleForGrid {
   studentNumber: number
   studentName: string
   finalSaleRevenue?: number
+  isRefunded: boolean
   products: string[]
 }
 
@@ -179,6 +180,7 @@ export async function listSales(
         sale_data_cardcom.cardcom_sale_revenue,
         sale_data_cardcom_manual.cardcom_sale_revenue,
         sale_data_no_invoice.sale_revenue) AS final_sale_revenue,
+      COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) IS NOT NULL AS is_refunded,
       COALESCE(products, json_build_array()) AS products
     FROM
       sale_history
