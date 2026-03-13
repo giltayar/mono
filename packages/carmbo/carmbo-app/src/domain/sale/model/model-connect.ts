@@ -465,7 +465,7 @@ export async function connectSaleToExternalProviders(
       sp.phone
     FROM student s
     JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
-    JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
+    LEFT JOIN student_name sn ON sn.data_id = s.last_data_id AND sn.item_order = 0
     LEFT JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
     WHERE s.student_number = ${studentNumber}
   `
@@ -473,7 +473,9 @@ export async function connectSaleToExternalProviders(
   const student = studentResult[0]
 
   if (!student)
-    throw new Error(`cannot connect student in sale to external providers because not found`)
+    throw new Error(
+      `cannot connect student ${studentNumber}in sale to external providers because not found`,
+    )
 
   logger.info(
     {email: student.email, phone: student.phone, name: student.firstName + ' ' + student.lastName},
