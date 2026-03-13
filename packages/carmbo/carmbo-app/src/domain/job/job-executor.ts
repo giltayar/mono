@@ -120,7 +120,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
       UPDATE job SET ${sql({
         updatedAt: now,
         finishedAt: now,
-        description: result ? result.description : null,
+        ...(result ? {description: result.description} : {}),
       })}
       WHERE id = ${job.id}
     `

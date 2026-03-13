@@ -584,6 +584,7 @@ export function initializePropagateAcademyCourseChangesJobHandlers(
   submitPropagateAcademyCourseChangesJob = registerJobHandler<PropagateAcademyCourseChangesPayload>(
     'propagate-academy-course-changes',
     nowService,
+    (payload) => `Propagate academy course changes for product ${payload.productNumber}`,
     async ({payload, jobId}, _attempt, logger) => {
       await propagateAcademyCourseChangesToSales(
         payload.productNumber,
@@ -593,10 +594,6 @@ export function initializePropagateAcademyCourseChangesJobHandlers(
         logger,
         jobId,
       )
-
-      return {
-        description: `Propagate academy course changes for product ${payload.productNumber}`,
-      }
     },
   )
 
@@ -604,12 +601,9 @@ export function initializePropagateAcademyCourseChangesJobHandlers(
     registerJobHandler<PropagateAcademyCourseChangesSingleSalePayload>(
       'propagate-academy-course-changes-single-sale',
       nowService,
+      (payload) => `Propagate academy course changes for sale ${payload.saleNumber}`,
       async ({payload}, _attempt, logger) => {
         await propagateAcademyCourseChangesForSingleSale(payload, academyIntegration, logger)
-
-        return {
-          description: `Propagate academy course changes for sale ${payload.saleNumber}`,
-        }
       },
     )
 }
@@ -837,6 +831,7 @@ export function initializePropagateSalesEventProductChangesJobHandlers(
     registerJobHandler<PropagateSalesEventProductChangesPayload>(
       'propagate-sales-event-product-changes',
       nowService,
+      (payload) => `Propagate product changes for sales event ${payload.salesEventNumber}`,
       async ({payload, jobId}, _attempt, logger) => {
         await propagateSalesEventProductChangesToSales(
           payload.salesEventNumber,
@@ -845,10 +840,6 @@ export function initializePropagateSalesEventProductChangesJobHandlers(
           logger,
           jobId,
         )
-
-        return {
-          description: `Propagate product changes for sales event ${payload.salesEventNumber}`,
-        }
       },
     )
 
@@ -856,6 +847,7 @@ export function initializePropagateSalesEventProductChangesJobHandlers(
     registerJobHandler<PropagateSalesEventProductChangesSingleSalePayload>(
       'propagate-sales-event-product-changes-single-sale',
       nowService,
+      (payload) => `Propagate product changes for sale ${payload.saleNumber}`,
       async ({payload}, _attempt, logger) => {
         await propagateSalesEventProductChangesForSingleSale(
           payload,
@@ -864,10 +856,6 @@ export function initializePropagateSalesEventProductChangesJobHandlers(
           logger,
           nowService(),
         )
-
-        return {
-          description: `Propagate product changes for sale ${payload.saleNumber}`,
-        }
       },
     )
 }

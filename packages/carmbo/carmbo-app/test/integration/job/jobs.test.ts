@@ -15,12 +15,16 @@ let submitPendingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string
 const nowService = () => new Date()
 
 test.beforeAll(() => {
-  submitTestJob = registerJobHandler<{name: string}>('test-job', nowService, async ({payload}) => {
-    return {description: `Processed: ${payload.name}`}
-  })
+  submitTestJob = registerJobHandler<{name: string}>(
+    'test-job',
+    nowService,
+    (payload) => `Processed: ${payload.name}`,
+    async () => {},
+  )
   submitFailingJob = registerJobHandler<{name: string}>(
     'test-failing-job',
     nowService,
+    (payload) => `Failed: ${payload.name}`,
     async ({payload}) => {
       throw new Error(`Failed: ${payload.name}`)
     },
@@ -28,19 +32,23 @@ test.beforeAll(() => {
   submitPendingJob = registerJobHandler<{name: string}>(
     'test-pending-job',
     nowService,
-    async ({payload}) => {
-      return {description: `Processed: ${payload.name}`}
+    (payload) => `Processed: ${payload.name}`,
+    async () => {},
+  )
+  submitParentJob = registerJobHandler<number>(
+    'test-parent-job',
+    nowService,
+    () => 'Parent Job',
+    async ({jobId}) => {
+      await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
+      await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
+      await submitTestJob({name: 'Sub 3'}, {parentJobId: jobId, retries: 1})
     },
   )
-  submitParentJob = registerJobHandler<number>('test-parent-job', nowService, async ({jobId}) => {
-    await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
-    await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
-    await submitTestJob({name: 'Sub 3'}, {parentJobId: jobId, retries: 1})
-    return {description: 'Parent Job'}
-  })
   submitPartialParentJob = registerJobHandler<number>(
     'test-partial-parent-job',
     nowService,
+    () => 'Partial Parent Job',
     async ({jobId}) => {
       await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
       await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
@@ -49,7 +57,6 @@ test.beforeAll(() => {
         {name: 'Sub 3'},
         {parentJobId: jobId, retries: 1, scheduledAt: farFuture},
       )
-      return {description: 'Partial Parent Job'}
     },
   )
 })

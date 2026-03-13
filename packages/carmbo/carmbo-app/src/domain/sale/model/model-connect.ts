@@ -36,12 +36,11 @@ export async function initializeJobHandlers(
   submitConnectionJob = registerJobHandler<SaleConnectionToStudent>(
     'connecting-cardcom-one-time-sale',
     nowService,
+    (payload) => `Connected cardcom sale ${payload.saleNumber} to external providers`,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>
         connectSaleToExternalProviders(payload, academyIntegration, smooveIntegration, sql, logger),
       )
-
-      return {description: `Connected cardcom sale ${payload.saleNumber} to external providers`}
     },
   )
 }

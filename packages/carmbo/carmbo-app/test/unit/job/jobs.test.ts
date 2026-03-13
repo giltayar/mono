@@ -93,11 +93,14 @@ describe('Job Executor', () => {
       attempt: number
     }> = []
 
-    const submitJob = registerJobHandler('test-job', nowService, async (data, attempt) => {
-      executedJobs.push({data, attempt})
-
-      return {description: `job ${(data.payload as any)?.message}`}
-    })
+    const submitJob = registerJobHandler(
+      'test-job',
+      nowService,
+      (payload: any) => `job ${payload?.message}`,
+      async (data, attempt) => {
+        executedJobs.push({data, attempt})
+      },
+    )
 
     await submitJob({message: 'Hello World'}, {retries: 3})
     await submitJob({message: 'Goodbye World'}, {retries: 3})
@@ -125,15 +128,18 @@ describe('Job Executor', () => {
 
     let once = false
 
-    const submitJob = registerJobHandler('test-job', nowService, async (data, attempt) => {
-      executedJobs.push({data, attempt})
-      if (!once) {
-        await submitJob({message: 'Sub Job'}, {parentJobId: data.jobId, retries: 3})
-        once = true
-      }
-
-      return {description: ''}
-    })
+    const submitJob = registerJobHandler(
+      'test-job',
+      nowService,
+      () => '',
+      async (data, attempt) => {
+        executedJobs.push({data, attempt})
+        if (!once) {
+          await submitJob({message: 'Sub Job'}, {parentJobId: data.jobId, retries: 3})
+          once = true
+        }
+      },
+    )
 
     await submitJob({message: 'Hello World'}, {retries: 3})
 
@@ -158,15 +164,18 @@ describe('Job Executor', () => {
     }> = []
     let callCount = 0
 
-    const submitJob = registerJobHandler('failing-job', nowService, async (data, attempt) => {
-      executedJobs.push({data, attempt})
-      ++callCount
-      if (callCount < 3) {
-        throw new Error('Job failed')
-      }
-
-      return {description: ''}
-    })
+    const submitJob = registerJobHandler(
+      'failing-job',
+      nowService,
+      () => '',
+      async (data, attempt) => {
+        executedJobs.push({data, attempt})
+        ++callCount
+        if (callCount < 3) {
+          throw new Error('Job failed')
+        }
+      },
+    )
 
     await submitJob({data: 'test'}, {retries: 3})
 
@@ -192,6 +201,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'always-failing-job',
       nowService,
+      () => '',
       async (data, attempt) => {
         executedJobs.push({data, attempt})
         throw new Error('Job always fails')
@@ -229,9 +239,9 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'scheduled-job',
       nowService,
+      () => '',
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
-        return {description: ''}
       },
     )
 
@@ -273,9 +283,9 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'multi-job',
       nowService,
+      () => '',
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
-        return {description: ''}
       },
     )
 
@@ -292,9 +302,14 @@ describe('Job Executor', () => {
   })
 
   test('should handle job handler that throws an error', async () => {
-    const submitJob = registerJobHandler('error-job', nowService, async () => {
-      throw new Error('Handler error')
-    })
+    const submitJob = registerJobHandler(
+      'error-job',
+      nowService,
+      () => '',
+      async () => {
+        throw new Error('Handler error')
+      },
+    )
 
     await submitJob({data: 'test'}, {retries: 1})
 
@@ -326,11 +341,11 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'mutex-job',
       nowService,
+      () => '',
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
         // Simulate long-running job
         await setTimeout(50)
-        return {description: ''}
       },
     )
 
@@ -348,7 +363,12 @@ describe('Job Executor', () => {
   })
 
   test('should garbage collect old jobs', async () => {
-    const submitJob = registerJobHandler('simple-job', nowService, async () => ({description: ''}))
+    const submitJob = registerJobHandler(
+      'simple-job',
+      nowService,
+      () => '',
+      async () => {},
+    )
 
     await submitJob({data: 'test'}, {retries: 1})
 

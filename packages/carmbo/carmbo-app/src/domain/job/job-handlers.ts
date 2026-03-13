@@ -11,13 +11,14 @@ type JobHandler<TPayload = unknown> = (
   data: {payload: TPayload; jobId: number},
   attempt: number,
   logger: FastifyBaseLogger,
-) => Promise<{description: string}>
+) => Promise<{description: string} | void>
 
 export const jobHandlers = new Map<string, JobHandler<unknown>>()
 
 export function registerJobHandler<TPayload extends JSONValue>(
   type: string,
   nowService: () => Date,
+  descriptionFn: (payload: TPayload) => string,
   handler: JobHandler<TPayload>,
 ): JobSubmitter<TPayload> {
   if (jobHandlers.has(type)) throw new Error(`Job Handler for ${type} already registered`)
@@ -32,6 +33,7 @@ export function registerJobHandler<TPayload extends JSONValue>(
         payload,
         numberOfRetries: retries,
         scheduledAt: scheduledAt ?? null,
+        description: descriptionFn(payload),
       })}
       RETURNING id
     `

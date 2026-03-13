@@ -10,26 +10,43 @@ const {url} = setup(import.meta.url)
 let submitTestJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 let submitFailingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 let submitParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
+let submitDescriptionOverrideJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 
 const nowService = () => new Date()
 
 test.beforeAll(() => {
-  submitTestJob = registerJobHandler<{name: string}>('test-job', nowService, async ({payload}) => {
-    return {description: `Processed: ${payload.name}`}
-  })
+  submitTestJob = registerJobHandler<{name: string}>(
+    'test-job',
+    nowService,
+    (payload) => `Processed: ${payload.name}`,
+    async () => {},
+  )
   submitFailingJob = registerJobHandler<{name: string}>(
     'test-failing-job',
     nowService,
+    (payload) => `Failed: ${payload.name}`,
     async ({payload}) => {
       throw new Error(`Failed: ${payload.name}`)
     },
   )
-  submitParentJob = registerJobHandler<number>('test-parent-job', nowService, async ({jobId}) => {
-    await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
-    await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
-    await submitTestJob({name: 'Sub 3'}, {parentJobId: jobId, retries: 1})
-    return {description: 'Parent Job'}
-  })
+  submitParentJob = registerJobHandler<number>(
+    'test-parent-job',
+    nowService,
+    () => 'Parent Job',
+    async ({jobId}) => {
+      await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
+      await submitTestJob({name: 'Sub 2'}, {parentJobId: jobId, retries: 1})
+      await submitTestJob({name: 'Sub 3'}, {parentJobId: jobId, retries: 1})
+    },
+  )
+  submitDescriptionOverrideJob = registerJobHandler<{name: string}>(
+    'test-description-override-job',
+    nowService,
+    (payload) => `Initial: ${payload.name}`,
+    async ({payload}) => {
+      return {description: `Overridden: ${payload.name}`}
+    },
+  )
 })
 
 test('job page shows details for a simple job and a job with subjobs', async ({page}) => {
@@ -110,4 +127,21 @@ test('job page shows error details for a failed job', async ({page}) => {
   )
   await expect(jobPageModel.finishedAt().locator).toContainText(new Date().getFullYear().toString())
   await expect(jobPageModel.subjobsList().locator).toHaveCount(0)
+})
+
+test('job page shows overridden description when handler returns one', async ({page}) => {
+  await submitDescriptionOverrideJob({name: 'Override Test'}, {retries: 1})
+
+  const jobListModel = createJobListPageModel(page)
+  const jobPageModel = createJobPageModel(page)
+
+  await expect(async () => {
+    await page.goto(new URL('/jobs', url()).href)
+    await expect(jobListModel.list().rows().locator).toHaveCount(1)
+  }).toPass()
+
+  await jobListModel.list().rows().row(0).idLink().locator.click()
+  await page.waitForURL(jobPageModel.urlRegex)
+
+  await expect(jobPageModel.pageTitle().locator).toContainText('Overridden: Override Test')
 })

@@ -47,6 +47,7 @@ export async function initialzeImportSmooveJobHandlers(
   submitImportFromSmooveListJob = registerJobHandler<ImportFromSmooveListJobPayload>(
     'import-from-smoove-list',
     nowService,
+    (payload) => `Import from Smoove list ${payload.smooveListId} for sales event ${payload.salesEventNumber}`,
     async ({payload, jobId}, _attempt, logger) => {
       await importFromSmooveList(
         payload.salesEventNumber,
@@ -56,16 +57,13 @@ export async function initialzeImportSmooveJobHandlers(
         logger,
         jobId,
       )
-
-      return {
-        description: `Import from Smoove list ${payload.smooveListId} for sales event ${payload.salesEventNumber}`,
-      }
     },
   )
 
   submitImportSingleContactJob = registerJobHandler<ImportSingeContactFromSmooveListJobPayload>(
     'import-single-contact-from-smoove-list',
     nowService,
+    (payload) => `Import ${payload.contact.email}`,
     async ({payload, jobId}, _attempt, logger) => {
       return await importSingleContact(
         payload.salesEventNumber,
@@ -171,7 +169,7 @@ async function importSingleContact(
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   logger: FastifyBaseLogger,
-): Promise<{description: string}> {
+): Promise<{description: string} | void> {
   return await sql.begin(async (txSql) => {
     const email = normalizeEmail(contact.email)
     const phone = contact.telephone ? normalizePhoneNumber(contact.telephone) : undefined
@@ -201,7 +199,7 @@ async function importSingleContact(
       }
 
       return {
-        description: `Skipped contact ${contact.email} - sale already exists for this student and sales event`,
+        description: `Skipped ${contact.email} - sale already exists`,
       }
     }
 
@@ -227,8 +225,6 @@ async function importSingleContact(
       txSql,
       logger,
     )
-
-    return {description: `Import ${contact.email}`}
   })
 }
 
