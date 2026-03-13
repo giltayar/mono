@@ -6,6 +6,7 @@ import {sqlTextSearch} from '../../../commons/sql-commons.ts'
 import assert from 'node:assert'
 import {TEST_executeHook} from '../../../commons/TEST_hooks.ts'
 import type {StandingOrderPaymentResolution} from './model-sale.ts'
+import {makeError} from '@giltayar/functional-commons'
 
 function itemPickerSchema() {
   return z
@@ -991,7 +992,7 @@ export function computeFinalSaleRevenue(
   )
 }
 
-export async function findSalesEventAndStudentByEmail(
+export async function findSaleAndStudentBySalesEvent(
   email: string,
   salesEventNumber: number,
   sql: Sql,
@@ -1012,7 +1013,7 @@ export async function findSalesEventAndStudentByEmail(
     LEFT JOIN sale_history slh ON slh.data_id = sd.data_id
     LEFT JOIN sale sl ON sl.sale_number = slh.sale_number
 
-    LEFT JOIN sale_data_product sdp ON sdp.data_product_id = slh.data_product_id AND sdp.item_order = 0
+    LEFT JOIN sale_data_product sdp ON sdp.data_product_id = slh.data_product_id
 
     LEFT JOIN product p ON p.product_number = sdp.product_number
     LEFT JOIN product_data pd ON pd.data_id = p.last_data_id
@@ -1028,6 +1029,62 @@ export async function findSalesEventAndStudentByEmail(
 
   if (result.length === 0) {
     return {studentName: undefined, productName: undefined, saleNumber: undefined}
+  }
+
+  if (result.length > 1) {
+    throw makeError(`Multiple sales found for email ${email} and sales event ${salesEventNumber}`, {
+      code: 'ERR_MULTIPLE_SALES_FOUND',
+    })
+  }
+
+  return {
+    studentName: result[0].studentFirstName
+      ? `${result[0].studentFirstName} ${result[0].studentLastName}`
+      : undefined,
+    productName: result[0].productName ?? undefined,
+    saleNumber: result[0].saleNumber ?? undefined,
+  }
+}
+
+export async function findSaleAndStudentByProduct(email: string, productNumber: number, sql: Sql) {
+  const result = (await sql`
+    SELECT
+      sn.first_name AS student_first_name,
+      sn.last_name AS student_last_name,
+      pd.name AS product_name,
+      sl.sale_number AS sale_number
+    FROM
+      student_email se
+    LEFT JOIN student_history sh ON sh.data_id = se.data_id
+    LEFT JOIN student s ON s.last_history_id = sh.id
+    LEFT JOIN student_name sn ON sn.data_id = se.data_id
+
+    LEFT JOIN sale_data sd ON sd.student_number = s.student_number
+    LEFT JOIN sale_history slh ON slh.data_id = sd.data_id
+    LEFT JOIN sale sl ON sl.sale_number = slh.sale_number
+
+    LEFT JOIN sale_data_product sdp ON sdp.data_product_id = slh.data_product_id
+
+    LEFT JOIN product p ON p.product_number = sdp.product_number
+    LEFT JOIN product_data pd ON pd.data_id = p.last_data_id
+    WHERE
+      se.email = ${email}
+      AND sdp.product_number = ${productNumber}
+  `) as {
+    studentFirstName: string | null
+    studentLastName: string | null
+    productName: string | null
+    saleNumber: number | null
+  }[]
+
+  if (result.length === 0) {
+    return {studentName: undefined, productName: undefined, saleNumber: undefined}
+  }
+
+  if (result.length > 1) {
+    throw makeError(`Multiple sales found for email ${email} and product ${productNumber}`, {
+      code: 'ERR_MULTIPLE_SALES_FOUND',
+    })
   }
 
   return {

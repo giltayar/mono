@@ -14,7 +14,8 @@ import {
   type Sale,
   fillInSale,
   querySalePayments,
-  findSalesEventAndStudentByEmail as findSaleAndStudentAndProductByEmail,
+  findSaleAndStudentBySalesEvent,
+  findSaleAndStudentByProduct,
 } from './model/model.ts'
 import {
   addCardcomSale,
@@ -27,7 +28,7 @@ import {
 } from './model/model-connect.ts'
 import {
   handleCardcomRecurringPayment,
-  cancelSubscription as model_cancelSubscription,
+  cancelSubscriptionBySalesEvent as model_cancelSubscription,
 } from './model/model-standing-order.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
@@ -51,6 +52,7 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {
   showErrorCancellingSubscription,
+  showErrorMultipleSalesFound,
   showErrorSubscriptionNotFound,
   showSubscriptionCancelled,
 } from './view/cancel-subscription.ts'
@@ -426,7 +428,7 @@ export async function disconnectSale(saleNumber: number): Promise<ControllerResu
   }
 }
 
-export async function cancelSubscription(
+export async function cancelSubscriptionBySalesEvent(
   email: string,
   salesEventNumber: number,
 ): Promise<ControllerResult> {
@@ -439,7 +441,7 @@ export async function cancelSubscription(
   const now = nowService()
 
   try {
-    const {studentName, productName, saleNumber} = await findSaleAndStudentAndProductByEmail(
+    const {studentName, productName, saleNumber} = await findSaleAndStudentBySalesEvent(
       email,
       salesEventNumber,
       sql,
@@ -447,7 +449,12 @@ export async function cancelSubscription(
 
     if (studentName === undefined || productName === undefined || saleNumber === undefined) {
       return finalHtml(
-        showErrorSubscriptionNotFound({email, salesEventNumber, studentName, productName}),
+        showErrorSubscriptionNotFound({
+          email,
+          identifier: {salesEventNumber},
+          studentName,
+          productName,
+        }),
       )
     }
 
@@ -463,10 +470,68 @@ export async function cancelSubscription(
     )
 
     return finalHtml(showSubscriptionCancelled(email, studentName, productName))
-  } catch (err) {
+  } catch (err: any) {
     const logger = requestContext.get('logger')!
-    logger.error({err}, 'cancel-subscription')
+    logger.error({err}, 'cancel-subscription-by-sales-event')
 
-    return finalHtml(showErrorCancellingSubscription(email, salesEventNumber))
+    if (err.code === 'ERR_MULTIPLE_SALES_FOUND') {
+      return finalHtml(showErrorMultipleSalesFound(email))
+    }
+
+    return finalHtml(showErrorCancellingSubscription(email, {salesEventNumber}))
+  }
+}
+
+export async function cancelSubscriptionByProduct(
+  email: string,
+  productNumber: number,
+): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+  const cardcomIntegration = requestContext.get('cardcomIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const logger = requestContext.get('logger')!
+  const now = nowService()
+
+  try {
+    const {studentName, productName, saleNumber} = await findSaleAndStudentByProduct(
+      email,
+      productNumber,
+      sql,
+    )
+
+    if (studentName === undefined || productName === undefined || saleNumber === undefined) {
+      return finalHtml(
+        showErrorSubscriptionNotFound({
+          email,
+          identifier: {productNumber},
+          studentName,
+          productName,
+        }),
+      )
+    }
+
+    await model_cancelSubscription(
+      email,
+      saleNumber,
+      sql,
+      cardcomIntegration,
+      academyIntegration,
+      smooveIntegration,
+      now,
+      logger,
+    )
+
+    return finalHtml(showSubscriptionCancelled(email, studentName, productName))
+  } catch (err: any) {
+    const logger = requestContext.get('logger')!
+    logger.error({err}, 'cancel-subscription-by-product')
+
+    if (err.code === 'ERR_MULTIPLE_SALES_FOUND') {
+      return finalHtml(showErrorMultipleSalesFound(email))
+    }
+
+    return finalHtml(showErrorCancellingSubscription(email, {productNumber}))
   }
 }

@@ -124,7 +124,7 @@ export async function handleCardcomRecurringPayment(
   })
 }
 
-export async function cancelSubscription(
+export async function cancelSubscriptionBySalesEvent(
   email: string,
   saleNumber: number,
   sql: Sql,

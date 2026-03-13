@@ -581,3 +581,254 @@ test('cancelling a standing order subscription removes student from academy cour
   await expect(saleHistory.items().item(1).locator).toContainText('canceled subscription')
   await expect(saleHistory.items().item(2).locator).toContainText('created')
 })
+
+test('cancelling a standing order subscription by product number', async ({page}) => {
+  const academyCourseId = 1
+  const smooveListId = 2
+  const smooveCancellingListId = 4
+  const smooveCancelledListId = 6
+  const smooveRemovedListId = 8
+
+  const product1Number = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+      academyCourses: [academyCourseId],
+      smooveListId,
+      smooveCancelledListId,
+      smooveCancellingListId,
+      smooveRemovedListId,
+      whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [product1Number],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const customerEmail = 'test-customer@example.com'
+  const customerName = 'John Doe'
+  const customerPhone = '0501234567'
+
+  // Create a standing order sale
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
+    {
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: 1776,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+  )
+
+  // Verify student was enrolled in academy course
+  await expect(async () => {
+    const academyContact = academyIntegration()._test_getContact(customerEmail)
+    expect(academyContact).toBeDefined()
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId),
+    ).toBe(true)
+  }).toPass()
+
+  // Verify student was subscribed to smoove list
+  await expect(async () => {
+    const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+    expect(smooveContacts.length).toBe(1)
+    expect(smooveContacts[0].email).toBe(customerEmail)
+    expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
+  }).toPass()
+
+  // Cancel the subscription via the API endpoint using product number instead of sales-event
+  await page.goto(
+    new URL(
+      `/landing-page/sales/cancel-subscription?product=${product1Number}&email=${encodeURIComponent(customerEmail)}`,
+      url(),
+    ).href,
+  )
+  const saleDetailModel = createUpdateSalePageModel(page)
+  const saleHistory = saleDetailModel.history()
+
+  await expect(async () => {
+    // Navigate to the sale page to verify the history
+    await page.goto(new URL('/sales/1', url()).href)
+
+    // Verify the sale history includes a cancel-subscription entry
+    await expect(saleHistory.items().locator).toHaveCount(2)
+    await expect(saleHistory.items().item(0).locator).toContainText('canceled subscription')
+    await expect(saleHistory.items().item(1).locator).toContainText('created')
+  }).toPass()
+
+  // Verify sale status shows unsubscribed
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Subscription (unsubscribed) | Connected to External Providers',
+  )
+
+  // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
+  await expect(async () => {
+    const smooveContacts = await smooveIntegration().fetchContactsOfList(smooveListId)
+    expect(smooveContacts.length).toBe(0)
+
+    const cancelledContacts = await smooveIntegration().fetchContactsOfList(smooveCancelledListId)
+    expect(cancelledContacts.length).toBe(1)
+    expect(cancelledContacts[0].email).toBe(customerEmail)
+    expect(cancelledContacts[0].lists_Linked).toContain(smooveCancelledListId)
+  }).toPass()
+})
+
+test('cancelling a subscription by product fails when multiple sales exist for the same product', async ({
+  page,
+}) => {
+  const academyCourseId = 1
+  const smooveListId = 2
+  const smooveCancelledListId = 6
+
+  const product1Number = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+      academyCourses: [academyCourseId],
+      smooveListId,
+      smooveCancelledListId,
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEvent1Number = await createSalesEvent(
+    {
+      name: 'Sales Event One',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-06-30'),
+      landingPageUrl: 'https://example.com/event-1',
+      productsForSale: [product1Number],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEvent2Number = await createSalesEvent(
+    {
+      name: 'Sales Event Two',
+      fromDate: new Date('2025-07-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/event-2',
+      productsForSale: [product1Number],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const customerEmail = 'test-customer@example.com'
+  const customerName = 'John Doe'
+  const customerPhone = '0501234567'
+
+  // Create first standing order sale (via sales event 1)
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
+    {
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: 1776,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEvent1Number, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+  )
+
+  // Create second standing order sale (via sales event 2, same product)
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
+    {
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: 1777,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEvent2Number, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+  )
+
+  // Wait for both sales to be created
+  await expect(async () => {
+    await page.goto(new URL('/sales', url()).href)
+    const saleListModel = createSaleListPageModel(page)
+    await expect(saleListModel.list().rows().locator).toHaveCount(2)
+  }).toPass()
+
+  // Cancel subscription by product — should fail because there are two sales with the same product
+  await page.goto(
+    new URL(
+      `/landing-page/sales/cancel-subscription?product=${product1Number}&email=${encodeURIComponent(customerEmail)}`,
+      url(),
+    ).href,
+  )
+
+  // Verify the error page is shown with the multiple sales error message
+  await expect(page.locator('p')).toContainText('נמצאו מספר מנויים')
+
+  // unfortunately, need to wait some time because we're checking that something has NOT happened
+  await page.waitForTimeout(1000)
+
+  // Verify neither sale was cancelled — both should still show as active subscriptions
+  await page.goto(new URL('/sales/1', url()).href)
+  const sale1Model = createUpdateSalePageModel(page)
+  await expect(sale1Model.saleStatus().locator).toHaveText(
+    'Subscription | Connected to External Providers',
+  )
+
+  await page.goto(new URL('/sales/2', url()).href)
+  const sale2Model = createUpdateSalePageModel(page)
+  await expect(sale2Model.saleStatus().locator).toHaveText(
+    'Subscription | Connected to External Providers',
+  )
+})

@@ -22,7 +22,8 @@ import {
   connectSale,
   dealWithCardcomRecurringPayment,
   showSalePayments,
-  cancelSubscription,
+  cancelSubscriptionBySalesEvent,
+  cancelSubscriptionByProduct,
   dealWithNoInvoiceSale,
 } from './controller.ts'
 import {
@@ -163,19 +164,32 @@ export function landingPageApiRoute(app: FastifyInstance) {
     '/cancel-subscription',
     {
       schema: {
-        querystring: z.object({
-          'sales-event': z.coerce.number().positive(),
-          email: z.string().email(),
-        }),
+        querystring: z.union([
+          z.object({
+            'sales-event': z.coerce.number().positive(),
+            email: z.string().email(),
+          }),
+          z.object({
+            product: z.coerce.number().positive(),
+            email: z.string().email(),
+          }),
+        ]),
       },
     },
     async (request, reply) => {
-      const {'sales-event': salesEventNumber, email} = request.query
+      const query = request.query
 
-      await dealWithControllerResult(
-        reply,
-        await cancelSubscription(email, Number(salesEventNumber)),
-      )
+      if ('sales-event' in query) {
+        await dealWithControllerResult(
+          reply,
+          await cancelSubscriptionBySalesEvent(query.email, Number(query['sales-event'])),
+        )
+      } else {
+        await dealWithControllerResult(
+          reply,
+          await cancelSubscriptionByProduct(query.email, Number(query.product)),
+        )
+      }
     },
   )
 }

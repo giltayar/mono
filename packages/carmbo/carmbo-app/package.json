@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "7.4.3",
+  "version": "7.5.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -82,7 +82,7 @@
     "yargs": "^18.0.0",
     "zod": "^4.3.6"
   },
-  "packageManager": "pnpm@10.30.3",
+  "packageManager": "pnpm@10.32.1",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
@@ -90,16 +90,16 @@
     "@playwright/test": "^1.58.2",
     "@railway/cli": "^4.31.0",
     "@types/chance": "^1.1.7",
-    "@types/node": "^25.3.5",
+    "@types/node": "^25.5.0",
     "@types/qs": "^6.15.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20260307.1",
+    "@typescript/native-preview": "7.0.0-dev.20260313.1",
     "eslint": "^10.0.3",
     "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.8.1",
-    "typescript-eslint": "^8.56.1"
+    "typescript-eslint": "^8.57.0"
   }
 }
