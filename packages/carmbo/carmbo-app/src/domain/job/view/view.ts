@@ -20,7 +20,7 @@ export function renderJobPage(job: JobView, subjobs: JobForGrid[]) {
   return html`
     <${MainLayout} title="Job details" activeNavItem="jobs">
       <${Layout}>
-        <h2>Job ${job.id} (${job.description}): ${job.error ? html`<span class="error" title=${job.error}>❌ ${job.errorMessage}</span>` : '✔'}</h2>
+        <h2>Job ${job.id} (${job.description}): ${job.error ? html`<span class="error" title=${job.error}>❌ ${job.errorMessage}</span>` : job.finishedAt ? '✔' : '🕐'}</h2>
         <p>Created: ${job.createdAt}</p>
         <p>Finished: ${job.finishedAt ?? 'still working...'}</p>
         ${subjobs.length > 0 && html` <${JobsView} jobs=${subjobs} page=${0} /> `}
@@ -95,7 +95,12 @@ function JobsView({
                 <td>
                   ${job.error
                     ? html`<span class="error" title=${job.error}>❌ ${job.errorMessage}</span>`
-                    : '✔'}
+                    : job.finishedAt
+                      ? '✔'
+                      : html`<span
+                          title=${job.scheduledAt ? String(job.scheduledAt) : 'Not started'}
+                          >🕐</span
+                        >`}
                 </td>
               </tr>
             `,

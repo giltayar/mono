@@ -11,6 +11,7 @@ let submitTestJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>
 let submitFailingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 let submitParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitDescriptionOverrideJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
+let submitScheduledJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 
 const nowService = () => new Date()
 
@@ -50,6 +51,13 @@ test.beforeAll(() => {
     async ({payload}) => {
       return {description: `Overridden: ${payload.name}`}
     },
+  )
+  submitScheduledJob = registerJobHandler<{name: string}>(
+    'test-scheduled-job',
+    nowService,
+    {isTrivial: false},
+    (payload) => `Scheduled: ${payload.name}`,
+    async () => {},
   )
 })
 
@@ -148,4 +156,22 @@ test('job page shows overridden description when handler returns one', async ({p
   await page.waitForURL(jobPageModel.urlRegex)
 
   await expect(jobPageModel.pageTitle().locator).toContainText('Overridden: Override Test')
+})
+
+test('job page shows clock emoji for an unfinished job', async ({page}) => {
+  const futureDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+  await submitScheduledJob({name: 'Pending Job'}, {retries: 1, scheduledAt: futureDate})
+
+  const jobListModel = createJobListPageModel(page)
+  const jobPageModel = createJobPageModel(page)
+
+  await page.goto(new URL('/jobs', url()).href)
+  await expect(jobListModel.list().rows().locator).toHaveCount(1)
+
+  await jobListModel.list().rows().row(0).idLink().locator.click()
+  await page.waitForURL(jobPageModel.urlRegex)
+
+  await expect(jobPageModel.pageTitle().locator).toContainText('Scheduled: Pending Job')
+  await expect(jobPageModel.pageTitle().locator).toContainText('🕐')
+  await expect(jobPageModel.finishedAt().locator).toContainText('still working...')
 })

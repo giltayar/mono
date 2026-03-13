@@ -16,6 +16,9 @@ export function createJobListModel(tableLocator: Locator) {
           errorSpan: (spanLocator = cellLocator.locator('span.error')) => ({
             locator: spanLocator,
           }),
+          clockSpan: (spanLocator = cellLocator.locator('span').filter({hasText: '🕐'})) => ({
+            locator: spanLocator,
+          }),
         }),
       }),
     }),

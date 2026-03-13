@@ -12,6 +12,7 @@ let submitParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitPartialParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitPendingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 let submitTrivialJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
+let submitScheduledJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 
 const nowService = () => new Date()
 
@@ -70,6 +71,13 @@ test.beforeAll(() => {
     nowService,
     {isTrivial: true},
     (payload) => `Trivial: ${payload.name}`,
+    async () => {},
+  )
+  submitScheduledJob = registerJobHandler<{name: string}>(
+    'test-scheduled-job',
+    nowService,
+    {isTrivial: false},
+    (payload) => `Scheduled: ${payload.name}`,
     async () => {},
   )
 })
@@ -187,4 +195,38 @@ test('trivial jobs are hidden by default and shown when checkbox is checked', as
     const rows = jobListModel.list().rows()
     await expect(rows.locator).toHaveCount(2)
   }).toPass()
+})
+
+test('jobs page shows clock emoji for a job scheduled in the future', async ({page}) => {
+  const futureDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+  await submitScheduledJob({name: 'Future Job'}, {retries: 1, scheduledAt: futureDate})
+
+  const jobListModel = createJobListPageModel(page)
+
+  await page.goto(new URL('/jobs', url()).href)
+
+  const rows = jobListModel.list().rows()
+  await expect(rows.locator).toHaveCount(1)
+
+  const row = rows.row(0)
+  await expect(row.statusCell().locator).toContainText('🕐')
+  await expect(row.statusCell().clockSpan().locator).toHaveAttribute(
+    'title',
+    new RegExp(String(futureDate.getFullYear())),
+  )
+})
+
+test('jobs page shows clock emoji with "Not started" for a job without a scheduled time', async ({page}) => {
+  await submitScheduledJob({name: 'Unscheduled Job'}, {retries: 1})
+
+  const jobListModel = createJobListPageModel(page)
+
+  await page.goto(new URL('/jobs', url()).href)
+
+  const rows = jobListModel.list().rows()
+  await expect(rows.locator).toHaveCount(1)
+
+  const row = rows.row(0)
+  await expect(row.statusCell().locator).toContainText('🕐')
+  await expect(row.statusCell().clockSpan().locator).toHaveAttribute('title', 'Not started')
 })

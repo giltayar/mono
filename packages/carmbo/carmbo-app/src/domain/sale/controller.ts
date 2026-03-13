@@ -28,7 +28,7 @@ import {
 } from './model/model-connect.ts'
 import {
   handleCardcomRecurringPayment,
-  cancelSubscriptionBySalesEvent as model_cancelSubscription,
+  cancelSubscription as model_cancelSubscription,
 } from './model/model-standing-order.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'

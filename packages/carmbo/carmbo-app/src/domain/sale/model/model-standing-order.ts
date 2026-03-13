@@ -27,7 +27,7 @@ export async function initializeJobHandlers(
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
     nowService,
-    {isTrivial: true},
+    {isTrivial: false},
     (payload) =>
       `Disconnecting sale ${payload.saleNumber} from external providers because ${payload.reason}`,
     async ({payload}, _attempt, logger) => {
@@ -123,7 +123,7 @@ export async function handleCardcomRecurringPayment(
   })
 }
 
-export async function cancelSubscriptionBySalesEvent(
+export async function cancelSubscription(
   email: string,
   saleNumber: number,
   sql: Sql,

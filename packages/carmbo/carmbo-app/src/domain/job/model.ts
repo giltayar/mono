@@ -4,6 +4,8 @@ export type JobForGrid = {
   id: number
   description: string | null
   createdAt: Date
+  finishedAt: Date | null
+  scheduledAt: Date | null
   progressCount: number
   progressTotal: number
   errorMessage: string | null
@@ -25,6 +27,7 @@ export async function listJobs(
       job.description,
       job.created_at,
       job.finished_at,
+      job.scheduled_at,
       COUNT(subjobs.*) FILTER (WHERE subjobs.finished_at IS NOT NULL) AS subjobs_progress_count,
       COUNT(subjobs.*) AS subjobs_total,
       job.error,
@@ -41,6 +44,7 @@ export async function listJobs(
     description: string | null
     createdAt: Date
     finishedAt: Date | null
+    scheduledAt: Date | null
     subjobsProgressCount: string
     subjobsTotal: string
     errorMessage: string | null
@@ -55,6 +59,8 @@ export async function listJobs(
       id: parseInt(job.id, 10),
       description: job.description,
       createdAt: job.createdAt,
+      finishedAt: job.finishedAt,
+      scheduledAt: job.scheduledAt,
       progressCount: progressTotal === 0 ? (job.finishedAt ? 1 : 0) : progressCount,
       progressTotal: progressTotal === 0 ? 1 : progressTotal,
       errorMessage: job.errorMessage,
