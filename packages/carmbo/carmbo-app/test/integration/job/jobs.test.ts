@@ -216,7 +216,9 @@ test('jobs page shows clock emoji for a job scheduled in the future', async ({pa
   )
 })
 
-test('jobs page shows clock emoji with "Not started" for a job without a scheduled time', async ({page}) => {
+test('jobs page shows clock emoji with "Not started" for a job without a scheduled time', async ({
+  page,
+}) => {
   await submitScheduledJob({name: 'Unscheduled Job'}, {retries: 1})
 
   const jobListModel = createJobListPageModel(page)
