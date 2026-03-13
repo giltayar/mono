@@ -18,12 +18,14 @@ test.beforeAll(() => {
   submitTestJob = registerJobHandler<{name: string}>(
     'test-job',
     nowService,
+    {isTrivial: false},
     (payload) => `Processed: ${payload.name}`,
     async () => {},
   )
   submitFailingJob = registerJobHandler<{name: string}>(
     'test-failing-job',
     nowService,
+    {isTrivial: false},
     (payload) => `Failed: ${payload.name}`,
     async ({payload}) => {
       throw new Error(`Failed: ${payload.name}`)
@@ -32,6 +34,7 @@ test.beforeAll(() => {
   submitParentJob = registerJobHandler<number>(
     'test-parent-job',
     nowService,
+    {isTrivial: false},
     () => 'Parent Job',
     async ({jobId}) => {
       await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
@@ -42,6 +45,7 @@ test.beforeAll(() => {
   submitDescriptionOverrideJob = registerJobHandler<{name: string}>(
     'test-description-override-job',
     nowService,
+    {isTrivial: false},
     (payload) => `Initial: ${payload.name}`,
     async ({payload}) => {
       return {description: `Overridden: ${payload.name}`}

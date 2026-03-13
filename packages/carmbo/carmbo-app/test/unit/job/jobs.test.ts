@@ -96,6 +96,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'test-job',
       nowService,
+      {isTrivial: false},
       (payload: any) => `job ${payload?.message}`,
       async (data, attempt) => {
         executedJobs.push({data, attempt})
@@ -131,6 +132,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'test-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async (data, attempt) => {
         executedJobs.push({data, attempt})
@@ -167,6 +169,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'failing-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async (data, attempt) => {
         executedJobs.push({data, attempt})
@@ -201,6 +204,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'always-failing-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async (data, attempt) => {
         executedJobs.push({data, attempt})
@@ -239,6 +243,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'scheduled-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
@@ -283,6 +288,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'multi-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
@@ -305,6 +311,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'error-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async () => {
         throw new Error('Handler error')
@@ -341,6 +348,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'mutex-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async ({payload}: {payload: {id: string}}) => {
         executedJobs.push(payload.id)
@@ -366,6 +374,7 @@ describe('Job Executor', () => {
     const submitJob = registerJobHandler(
       'simple-job',
       nowService,
+      {isTrivial: false},
       () => '',
       async () => {},
     )

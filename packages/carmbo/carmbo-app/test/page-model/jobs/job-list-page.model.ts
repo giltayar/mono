@@ -6,6 +6,7 @@ export function createJobListPageModel(page: Page) {
     urlRegex: /\/jobs$/,
     pageTitle: (locator = page.locator('h2')) => ({locator}),
     list: (locator = page.locator('table')) => createJobListModel(locator),
+    showTrivialCheckbox: (locator = page.getByLabel('Show trivial')) => ({locator}),
   }
 }
 

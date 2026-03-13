@@ -18,6 +18,7 @@ export const jobHandlers = new Map<string, JobHandler<unknown>>()
 export function registerJobHandler<TPayload extends JSONValue>(
   type: string,
   nowService: () => Date,
+  options: {isTrivial: boolean},
   descriptionFn: (payload: TPayload) => string,
   handler: JobHandler<TPayload>,
 ): JobSubmitter<TPayload> {
@@ -34,6 +35,7 @@ export function registerJobHandler<TPayload extends JSONValue>(
         numberOfRetries: retries,
         scheduledAt: scheduledAt ?? null,
         description: descriptionFn(payload),
+        isTrivial: options.isTrivial,
       })}
       RETURNING id
     `

@@ -47,7 +47,9 @@ export async function initialzeImportSmooveJobHandlers(
   submitImportFromSmooveListJob = registerJobHandler<ImportFromSmooveListJobPayload>(
     'import-from-smoove-list',
     nowService,
-    (payload) => `Import from Smoove list ${payload.smooveListId} for sales event ${payload.salesEventNumber}`,
+    {isTrivial: false},
+    (payload) =>
+      `Import from Smoove list ${payload.smooveListId} for sales event ${payload.salesEventNumber}`,
     async ({payload, jobId}, _attempt, logger) => {
       await importFromSmooveList(
         payload.salesEventNumber,
@@ -63,6 +65,7 @@ export async function initialzeImportSmooveJobHandlers(
   submitImportSingleContactJob = registerJobHandler<ImportSingeContactFromSmooveListJobPayload>(
     'import-single-contact-from-smoove-list',
     nowService,
+    {isTrivial: false},
     (payload) => `Import ${payload.contact.email}`,
     async ({payload, jobId}, _attempt, logger) => {
       return await importSingleContact(

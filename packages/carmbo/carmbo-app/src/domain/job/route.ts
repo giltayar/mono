@@ -14,12 +14,21 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     {
       schema: {
         querystring: z
-          .object({page: z.coerce.number().int().min(0).default(0).optional()})
+          .object({
+            page: z.coerce.number().int().min(0).default(0).optional(),
+            'with-trivial': z.string(),
+          })
           .partial(),
       },
     },
     async (request, reply) =>
-      dealWithControllerResult(reply, await showJobs(sql, {page: request.query.page ?? 0})),
+      dealWithControllerResult(
+        reply,
+        await showJobs(sql, {
+          page: request.query.page ?? 0,
+          withTrivial: 'with-trivial' in request.query,
+        }),
+      ),
   )
   appWithTypes.get(
     '/:jobId',

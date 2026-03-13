@@ -3,11 +3,14 @@ import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {JobForGrid, JobView} from '../model.ts'
 
-export function renderJobsPage(jobs: JobForGrid[], {page}: {page: number}) {
+export function renderJobsPage(
+  jobs: JobForGrid[],
+  {page, withTrivial}: {page: number; withTrivial: boolean},
+) {
   return html`
     <${MainLayout} title="Jobs" activeNavItem="jobs">
       <${Layout}>
-        <${JobsView} jobs=${jobs} page=${page} />
+        <${JobsView} jobs=${jobs} page=${page} withTrivial=${withTrivial} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -26,11 +29,38 @@ export function renderJobPage(job: JobView, subjobs: JobForGrid[]) {
   `
 }
 
-function JobsView({jobs, page}: {jobs: JobForGrid[]; page: number}) {
+function JobsView({
+  jobs,
+  page,
+  withTrivial,
+}: {
+  jobs: JobForGrid[]
+  page: number
+  withTrivial?: boolean
+}) {
   return html`
     <div class="mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
         <h2>Jobs</h2>
+        ${withTrivial !== undefined &&
+        html`<form
+          class="mb-1 ms-auto"
+          action="/jobs"
+          hx-boost
+          hx-trigger="input changed throttle:500ms"
+        >
+          <fieldset class="row align-items-center me-0">
+            <label class="form-check-label form-check col-auto"
+              ><input
+                type="checkbox"
+                class="form-check-input"
+                name="with-trivial"
+                checked=${withTrivial}
+              />
+              Show trivial</label
+            >
+          </fieldset>
+        </form>`}
       </div>
       <table class="table mt-3">
         <thead>
@@ -48,7 +78,7 @@ function JobsView({jobs, page}: {jobs: JobForGrid[]; page: number}) {
               <tr
                 ...${i === l.length - 1
                   ? {
-                      'hx-get': `/jobs?page=${encodeURIComponent(page + 1)}`,
+                      'hx-get': `/jobs?page=${encodeURIComponent(page + 1)}${withTrivial ? '&with-trivial=on' : ''}`,
                       'hx-trigger': 'revealed',
                       'hx-select': '.jobs-view tbody tr',
                       'hx-include': '.jobs-view form',

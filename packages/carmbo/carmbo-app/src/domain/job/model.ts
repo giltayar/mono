@@ -12,7 +12,12 @@ export type JobForGrid = {
 
 export async function listJobs(
   sql: Sql,
-  {parentJobId, limit, page}: {parentJobId: number | undefined; limit: number; page: number},
+  {
+    parentJobId,
+    withTrivial,
+    limit,
+    page,
+  }: {parentJobId: number | undefined; withTrivial: boolean; limit: number; page: number},
 ): Promise<JobForGrid[]> {
   const jobs = (await sql`
     SELECT
@@ -27,6 +32,7 @@ export async function listJobs(
     FROM job
     LEFT JOIN job as subjobs ON subjobs.parent_job_id = job.id
     WHERE job.parent_job_id ${parentJobId !== undefined ? sql`= ${parentJobId}` : sql`IS NULL`}
+    ${!withTrivial ? sql`AND job.is_trivial = false` : sql``}
     GROUP BY job.id
     ORDER BY job.created_at DESC
     LIMIT ${limit} OFFSET ${page * limit}

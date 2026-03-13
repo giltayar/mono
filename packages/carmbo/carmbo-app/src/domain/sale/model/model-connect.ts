@@ -36,6 +36,7 @@ export async function initializeJobHandlers(
   submitConnectionJob = registerJobHandler<SaleConnectionToStudent>(
     'connecting-cardcom-one-time-sale',
     nowService,
+    {isTrivial: true},
     (payload) => `Connected cardcom sale ${payload.saleNumber} to external providers`,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>

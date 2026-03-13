@@ -11,6 +11,7 @@ let submitFailingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string
 let submitParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitPartialParentJob: Awaited<ReturnType<typeof registerJobHandler<number>>>
 let submitPendingJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
+let submitTrivialJob: Awaited<ReturnType<typeof registerJobHandler<{name: string}>>>
 
 const nowService = () => new Date()
 
@@ -18,12 +19,14 @@ test.beforeAll(() => {
   submitTestJob = registerJobHandler<{name: string}>(
     'test-job',
     nowService,
+    {isTrivial: false},
     (payload) => `Processed: ${payload.name}`,
     async () => {},
   )
   submitFailingJob = registerJobHandler<{name: string}>(
     'test-failing-job',
     nowService,
+    {isTrivial: false},
     (payload) => `Failed: ${payload.name}`,
     async ({payload}) => {
       throw new Error(`Failed: ${payload.name}`)
@@ -32,12 +35,14 @@ test.beforeAll(() => {
   submitPendingJob = registerJobHandler<{name: string}>(
     'test-pending-job',
     nowService,
+    {isTrivial: false},
     (payload) => `Processed: ${payload.name}`,
     async () => {},
   )
   submitParentJob = registerJobHandler<number>(
     'test-parent-job',
     nowService,
+    {isTrivial: false},
     () => 'Parent Job',
     async ({jobId}) => {
       await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
@@ -48,6 +53,7 @@ test.beforeAll(() => {
   submitPartialParentJob = registerJobHandler<number>(
     'test-partial-parent-job',
     nowService,
+    {isTrivial: false},
     () => 'Partial Parent Job',
     async ({jobId}) => {
       await submitTestJob({name: 'Sub 1'}, {parentJobId: jobId, retries: 1})
@@ -58,6 +64,13 @@ test.beforeAll(() => {
         {parentJobId: jobId, retries: 1, scheduledAt: farFuture},
       )
     },
+  )
+  submitTrivialJob = registerJobHandler<{name: string}>(
+    'test-trivial-job',
+    nowService,
+    {isTrivial: true},
+    (payload) => `Trivial: ${payload.name}`,
+    async () => {},
   )
 })
 
@@ -147,5 +160,31 @@ test('jobs page shows 2/3 progress when one subjob has not finished', async ({pa
     const row = rows.row(0)
     await expect(row.descriptionCell().locator).toHaveText('Partial Parent Job')
     await expect(row.progressCell().locator).toHaveText('2/3')
+  }).toPass()
+})
+
+test('trivial jobs are hidden by default and shown when checkbox is checked', async ({page}) => {
+  await submitTestJob({name: 'Normal Job'}, {retries: 1})
+  await submitTrivialJob({name: 'Hidden Job'}, {retries: 1})
+
+  await triggerJobsExecution(() => new Date())
+
+  const jobListModel = createJobListPageModel(page)
+
+  // By default, only the non-trivial job should be visible
+  await expect(async () => {
+    await page.goto(new URL('/jobs', url()).href)
+    const rows = jobListModel.list().rows()
+    await expect(rows.locator).toHaveCount(1)
+    await expect(rows.row(0).descriptionCell().locator).toHaveText('Processed: Normal Job')
+  }).toPass()
+
+  // Check the "Show trivial" checkbox
+  await jobListModel.showTrivialCheckbox().locator.check()
+
+  // Now both jobs should be visible
+  await expect(async () => {
+    const rows = jobListModel.list().rows()
+    await expect(rows.locator).toHaveCount(2)
   }).toPass()
 })

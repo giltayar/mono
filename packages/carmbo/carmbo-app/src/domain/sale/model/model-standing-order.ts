@@ -27,6 +27,7 @@ export async function initializeJobHandlers(
   createDisconnectSaleFromExternalProvidersJob = registerJobHandler<DisconnectSalePayload>(
     'disconnecting-sale-from-external-providers',
     nowService,
+    {isTrivial: true},
     (payload) =>
       `Disconnecting sale ${payload.saleNumber} from external providers because ${payload.reason}`,
     async ({payload}, _attempt, logger) => {
