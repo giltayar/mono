@@ -504,7 +504,7 @@ export async function connectStudentWithAcademyCourses(
   logger: FastifyBaseLogger,
 ): Promise<void> {
   // Get student info and all academy courses for products in the actual sale
-  const courses = await sql<{courseId: string}[]>`
+  const courses = (await sql`
     SELECT DISTINCT
       pac.workshop_id as course_id
 
@@ -514,26 +514,25 @@ export async function connectStudentWithAcademyCourses(
     INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
     WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0
     ORDER BY pac.workshop_id
-  `
+  `) as {courseId: string}[]
 
-  logger.info({courses}, 'academy-courses-to-connect')
-
-  // This has to be done sequentially because the academy integration does not
-  // like concurrent requests for the same student
-  for (const {courseId} of courses) {
-    try {
-      await retry(() => academyIntegration.addStudentToCourse(student, parseInt(courseId)), {
+  try {
+    await retry(
+      () =>
+        academyIntegration.addStudentToCourses(
+          student,
+          courses.map(({courseId}) => parseInt(courseId)),
+        ),
+      {
         retries: 5,
         minTimeout: 1000,
         maxTimeout: 5000,
-      })
-      logger.info({courseId, student: student.email}, 'adding-student-to-academy-course-succeeded')
-    } catch (err) {
-      logger.error(
-        {err, courseId, student: student.email},
-        'adding-student-to-academy-course-failed',
-      )
-    }
+      },
+    )
+
+    logger.info({courses, student: student.email}, 'adding-student-to-academy-course-succeeded')
+  } catch (err) {
+    logger.error({err, courses, student: student.email}, 'adding-student-to-academy-course-failed')
   }
 }
 
@@ -753,29 +752,26 @@ async function propagateAcademyCourseChangesForSingleSale(
   // Also consider courses from the student's other connected sales
   const coursesFromOtherSales = new Set(saleInfo.coursesFromOtherSales ?? [])
 
-  // For added courses: always enroll
-  for (const courseId of saleInfo.addedCourses) {
-    try {
-      await retry(
-        () =>
-          academyIntegration.addStudentToCourse(
-            {
-              email: saleInfo.studentEmail,
-              name: saleInfo.studentName,
-              phone: saleInfo.studentPhone,
-            },
-            courseId,
-          ),
-        {
-          retries: 5,
-          minTimeout: 1000,
-          maxTimeout: 5000,
-        },
-      )
-      saleLogger.info({courseId}, 'propagate-added-course-succeeded')
-    } catch (err) {
-      saleLogger.error({err, courseId}, 'propagate-added-course-failed')
-    }
+  try {
+    await retry(
+      () =>
+        academyIntegration.addStudentToCourses(
+          {
+            email: saleInfo.studentEmail,
+            name: saleInfo.studentName,
+            phone: saleInfo.studentPhone,
+          },
+          saleInfo.addedCourses,
+        ),
+      {
+        retries: 5,
+        minTimeout: 1000,
+        maxTimeout: 5000,
+      },
+    )
+    saleLogger.info({courses: saleInfo.addedCourses}, 'propagate-added-course-succeeded')
+  } catch (err) {
+    saleLogger.error({err, courses: saleInfo.addedCourses}, 'propagate-added-course-failed')
   }
 
   // For removed courses: only unenroll if no other product in this sale or other sales has that course
@@ -1055,29 +1051,29 @@ async function propagateSalesEventProductChangesForSingleSale(
   }
 
   // Enroll in courses for added products
-  for (const {courseId} of saleInfo.addedProductCourses.filter((pc) =>
-    productsToAdd.includes(pc.productNumber),
-  )) {
-    try {
-      await retry(
-        () =>
-          academyIntegration.addStudentToCourse(
-            {
-              email: saleInfo.studentEmail,
-              name: saleInfo.studentName,
-              phone: saleInfo.studentPhone,
-            },
-            courseId,
-          ),
-        {
-          retries: 5,
-          minTimeout: 1000,
-          maxTimeout: 5000,
-        },
-      )
-      saleLogger.info({courseId}, 'propagate-added-product-course-succeeded')
-    } catch (err) {
-      saleLogger.error({err, courseId}, 'propagate-added-product-course-failed')
-    }
+  const courses = saleInfo.addedProductCourses
+    .filter((pc) => productsToAdd.includes(pc.productNumber))
+    .map((pc) => pc.courseId)
+  try {
+    await retry(
+      () => {
+        return academyIntegration.addStudentToCourses(
+          {
+            email: saleInfo.studentEmail,
+            name: saleInfo.studentName,
+            phone: saleInfo.studentPhone,
+          },
+          courses,
+        )
+      },
+      {
+        retries: 5,
+        minTimeout: 1000,
+        maxTimeout: 5000,
+      },
+    )
+    saleLogger.info({courses}, 'propagate-added-product-course-succeeded')
+  } catch (err) {
+    saleLogger.error({err, courses}, 'propagate-added-product-course-failed')
   }
 }
