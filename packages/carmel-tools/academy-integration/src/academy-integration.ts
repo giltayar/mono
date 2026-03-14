@@ -29,6 +29,7 @@ export function createAcademyIntegrationService(context: AcademyIntegrationServi
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
     addStudentToCourse: sBind(addStudentToCourse),
+    addStudentToCourses: sBind(addStudentToCourses),
     removeStudentFromCourse: sBind(removeStudentFromCourse),
     isStudentEnrolledInCourse: sBind(isStudentEnrolledInCourse),
     updateStudentEmail: sBind(updateStudentEmail),
@@ -74,7 +75,24 @@ export async function addStudentToCourse(
   const url = new URL(`https://www.mypages.co.il/tasks/add/api/${s.context.accountApiKey}`)
 
   await fetchAsTextWithJsonBody(url, {
-    workshop_ids: courseId.toString(),
+    workshop_id: courseId.toString(),
+    email: student.email,
+    name: student.name,
+    phone: student.phone,
+  })
+}
+
+// This will add the student to the course. If the student doesn't exist, it will add the student with
+// the given name and phone. Otherwise it will ignore them
+export async function addStudentToCourses(
+  s: AcademyIntegrationServiceData,
+  student: {email: string; name: string; phone: string},
+  courseIds: number[],
+): Promise<void> {
+  const url = new URL(`https://www.mypages.co.il/tasks/add/api/${s.context.accountApiKey}`)
+
+  await fetchAsTextWithJsonBody(url, {
+    workshop_ids: courseIds.map(String).join(','),
     email: student.email,
     name: student.name,
     phone: student.phone,

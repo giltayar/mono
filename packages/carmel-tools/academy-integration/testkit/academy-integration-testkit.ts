@@ -21,6 +21,7 @@ export function createFakeAcademyIntegrationService(context: {
     removeContactFromAccount: sBind(removeContactFromAccount),
     listCourses: sBind(listCourses),
     addStudentToCourse: sBind(addStudentToCourse),
+    addStudentToCourses: sBind(addStudentToCourses),
     removeStudentFromCourse: sBind(removeStudentFromCourse),
     updateStudentEmail: sBind(updateStudentEmail),
     isStudentEnrolledInCourse: sBind(isStudentEnrolledInCourse),
@@ -60,6 +61,24 @@ async function addStudentToCourse(
   }
 
   s.state.enrolledContacts.get(student.email)!.enrolledInCourses.push(courseId)
+}
+
+async function addStudentToCourses(
+  s: AcademyIntegrationServiceData,
+  student: {email: string; name: string; phone: string},
+  courseIds: number[],
+): Promise<void> {
+  const hasStudent = s.state.enrolledContacts.has(student.email)
+
+  if (!hasStudent) {
+    s.state.enrolledContacts.set(student.email, {
+      name: student.name,
+      phone: student.phone,
+      enrolledInCourses: [],
+    })
+  }
+
+  s.state.enrolledContacts.get(student.email)!.enrolledInCourses.push(...courseIds)
 }
 
 async function removeStudentFromCourse(
