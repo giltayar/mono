@@ -277,8 +277,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(result.cardcomCustomerId, '12345')
 
       // Verify the invoice information was stored correctly
-      const storedInvoice = await service._test_getTaxInvoiceDocument('1')
-      assert.ok(storedInvoice)
+      const storedInvoice = await service.fetchInvoiceInformation(1)
       assert.strictEqual(storedInvoice.customerName, 'John Doe')
       assert.strictEqual(storedInvoice.customerEmail, 'john@example.com')
       assert.strictEqual(storedInvoice.customerPhone, '050-1234567')
@@ -325,8 +324,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.ok(parseInt(result.cardcomCustomerId) >= 0)
 
       // Verify the invoice information was stored correctly
-      const storedInvoice = await service._test_getTaxInvoiceDocument('1')
-      assert.ok(storedInvoice)
+      const storedInvoice = await service.fetchInvoiceInformation(1)
       assert.strictEqual(storedInvoice.customerName, 'Jane Smith')
       assert.strictEqual(storedInvoice.customerEmail, 'jane@example.com')
       assert.strictEqual(storedInvoice.customerPhone, undefined)
@@ -393,12 +391,10 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(result2.cardcomDocumentLink, 'http://invoice-document.example.com/2')
 
       // Verify both invoices were stored correctly
-      const storedInvoice1 = await service._test_getTaxInvoiceDocument('1')
-      assert.ok(storedInvoice1)
+      const storedInvoice1 = await service.fetchInvoiceInformation(1)
       assert.strictEqual(storedInvoice1.customerName, 'Customer One')
 
-      const storedInvoice2 = await service._test_getTaxInvoiceDocument('2')
-      assert.ok(storedInvoice2)
+      const storedInvoice2 = await service.fetchInvoiceInformation(2)
       assert.strictEqual(storedInvoice2.customerName, 'Customer Two')
     })
   })
@@ -439,8 +435,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(result.url, 'http://invoice-document.example.com/1')
 
       // Verify the stored invoice matches what was created
-      const storedInvoice = await service._test_getTaxInvoiceDocument('1')
-      assert.ok(storedInvoice)
+      const storedInvoice = await service.fetchInvoiceInformation(1)
       assert.strictEqual(storedInvoice.customerName, 'Test User')
       assert.strictEqual(storedInvoice.customerEmail, 'test@example.com')
       assert.strictEqual(storedInvoice.cardcomCustomerId, 99999)
@@ -490,13 +485,10 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(url3.url, 'http://invoice-document.example.com/3')
 
       // Verify all three invoices were stored
-      const storedInvoice1 = await service._test_getTaxInvoiceDocument('1')
-      const storedInvoice2 = await service._test_getTaxInvoiceDocument('2')
-      const storedInvoice3 = await service._test_getTaxInvoiceDocument('3')
+      const storedInvoice1 = await service.fetchInvoiceInformation(1)
+      const storedInvoice2 = await service.fetchInvoiceInformation(2)
+      const storedInvoice3 = await service.fetchInvoiceInformation(3)
 
-      assert.ok(storedInvoice1)
-      assert.ok(storedInvoice2)
-      assert.ok(storedInvoice3)
       assert.strictEqual(storedInvoice1.customerName, 'Test User')
       assert.strictEqual(storedInvoice2.customerName, 'Test User')
       assert.strictEqual(storedInvoice3.customerName, 'Test User')
@@ -597,6 +589,52 @@ describe('Cardcom Integration Testkit', () => {
         () => service.refundTransaction(transactionId),
         /Transaction .* has already been refunded/,
       )
+    })
+  })
+
+  describe('fetchInvoiceInformation', () => {
+    it('should return invoice information for an existing invoice', async () => {
+      const service = createTestService()
+
+      const invoiceInformation = {
+        customerName: 'John Doe',
+        customerEmail: 'john@example.com',
+        customerPhone: '050-1234567',
+        cardcomCustomerId: 12345,
+        productsSold: [
+          {
+            productId: 'prod-1',
+            productName: 'Product One',
+            quantity: 2,
+            unitPriceInCents: 5000,
+          },
+        ],
+        transactionDate: new Date('2024-06-15'),
+        transactionDescription: 'Test transaction',
+        transactionRevenueInCents: 10000,
+      }
+
+      const createResult = await service.createTaxInvoiceDocument(invoiceInformation, {
+        sendInvoiceByMail: false,
+      })
+
+      const result = await service.fetchInvoiceInformation(createResult.cardcomInvoiceNumber)
+
+      assert.strictEqual(result.customerName, 'John Doe')
+      assert.strictEqual(result.customerEmail, 'john@example.com')
+      assert.strictEqual(result.customerPhone, '050-1234567')
+      assert.strictEqual(result.productsSold.length, 1)
+      assert.strictEqual(result.productsSold[0].productName, 'Product One')
+      assert.strictEqual(result.productsSold[0].productId, 'prod-1')
+      assert.strictEqual(result.productsSold[0].quantity, 2)
+      assert.strictEqual(result.productsSold[0].unitPriceInCents, 5000)
+      assert.strictEqual(result.transactionRevenueInCents, 10000)
+    })
+
+    it('should throw error for non-existent invoice', async () => {
+      const service = createTestService()
+
+      await assert.rejects(() => service.fetchInvoiceInformation(99999), /Invoice 99999 not found/)
     })
   })
 

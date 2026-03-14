@@ -76,6 +76,7 @@ export function createFakeCardcomIntegrationService(context: {
     fetchAccountInformation: sBind(fetchAccountInformation),
     createTaxInvoiceDocument: sBind(createTaxInvoiceDocument),
     createTaxInvoiceDocumentUrl: sBind(createTaxInvoiceDocumentUrl),
+    fetchInvoiceInformation: sBind(fetchInvoiceInformation),
   }
 
   return {
@@ -95,13 +96,6 @@ export function createFakeCardcomIntegrationService(context: {
         (rp) => rp.recurringPaymentId === recurringPaymentId,
       )
       return recurringPayment?.isActive
-    },
-    _test_getTaxInvoiceDocument: async (
-      cardcomInvoiceNumber: string,
-    ): Promise<TaxInvoiceInformation | undefined> => {
-      return Object.values(state.payments).find(
-        (inv) => inv.invoiceNumber === parseInt(cardcomInvoiceNumber, 10),
-      )?.invoiceInformation
     },
     _test_simulateCardcomSale: sBind(_test_simulateCardcomSale),
     _test_simulateCardcomStandingOrder: sBind(_test_simulateCardcomStandingOrder),
@@ -261,6 +255,18 @@ async function createTaxInvoiceDocumentUrl(
     )
 
   return {url: `http://invoice-document.example.com/${cardcomInvoiceNumber}`}
+}
+
+async function fetchInvoiceInformation(
+  s: CardcomIntegrationServiceData,
+  invoiceNumber: number,
+): Promise<TaxInvoiceInformation> {
+  const payment = Object.values(s.state.payments).find((p) => p.invoiceNumber === invoiceNumber)
+  if (!payment) {
+    throw new Error(`Invoice ${invoiceNumber} not found`)
+  }
+
+  return payment.invoiceInformation
 }
 
 export function assertTaxInvoiceDocumentUrl(url: string, cardcomInvoiceNumber: string) {

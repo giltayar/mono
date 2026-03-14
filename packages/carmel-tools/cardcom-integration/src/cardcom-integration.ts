@@ -27,6 +27,7 @@ export function createCardcomIntegrationService(context: CardcomIntegrationServi
     fetchAccountInformation: sBind(fetchAccountInformation),
     createTaxInvoiceDocument: sBind(createTaxInvoiceDocument),
     createTaxInvoiceDocumentUrl: sBind(createTaxInvoiceDocumentUrl),
+    fetchInvoiceInformation: sBind(fetchInvoiceInformation),
   }
 }
 
@@ -300,4 +301,66 @@ async function refundTransaction(
   }
 
   return {refundTransactionId: response.NewTranzactionId}
+}
+
+async function fetchInvoiceInformation(
+  service: CardcomIntegrationServiceData,
+  invoiceNumber: number,
+): Promise<TaxInvoiceInformation> {
+  const url = new URL('https://secure.cardcom.solutions/Interface/InvoiceGetInfo.aspx')
+  url.searchParams.set('UserName', service.context.apiKey)
+  url.searchParams.set('UserPassword', service.context.apiKeyPassword)
+  url.searchParams.set('InvoiceNumber', String(invoiceNumber))
+  url.searchParams.set('InvoiceType', '1')
+
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch invoice ${invoiceNumber}: ${response.status}, ${await response.text()}`,
+    )
+  }
+
+  const resultText = await response.text()
+  const params = new URLSearchParams(resultText)
+
+  if (params.get('ResponseCode') !== '0') {
+    throw new Error(`Failed to get invoice information: ${resultText}`)
+  }
+
+  const totalLines = parseInt(params.get('TotalExtReadInvoiceLines') ?? '0', 10)
+  const productsSold = []
+  for (let i = 0; i < totalLines; i++) {
+    const prefix = i === 0 ? 'ExtReadInvoiceLines' : `ExtReadInvoiceLines${i}`
+    const quantity = parseFloat(params.get(`${prefix}.Quantity`) ?? '0')
+    const totalIncludeVat = parseFloat(params.get(`${prefix}.TotalLineCostIncludeVAT`) ?? '0')
+    productsSold.push({
+      productId: params.get(`${prefix}.ProductID`) ?? '',
+      productName: (params.get(`${prefix}.Description`) ?? '').trim(),
+      quantity,
+      unitPriceInCents: Math.round(totalIncludeVat * 100),
+    })
+  }
+
+  const invoiceDateStr = params.get('ExtReadInvoiceHead.InvoiceDate') ?? ''
+  const [datePart] = invoiceDateStr.split(' ')
+  const [day, month, year] = (datePart ?? '').split('/')
+  const transactionDate =
+    day && month && year ? new Date(`${year}-${month}-${day}`) : new Date(invoiceDateStr)
+
+  const totalIncludeVAT = parseFloat(params.get('ExtReadInvoiceHead.TotalIncludeVAT') ?? '0')
+
+  const accountId = parseInt(params.get('ExtReadInvoiceHead.AccountId') ?? '0', 10)
+
+  return {
+    customerName:
+      params.get('ExtReadInvoiceHead.CustName') || params.get('ExtShvaParams.CardOwnerName') || '',
+    customerEmail: (params.get('ExtReadInvoiceHead.Email') ?? '').trim(),
+    customerPhone: params.get('ExtReadInvoiceHead.CustMobilePH') || undefined,
+    cardcomCustomerId: accountId || undefined,
+    productsSold,
+    transactionRevenueInCents: Math.round(totalIncludeVAT * 100),
+    transactionDate,
+    transactionDescription: undefined,
+  }
 }
