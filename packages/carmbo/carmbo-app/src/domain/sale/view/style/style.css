@@ -1,3 +1,7 @@
+.sales-view_form-fields:has(#studentNumber:valid) .create-student-from-invoice {
+  display: none;
+}
+
 .sales-view {
   section.add-new {
     position: fixed;

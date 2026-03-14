@@ -368,9 +368,8 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
   )
   await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('777')
 
-  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(
-    cardcomInvoiceNumber,
-  )
+  const taxInvoiceDocument =
+    await cardcomIntegration().fetchInvoiceInformation(cardcomInvoiceNumber)
 
   expect(taxInvoiceDocument).toBeDefined()
 

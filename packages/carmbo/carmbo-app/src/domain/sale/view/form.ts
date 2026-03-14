@@ -177,14 +177,30 @@ export function SalesFormFields({
           : ''}
         <div class="mb-3">
           <label for="cardcomInvoiceNumber" class="form-label">Cardcom Invoice Number</label>
-          <input
-            type="number"
-            class="form-control"
-            id="cardcomInvoiceNumber"
-            name="cardcomInvoiceNumber"
-            value=${sale.cardcomInvoiceNumber}
-            readonly=${isReadOnly}
-          />${sale.cardcomInvoiceDocumentUrl
+          <div class="input-group">
+            <input
+              type="number"
+              class="form-control"
+              id="cardcomInvoiceNumber"
+              name="cardcomInvoiceNumber"
+              value=${sale.cardcomInvoiceNumber}
+              readonly=${isReadOnly}
+            />
+            ${!isReadOnly
+              ? html`<button
+                  type="button"
+                  class="btn btn-outline-secondary create-student-from-invoice"
+                  hx-post="/sales/create-student-from-invoice"
+                  hx-target="closest .sales-view_form-fields"
+                  hx-swap="outerHTML"
+                  hx-include="closest form"
+                  hx-indicator=".operation-spinner"
+                >
+                  Create Student from invoice
+                </button>`
+              : ''}
+          </div>
+          ${sale.cardcomInvoiceDocumentUrl
             ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
             : undefined}
         </div>

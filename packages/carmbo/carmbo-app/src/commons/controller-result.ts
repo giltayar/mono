@@ -1,4 +1,6 @@
 import {assertNever} from '@giltayar/functional-commons'
+import {html} from './html-templates.ts'
+import {BannerComponent, type Banner} from '../layout/banner.ts'
 
 export type ControllerResult =
   | {
@@ -9,8 +11,19 @@ export type ControllerResult =
   | {htmxRedirect: string}
   | {htmxTarget: string; body: string}
 
-export function finalHtml(htmlContent: string | string[]): string {
-  return Array.isArray(htmlContent) ? htmlContent.flat().join('') : htmlContent
+export function finalHtml(
+  htmlContent: string | string[],
+  {banner}: {banner?: Banner} = {},
+): string {
+  const content = Array.isArray(htmlContent) ? htmlContent.flat().join('') : htmlContent
+
+  if (!banner) return content
+
+  const bannerOob = html`<div id="banner-container" hx-swap-oob="innerHTML">
+    <${BannerComponent} banner=${banner} />
+  </div>`
+
+  return content + bannerOob
 }
 
 export function retarget(result: ControllerResult, target: string): ControllerResult {

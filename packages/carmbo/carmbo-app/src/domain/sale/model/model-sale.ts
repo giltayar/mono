@@ -626,6 +626,45 @@ function generateStudentInfoFromCardcomSale(
   }
 }
 
+export async function findOrCreateStudentFromInvoice(
+  cardcomInvoiceNumber: string,
+  now: Date,
+  cardcomIntegration: CardcomIntegrationService,
+  smooveIntegration: SmooveIntegrationService,
+  sql: Sql,
+): Promise<StudentInfoFound> {
+  const invoiceInfo = await cardcomIntegration.fetchInvoiceInformation(
+    parseInt(cardcomInvoiceNumber, 10),
+  )
+
+  const nameParts = (invoiceInfo.customerName || '').trim().split(/\s+/)
+  const firstName = nameParts[0] || ''
+  const lastName = nameParts.slice(1).join(' ')
+
+  const existingStudent = await findStudent(
+    invoiceInfo.customerEmail,
+    invoiceInfo.customerPhone,
+    sql,
+  )
+
+  if (existingStudent) {
+    return existingStudent
+  }
+
+  return await createStudentFromStudentInfo(
+    {
+      email: invoiceInfo.customerEmail,
+      firstName,
+      lastName,
+      phone: invoiceInfo.customerPhone,
+      cellPhone: undefined,
+    },
+    now,
+    smooveIntegration,
+    sql,
+  )
+}
+
 export async function refundSale(
   saleNumber: number,
   now: Date,

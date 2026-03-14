@@ -20,6 +20,7 @@ import {
 import {
   addCardcomSale,
   addNoInvoiceSale,
+  findOrCreateStudentFromInvoice as model_findOrCreateStudentFromInvoice,
   refundSale as model_refundSale,
 } from './model/model-sale.ts'
 import {
@@ -74,6 +75,49 @@ export async function showOngoingSale(sale: NewSale): Promise<ControllerResult> 
   const sql = requestContext.get('sql')!
 
   return finalHtml(renderSaleFormFields(sale ? await fillInSale(sale, sql) : undefined))
+}
+
+export async function createStudentFromInvoice(sale: NewSale): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+  const cardcomIntegration = requestContext.get('cardcomIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const logger = requestContext.get('logger')!
+
+  if (!sale.cardcomInvoiceNumber) {
+    return finalHtml(renderSaleFormFields(sale), {
+      banner: exceptionToBanner('', new Error('Please fill in the Cardcom Invoice Number first')),
+    })
+  }
+
+  try {
+    const student = await model_findOrCreateStudentFromInvoice(
+      sale.cardcomInvoiceNumber,
+      nowService(),
+      cardcomIntegration,
+      smooveIntegration,
+      sql,
+    )
+
+    const updatedSale: NewSale = {
+      ...sale,
+      studentNumber: student.studentNumber,
+      studentName: `${student.firstName} ${student.lastName}`.trim(),
+    }
+
+    return finalHtml(renderSaleFormFields(await fillInSale(updatedSale, sql)), {
+      banner: {
+        message: `Student ${updatedSale.studentName} (${student.studentNumber}) set`,
+        type: 'info',
+        disappearing: true,
+      },
+    })
+  } catch (error) {
+    logger.error({err: error}, 'create-student-from-invoice')
+    return finalHtml(renderSaleFormFields(sale), {
+      banner: exceptionToBanner('Error creating student from invoice: ', error),
+    })
+  }
 }
 
 export async function showSalesEventList(q: string | undefined): Promise<ControllerResult> {

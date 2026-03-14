@@ -21,6 +21,11 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
     cardcomInvoiceNumberInput: (inputLocator = locator.getByLabel('Cardcom Invoice Number')) => ({
       locator: inputLocator,
     }),
+    createStudentFromInvoiceButton: (
+      btnLocator = locator.getByRole('button', {name: 'Create Student'}),
+    ) => ({
+      locator: btnLocator,
+    }),
     transactionDescriptionInput: (inputLocator = locator.getByLabel('Description')) => ({
       locator: inputLocator,
     }),

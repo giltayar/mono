@@ -10,10 +10,10 @@ export function createNewSalePageModel(page: Page) {
     urlRegex: /\/sales\/new$/,
     pageTitle: (locator = page.getByRole('heading', {name: /New Sale/})) => ({locator}),
     form: () => ({
-      createButton: (btnLocator = page.getByRole('button', {name: 'Create'})) => ({
+      createButton: (btnLocator = page.getByRole('button', {name: 'Create', exact: true})) => ({
         locator: btnLocator,
       }),
-      discardButton: (btnLocator = page.getByRole('button', {name: 'Discard'})) => ({
+      discardButton: (btnLocator = page.getByRole('button', {name: 'Discard', exact: true})) => ({
         locator: btnLocator,
       }),
 

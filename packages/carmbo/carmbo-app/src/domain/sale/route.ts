@@ -16,6 +16,7 @@ import {
   showStudentList,
   showProductList,
   createSale,
+  createStudentFromInvoice,
   updateSale,
   updateSaleNotes,
   deleteSale,
@@ -237,6 +238,13 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
   appWithTypes.post('/', {schema: {body: NewSaleSchema}}, async (request, reply) =>
     dealWithControllerResult(reply, await createSale(request.body, sql)),
+  )
+
+  appWithTypes.post(
+    '/create-student-from-invoice',
+    {schema: {body: NewSaleSchema}},
+    async (request, reply) =>
+      dealWithControllerResult(reply, await createStudentFromInvoice(request.body)),
   )
 
   appWithTypes.get(
