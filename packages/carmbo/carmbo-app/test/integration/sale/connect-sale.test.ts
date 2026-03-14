@@ -149,7 +149,7 @@ test('create sale then connect it', async ({page}) => {
     `http://invoice-document.example.com/1`,
   )
 
-  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
 
   expect(taxInvoiceDocument).toBeDefined()
 
@@ -368,8 +368,8 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
   )
   await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('777')
 
-  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument(
-    cardcomInvoiceNumber.toString(),
+  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(
+    cardcomInvoiceNumber,
   )
 
   expect(taxInvoiceDocument).toBeDefined()
@@ -546,7 +546,7 @@ test('connect sale then reconnect it', async ({page}) => {
     'Regular Sale | Connected to External Providers',
   )
 
-  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
 
   expect(taxInvoiceDocument).toBeDefined()
 
@@ -690,7 +690,7 @@ test('create sale with transaction description then connect it', async ({page}) 
   await expect(updateSaleModel.form().transactionDescriptionInput().locator).toBeVisible()
 
   // Verify the transaction description was passed to Cardcom
-  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
   expect(taxInvoiceDocument).toBeDefined()
   expect(taxInvoiceDocument?.transactionDescription).toBe('שולם בהעברה בנקאית')
 })

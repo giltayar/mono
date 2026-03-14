@@ -145,7 +145,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     true,
   )
 
-  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
 
   expect(taxInvoiceDocument).toBeDefined()
 
@@ -564,10 +564,9 @@ test('double call of cardcom webhook should create only one sale and one student
   )
 
   // Verify only one tax invoice document was created
-  const taxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('1')
+  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
   expect(taxInvoiceDocument).toBeDefined()
 
   // There should be no second tax invoice document
-  const secondTaxInvoiceDocument = await cardcomIntegration()._test_getTaxInvoiceDocument('2')
-  expect(secondTaxInvoiceDocument).toBeUndefined()
+  await expect(cardcomIntegration().fetchInvoiceInformation(2)).rejects.toThrow()
 })
