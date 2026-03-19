@@ -15,6 +15,9 @@ import {
   showSalesEventList,
   showStudentList,
   showProductList,
+  showStudentSearchDialog,
+  showStudentSearchResults,
+  quickCreateStudent,
   createSale,
   createStudentFromInvoice,
   updateSale,
@@ -266,6 +269,33 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     {schema: {querystring: z.object({q: z.string().optional()})}},
     async (request, reply) =>
       dealWithControllerResult(reply, await showProductList(request.query.q)),
+  )
+
+  appWithTypes.get('/student-search-dialog', async (_request, reply) =>
+    dealWithControllerResult(reply, await showStudentSearchDialog()),
+  )
+
+  appWithTypes.get(
+    '/query/student-search',
+    {schema: {querystring: z.object({q: z.string().optional()})}},
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showStudentSearchResults(request.query.q)),
+  )
+
+  appWithTypes.post(
+    '/quick-create-student',
+    {
+      schema: {
+        body: z.object({
+          quickCreateEmail: z.string().email(),
+          quickCreateFirstName: z.string().min(1),
+          quickCreateLastName: z.string().min(1),
+          quickCreatePhone: z.string().optional(),
+        }),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await quickCreateStudent(request.body)),
   )
 
   // View sale

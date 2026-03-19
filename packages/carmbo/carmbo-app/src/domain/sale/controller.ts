@@ -39,6 +39,9 @@ import {
   renderSalePaymentsPage,
   renderSaleProvidersPage,
   renderSaleViewPage,
+  renderStudentSearchDialog,
+  renderStudentSearchResults,
+  renderStudentInput,
 } from './view/view.ts'
 import type {Sql} from 'postgres'
 import {
@@ -46,6 +49,7 @@ import {
   renderStudentListPage,
   renderProductListPage,
 } from './view/list-searches.ts'
+import {createStudent as model_createStudent} from '../student/model.ts'
 import {exceptionToBanner, exceptionToBannerHtml} from '../../layout/banner.ts'
 import type {
   CardcomRecurringOrderWebHookJson,
@@ -116,6 +120,59 @@ export async function createStudentFromInvoice(sale: NewSale): Promise<Controlle
     logger.error({err: error}, 'create-student-from-invoice')
     return finalHtml(renderSaleFormFields(sale), {
       banner: exceptionToBanner('Error creating student from invoice: ', error),
+    })
+  }
+}
+
+export async function showStudentSearchDialog(): Promise<ControllerResult> {
+  return finalHtml(renderStudentSearchDialog())
+}
+
+export async function showStudentSearchResults(q: string | undefined): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+
+  const students = q ? await searchStudents(q, sql) : []
+
+  return finalHtml(renderStudentSearchResults(students))
+}
+
+export async function quickCreateStudent(body: {
+  quickCreateEmail: string
+  quickCreateFirstName: string
+  quickCreateLastName: string
+  quickCreatePhone?: string
+}): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const nowService = requestContext.get('nowService')!
+  const logger = requestContext.get('logger')!
+
+  try {
+    const studentNumber = await model_createStudent(
+      {
+        names: [{firstName: body.quickCreateFirstName, lastName: body.quickCreateLastName}],
+        emails: [body.quickCreateEmail],
+        phones: body.quickCreatePhone ? [body.quickCreatePhone] : undefined,
+      },
+      'quick-create from sale form',
+      smooveIntegration,
+      nowService(),
+      sql,
+    )
+
+    const studentName = `${body.quickCreateFirstName} ${body.quickCreateLastName}`.trim()
+
+    return finalHtml(renderStudentInput(studentNumber, studentName), {
+      banner: {
+        message: `Student ${studentName} (${studentNumber}) created and set`,
+        type: 'info',
+        disappearing: true,
+      },
+    })
+  } catch (error) {
+    logger.error({err: error}, 'quick-create-student')
+    return finalHtml('', {
+      banner: exceptionToBanner('Error creating student: ', error),
     })
   }
 }

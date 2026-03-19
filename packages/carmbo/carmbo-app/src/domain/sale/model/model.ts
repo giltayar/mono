@@ -363,15 +363,21 @@ export async function searchSalesEvents(
 export async function searchStudents(
   q: string,
   sql: Sql,
-): Promise<{studentNumber: number; name: string}[]> {
-  return await sql<{studentNumber: number; name: string}[]>`
+): Promise<{studentNumber: number; name: string; email: string | null; phone: string | null}[]> {
+  return await sql<
+    {studentNumber: number; name: string; email: string | null; phone: string | null}[]
+  >`
     SELECT
       s.student_number,
-      CONCAT(sn.first_name, ' ', sn.last_name) as name
+      CONCAT(sn.first_name, ' ', sn.last_name) as name,
+      se.email,
+      sp.phone
     FROM
       student s
     LEFT JOIN student_history sh on sh.id = s.last_history_id
-    LEFT JOIN student_name sn on sn.data_id = s.last_data_id
+    LEFT JOIN student_name sn on sn.data_id = s.last_data_id AND sn.item_order = 0
+    LEFT JOIN student_email se on se.data_id = s.last_data_id AND se.item_order = 0
+    LEFT JOIN student_phone sp on sp.data_id = s.last_data_id AND sp.item_order = 0
     LEFT JOIN student_search ss on ss.data_id = s.last_data_id
     WHERE
       ss.searchable_text ${sqlTextSearch(q, sql)}

@@ -24,5 +24,9 @@ export function SaleCreateView({sale}: {sale: NewSale}) {
         <${SalesFormFields} sale=${sale} operation="write" />
       </div>
     </form>
+    <div
+      id="student-search-dialog-container"
+      hx-on::after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
   `
 }

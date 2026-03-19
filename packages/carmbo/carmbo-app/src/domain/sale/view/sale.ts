@@ -105,6 +105,10 @@ export function SaleUpdateView({
         />
       </div>
     </form>
+    <div
+      id="student-search-dialog-container"
+      hx-on::after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
     <${SaleHistoryList} sale=${sale} history=${history} />
   `
 }

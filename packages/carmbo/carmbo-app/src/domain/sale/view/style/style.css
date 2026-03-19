@@ -2,6 +2,25 @@
   display: none;
 }
 
+/* Student Search Dialog */
+.student-search-dialog {
+  max-width: 600px;
+  width: 90%;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.student-search-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.student-search-dialog .list-group {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 .sales-view {
   section.add-new {
     position: fixed;

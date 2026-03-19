@@ -58,19 +58,9 @@ export function SalesFormFields({
         <div class="mb-3">
           <div class="row">
             <div class="col form-floating">
-              <input
-                class="form-control"
-                id="studentNumber"
-                name="studentNumber"
-                list="student-list"
-                hx-post=""
-                hx-target="closest .sales-view_form-fields"
-                hx-swap="outerHTML"
-                hx-trigger="change"
-                value=${generateItemTitle(sale.studentNumber, sale.studentName)}
-                required
-                placeholder=" "
-                readonly=${isReadOnly}
+              <${StudentInput}
+                studentNumber=${sale.studentNumber}
+                studentName=${sale.studentName}
               />
               <label for="studentNumber" class="form-label">Student</label>
             </div>
@@ -92,6 +82,19 @@ export function SalesFormFields({
                   </a>`
                 : ''}
             </div>
+            ${!isReadOnly
+              ? html`<div class="col-auto">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="/sales/student-search-dialog"
+                    hx-target="#student-search-dialog-container"
+                    hx-swap="innerHTML"
+                  >
+                    Search / Create
+                  </button>
+                </div>`
+              : ''}
           </div>
         </div>
         <div class="mb-3 row">
@@ -385,4 +388,26 @@ function InvoiceDocumentUrlLink({url}: {url: string}) {
       class="feather feather-small pe-none"
       data=${`/src/${version}/layout/style/external-link.svg`}
     ></object>`
+}
+
+export function StudentInput({
+  studentNumber,
+  studentName,
+}: {
+  studentNumber: number
+  studentName: string
+}) {
+  return html`<input
+    class="form-control"
+    id="studentNumber"
+    name="studentNumber"
+    list="student-list"
+    hx-post=""
+    hx-target="closest .sales-view_form-fields"
+    hx-swap="outerHTML"
+    hx-trigger="change"
+    value=${generateItemTitle(studentNumber, studentName)}
+    required
+    placeholder=" "
+  />`
 }

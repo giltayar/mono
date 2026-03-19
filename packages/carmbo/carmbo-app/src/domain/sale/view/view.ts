@@ -9,11 +9,29 @@ import {
 import {SaleUpdateView} from './sale.ts'
 import {Layout} from './layout.ts'
 import {SaleCreateView} from './create-update.ts'
-import {SalesFormFields} from './form.ts'
+import {SalesFormFields, StudentInput} from './form.ts'
 import type {Banner} from '../../../layout/banner.ts'
 import {SalePaymentsView} from './sale-payment.ts'
 import type {SaleWithProviders} from '../model/model-external-providers.ts'
 import {SaleProvidersView} from './sale-providers.ts'
+import {
+  renderStudentSearchDialog as renderStudentSearchDialogView,
+  renderStudentSearchResults as renderStudentSearchResultsView,
+} from './student-search-dialog.ts'
+
+export function renderStudentSearchDialog() {
+  return renderStudentSearchDialogView()
+}
+
+export function renderStudentSearchResults(
+  students: {studentNumber: number; name: string; email: string | null; phone: string | null}[],
+) {
+  return renderStudentSearchResultsView(students)
+}
+
+export function renderStudentInput(studentNumber: number, studentName: string) {
+  return StudentInput({studentNumber, studentName})
+}
 
 export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banner?: Banner} = {}) {
   const finalSale: NewSale = sale ?? {

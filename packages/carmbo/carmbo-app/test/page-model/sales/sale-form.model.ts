@@ -15,6 +15,11 @@ export function saleFormPageModel(page: Page, locator = page.locator('form')) {
         locator: linkLocator,
       }),
     }),
+    searchCreateStudentButton: (
+      btnLocator = locator.getByRole('button', {name: 'Search / Create'}),
+    ) => ({
+      locator: btnLocator,
+    }),
     finalSaleRevenueInput: (inputLocator = locator.getByLabel('Final Sale Revenue')) => ({
       locator: inputLocator,
     }),
