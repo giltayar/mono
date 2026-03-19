@@ -62,8 +62,8 @@ async function executeJobs(nowService: NowService) {
     const jobLogger = globalLogger.child({jobExecutionId})
     jobLogger.info({jobMutex, now: now.toISOString()}, 'execute-jobs-started')
     const sql = globalSql
-    const jobsToExecute = async () =>
-      (await sql`
+
+    const currentJobs = (await sql`
       SELECT
         id, type, payload, number_of_retries, attempts
       FROM
@@ -73,17 +73,16 @@ async function executeJobs(nowService: NowService) {
         finished_at IS NULL
     `) as JobToExecute[]
 
-    jobLogger.info('finding-jobs-to-execute')
-
-    const currentJobs = await jobsToExecute()
-    jobLogger.info({jobsToExecute: currentJobs.length}, 'finding-jobs-to-execute')
+    jobLogger.info({jobsToExecute: currentJobs.length}, 'found-jobs-to-execute')
 
     for (const job of currentJobs) {
       const childLogger = jobLogger.child({jobId: job.id, type: job.type})
       childLogger.info({}, 'executing-job-start')
 
       try {
-        await executeJob(job, now, globalSql, childLogger)
+        await executeJob(job, nowService(), globalSql, childLogger)
+
+        childLogger.info({}, 'executing-job-success')
       } catch (err) {
         childLogger.error({err}, 'executing-job-failed')
       }
