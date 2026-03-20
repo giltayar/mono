@@ -106,7 +106,7 @@ export async function listStudents(
           student_phone.data_id = student_history.data_id
       ) phones ON true
     ${filters.flatMap((filter, i) => (i === 0 ? [sql`WHERE`, filter] : [sql`AND`, filter]))}
-    ORDER BY student.student_number
+    ORDER BY student.student_number DESC
     LIMIT ${limit} OFFSET ${page * limit}
     `
 

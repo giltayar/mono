@@ -101,8 +101,8 @@ test('deleting a student', async ({page}) => {
   await expect(studentListModel.search().showArchivedCheckbox().locator).toBeChecked()
 
   // Verify both students are present, with one marked as archived
-  expect(studentListModel.list().rows().row(0).nameCell().locator).toHaveText('Alice Johnson')
-  expect(studentListModel.list().rows().row(1).nameCell().locator).toHaveText('Bob Williams')
+  expect(studentListModel.list().rows().row(0).nameCell().locator).toHaveText('Bob Williams')
+  expect(studentListModel.list().rows().row(1).nameCell().locator).toHaveText('Alice Johnson')
 
   // Uncheck the "Show archived" checkbox
   await studentListModel.search().showArchivedCheckbox().locator.click()

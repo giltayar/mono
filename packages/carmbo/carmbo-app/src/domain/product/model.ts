@@ -82,7 +82,7 @@ export async function listProducts(
       LEFT JOIN product_search USING (data_id)
       LEFT JOIN product_data USING (data_id)
     ${filters.flatMap((filter, i) => (i === 0 ? [sql`WHERE`, filter] : [sql`AND`, filter]))}
-    ORDER BY product.product_number
+    ORDER BY product.product_number DESC
     LIMIT ${limit} OFFSET ${page * limit}
     `
 }

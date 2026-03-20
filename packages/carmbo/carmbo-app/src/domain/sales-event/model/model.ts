@@ -82,7 +82,7 @@ export async function listSalesEvents(
           sales_event_product_for_sale.data_id = sales_event_history.data_id
       ) products_for_sale ON true
     ${filters.flatMap((filter, i) => (i === 0 ? [sql`WHERE`, filter] : [sql`AND`, filter]))}
-    ORDER BY sales_event.sales_event_number
+    ORDER BY sales_event.sales_event_number DESC
     LIMIT ${limit} OFFSET ${page * limit}
     `
 }

@@ -78,8 +78,8 @@ test('deleting a product', async ({page}) => {
   await expect(productListModel.search().showArchivedCheckbox().locator).toBeChecked()
 
   // Verify both products are present
-  expect(productListModel.list().rows().row(0).nameCell().locator).toHaveText('Product Alpha')
-  expect(productListModel.list().rows().row(1).nameCell().locator).toHaveText('Product Beta')
+  expect(productListModel.list().rows().row(0).nameCell().locator).toHaveText('Product Beta')
+  expect(productListModel.list().rows().row(1).nameCell().locator).toHaveText('Product Alpha')
 
   // Uncheck the "Show archived" checkbox
   await productListModel.search().showArchivedCheckbox().locator.click()

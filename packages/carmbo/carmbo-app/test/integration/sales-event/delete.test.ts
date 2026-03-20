@@ -81,8 +81,8 @@ test('deleting a sales event', async ({page}) => {
   await expect(salesEventListModel.search().showArchivedCheckbox().locator).toBeChecked()
 
   // Verify both sales events are present
-  expect(salesEventListModel.list().rows().row(0).nameCell().locator).toHaveText('Sale Alpha')
-  expect(salesEventListModel.list().rows().row(1).nameCell().locator).toHaveText('Sale Beta')
+  expect(salesEventListModel.list().rows().row(0).nameCell().locator).toHaveText('Sale Beta')
+  expect(salesEventListModel.list().rows().row(1).nameCell().locator).toHaveText('Sale Alpha')
 
   // Uncheck the "Show archived" checkbox
   await salesEventListModel.search().showArchivedCheckbox().locator.click()
