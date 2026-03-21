@@ -4,8 +4,11 @@ import {createSalesEventListPageModel} from '../../page-model/sales-events/sales
 import {createNewSalesEventPageModel} from '../../page-model/sales-events/new-sales-event-page.model.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
+import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
 
 const {url, sql, TEST_hooks} = setup(import.meta.url)
+
+test.use({viewport: {width: 1280, height: 1000}})
 
 test.beforeEach(async () => {
   await createProduct(
@@ -68,11 +71,15 @@ test('create sales event then update it', async ({page}) => {
   // Add products for sale
   await newForm.productsForSale().addButton().locator.click()
   await newForm.productsForSale().productInput(0).locator.fill('1')
-  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1')
+  await newForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue(/1/)
   await newForm.productsForSale().addButton().locator.click()
 
   await newForm.productsForSale().productInput(1).locator.fill('2')
-  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('2')
+  await newForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue(/2/)
   await newForm.notesInput().locator.fill('Initial sales event notes')
 
   // Save the sales event
@@ -108,11 +115,20 @@ test('create sales event then update it', async ({page}) => {
   await updateForm.toDateInput().locator.fill('2025-02-28')
   await updateForm.landingPageUrlInput().locator.fill('https://example.com/updated-sale')
   await updateForm.productsForSale().productInput(0).locator.fill('3')
+  await updateForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
   await updateForm.productsForSale().productInput(1).locator.fill('4')
+  await updateForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await updateForm.notesInput().locator.clear()
   await updateForm.notesInput().locator.fill('Updated sales event notes')
 
   // Save the sales event and verify data
   await updateForm.updateButton().locator.click()
+
+  await waitForAllJobsToBeDone(page, url())
+  await page.goto(new URL(`/sales-events/${salesEventNumber}`, url()).href)
+
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Sale')
   await expect(updateForm.fromDateInput().locator).toHaveValue('2025-02-01')
   await expect(updateForm.toDateInput().locator).toHaveValue('2025-02-28')
@@ -173,8 +189,13 @@ test('creation/update error shows alert', async ({page}) => {
   await newForm.landingPageUrlInput().locator.fill('https://example.com/test-event')
   await newForm.productsForSale().addButton().locator.click()
   await newForm.productsForSale().productInput(0).locator.fill('1')
+  await newForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
   await newForm.productsForSale().addButton().locator.click()
+  await page.waitForLoadState('networkidle')
   await newForm.productsForSale().productInput(1).locator.fill('2')
+  await newForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
 
   TEST_hooks['createSalesEvent'] = () => {
     throw new Error('ouch!')

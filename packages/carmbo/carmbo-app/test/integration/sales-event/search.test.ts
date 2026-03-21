@@ -3,6 +3,7 @@ import {createSalesEventListPageModel} from '../../page-model/sales-events/sales
 import {setup} from '../common/setup.ts'
 import {createSalesEvent, type NewSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
+import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import type {Sql} from 'postgres'
 
@@ -52,10 +53,24 @@ test('searching sales events', async ({page}) => {
   await expect(salesEventListModel.list().rows().row(1).idLink().locator).toHaveText(
     String(notableNumbers[0]),
   )
-  // Verify products column renders product names
+  // Verify products column renders product names as links
   await expect(salesEventListModel.list().rows().row(1).productsCell().locator).toContainText(
     'Intro Course',
   )
+  // Verify product links navigate to the correct product pages
+  await expect(
+    salesEventListModel.list().rows().row(1).productsCell().productLink(0).locator,
+  ).toHaveText('Intro Course')
+  await expect(
+    salesEventListModel.list().rows().row(1).productsCell().productLink(1).locator,
+  ).toHaveText('Advanced Pack')
+
+  const updateProductModel = createUpdateProductPageModel(page)
+
+  await salesEventListModel.list().rows().row(1).productsCell().productLink(0).locator.click()
+  await expect(updateProductModel.pageTitle().locator).toHaveText('Update Product 1')
+
+  await page.goBack()
 
   // --- Search by landing page URL: "gamma-special" → 1 hit ---
   await page.goto(new URL('/sales-events', url()).href)

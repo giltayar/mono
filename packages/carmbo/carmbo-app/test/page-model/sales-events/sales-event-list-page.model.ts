@@ -9,10 +9,15 @@ export function createSalesEventListPageModel(page: Page) {
         locator: rowLocator,
         row: (index: number, locator = rowLocator.nth(index)) => ({
           locator,
-          idLink: (linkLocator = locator.locator('td a')) => ({locator: linkLocator}),
+          idLink: (linkLocator = locator.locator('td').nth(0)) => ({locator: linkLocator}),
           nameCell: (cellLocator = locator.locator('td').nth(1)) => ({locator: cellLocator}),
           datesCell: (cellLocator = locator.locator('td').nth(2)) => ({locator: cellLocator}),
-          productsCell: (cellLocator = locator.locator('td').nth(3)) => ({locator: cellLocator}),
+          productsCell: (cellLocator = locator.locator('td').nth(3)) => ({
+            locator: cellLocator,
+            productLink: (i: number) => ({
+              locator: cellLocator.getByRole('link').nth(i),
+            }),
+          }),
         }),
       }),
     }),

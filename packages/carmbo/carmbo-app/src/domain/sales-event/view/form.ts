@@ -97,12 +97,28 @@ export function SalesEventCreateOrUpdateFormFields({
                     placeholder=" "
                     required
                     class="form-control pick-item-title"
+                    hx-post=""
+                    hx-target="closest .sales-events-view_form-fields"
+                    hx-swap="outerHTML"
+                    hx-trigger="change delay:1ms"
                   />
                   <label for="productsForSale-${i}">Product For Sale</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
                 html`<${AddButton} itemsName="productsForSale" i=${i} l=${l} />`}
+                ${productForSaleId
+                  ? html`<a
+                      class="align-self-center ms-1"
+                      href="/products/${productForSaleId}"
+                      title="View product"
+                      ><object
+                        type="image/svg+xml"
+                        class="feather feather-small pe-none"
+                        data=${`/src/${version}/layout/style/link.svg`}
+                      ></object>
+                    </a>`
+                  : ''}
               </div>
             `,
           )}

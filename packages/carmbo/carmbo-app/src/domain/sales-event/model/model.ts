@@ -26,12 +26,17 @@ export type SalesEvent = z.infer<typeof SalesEventSchema>
 export type NewSalesEvent = z.infer<typeof NewSalesEventSchema>
 export type SalesEventWithHistoryInfo = z.infer<typeof SalesEventWithHistoryInfoSchema>
 
+export interface ProductForSaleInGrid {
+  productNumber: number
+  name: string
+}
+
 export interface SalesEventForGrid {
   salesEventNumber: number
   name: string
   fromDate?: Date
   toDate?: Date
-  productsForSale: string[]
+  productsForSale: ProductForSaleInGrid[]
 }
 
 export interface SalesEventHistory {
@@ -73,7 +78,7 @@ export async function listSalesEvents(
       LEFT JOIN sales_event_data USING (data_id)
       LEFT JOIN LATERAL (
         SELECT
-          json_agg(product_data.name ORDER BY item_order) AS products_for_sale
+          json_agg(json_build_object('productNumber', product.product_number, 'name', product_data.name) ORDER BY item_order) AS products_for_sale
         FROM
           sales_event_product_for_sale
         JOIN product ON product.product_number = sales_event_product_for_sale.product_number

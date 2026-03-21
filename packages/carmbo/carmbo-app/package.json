@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "7.9.0",
+  "version": "7.10.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -94,7 +94,7 @@
     "@types/qs": "^6.15.0",
     "@types/vhtml": "^2.2.9",
     "@typescript/native-preview": "7.0.0-dev.20260320.1",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.4.0",

@@ -94,7 +94,14 @@ function SalesEventsView({
                 </td>
                 <td>${salesEvent.name}</td>
                 <td dir="rtl">${formatDateRange(salesEvent.fromDate, salesEvent.toDate)}</td>
-                <td>${salesEvent.productsForSale.join(', ')}</td>
+                <td>
+                  ${salesEvent.productsForSale.map(
+                    (p, i) =>
+                      html`${i > 0 ? ', ' : ''}<a href="/products/${p.productNumber}"
+                          >${p.name}</a
+                        >`,
+                  )}
+                </td>
               </tr>
             `,
           )}

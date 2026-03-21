@@ -1,2 +1,6 @@
 neverBuiltDependencies:
   - es5-ext
+
+updateConfig:
+  ignoreDependencies:
+    - postgres@3.4.8
