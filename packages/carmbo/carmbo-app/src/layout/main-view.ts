@@ -1,6 +1,7 @@
 import {BannerComponent, type Banner} from './banner.ts'
 import {html} from '../commons/html-templates.ts'
 import {version} from '../commons/version.ts'
+import i18next from 'i18next'
 
 export function MainLayout({
   title,
@@ -16,7 +17,7 @@ export function MainLayout({
   return (
     '<!DOCTYPE html>' +
     html`
-      <html lang="en">
+      <html lang="${i18next.language}" dir="${i18next.dir()}">
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />

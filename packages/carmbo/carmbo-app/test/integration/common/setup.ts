@@ -13,6 +13,7 @@ import {fileURLToPath} from 'node:url'
 import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
+import {initializei18next} from '../../../src/commons/i18next-utils.ts'
 
 export type SmooveContact = {
   id: number
@@ -139,6 +140,8 @@ export function setup(
     }))
 
     await migrate({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
+
+    await initializei18next('he')
 
     await app.listen()
     app.server.unref()

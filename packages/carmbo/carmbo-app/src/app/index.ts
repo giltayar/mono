@@ -7,6 +7,7 @@ import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-inte
 import {throw_} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
+import { initializei18next } from '../commons/i18next-utils.ts';
 
 export const EnvironmentVariablesSchema = z.object({
   DB_CONNECTION_STRING: z.string().optional(),
@@ -88,5 +89,7 @@ const {app, sql} = await makeApp({
 })
 
 await prepareDatabase(sql)
+
+await initializei18next('he')
 
 await app.listen({port: env.PORT, host: env.HOST})

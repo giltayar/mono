@@ -5,6 +5,7 @@ import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {prepareDatabase} from './prepare-database.ts'
 import {range} from '@giltayar/functional-commons'
+import {initializei18next} from '../commons/i18next-utils.ts'
 
 const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
 
@@ -66,6 +67,8 @@ const {app, sql} = await makeApp({
 })
 
 await prepareDatabase(sql)
+
+await initializei18next('he')
 
 await app.listen({port: 3000, host: 'localhost'})
 
