@@ -3,12 +3,14 @@ import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import {StudentCreateOrUpdateFormFields} from './form.ts'
 import {StudentHistoryList, historyOperationToText} from './history.ts'
 import {Tabs} from './layout.ts'
-import {t} from 'i18next'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'student')
 
 export function StudentCreateView({student}: {student: Student}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      ${t('studentForm.newStudent', {ns: 'student'})}
+      ${t('form.newStudent')}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
     <form

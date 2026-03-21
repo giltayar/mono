@@ -14,14 +14,19 @@ export function MainLayout({
   children: string[]
   activeNavItem: 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }) {
+  const dir = i18next.dir()
+
   return (
     '<!DOCTYPE html>' +
     html`
-      <html lang="${i18next.language}" dir="${i18next.dir()}">
+      <html lang="${i18next.language}" dir="${dir}">
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <link rel="stylesheet" href=${`/dist/${version}/bootstrap.min.css`} />
+          <link
+            rel="stylesheet"
+            href=${`/dist/${version}/bootstrap.${dir === 'rtl' ? 'rtl.' : ''}min.css`}
+          />
           <link rel="stylesheet" href=${`/src/${version}/layout/style/style.css`} />
           <script src=${`/dist/${version}/htmx.min.js`}></script>
           <script src=${`/dist/${version}/bootstrap.bundle.min.js`} defer></script>

@@ -141,7 +141,7 @@ export function setup(
 
     await migrate({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
 
-    await initializei18next('he')
+    await initializei18next('en')
 
     await app.listen()
     app.server.unref()

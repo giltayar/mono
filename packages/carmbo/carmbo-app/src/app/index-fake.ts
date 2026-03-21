@@ -68,7 +68,7 @@ const {app, sql} = await makeApp({
 
 await prepareDatabase(sql)
 
-await initializei18next('he')
+await initializei18next(process.env.LANG)
 
 await app.listen({port: 3000, host: 'localhost'})
 
