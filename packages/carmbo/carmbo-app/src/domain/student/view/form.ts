@@ -2,6 +2,9 @@ import {html} from '../../../commons/html-templates.ts'
 import type {Student} from '../model.ts'
 import type {OngoingStudent} from './model.ts'
 import {version} from '../../../commons/version.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'student')
 
 export function StudentCreateOrUpdateFormFields({
   student,
@@ -15,7 +18,7 @@ export function StudentCreateOrUpdateFormFields({
   return html`
     <div class="students-view_form-fields card">
       <div class="card-body">
-        <fieldset aria-label="Names" class="mt-3">
+        <fieldset aria-label=${t('form.names')} class="mt-3">
           ${student.names?.map(
             (name, i, l) => html`
               <div class="students-view_item input-group">
@@ -32,7 +35,7 @@ export function StudentCreateOrUpdateFormFields({
                     data-1p-ignore
                     readonly=${isReadOnly}
                   />
-                  <label for="firstName-${i}">First Name</label>
+                  <label for="firstName-${i}">${t('form.firstName')}</label>
                 </div>
 
                 <div class="form-floating">
@@ -48,7 +51,7 @@ export function StudentCreateOrUpdateFormFields({
                     data-1p-ignore
                     readonly=${isReadOnly}
                   />
-                  <label for="lastName-${i}">Last Name</label>
+                  <label for="lastName-${i}">${t('form.lastName')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' && html`<${AddButton} itemsName="names" i=${i} l=${l} />`}
@@ -56,10 +59,10 @@ export function StudentCreateOrUpdateFormFields({
             `,
           )}
           ${operation === 'write' &&
-          html`<${AddButton} itemsName="names" humanName="Names" l=${student.names} />`}
+          html`<${AddButton} itemsName="names" humanName=${t('form.names')} l=${student.names} />`}
         </fieldset>
 
-        <fieldset aria-label="Emails" class="mt-3">
+        <fieldset aria-label=${t('form.emails')} class="mt-3">
           ${student.emails?.map(
             (email, i, l) => html`
               <div class="students-view_item input-group">
@@ -76,7 +79,7 @@ export function StudentCreateOrUpdateFormFields({
                     data-1p-ignore
                     readonly=${isReadOnly}
                   />
-                  <label for="email-${i}">Email</label>
+                  <label for="email-${i}">${t('form.email')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' && html`<${AddButton} itemsName="emails" i=${i} l=${l} />`}
@@ -84,10 +87,14 @@ export function StudentCreateOrUpdateFormFields({
             `,
           )}
           ${operation === 'write' &&
-          html`<${AddButton} itemsName="emails" humanName="Emails" l=${student.emails} />`}
+          html`<${AddButton}
+            itemsName="emails"
+            humanName=${t('form.emails')}
+            l=${student.emails}
+          />`}
         </fieldset>
 
-        <fieldset aria-label="Phones" class="mt-3">
+        <fieldset aria-label=${t('form.phones')} class="mt-3">
           ${student.phones?.map(
             (phone, i, l) => html`
               <div class="students-view_item input-group">
@@ -105,7 +112,7 @@ export function StudentCreateOrUpdateFormFields({
                     data-1p-ignore
                     readonly=${isReadOnly}
                   />
-                  <label for="phone-${i}">Phone</label>
+                  <label for="phone-${i}">${t('form.phone')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' && html`<${AddButton} itemsName="phones" i=${i} l=${l} />`}
@@ -113,10 +120,14 @@ export function StudentCreateOrUpdateFormFields({
             `,
           )}
           ${operation === 'write' &&
-          html`<${AddButton} itemsName="phones" humanName="Phones" l=${student.phones} />`}
+          html`<${AddButton}
+            itemsName="phones"
+            humanName=${t('form.phones')}
+            l=${student.phones}
+          />`}
         </fieldset>
 
-        <fieldset aria-label="Facebook Names" class="mt-3">
+        <fieldset aria-label=${t('form.facebookNames')} class="mt-3">
           ${student.facebookNames?.map(
             (fb, i, l) => html`
               <div class="students-view_item input-group">
@@ -133,7 +144,7 @@ export function StudentCreateOrUpdateFormFields({
                     data-1p-ignore
                     readonly=${isReadOnly}
                   />
-                  <label for="facebookName-${i}">Facebook Name</label>
+                  <label for="facebookName-${i}">${t('form.facebookName')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -144,7 +155,7 @@ export function StudentCreateOrUpdateFormFields({
           ${operation === 'write' &&
           html`<${AddButton}
             itemsName="facebookNames"
-            humanName="Facebook Names"
+            humanName=${t('form.facebookNames')}
             l=${student.facebookNames}
           />`}
         </fieldset>
@@ -159,7 +170,7 @@ export function StudentCreateOrUpdateFormFields({
             value=${student.birthday ? student.birthday.toISOString().split('T')[0] : ''}
             readonly=${isReadOnly}
           />
-          <label for="birthday">Birthday</label>
+          <label for="birthday">${t('form.birthday')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -173,7 +184,7 @@ export function StudentCreateOrUpdateFormFields({
           >
 ${student.notes ?? ''}</textarea
           >
-          <label for="notes">Notes</label>
+          <label for="notes">${t('form.notes')}</label>
         </div>
 
         ${'cardcomCustomerIds' in student &&
@@ -189,7 +200,7 @@ ${student.notes ?? ''}</textarea
                   value=${student.cardcomCustomerIds.join(', ')}
                   readonly
                 />
-                <label for="cardcomCustomerIds">Cardcom Customer IDs</label>
+                <label for="cardcomCustomerIds">${t('form.cardcomCustomerIds')}</label>
               </div>
             `
           : ''}

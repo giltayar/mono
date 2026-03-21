@@ -1,5 +1,61 @@
 {
   "form": {
-    "newStudent": "New Student"
+    "newStudent": "New Student",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "facebookName": "Facebook Name",
+    "birthday": "Birthday",
+    "notes": "Notes",
+    "cardcomCustomerIds": "Cardcom Customer IDs",
+    "names": "Names",
+    "emails": "Emails",
+    "phones": "Phones",
+    "facebookNames": "Facebook Names"
+  },
+  "createUpdate": {
+    "updateStudent": "Update Student",
+    "archived": "(archived)",
+    "discard": "Discard",
+    "restore": "Restore",
+    "archive": "Archive",
+    "update": "Update",
+    "create": "Create",
+    "academyMagicLink": "Academy Magic Link",
+    "fetchLink": "Fetch link",
+    "viewStudent": "View Student"
+  },
+  "history": {
+    "history": "History",
+    "created": "created",
+    "updated": "updated",
+    "archived": "archived",
+    "restored": "restored"
+  },
+  "layout": {
+    "details": "Details",
+    "sales": "Sales"
+  },
+  "list": {
+    "students": "Students",
+    "showArchived": "Show archived",
+    "search": "Search:",
+    "searchPlaceholder": "Search",
+    "id": "ID",
+    "names": "Names",
+    "emails": "Emails",
+    "phones": "Phones",
+    "newStudent": "new student"
+  },
+  "studentSales": {
+    "studentSales": "Student {{studentNumber}} Sales",
+    "saleNumber": "Sale #",
+    "salesEvent": "Sales Event",
+    "products": "Products",
+    "date": "Date"
+  },
+  "view": {
+    "noMagicLinksFound": "No magic links found for this student."
   }
 }

@@ -7,6 +7,9 @@ import {StudentCreateOrUpdateFormFields} from './form.ts'
 import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
 import type {Banner} from '../../../layout/banner.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'student')
 
 export function renderStudentsCreatePage(
   student: NewStudent | OngoingStudent | undefined,
@@ -23,7 +26,7 @@ export function renderStudentsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Students" activeNavItem="students" banner=${banner}>
+    <${MainLayout} title=${t('list.students')} activeNavItem="students" banner=${banner}>
       <${Layout}>
         <${StudentCreateView} student=${finalStudent} />
       </${Layout}>
@@ -37,7 +40,7 @@ export function renderStudentUpdatePage(
   {banner}: {banner?: Banner | undefined} = {},
 ) {
   return html`
-    <${MainLayout} title="Students" activeNavItem="students" banner=${banner}>
+    <${MainLayout} title=${t('list.students')} activeNavItem="students" banner=${banner}>
       <${Layout}>
         <${StudentUpdateView} student=${student} history=${history} />
       </${Layout}>
@@ -50,7 +53,7 @@ export function renderStudentViewInHistoryPage(
   history: StudentHistory[],
 ) {
   return html`
-    <${MainLayout} title="Students" activeNavItem="students">
+    <${MainLayout} title=${t('list.students')} activeNavItem="students">
       <${Layout}>
           <${StudentHistoryView} student=${student} history=${history} operationId=${student.id} />
       </${Layout}>
@@ -79,7 +82,7 @@ export function renderMagicLinks(magicLinks: {email: string; link: string}[]) {
       >
     `
   } else if (magicLinks.length === 0) {
-    return html`<p>No magic links found for this student.</p>`
+    return html`<p>${t('view.noMagicLinksFound')}</p>`
   } else {
     return html`
       <ul>

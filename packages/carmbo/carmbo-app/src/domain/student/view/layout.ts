@@ -1,5 +1,8 @@
 import {html} from '../../../commons/html-templates.ts'
 import {version} from '../../../commons/version.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'student')
 
 export function Layout({children}: {children: string | string[]}) {
   return html`
@@ -23,7 +26,7 @@ export function Tabs({
           class="nav-link"
           aria-current=${activeTab === 'details' ? 'page' : undefined}
           href=${`/students/${studentNumber}`}
-          >Details</a
+          >${t('layout.details')}</a
         >
       </li>
       <li class="nav-item">
@@ -31,7 +34,7 @@ export function Tabs({
           class="nav-link"
           aria-current=${activeTab === 'sales' ? 'page' : undefined}
           href=${`/students/${studentNumber}/sales`}
-          >Sales</a
+          >${t('layout.sales')}</a
         >
       </li>
     </ul>

@@ -1,5 +1,61 @@
 {
   "form": {
+    "newStudent": "תלמידה חדשה",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה",
+    "email": "אימייל",
+    "phone": "טלפון",
+    "facebookName": "שם בפייסבוק",
+    "birthday": "תאריך לידה",
+    "notes": "הערות",
+    "cardcomCustomerIds": "מספרי לקוח קארדקום",
+    "names": "שמות",
+    "emails": "אימיילים",
+    "phones": "טלפונים",
+    "facebookNames": "שמות בפייסבוק"
+  },
+  "createUpdate": {
+    "updateStudent": "עדכון תלמידה",
+    "archived": "(בארכיון)",
+    "discard": "ביטול",
+    "restore": "שחזור",
+    "archive": "העברה לארכיון",
+    "update": "עדכון",
+    "create": "יצירה",
+    "academyMagicLink": "קישור קסם לאקדמיה",
+    "fetchLink": "הבאת קישור",
+    "viewStudent": "צפייה בתלמידה"
+  },
+  "history": {
+    "history": "היסטוריה",
+    "created": "נוצרה",
+    "updated": "עודכנה",
+    "archived": "הועברה לארכיון",
+    "restored": "שוחזרה"
+  },
+  "layout": {
+    "details": "פרטים",
+    "sales": "מכירות"
+  },
+  "list": {
+    "students": "תלמידות",
+    "showArchived": "הצגת ארכיון",
+    "search": "חיפוש:",
+    "searchPlaceholder": "חיפוש",
+    "id": "מספר",
+    "names": "שמות",
+    "emails": "אימיילים",
+    "phones": "טלפונים",
     "newStudent": "תלמידה חדשה"
+  },
+  "studentSales": {
+    "studentSales": "מכירות תלמידה {{studentNumber}}",
+    "saleNumber": "מכירה #",
+    "salesEvent": "אירוע מכירה",
+    "products": "מוצרים",
+    "date": "תאריך"
+  },
+  "view": {
+    "noMagicLinksFound": "לא נמצאו קישורי קסם עבור תלמידה זו."
   }
 }

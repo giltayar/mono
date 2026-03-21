@@ -2,10 +2,13 @@ import {html} from '../../../commons/html-templates.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import type {StudentSaleForGrid} from '../model.ts'
 import {Layout, Tabs} from './layout.ts'
+import {getFixedT, default as i18next} from 'i18next'
+
+const t = getFixedT(null, 'student')
 
 export function renderStudentSalesPage(studentNumber: number, sales: StudentSaleForGrid[]) {
   return html`
-    <${MainLayout} title="Students" activeNavItem="students">
+    <${MainLayout} title=${t('list.students')} activeNavItem="students">
       <${Layout}>
         <${StudentSalesView} studentNumber=${studentNumber} sales=${sales} />
       </${Layout}>
@@ -21,15 +24,15 @@ function StudentSalesView({
   sales: StudentSaleForGrid[]
 }) {
   return html`
-    <h2 class="border-bottom col-md-6 mt-3">Student ${studentNumber} Sales</h2>
+    <h2 class="border-bottom col-md-6 mt-3">${t('studentSales.studentSales', {studentNumber})}</h2>
     <${Tabs} studentNumber=${studentNumber} activeTab="sales" />
     <table class="table mt-3 col-md-6">
       <thead>
         <tr>
-          <th>Sale #</th>
-          <th>Sales Event</th>
-          <th>Products</th>
-          <th>Date</th>
+          <th>${t('studentSales.saleNumber')}</th>
+          <th>${t('studentSales.salesEvent')}</th>
+          <th>${t('studentSales.products')}</th>
+          <th>${t('studentSales.date')}</th>
         </tr>
       </thead>
       <tbody>
@@ -62,7 +65,7 @@ function StudentSalesView({
 }
 
 function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-IL', {
+  return new Intl.DateTimeFormat(`${i18next.language}-IL`, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -70,7 +73,7 @@ function formatDate(date: Date): string {
 }
 
 function formatTime(date: Date): string {
-  return new Intl.DateTimeFormat('en-IL', {
+  return new Intl.DateTimeFormat(`${i18next.language}-IL`, {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)

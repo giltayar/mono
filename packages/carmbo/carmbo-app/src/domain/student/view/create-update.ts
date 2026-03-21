@@ -21,8 +21,12 @@ export function StudentCreateView({student}: {student: Student}) {
     >
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
-          <button class="btn btn-primary" type="Submit" value="save">Create</button>
+          <button class="btn btn-secondary discard" type="Submit" value="discard">
+            ${t('createUpdate.discard')}
+          </button>
+          <button class="btn btn-primary" type="Submit" value="save">
+            ${t('createUpdate.create')}
+          </button>
         </section>
       </div>
       <div class="mt-3">
@@ -41,9 +45,9 @@ export function StudentUpdateView({
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      Update Student ${student.studentNumber}
+      ${t('createUpdate.updateStudent')} ${student.studentNumber}
       ${student.historyOperation === 'delete'
-        ? html` <small class="text-body-secondary">(archived)</small>`
+        ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
         : ''}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
@@ -71,12 +75,12 @@ export function StudentUpdateView({
                   hx-delete=""
                   hx-params="delete-operation"
                 >
-                  Restore
+                  ${t('createUpdate.restore')}
                 </button>
               `
             : html`
                 <button class="btn btn-secondary discard" type="Submit" value="discard">
-                  Discard
+                  ${t('createUpdate.discard')}
                 </button>
                 <button
                   class="btn btn-danger"
@@ -85,9 +89,11 @@ export function StudentUpdateView({
                   hx-delete=""
                   hx-params="delete-operation"
                 >
-                  Archive
+                  ${t('createUpdate.archive')}
                 </button>
-                <button class="btn btn-primary" type="Submit" value="save">Update</button>
+                <button class="btn btn-primary" type="Submit" value="save">
+                  ${t('createUpdate.update')}
+                </button>
               `}
         </section>
       </div>
@@ -103,14 +109,14 @@ export function StudentUpdateView({
       class="form-group col-md-6 mt-3"
       aria-labelledby="magic-link-label"
     >
-      <h5 id="magic-link-label" class="mb-3">Academy Magic Link</h5>
+      <h5 id="magic-link-label" class="mb-3">${t('createUpdate.academyMagicLink')}</h5>
       <button
         hx-get="/students/${student.studentNumber}/academy-magic-link"
         hx-swap="outerHTML"
         hx-target="this"
         hx-indicator="#magic-link-section .operation-spinner"
       >
-        Fetch link
+        ${t('createUpdate.fetchLink')}
         <div class="operation-spinner spinner-border spinner-border-sm" role="status"></div>
       </button>
     </section>
@@ -130,7 +136,7 @@ export function StudentHistoryView({
 
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      View Student ${student.studentNumber}<> </>
+      ${t('createUpdate.viewStudent')} ${student.studentNumber}<> </>
       <small class="text-body-secondary"
         >(${historyOperationToText(currentHistory?.operation)})</small
       >

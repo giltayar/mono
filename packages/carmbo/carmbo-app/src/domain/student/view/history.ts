@@ -1,6 +1,9 @@
 import {html} from '../../../commons/html-templates.ts'
 import type {StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import type {HistoryOperation} from '../../../commons/operation-type.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'student')
 
 export function StudentHistoryList({
   student,
@@ -10,7 +13,7 @@ export function StudentHistoryList({
   history: StudentHistory[]
 }) {
   return html`
-    <h5 class="mt-3 col-md-6 border-bottom">History</h5>
+    <h5 class="mt-3 col-md-6 border-bottom">${t('history.history')}</h5>
     <ul
       aria-label="Student History"
       class="list-group mt-3 pb-3 col-md-6"
@@ -40,13 +43,13 @@ export function StudentHistoryList({
 export function historyOperationToText(operation: HistoryOperation | undefined): string {
   switch (operation) {
     case 'create':
-      return 'created'
+      return t('history.created')
     case 'update':
-      return 'updated'
+      return t('history.updated')
     case 'delete':
-      return 'archived'
+      return t('history.archived')
     case 'restore':
-      return 'restored'
+      return t('history.restored')
     default:
       return operation + '???'
   }
