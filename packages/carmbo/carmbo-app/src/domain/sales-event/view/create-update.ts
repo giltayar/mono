@@ -3,11 +3,14 @@ import {html} from '../../../commons/html-templates.ts'
 import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model/model.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'
 import {SalesEventHistoryList, historyOperationToText} from './history.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'salesEvent')
 
 export function SalesEventCreateView({salesEvent}: {salesEvent: SalesEvent}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      New Sales Event
+      ${t('createUpdate.newSalesEvent')}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
     <form
@@ -18,8 +21,12 @@ export function SalesEventCreateView({salesEvent}: {salesEvent: SalesEvent}) {
     >
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
-          <button class="btn btn-primary" type="Submit" value="save">Create</button>
+          <button class="btn btn-secondary discard" type="Submit" value="discard">
+            ${t('createUpdate.discard')}
+          </button>
+          <button class="btn btn-primary" type="Submit" value="save">
+            ${t('createUpdate.create')}
+          </button>
         </section>
       </div>
       <div class="mt-3">
@@ -40,9 +47,9 @@ export function SalesEventUpdateView({
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      Update Sales Event ${salesEvent.salesEventNumber}
+      ${t('createUpdate.updateSalesEvent')} ${salesEvent.salesEventNumber}
       ${salesEvent.historyOperation === 'delete'
-        ? html` <small class="text-body-secondary">(archived)</small>`
+        ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
         : ''}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
@@ -69,12 +76,12 @@ export function SalesEventUpdateView({
                   hx-delete=""
                   hx-params="delete-operation"
                 >
-                  Restore
+                  ${t('createUpdate.restore')}
                 </button>
               `
             : html`
                 <button class="btn btn-secondary discard" type="Submit" value="discard">
-                  Discard
+                  ${t('createUpdate.discard')}
                 </button>
                 <button
                   class="btn btn-danger"
@@ -83,9 +90,11 @@ export function SalesEventUpdateView({
                   hx-delete=""
                   hx-params="delete-operation"
                 >
-                  Archive
+                  ${t('createUpdate.archive')}
                 </button>
-                <button class="btn btn-primary" type="Submit" value="save">Update</button>
+                <button class="btn btn-primary" type="Submit" value="save">
+                  ${t('createUpdate.update')}
+                </button>
               `}
         </section>
       </div>
@@ -97,9 +106,9 @@ export function SalesEventUpdateView({
       </div>
     </form>
     <div class="form-group col-md-6 mt-3">
-      <h5 class="mb-3">Cardcom Information</h5>
+      <h5 class="mb-3">${t('createUpdate.cardcomInformation')}</h5>
       <label style="width: 100%">
-        CardCom Webhook URL
+        ${t('createUpdate.cardcomWebhookUrl')}
         <input
           class="form-control"
           type="url"
@@ -112,9 +121,9 @@ export function SalesEventUpdateView({
       </label>
     </div>
     <div class="form-group col-md-6 mt-3">
-      <h5 class="mb-3">Smoove Information</h5>
+      <h5 class="mb-3">${t('createUpdate.smooveInformation')}</h5>
       <label style="width: 100%">
-        Smoove Webhook URL
+        ${t('createUpdate.smooveWebhookUrl')}
         <input
           class="form-control"
           type="url"
@@ -137,7 +146,7 @@ export function SalesEventUpdateView({
         hx-target="#import-smoove-dialog-container"
         hx-swap="innerHTML"
       >
-        Import from Smoove
+        ${t('createUpdate.importFromSmoove')}
       </button>
       <div id="import-smoove-dialog-container"></div>
     </div>
@@ -156,7 +165,7 @@ export function SalesEventHistoryView({
 
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      View Sales Event ${salesEvent.salesEventNumber}<> </>
+      ${t('createUpdate.viewSalesEvent')} ${salesEvent.salesEventNumber}<> </>
       <small class="text-body-secondary"
         >(${historyOperationToText(currentHistory?.operation)})</small
       >

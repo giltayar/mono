@@ -3,6 +3,9 @@ import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {SalesEventForGrid} from '../model/model.ts'
 import {version} from '../../../commons/version.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'salesEvent')
 
 export function renderSalesEventsPage(
   flash: string | undefined,
@@ -10,7 +13,7 @@ export function renderSalesEventsPage(
   {withArchived, query, page}: {withArchived: boolean; query: string; page: number},
 ) {
   return html`
-    <${MainLayout} title="Sales Events" flash=${flash} activeNavItem="sales-events">
+    <${MainLayout} title=${t('list.salesEvents')} flash=${flash} activeNavItem="sales-events">
       <${Layout}>
         <${SalesEventsView} salesEvents=${salesEvents} withArchived=${withArchived} query=${query} page=${page} />
       </${Layout}>
@@ -32,7 +35,7 @@ function SalesEventsView({
   return html`
     <div class="mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
-        <h2>Sales Events</h2>
+        <h2>${t('list.salesEvents')}</h2>
         <form
           class="mb-1 ms-auto"
           action="/sales-events"
@@ -47,15 +50,15 @@ function SalesEventsView({
                 name="with-archived"
                 checked=${withArchived}
               />
-              Show archived</label
+              ${t('list.showArchived')}</label
             >
-            <label class="form-input-label col-auto" for="query">Search:</label>
+            <label class="form-input-label col-auto" for="query">${t('list.search')}</label>
             <input
               type="search"
               name="q"
               id="query"
               class="form-control form-control-sm col"
-              placeholder="Search"
+              placeholder=${t('list.searchPlaceholder')}
               value=${query}
             />
           </fieldset>
@@ -64,10 +67,10 @@ function SalesEventsView({
       <table class="table mt-3">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Dates</th>
-            <th>Products for Sale</th>
+            <th>${t('list.id')}</th>
+            <th>${t('list.name')}</th>
+            <th>${t('list.dates')}</th>
+            <th>${t('list.productsForSale')}</th>
           </tr>
         </thead>
         <tbody>
@@ -112,7 +115,7 @@ function SalesEventsView({
           role="button"
           class="btn float-end"
           href="/sales-events/new"
-          aria-label="new sales event"
+          aria-label=${t('list.newSalesEvent')}
         >
           <object
             type="image/svg+xml"

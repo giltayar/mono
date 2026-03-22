@@ -102,7 +102,12 @@ function ProductsView({
         </tbody>
       </table>
       <section class="add-new">
-        <a role="button" class="btn float-end" href="/products/new" aria-label=${t('list.newProduct')}>
+        <a
+          role="button"
+          class="btn float-end"
+          href="/products/new"
+          aria-label=${t('list.newProduct')}
+        >
           <object
             type="image/svg+xml"
             class="feather feather-large"

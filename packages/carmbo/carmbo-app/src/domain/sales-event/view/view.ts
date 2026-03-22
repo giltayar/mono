@@ -12,6 +12,9 @@ import {SalesEventCreateOrUpdateFormFields} from './form.ts'
 import {SalesEventCreateView, SalesEventHistoryView, SalesEventUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
 import type {Banner} from '../../../layout/banner.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'salesEvent')
 
 export function renderSalesEventsCreatePage(
   salesEvent: NewSalesEvent | OngoingSalesEvent | undefined,
@@ -28,7 +31,7 @@ export function renderSalesEventsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Sales Events" activeNavItem="sales-events" banner=${banner}>
+    <${MainLayout} title=${t('list.salesEvents')} activeNavItem="sales-events" banner=${banner}>
       <${Layout}>
         <${SalesEventCreateView} salesEvent=${finalSalesEvent} />
       </${Layout}>
@@ -43,7 +46,7 @@ export function renderSalesEventUpdatePage(
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ) {
   return html`
-    <${MainLayout} title="Sales Events" activeNavItem="sales-events" banner=${banner}>
+    <${MainLayout} title=${t('list.salesEvents')} activeNavItem="sales-events" banner=${banner}>
       <${Layout}>
         <${SalesEventUpdateView}
           salesEvent=${salesEvent}
@@ -60,7 +63,7 @@ export function renderSalesEventViewInHistoryPage(
   history: SalesEventHistory[],
 ) {
   return html`
-    <${MainLayout} title="Sales Events" activeNavItem="sales-events">
+    <${MainLayout} title=${t('list.salesEvents')} activeNavItem="sales-events">
       <${Layout}>
         <${SalesEventHistoryView}
           salesEvent=${salesEvent}

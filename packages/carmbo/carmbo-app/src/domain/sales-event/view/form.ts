@@ -4,6 +4,9 @@ import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {SalesEvent} from '../model/model.ts'
 import type {OngoingSalesEvent} from './model.ts'
 import {version} from '../../../commons/version.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'salesEvent')
 
 export function SalesEventCreateOrUpdateFormFields({
   salesEvent,
@@ -31,7 +34,7 @@ export function SalesEventCreateOrUpdateFormFields({
             data-1p-ignore
             readonly=${isReadOnly}
           />
-          <label for="name">Sales Event Name</label>
+          <label for="name">${t('form.salesEventName')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -44,7 +47,7 @@ export function SalesEventCreateOrUpdateFormFields({
             value=${salesEvent.fromDate ? formatDateForInput(salesEvent.fromDate) : ''}
             readonly=${isReadOnly}
           />
-          <label for="fromDate">From Date</label>
+          <label for="fromDate">${t('form.fromDate')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -57,7 +60,7 @@ export function SalesEventCreateOrUpdateFormFields({
             value=${salesEvent.toDate ? formatDateForInput(salesEvent.toDate) : ''}
             readonly=${isReadOnly}
           />
-          <label for="toDate">To Date</label>
+          <label for="toDate">${t('form.toDate')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -70,10 +73,10 @@ export function SalesEventCreateOrUpdateFormFields({
             value=${salesEvent.landingPageUrl ?? ''}
             readonly=${isReadOnly}
           />
-          <label for="landingPageUrl">Landing Page URL</label>
+          <label for="landingPageUrl">${t('form.landingPageUrl')}</label>
         </div>
 
-        <fieldset aria-label="Products for Sale" class="mt-3">
+        <fieldset aria-label=${t('form.productsForSale')} class="mt-3">
           ${salesEvent.productsForSale?.map(
             (productForSaleId, i, l) => html`
               <div class="sales-events-view_item input-group">
@@ -102,7 +105,7 @@ export function SalesEventCreateOrUpdateFormFields({
                     hx-swap="outerHTML"
                     hx-trigger="change delay:1ms"
                   />
-                  <label for="productsForSale-${i}">Product For Sale</label>
+                  <label for="productsForSale-${i}">${t('form.productForSale')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -125,7 +128,7 @@ export function SalesEventCreateOrUpdateFormFields({
           ${operation === 'write' &&
           html`<${AddButton}
             itemsName="productsForSale"
-            humanName="Products for Sale"
+            humanName=${t('form.productsForSale')}
             l=${salesEvent.productsForSale}
           />`}
         </fieldset>
@@ -141,7 +144,7 @@ export function SalesEventCreateOrUpdateFormFields({
           >
 ${salesEvent.notes ?? ''}</textarea
           >
-          <label for="notes">Notes</label>
+          <label for="notes">${t('form.notes')}</label>
         </div>
       </div>
     </div>

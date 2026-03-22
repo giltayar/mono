@@ -105,7 +105,9 @@ function NavBar({
               >
             </li>
             <li class="nav-item" role="menuitem">
-              <a class="nav-link ${activeNavItem === 'jobs' ? 'active' : ''}" href="/jobs">${t('nav.jobs')}</a>
+              <a class="nav-link ${activeNavItem === 'jobs' ? 'active' : ''}" href="/jobs"
+                >${t('nav.jobs')}</a
+              >
             </li>
           </ul>
         </div>

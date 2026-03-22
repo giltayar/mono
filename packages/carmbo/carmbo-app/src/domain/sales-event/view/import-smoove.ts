@@ -1,6 +1,9 @@
 import {html} from '../../../commons/html-templates.ts'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/types'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'salesEvent')
 
 export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: SmooveList[]) {
   return html`
@@ -12,14 +15,13 @@ export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: 
         hx-swap="innerHTML"
         hx-indicator="#import-smoove-spinner"
       >
-        <h4 class="mb-3">Import from Smoove List</h4>
-        <p class="text-muted">
-          Select a Smoove list to import contacts from. Each contact will be created as a sale with
-          zero revenue.
-        </p>
+        <h4 class="mb-3">${t('importSmoove.importFromSmooveList')}</h4>
+        <p class="text-muted">${t('importSmoove.importDescription')}</p>
 
         <div class="mb-3">
-          <label for="import-smooveListId" class="form-label">Smoove List</label>
+          <label for="import-smooveListId" class="form-label"
+            >${t('importSmoove.smooveList')}</label
+          >
           <input
             name="smooveListId"
             id="import-smooveListId_value"
@@ -30,7 +32,7 @@ export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: 
           <input
             type="text"
             list="import-smoove-lists-list"
-            placeholder="Select a Smoove list..."
+            placeholder=${t('importSmoove.selectSmooveList')}
             class="form-control pick-item-title"
             id="import-smooveListId"
             spellcheck="false"
@@ -49,14 +51,14 @@ export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: 
 
         <div class="d-flex gap-2 justify-content-end">
           <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">
-            Cancel
+            ${t('importSmoove.cancel')}
           </button>
           <button type="submit" class="btn btn-primary" id="import-smoove-start-btn">
             <span
               id="import-smoove-spinner"
               class="spinner-border spinner-border-sm htmx-indicator me-1"
             ></span>
-            Start Import
+            ${t('importSmoove.startImport')}
           </button>
         </div>
       </form>
@@ -76,9 +78,9 @@ export type ImportResult = {
 export function renderImportJob(jobId: number) {
   return html`
     <div class="mt-3">
-      <h5>Import Job Submitted</h5>
+      <h5>${t('importSmoove.importJobSubmitted')}</h5>
       <div class="alert alert-info">
-        <p class="mb-1"><a href="/jobs/${jobId}">Track import job</a></p>
+        <p class="mb-1"><a href="/jobs/${jobId}">${t('importSmoove.trackImportJob')}</a></p>
       </div>
     </div>
   `

@@ -1,0 +1,55 @@
+{
+  "form": {
+    "salesEventName": "שם אירוע מכירה",
+    "fromDate": "מתאריך",
+    "toDate": "עד תאריך",
+    "landingPageUrl": "כתובת דף נחיתה",
+    "productForSale": "מוצר למכירה",
+    "productsForSale": "מוצרים למכירה",
+    "notes": "הערות"
+  },
+  "createUpdate": {
+    "newSalesEvent": "אירוע מכירה חדש",
+    "updateSalesEvent": "עדכון אירוע מכירה",
+    "viewSalesEvent": "צפייה באירוע מכירה",
+    "archived": "(בארכיון)",
+    "discard": "ביטול",
+    "restore": "שחזור",
+    "archive": "העברה לארכיון",
+    "update": "עדכון",
+    "create": "יצירה",
+    "cardcomInformation": "מידע קארדקום",
+    "cardcomWebhookUrl": "כתובת Webhook של קארדקום",
+    "smooveInformation": "מידע סמוב",
+    "smooveWebhookUrl": "כתובת Webhook של סמוב",
+    "importFromSmoove": "ייבוא מסמוב"
+  },
+  "history": {
+    "history": "היסטוריה",
+    "created": "נוצר",
+    "updated": "עודכן",
+    "archived": "הועבר לארכיון",
+    "restored": "שוחזר"
+  },
+  "list": {
+    "salesEvents": "אירועי מכירה",
+    "showArchived": "הצגת ארכיון",
+    "search": "חיפוש:",
+    "searchPlaceholder": "חיפוש",
+    "id": "מספר",
+    "name": "שם",
+    "dates": "תאריכים",
+    "productsForSale": "מוצרים למכירה",
+    "newSalesEvent": "אירוע מכירה חדש"
+  },
+  "importSmoove": {
+    "importFromSmooveList": "ייבוא מרשימת סמוב",
+    "importDescription": "בחרי רשימת סמוב לייבוא אנשי קשר. כל איש קשר ייווצר כמכירה ללא הכנסה.",
+    "smooveList": "רשימת סמוב",
+    "selectSmooveList": "בחרי רשימת סמוב...",
+    "cancel": "ביטול",
+    "startImport": "התחל ייבוא",
+    "importJobSubmitted": "משימת ייבוא נשלחה",
+    "trackImportJob": "מעקב אחר משימת ייבוא"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "form": {
+    "salesEventName": "Sales Event Name",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "landingPageUrl": "Landing Page URL",
+    "productForSale": "Product For Sale",
+    "productsForSale": "Products for Sale",
+    "notes": "Notes"
+  },
+  "createUpdate": {
+    "newSalesEvent": "New Sales Event",
+    "updateSalesEvent": "Update Sales Event",
+    "viewSalesEvent": "View Sales Event",
+    "archived": "(archived)",
+    "discard": "Discard",
+    "restore": "Restore",
+    "archive": "Archive",
+    "update": "Update",
+    "create": "Create",
+    "cardcomInformation": "Cardcom Information",
+    "cardcomWebhookUrl": "CardCom Webhook URL",
+    "smooveInformation": "Smoove Information",
+    "smooveWebhookUrl": "Smoove Webhook URL",
+    "importFromSmoove": "Import from Smoove"
+  },
+  "history": {
+    "history": "History",
+    "created": "created",
+    "updated": "updated",
+    "archived": "archived",
+    "restored": "restored"
+  },
+  "list": {
+    "salesEvents": "Sales Events",
+    "showArchived": "Show archived",
+    "search": "Search:",
+    "searchPlaceholder": "Search",
+    "id": "ID",
+    "name": "Name",
+    "dates": "Dates",
+    "productsForSale": "Products for Sale",
+    "newSalesEvent": "new sales event"
+  },
+  "importSmoove": {
+    "importFromSmooveList": "Import from Smoove List",
+    "importDescription": "Select a Smoove list to import contacts from. Each contact will be created as a sale with zero revenue.",
+    "smooveList": "Smoove List",
+    "selectSmooveList": "Select a Smoove list...",
+    "cancel": "Cancel",
+    "startImport": "Start Import",
+    "importJobSubmitted": "Import Job Submitted",
+    "trackImportJob": "Track import job"
+  }
+}
