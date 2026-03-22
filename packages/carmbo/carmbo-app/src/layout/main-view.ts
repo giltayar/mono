@@ -1,7 +1,9 @@
 import {BannerComponent, type Banner} from './banner.ts'
 import {html} from '../commons/html-templates.ts'
 import {version} from '../commons/version.ts'
-import i18next from 'i18next'
+import i18next, {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'layout')
 
 export function MainLayout({
   title,
@@ -71,7 +73,7 @@ function NavBar({
           data-bs-target="#layouts-main-view_navbarSupportedContent"
           aria-controls="layouts-main-view_navbarSupportedContent"
           aria-expanded="false"
-          aria-label="Toggle navigation"
+          aria-label=${t('nav.toggleNavigation')}
         >
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -82,28 +84,28 @@ function NavBar({
                 class="nav-link ${activeNavItem === 'students' ? 'active' : ''}"
                 href="/students"
                 aria-current="page"
-                >Students</a
+                >${t('nav.students')}</a
               >
             </li>
             <li class="nav-item" role="menuitem">
               <a class="nav-link ${activeNavItem === 'products' ? 'active' : ''}" href="/products"
-                >Products</a
+                >${t('nav.products')}</a
               >
             </li>
             <li class="nav-item">
               <a
                 class="nav-link ${activeNavItem === 'sales-events' ? 'active' : ''}"
                 href="/sales-events"
-                >Sales events</a
+                >${t('nav.salesEvents')}</a
               >
             </li>
             <li class="nav-item" role="menuitem">
               <a class="nav-link ${activeNavItem === 'sales' ? 'active' : ''}" href="/sales"
-                >Sales</a
+                >${t('nav.sales')}</a
               >
             </li>
             <li class="nav-item" role="menuitem">
-              <a class="nav-link ${activeNavItem === 'jobs' ? 'active' : ''}" href="/jobs">Jobs</a>
+              <a class="nav-link ${activeNavItem === 'jobs' ? 'active' : ''}" href="/jobs">${t('nav.jobs')}</a>
             </li>
           </ul>
         </div>
