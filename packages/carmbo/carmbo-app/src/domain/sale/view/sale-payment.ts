@@ -1,18 +1,22 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import type {SaleWithPayments} from '../model/model.ts'
 import {Tabs} from './layout.ts'
 
 export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {
+  const t = getFixedT(null, 'sales')
   return html`
-    <h2 class="border-bottom col-md-6 mt-3">Sale ${sale.saleNumber} Payments</h2>
+    <h2 class="border-bottom col-md-6 mt-3">
+      ${t('payments.salePayments', {saleNumber: sale.saleNumber})}
+    </h2>
     <${Tabs} saleNumber=${sale.saleNumber} activeTab="payments" />
     <table class="table mt-3">
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Amount</th>
-          <th>Resolution</th>
-          <th>Invoice Document Number</th>
+          <th>${t('payments.date')}</th>
+          <th>${t('payments.amount')}</th>
+          <th>${t('payments.resolution')}</th>
+          <th>${t('payments.invoiceDocumentNumber')}</th>
         </tr>
       </thead>
       <tbody>
@@ -35,7 +39,7 @@ export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {
                   ? html`<a href=${payment.invoiceDocumentUrl} target="_blank"
                       >${payment.invoiceDocumentNumber}</a
                     >`
-                  : 'N/A'}
+                  : t('payments.na')}
               </td>
             </tr>
           `,

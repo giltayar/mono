@@ -1,4 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import type {Sale, SaleHistory, SaleWithHistoryInfo} from '../model/model.ts'
 import {SalesFormFields} from './form.ts'
 import {SaleHistoryList} from './history.ts'
@@ -12,13 +13,15 @@ export function SaleUpdateView({
   history: SaleHistory[]
 }) {
   const isReadOnlySale = sale.isActive || sale.cardcomRefundTransactionId
+  const t = getFixedT(null, 'sales')
 
   return html`
     <div class="sale-title border-bottom col-md-6 mt-3">
       <h2>
-        ${!isReadOnlySale ? 'Update' : ''} Sale ${sale.saleNumber}
+        ${!isReadOnlySale ? t('createUpdate.updateSale') : t('createUpdate.sale')}
+        ${` ${sale.saleNumber}`}
         ${sale.historyOperation === 'delete'
-          ? html` <small class="text-body-secondary">(archived)</small>`
+          ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
           : ''}
         <div class="operation-spinner spinner-border mr-1" role="status"></div>
       </h2>
@@ -43,7 +46,7 @@ export function SaleUpdateView({
                   hx-include="#sale-notes"
                   hx-indicator=".operation-spinner"
                 >
-                  Update
+                  ${t('createUpdate.update')}
                 </button>`
               : undefined
             : sale.historyOperation === 'delete'
@@ -55,12 +58,12 @@ export function SaleUpdateView({
                     name="operation"
                     value="restore"
                   >
-                    Restore
+                    ${t('createUpdate.restore')}
                   </button>
                 `
               : html`
                   <button class="btn btn-secondary discard" type="Submit" value="discard">
-                    Discard
+                    ${t('createUpdate.discard')}
                   </button>
                   <button
                     class="btn btn-danger"
@@ -69,12 +72,14 @@ export function SaleUpdateView({
                     name="operation"
                     value="delete"
                   >
-                    Archive
+                    ${t('createUpdate.archive')}
                   </button>
-                  <button class="btn btn-primary" type="Submit" value="save">Update</button>
+                  <button class="btn btn-primary" type="Submit" value="save">
+                    ${t('createUpdate.update')}
+                  </button>
                 `}
           <button class="button btn-primary" hx-post="/sales/${sale.saleNumber}/connect">
-            ${!sale.isConnected ? 'Connect' : 'Reconnect'}
+            ${!sale.isConnected ? t('createUpdate.connect') : t('createUpdate.reconnect')}
           </button>
           ${sale.isActive &&
           !sale.cardcomRefundTransactionId &&
@@ -87,12 +92,12 @@ export function SaleUpdateView({
                   ? 'This sale is manual! You MUST process the refund in Cardcom. Are you sure you want to proceed?'
                   : undefined}
               >
-                Refund
+                ${t('createUpdate.refund')}
               </button>`
             : undefined}
           ${sale.isConnected
             ? html`<button class="button" hx-post="/sales/${sale.saleNumber}/disconnect">
-                Disconnect
+                ${t('createUpdate.disconnect')}
               </button>`
             : undefined}
         </section>
@@ -114,15 +119,18 @@ export function SaleUpdateView({
 }
 
 function SaleStatus({sale}: {sale: Sale}) {
+  const t = getFixedT(null, 'sales')
   return html`
     <div>
       ${sale.isStandingOrder
-        ? html`Subscription${!sale.isActive ? ' (unsubscribed)' : ''}`
-        : 'Regular Sale'}
-      ${sale.cardcomRefundTransactionId ? html` | Refunded` : ''}
+        ? html`${t('createUpdate.subscription')}${!sale.isActive
+            ? ' ' + t('createUpdate.unsubscribed')
+            : ''}`
+        : t('createUpdate.regularSale')}
+      ${sale.cardcomRefundTransactionId ? html` | ${t('createUpdate.refunded')}` : ''}
       ${sale.isConnected
-        ? ' | Connected to External Providers'
-        : ' | Disconnected from External Providers'}
+        ? ' | ' + t('createUpdate.connectedToProviders')
+        : ' | ' + t('createUpdate.disconnectedFromProviders')}
     </div>
   `
 }

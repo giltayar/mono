@@ -1,26 +1,28 @@
 import {assertNever} from '@giltayar/functional-commons'
+import {getFixedT} from 'i18next'
 import type {SaleHistoryOperation} from '../model/model.ts'
 
 export function saleHistoryOperationToText(operation: SaleHistoryOperation): string {
+  const t = getFixedT(null, 'sales')
   switch (operation) {
     case 'create':
-      return 'created'
+      return t('history.created')
     case 'update':
-      return 'updated'
+      return t('history.updated')
     case 'delete':
-      return 'archived'
+      return t('history.archived')
     case 'restore':
-      return 'restored'
+      return t('history.restored')
     case 'connect-sale':
-      return 'connected sale'
+      return t('history.connectedSale')
     case 'refund-sale':
-      return 'refunded sale'
+      return t('history.refundedSale')
     case 'cancel-subscription':
-      return 'canceled subscription'
+      return t('history.canceledSubscription')
     case 'removed-from-subscription':
-      return 'removed from subscription'
+      return t('history.removedFromSubscription')
     case 'disconnected-manually':
-      return 'disconnected manually'
+      return t('history.disconnectedManually')
     default:
       assertNever(operation)
   }

@@ -1,4 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {NewSale, Sale} from '../model/model.ts'
 import {version} from '../../../commons/version.ts'
@@ -13,6 +14,7 @@ export function SalesFormFields({
 }) {
   const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceDocumentUrl
   const isNotesReadOnly = operation === 'read'
+  const t = getFixedT(null, 'sales')
 
   return html`
     <div class="sales-view_form-fields card">
@@ -34,7 +36,7 @@ export function SalesFormFields({
               required
               readonly=${isReadOnly}
             />
-            <label for="salesEventNumber" class="form-label">Sales Event</label>
+            <label for="salesEventNumber" class="form-label">${t('form.salesEvent')}</label>
             <datalist
               id="sales-event-list"
               hx-trigger="input changed from:#salesEventNumber"
@@ -62,7 +64,7 @@ export function SalesFormFields({
                 studentNumber=${sale.studentNumber}
                 studentName=${sale.studentName}
               />
-              <label for="studentNumber" class="form-label">Student</label>
+              <label for="studentNumber" class="form-label">${t('form.student')}</label>
             </div>
             <datalist
               id="student-list"
@@ -91,7 +93,7 @@ export function SalesFormFields({
                     hx-target="#student-search-dialog-container"
                     hx-swap="innerHTML"
                   >
-                    Search / Create
+                    ${t('form.searchCreate')}
                   </button>
                 </div>`
               : ''}
@@ -108,7 +110,7 @@ export function SalesFormFields({
               onclick="return false"
             />
             <label class="ms-2 form-check-label" for="is-standing-order-checkbox"
-              >Standing Order${sale.isStandingOrder ? ':' : ''}
+              >${t('form.standingOrder')}${sale.isStandingOrder ? ':' : ''}
             </label>
           </div>
           ${sale.isStandingOrder
@@ -120,7 +122,7 @@ export function SalesFormFields({
         ${sale.products && sale.products.length > 0
           ? html`
               <fieldset class="mb-3">
-                <legend><h6>Products</h6></legend>
+                <legend><h6>${t('form.products')}</h6></legend>
                 ${sale.products.map(
                   (product, index) => html`
                     <fieldset class="card mb-2">
@@ -154,7 +156,9 @@ export function SalesFormFields({
                               class="form-control"
                               readonly=${isReadOnly}
                             />
-                            <label for="products[${index}][unitPrice]">Unit Price</label>
+                            <label for="products[${index}][unitPrice]"
+                              >${t('form.unitPrice')}</label
+                            >
                           </div>
 
                           <div class="form-floating">
@@ -168,7 +172,7 @@ export function SalesFormFields({
                               class="form-control"
                               readonly=${isReadOnly}
                             />
-                            <label for="products[${index}][quantity]">Quantity</label>
+                            <label for="products[${index}][quantity]">${t('form.quantity')}</label>
                           </div>
                         </div>
                       </div>
@@ -179,7 +183,9 @@ export function SalesFormFields({
             `
           : ''}
         <div class="mb-3">
-          <label for="cardcomInvoiceNumber" class="form-label">Cardcom Invoice Number</label>
+          <label for="cardcomInvoiceNumber" class="form-label"
+            >${t('form.cardcomInvoiceNumber')}</label
+          >
           <div class="input-group">
             <input
               type="number"
@@ -199,7 +205,7 @@ export function SalesFormFields({
                   hx-include="closest form"
                   hx-indicator=".operation-spinner"
                 >
-                  Create Student from invoice
+                  ${t('form.createStudentFromInvoice')}
                 </button>`
               : ''}
           </div>
@@ -211,7 +217,7 @@ export function SalesFormFields({
           class="mb-3"
           style=${operation === 'write' || sale.transactionDescription ? '' : 'display: none'}
         >
-          <label for="transactionDescription" class="form-label">Description</label>
+          <label for="transactionDescription" class="form-label">${t('form.description')}</label>
           <input
             type="text"
             class="form-control"
@@ -229,7 +235,7 @@ export function SalesFormFields({
           </datalist>
         </div>
         <div class="mb-3">
-          <label for="finalSaleRevenue" class="form-label">Final Sale Revenue</label>
+          <label for="finalSaleRevenue" class="form-label">${t('form.finalSaleRevenue')}</label>
           <input
             type="number"
             class="form-control"
@@ -251,7 +257,7 @@ export function SalesFormFields({
           >
 ${sale.notes ?? ''}</textarea
           >
-          <label for="sale-notes">Notes</label>
+          <label for="sale-notes">${t('form.notes')}</label>
         </div>
         <div class="mb-3">
           <div class="form-check">
@@ -269,14 +275,14 @@ ${sale.notes ?? ''}</textarea
               readonly=${isReadOnly}
               onclick=${isReadOnly ? 'return false' : undefined}
             />
-            <label class="form-check-label" for="delivery-address">Has delivery</label>
+            <label class="form-check-label" for="delivery-address">${t('form.hasDelivery')}</label>
           </div>
         </div>
         <fieldset class="mb-3" style="display: ${sale.hasDeliveryAddress ? 'block' : 'none'}">
-          <legend><h6>Delivery Address</h6></legend>
+          <legend><h6>${t('form.deliveryAddress')}</h6></legend>
           <div class="row">
             <div class="col-md-6">
-              <label for="delivery-address-street" class="form-label">Street</label>
+              <label for="delivery-address-street" class="form-label">${t('form.street')}</label>
               <input
                 type="text"
                 class="form-control"
@@ -287,7 +293,9 @@ ${sale.notes ?? ''}</textarea
               />
             </div>
             <div class="col-md-3">
-              <label for="delivery-address-street-number" class="form-label">Street Number</label>
+              <label for="delivery-address-street-number" class="form-label"
+                >${t('form.streetNumber')}</label
+              >
               <input
                 type="text"
                 class="form-control"
@@ -298,7 +306,9 @@ ${sale.notes ?? ''}</textarea
               />
             </div>
             <div class="col-md-3">
-              <label for="delivery-address-entrance" class="form-label">Entrance</label>
+              <label for="delivery-address-entrance" class="form-label"
+                >${t('form.entrance')}</label
+              >
               <input
                 type="text"
                 class="form-control"
@@ -311,7 +321,7 @@ ${sale.notes ?? ''}</textarea
           </div>
           <div class="row">
             <div class="col-md-12">
-              <label for="delivery-address-city" class="form-label">City</label>
+              <label for="delivery-address-city" class="form-label">${t('form.city')}</label>
               <input
                 type="text"
                 class="form-control"
@@ -324,7 +334,7 @@ ${sale.notes ?? ''}</textarea
           </div>
           <div class="row">
             <div class="col-md-6">
-              <label for="delivery-address-floor" class="form-label">Floor</label>
+              <label for="delivery-address-floor" class="form-label">${t('form.floor')}</label>
               <input
                 type="text"
                 class="form-control"
@@ -336,7 +346,7 @@ ${sale.notes ?? ''}</textarea
             </div>
             <div class="col-md-6">
               <label for="delivery-address-apartment-number" class="form-label"
-                >Apartment Number</label
+                >${t('form.apartmentNumber')}</label
               >
               <input
                 type="text"
@@ -350,7 +360,9 @@ ${sale.notes ?? ''}</textarea
           </div>
           <div class="row">
             <div class="col-md-12">
-              <label for="delivery-address-contact-phone" class="form-label">Contact Phone</label>
+              <label for="delivery-address-contact-phone" class="form-label"
+                >${t('form.contactPhone')}</label
+              >
               <input
                 type="tel"
                 class="form-control"
@@ -363,7 +375,9 @@ ${sale.notes ?? ''}</textarea
           </div>
           <div class="row">
             <div class="col-md-12">
-              <label for="delivery-address-notes" class="form-label">Notes</label>
+              <label for="delivery-address-notes" class="form-label"
+                >${t('form.deliveryNotes')}</label
+              >
               <textarea
                 class="form-control"
                 id="delivery-address-notes"
@@ -382,7 +396,8 @@ ${sale.deliveryAddress?.notesToDeliveryPerson ?? ''}</textarea
 }
 
 function InvoiceDocumentUrlLink({url}: {url: string}) {
-  return html`<a target="_blank" href=${url}>View Invoice </a
+  const t = getFixedT(null, 'sales')
+  return html`<a target="_blank" href=${url}>${t('form.viewInvoice')} </a
     ><object
       type="image/svg+xml"
       class="feather feather-small pe-none"

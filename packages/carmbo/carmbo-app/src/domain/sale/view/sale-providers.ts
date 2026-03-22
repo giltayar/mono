@@ -1,19 +1,25 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import {Tabs} from './layout.ts'
 import type {SaleWithProviders} from '../model/model-external-providers.ts'
 
 export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
+  const t = getFixedT(null, 'sales')
   return html`
-    <h2 class="border-bottom col-md-6 mt-3">Sale ${sale.saleNumber} Payments</h2>
+    <h2 class="border-bottom col-md-6 mt-3">
+      ${t('providers.saleProviders', {saleNumber: sale.saleNumber})}
+    </h2>
     <${Tabs} saleNumber=${sale.saleNumber} activeTab="providers" />
     ${sale.products.map(
       (product) => html`
         <div class="card mb-5" aria-label="product">
           <div class="card-body" aria-labelledby="product-${product.productNumber}-title">
             <h5 class="card-title" id="product-${product.productNumber}-stitle">
-              Product ${product.productNumber}: ${product.productName}
+              ${t('providers.product')} ${product.productNumber}: ${product.productName}
             </h5>
-            <div class="card-header" id="academy-courses-header">Academy courses</div>
+            <div class="card-header" id="academy-courses-header">
+              ${t('providers.academyCourses')}
+            </div>
             <ul class="list-group list-group-flush" aria-labelledby="academy-courses-header">
               ${product.academyCourses.map(
                 (academyCourse) => html`
@@ -34,7 +40,7 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                 `,
               )}
             </ul>
-            <div class="card-header" id="smoove-lists-header">Smoove lists</div>
+            <div class="card-header" id="smoove-lists-header">${t('providers.smooveLists')}</div>
             <ul class="list-group list-group-flush" aria-labelledby="smoove-lists-header">
               <li class="list-group-item">
                 <div class="form-check">
@@ -46,7 +52,7 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                     checked=${product.smooveLists.isListConnected}
                   />
                   <label class="form-check-label" for="smoove-list-main"
-                    >Main list (${product.smooveLists.listName})</label
+                    >${t('providers.mainList')} (${product.smooveLists.listName})</label
                   >
                 </div>
               </li>
@@ -60,7 +66,8 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                     checked=${product.smooveLists.isCancelledListConnected}
                   />
                   <label class="form-check-label" for="smoove-list-cancelled"
-                    >Cancelled list (${product.smooveLists.cancelledListName})</label
+                    >${t('providers.cancelledList') + ' '}
+                    (${product.smooveLists.cancelledListName})</label
                   >
                 </div>
               </li>
@@ -74,12 +81,14 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                     checked=${product.smooveLists.isRemovedListConnected}
                   />
                   <label class="form-check-label" for="smoove-list-removed"
-                    >Removed list (${product.smooveLists.removedListName})</label
+                    >${t('providers.removedList')} (${product.smooveLists.removedListName})</label
                   >
                 </div>
               </li>
             </ul>
-            <div class="card-header" id="whatsap-groups-header">WhatsApp groups</div>
+            <div class="card-header" id="whatsap-groups-header">
+              ${t('providers.whatsappGroups')}
+            </div>
             <ul class="list-group list-group-flush" aria-labelledby="whatsap-groups-header">
               ${product.whatsAppGroups.map(
                 (whatsAppGroup) => html`

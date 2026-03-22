@@ -1,4 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {
   type NewSale,
@@ -34,6 +35,7 @@ export function renderStudentInput(studentNumber: number, studentName: string) {
 }
 
 export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banner?: Banner} = {}) {
+  const t = getFixedT(null, 'sales')
   const finalSale: NewSale = sale ?? {
     salesEventNumber: 0,
     salesEventName: '',
@@ -48,7 +50,7 @@ export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banne
   }
 
   return html`
-    <${MainLayout} title="Sales" activeNavItem="sales" banner=${banner}>
+    <${MainLayout} title=${t('list.sales')} activeNavItem="sales" banner=${banner}>
       <${Layout}>
         <${SaleCreateView} sale=${finalSale} />
       </${Layout}>
@@ -77,8 +79,9 @@ export function renderSaleViewPage(
   history: SaleHistory[],
   {banner}: {banner?: Banner} = {},
 ) {
+  const t = getFixedT(null, 'sales')
   return html`
-    <${MainLayout} title="Sales" activeNavItem="sales" banner=${banner}>
+    <${MainLayout} title=${t('list.sales')} activeNavItem="sales" banner=${banner}>
       <${Layout}>
         <${SaleUpdateView} sale=${sale} history=${history} />
       </${Layout}>
@@ -87,8 +90,9 @@ export function renderSaleViewPage(
 }
 
 export function renderSalePaymentsPage(sale: SaleWithPayments) {
+  const t = getFixedT(null, 'sales')
   return html`
-    <${MainLayout} title="Sale Payments" activeNavItem="sales">
+    <${MainLayout} title=${t('payments.salePayments', {saleNumber: sale.saleNumber})} activeNavItem="sales">
       <${Layout}>
         <${SalePaymentsView} sale=${sale} />
       </${Layout}>
@@ -97,8 +101,9 @@ export function renderSalePaymentsPage(sale: SaleWithPayments) {
 }
 
 export function renderSaleProvidersPage(sale: SaleWithProviders) {
+  const t = getFixedT(null, 'sales')
   return html`
-    <${MainLayout} title="Sale Payments" activeNavItem="sales">
+    <${MainLayout} title=${t('providers.saleProviders', {saleNumber: sale.saleNumber})} activeNavItem="sales">
       <${Layout}>
         <${SaleProvidersView} sale=${sale} />
       </${Layout}>

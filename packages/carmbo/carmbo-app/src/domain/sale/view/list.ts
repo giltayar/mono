@@ -1,4 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {SaleForGrid} from '../model/model.ts'
@@ -9,7 +10,8 @@ export function renderSalesPage(
   sales: SaleForGrid[],
   {withArchived, query, page}: {withArchived: boolean; query: string; page: number},
 ) {
-  return html`
+  const t = getFixedT(null, 'sales')
+  return html`${t('list.sales')}
     <${MainLayout} title="Sales" flash=${flash} activeNavItem="sales">
       <${Layout}>
         <${SalesView} sales=${sales} withArchived=${withArchived} query=${query} page=${page} />
@@ -29,10 +31,11 @@ function SalesView({
   query: string
   page: number
 }) {
+  const t = getFixedT(null, 'sales')
   return html`
     <div class="mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
-        <h2>Sales</h2>
+        <h2>${t('list.sales')}</h2>
         <form
           class="mb-1 ms-auto"
           action="/sales"
@@ -47,15 +50,15 @@ function SalesView({
                 name="with-archived"
                 checked=${withArchived}
               />
-              Show archived</label
+              ${t('list.showArchived')}</label
             >
-            <label class="form-input-label col-auto" for="query">Search:</label>
+            <label class="form-input-label col-auto" for="query">${t('list.search')}</label>
             <input
               type="search"
               name="q"
               id="query"
               class="form-control form-control-sm col"
-              placeholder="Search"
+              placeholder=${t('list.searchPlaceholder')}
               value=${query}
             />
           </fieldset>
@@ -64,12 +67,12 @@ function SalesView({
       <table class="table mt-3">
         <thead>
           <tr>
-            <th>Sale #</th>
-            <th>Date</th>
-            <th>Event</th>
-            <th>Student</th>
-            <th>Revenue</th>
-            <th>Products</th>
+            <th>${t('list.saleNumber')}</th>
+            <th>${t('list.date')}</th>
+            <th>${t('list.event')}</th>
+            <th>${t('list.student')}</th>
+            <th>${t('list.revenue')}</th>
+            <th>${t('list.products')}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +103,7 @@ function SalesView({
                 </td>
                 <td>
                   ${sale.finalSaleRevenue
-                    ? `₪${sale.finalSaleRevenue.toFixed(2)}${sale.isRefunded ? ' (refunded)' : ''}`
+                    ? `₪${sale.finalSaleRevenue.toFixed(2)}${sale.isRefunded ? ' ' + t('list.refunded') : ''}`
                     : '-'}
                 </td>
                 <td>${sale.products.join(', ')}</td>
@@ -110,7 +113,7 @@ function SalesView({
         </tbody>
       </table>
       <section class="add-new">
-        <a role="button" class="btn float-end" href="/sales/new" aria-label="new sale">
+        <a role="button" class="btn float-end" href="/sales/new" aria-label=${t('list.newSale')}>
           <object
             type="image/svg+xml"
             class="feather feather-large"
@@ -123,7 +126,7 @@ function SalesView({
 }
 
 function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-IL', {
+  return new Intl.DateTimeFormat('he-IL', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

@@ -2,6 +2,7 @@ import enStudent from '../domain/student/locale/en.json'
 import enLayout from '../layout/locale/en.json'
 import enProduct from '../domain/product/locale/en.json'
 import enSalesEvent from '../domain/salesEvent/locale/en.json'
+import enSales from '../domain/sales/locale/en.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -10,6 +11,7 @@ declare module 'i18next' {
       layout: typeof enLayout
       product: typeof enProduct
       salesEvent: typeof enSalesEvent
+      sales: typeof enSales
     }
   }
 }

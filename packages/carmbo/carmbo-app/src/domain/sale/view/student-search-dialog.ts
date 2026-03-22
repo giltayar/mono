@@ -1,19 +1,21 @@
 import {html} from '../../../commons/html-templates.ts'
+import {getFixedT} from 'i18next'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 
 export function renderStudentSearchDialog() {
+  const t = getFixedT(null, 'sales')
   return html`
     <dialog id="student-search-dialog" class="student-search-dialog">
-      <h5 class="mb-3">Search / Create Student</h5>
+      <h5 class="mb-3">${t('studentSearch.searchCreateStudent')}</h5>
 
       <div class="mb-3">
-        <label for="student-search-q" class="form-label">Search</label>
+        <label for="student-search-q" class="form-label">${t('studentSearch.search')}</label>
         <input
           type="text"
           class="form-control"
           id="student-search-q"
           name="q"
-          placeholder="Search by name, email, or phone..."
+          placeholder=${t('studentSearch.searchPlaceholder')}
           hx-get="/sales/query/student-search"
           hx-trigger="input changed delay:500ms"
           hx-target="#student-search-results"
@@ -34,7 +36,7 @@ export function renderStudentSearchDialog() {
       <hr />
 
       <details>
-        <summary class="mb-2"><strong>Create New Student</strong></summary>
+        <summary class="mb-2"><strong>${t('studentSearch.createNewStudent')}</strong></summary>
         <form
           hx-post="/sales/quick-create-student"
           hx-target="#studentNumber"
@@ -43,7 +45,7 @@ export function renderStudentSearchDialog() {
           hx-on::after-request="this.closest('dialog')?.close(); document.getElementById('studentNumber')?.dispatchEvent(new Event('change', {bubbles: true}))"
         >
           <div class="mb-2">
-            <label for="quick-create-email" class="form-label">Email *</label>
+            <label for="quick-create-email" class="form-label">${t('studentSearch.email')}</label>
             <input
               type="email"
               class="form-control form-control-sm"
@@ -54,7 +56,9 @@ export function renderStudentSearchDialog() {
           </div>
           <div class="row mb-2">
             <div class="col">
-              <label for="quick-create-first-name" class="form-label">First Name *</label>
+              <label for="quick-create-first-name" class="form-label"
+                >${t('studentSearch.firstName')}</label
+              >
               <input
                 type="text"
                 class="form-control form-control-sm"
@@ -64,7 +68,9 @@ export function renderStudentSearchDialog() {
               />
             </div>
             <div class="col">
-              <label for="quick-create-last-name" class="form-label">Last Name *</label>
+              <label for="quick-create-last-name" class="form-label"
+                >${t('studentSearch.lastName')}</label
+              >
               <input
                 type="text"
                 class="form-control form-control-sm"
@@ -75,7 +81,7 @@ export function renderStudentSearchDialog() {
             </div>
           </div>
           <div class="mb-3">
-            <label for="quick-create-phone" class="form-label">Phone</label>
+            <label for="quick-create-phone" class="form-label">${t('studentSearch.phone')}</label>
             <input
               type="text"
               class="form-control form-control-sm"
@@ -83,13 +89,15 @@ export function renderStudentSearchDialog() {
               name="quickCreatePhone"
             />
           </div>
-          <button type="submit" class="btn btn-success btn-sm">Create & Choose</button>
+          <button type="submit" class="btn btn-success btn-sm">
+            ${t('studentSearch.createAndChoose')}
+          </button>
         </form>
       </details>
 
       <div class="d-flex justify-content-end mt-3">
         <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">
-          Cancel
+          ${t('studentSearch.cancel')}
         </button>
       </div>
     </dialog>
@@ -99,8 +107,9 @@ export function renderStudentSearchDialog() {
 export function renderStudentSearchResults(
   students: {studentNumber: number; name: string; email: string | null; phone: string | null}[],
 ) {
+  const t = getFixedT(null, 'sales')
   if (students.length === 0) {
-    return html`<p class="text-muted">No students found.</p>`
+    return html`<p class="text-muted">${t('studentSearch.noStudentsFound')}</p>`
   }
 
   return html`
@@ -118,7 +127,7 @@ export function renderStudentSearchResults(
               class="btn btn-primary btn-sm"
               onclick=${`document.getElementById('studentNumber').value = ${JSON.stringify(generateItemTitle(student.studentNumber, student.name))}; document.getElementById('studentNumber').dispatchEvent(new Event('change', {bubbles: true})); this.closest('dialog').close()`}
             >
-              Choose
+              ${t('studentSearch.choose')}
             </button>
           </div>
         `,
