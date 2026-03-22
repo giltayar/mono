@@ -1,0 +1,19 @@
+{
+  "list": {
+    "jobs": "Jobs",
+    "showTrivial": "Show trivial",
+    "id": "ID",
+    "description": "Description",
+    "createdAt": "Created At",
+    "progress": "Progress",
+    "status": "Status",
+    "notStarted": "Not started"
+  },
+  "detail": {
+    "jobDetails": "Job details",
+    "job": "Job",
+    "created": "Created:",
+    "finished": "Finished:",
+    "stillWorking": "still working..."
+  }
+}

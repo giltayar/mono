@@ -1,0 +1,19 @@
+{
+  "list": {
+    "jobs": "משימות",
+    "showTrivial": "הצגת משימות טריוויאליות",
+    "id": "מספר",
+    "description": "תיאור",
+    "createdAt": "נוצר בתאריך",
+    "progress": "התקדמות",
+    "status": "סטטוס",
+    "notStarted": "לא התחיל"
+  },
+  "detail": {
+    "jobDetails": "פרטי משימה",
+    "job": "משימה",
+    "created": "נוצר:",
+    "finished": "הסתיים:",
+    "stillWorking": "עדיין עובד..."
+  }
+}
