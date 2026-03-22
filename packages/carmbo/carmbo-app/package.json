@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "7.10.0",
+  "version": "8.0.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -74,7 +74,7 @@
     "fastify-type-provider-zod": "^6.1.0",
     "htm": "^3.1.1",
     "htmx.org": "^2.0.8",
-    "i18next": "^25.9.0",
+    "i18next": "^25.10.4",
     "i18next-fs-backend": "^2.6.1",
     "p-map-series": "^3.0.0",
     "p-retry": "^7.1.1",
@@ -95,7 +95,7 @@
     "@types/node": "^25.5.0",
     "@types/qs": "^6.15.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20260320.1",
+    "@typescript/native-preview": "7.0.0-dev.20260322.1",
     "eslint": "^10.1.0",
     "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-prettier": "^5.5.5",

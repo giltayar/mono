@@ -3,4 +3,4 @@ neverBuiltDependencies:
 
 updateConfig:
   ignoreDependencies:
-    - postgres@3.4.8
+    - postgres
