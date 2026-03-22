@@ -1,6 +1,9 @@
 import {html} from '../../../commons/html-templates.ts'
 import type {ProductHistory, ProductWithHistoryInfo} from '../model.ts'
 import type {HistoryOperation} from '../../../commons/operation-type.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'product')
 
 export function ProductHistoryList({
   product,
@@ -10,7 +13,7 @@ export function ProductHistoryList({
   history: ProductHistory[]
 }) {
   return html`
-    <h5 class="mt-3 col-md-6 border-bottom">History</h5>
+    <h5 class="mt-3 col-md-6 border-bottom">${t('history.history')}</h5>
     <ul
       aria-label="Product History"
       class="list-group mt-3 pb-3 col-md-6"
@@ -40,13 +43,13 @@ export function ProductHistoryList({
 export function historyOperationToText(operation: HistoryOperation | undefined): string {
   switch (operation) {
     case 'create':
-      return 'created'
+      return t('history.created')
     case 'update':
-      return 'updated'
+      return t('history.updated')
     case 'delete':
-      return 'archived'
+      return t('history.archived')
     case 'restore':
-      return 'restored'
+      return t('history.restored')
     default:
       return operation + '???'
   }

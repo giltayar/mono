@@ -3,11 +3,14 @@ import {html} from '../../../commons/html-templates.ts'
 import type {Product, ProductHistory, ProductWithHistoryInfo} from '../model.ts'
 import {ProductCreateOrUpdateFormFields} from './form.ts'
 import {ProductHistoryList, historyOperationToText} from './history.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'product')
 
 export function ProductCreateView({product}: {product: Product}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      New Product
+      ${t('createUpdate.newProduct')}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
     <form
@@ -18,8 +21,12 @@ export function ProductCreateView({product}: {product: Product}) {
     >
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          <button class="btn btn-secondary discard" type="Submit" value="discard">Discard</button>
-          <button class="btn btn-primary" type="Submit" value="save">Create</button>
+          <button class="btn btn-secondary discard" type="Submit" value="discard">
+            ${t('createUpdate.discard')}
+          </button>
+          <button class="btn btn-primary" type="Submit" value="save">
+            ${t('createUpdate.create')}
+          </button>
         </section>
       </div>
       <div class="mt-3">
@@ -40,9 +47,9 @@ export function ProductUpdateView({
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      Update Product ${product.productNumber}
+      ${t('createUpdate.updateProduct')} ${product.productNumber}
       ${product.historyOperation === 'delete'
-        ? html` <small class="text-body-secondary">(archived)</small>`
+        ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
         : ''}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
@@ -69,12 +76,12 @@ export function ProductUpdateView({
                   hx-delete=""
                   hx-params="delete-operation"
                 >
-                  Restore
+                  ${t('createUpdate.restore')}
                 </button>
               `
             : html`
                 <button class="btn btn-secondary discard" type="Submit" value="discard">
-                  Discard
+                  ${t('createUpdate.discard')}
                 </button>
                 <button
                   class="btn btn-danger"
@@ -83,9 +90,11 @@ export function ProductUpdateView({
                   hx-delete=""
                   hx-params="delete-operation"
                 >
-                  Archive
+                  ${t('createUpdate.archive')}
                 </button>
-                <button class="btn btn-primary" type="Submit" value="save">Update</button>
+                <button class="btn btn-primary" type="Submit" value="save">
+                  ${t('createUpdate.update')}
+                </button>
               `}
         </section>
       </div>
@@ -112,7 +121,7 @@ export function ProductHistoryView({
 
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
-      View Product ${product.productNumber}<> </>
+      ${t('createUpdate.viewProduct')} ${product.productNumber}<> </>
       <small class="text-body-secondary"
         >(${historyOperationToText(currentHistory?.operation)})</small
       >

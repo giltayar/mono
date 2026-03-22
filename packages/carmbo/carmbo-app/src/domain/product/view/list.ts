@@ -3,6 +3,9 @@ import {MainLayout} from '../../../layout/main-view.ts'
 import {Layout} from './layout.ts'
 import type {ProductForGrid} from '../model.ts'
 import {version} from '../../../commons/version.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'product')
 
 export function renderProductsPage(
   flash: string | undefined,
@@ -10,7 +13,7 @@ export function renderProductsPage(
   {withArchived, query, page}: {withArchived: boolean; query: string; page: number},
 ) {
   return html`
-    <${MainLayout} title="Products" flash=${flash} activeNavItem="products">
+    <${MainLayout} title=${t('list.products')} flash=${flash} activeNavItem="products">
       <${Layout}>
         <${ProductsView} products=${products} withArchived=${withArchived} query=${query} page=${page} />
       </${Layout}>
@@ -32,7 +35,7 @@ function ProductsView({
   return html`
     <div class="mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
-        <h2>Products</h2>
+        <h2>${t('list.products')}</h2>
         <form
           class="mb-1 ms-auto"
           action="/products"
@@ -47,15 +50,15 @@ function ProductsView({
                 name="with-archived"
                 checked=${withArchived}
               />
-              Show archived</label
+              ${t('list.showArchived')}</label
             >
-            <label class="form-input-label col-auto" for="query">Search:</label>
+            <label class="form-input-label col-auto" for="query">${t('list.search')}</label>
             <input
               type="search"
               name="q"
               id="query"
               class="form-control form-control-sm col"
-              placeholder="Search"
+              placeholder=${t('list.searchPlaceholder')}
               value=${query}
             />
           </fieldset>
@@ -64,9 +67,9 @@ function ProductsView({
       <table class="table mt-3">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Type</th>
+            <th>${t('list.id')}</th>
+            <th>${t('list.name')}</th>
+            <th>${t('list.type')}</th>
           </tr>
         </thead>
         <tbody>
@@ -99,7 +102,7 @@ function ProductsView({
         </tbody>
       </table>
       <section class="add-new">
-        <a role="button" class="btn float-end" href="/products/new" aria-label="new product">
+        <a role="button" class="btn float-end" href="/products/new" aria-label=${t('list.newProduct')}>
           <object
             type="image/svg+xml"
             class="feather feather-large"

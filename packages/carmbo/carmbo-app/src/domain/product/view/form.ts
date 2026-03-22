@@ -4,6 +4,9 @@ import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
 import {version} from '../../../commons/version.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'product')
 
 export function ProductCreateOrUpdateFormFields({
   product,
@@ -33,7 +36,7 @@ export function ProductCreateOrUpdateFormFields({
             data-1p-ignore
             readonly=${isReadOnly}
           />
-          <label for="name">Product Name</label>
+          <label for="name">${t('form.productName')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -45,18 +48,22 @@ export function ProductCreateOrUpdateFormFields({
             required
           >
             <option value="recorded" selected=${product.productType === 'recorded'}>
-              Recorded
+              ${t('form.recorded')}
             </option>
             <option value="challenge" selected=${product.productType === 'challenge'}>
-              Challenge
+              ${t('form.challenge')}
             </option>
-            <option value="club" selected=${product.productType === 'club'}>Club</option>
-            <option value="bundle" selected=${product.productType === 'bundle'}>Bundle</option>
+            <option value="club" selected=${product.productType === 'club'}>
+              ${t('form.club')}
+            </option>
+            <option value="bundle" selected=${product.productType === 'bundle'}>
+              ${t('form.bundle')}
+            </option>
           </select>
-          <label for="productType">Product Type</label>
+          <label for="productType">${t('form.productType')}</label>
         </div>
 
-        <fieldset aria-label="Academy Courses" class="mt-3">
+        <fieldset aria-label=${t('form.academyCourses')} class="mt-3">
           ${product.academyCourses?.map(
             (courseId, i, l) => html`
               <div class="products-view_item input-group">
@@ -83,7 +90,7 @@ export function ProductCreateOrUpdateFormFields({
                     autocapitalize="off"
                     readonly=${isReadOnly}
                   />
-                  <label for="academyCourse-${i}">Academy Course ID</label>
+                  <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -94,12 +101,12 @@ export function ProductCreateOrUpdateFormFields({
           ${operation === 'write' &&
           html`<${AddButton}
             itemsName="academyCourses"
-            humanName="Academy Courses"
+            humanName=${t('form.academyCourses')}
             l=${product.academyCourses}
           />`}
         </fieldset>
 
-        <fieldset aria-label="WhatsApp Groups" class="mt-3">
+        <fieldset aria-label=${t('form.whatsappGroups')} class="mt-3">
           ${product.whatsappGroups?.map(
             (group, i, l) => html`
               <div class="products-view_item input-group">
@@ -129,7 +136,7 @@ export function ProductCreateOrUpdateFormFields({
                       : ''}
                     readonly=${isReadOnly}
                   />
-                  <label for="whatsappGroup-${i}">WhatsApp Group ID</label>
+                  <label for="whatsappGroup-${i}">${t('form.whatsappGroupId')}</label>
                 </div>
                 <div class="form-floating">
                   <input
@@ -141,7 +148,7 @@ export function ProductCreateOrUpdateFormFields({
                     id="whatsappGroupUrl-${i}"
                     readonly=${isReadOnly}
                   />
-                  <label for="whatsappGroupUrl-${i}">Messages Google Sheet URL</label>
+                  <label for="whatsappGroupUrl-${i}">${t('form.messagesGoogleSheetUrl')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -152,12 +159,12 @@ export function ProductCreateOrUpdateFormFields({
           ${operation === 'write' &&
           html`<${AddButton}
             itemsName="whatsappGroups"
-            humanName="WhatsApp Groups"
+            humanName=${t('form.whatsappGroups')}
             l=${product.whatsappGroups}
           />`}
         </fieldset>
 
-        <fieldset aria-label="Facebook Groups" class="mt-3">
+        <fieldset aria-label=${t('form.facebookGroups')} class="mt-3">
           ${product.facebookGroups?.map(
             (groupId, i, l) => html`
               <div class="products-view_item input-group">
@@ -172,7 +179,7 @@ export function ProductCreateOrUpdateFormFields({
                     id="facebookGroup-${i}"
                     readonly=${isReadOnly}
                   />
-                  <label for="facebookGroup-${i}">Facebook Group ID</label>
+                  <label for="facebookGroup-${i}">${t('form.facebookGroupId')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -183,7 +190,7 @@ export function ProductCreateOrUpdateFormFields({
           ${operation === 'write' &&
           html`<${AddButton}
             itemsName="facebookGroups"
-            humanName="Facebook Groups"
+            humanName=${t('form.facebookGroups')}
             l=${product.facebookGroups}
           />`}
         </fieldset>
@@ -213,7 +220,7 @@ export function ProductCreateOrUpdateFormFields({
               : ''}
             readonly=${isReadOnly}
           />
-          <label for="smooveListId">Smoove List ID</label>
+          <label for="smooveListId">${t('form.smooveListId')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -241,7 +248,7 @@ export function ProductCreateOrUpdateFormFields({
               : ''}
             readonly=${isReadOnly}
           />
-          <label for="smooveCancellingListId">Smoove Cancelling List ID</label>
+          <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -269,7 +276,7 @@ export function ProductCreateOrUpdateFormFields({
               : ''}
             readonly=${isReadOnly}
           />
-          <label for="smooveCancelledListId">Smoove Cancelled List ID</label>
+          <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -297,7 +304,7 @@ export function ProductCreateOrUpdateFormFields({
               : ''}
             readonly=${isReadOnly}
           />
-          <label for="smooveRemovedListId">Smoove Removed List ID</label>
+          <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
         </div>
 
         <div class="mt-3 form-floating">
@@ -311,7 +318,7 @@ export function ProductCreateOrUpdateFormFields({
           >
 ${product.notes ?? ''}</textarea
           >
-          <label for="notes">Notes</label>
+          <label for="notes">${t('form.notes')}</label>
         </div>
       </div>
     </div>

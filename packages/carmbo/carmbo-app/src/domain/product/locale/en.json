@@ -1,0 +1,50 @@
+{
+  "form": {
+    "productName": "Product Name",
+    "productType": "Product Type",
+    "recorded": "Recorded",
+    "challenge": "Challenge",
+    "club": "Club",
+    "bundle": "Bundle",
+    "academyCourseId": "Academy Course ID",
+    "academyCourses": "Academy Courses",
+    "whatsappGroupId": "WhatsApp Group ID",
+    "messagesGoogleSheetUrl": "Messages Google Sheet URL",
+    "whatsappGroups": "WhatsApp Groups",
+    "facebookGroupId": "Facebook Group ID",
+    "facebookGroups": "Facebook Groups",
+    "smooveListId": "Smoove List ID",
+    "smooveCancellingListId": "Smoove Cancelling List ID",
+    "smooveCancelledListId": "Smoove Cancelled List ID",
+    "smooveRemovedListId": "Smoove Removed List ID",
+    "notes": "Notes"
+  },
+  "createUpdate": {
+    "newProduct": "New Product",
+    "updateProduct": "Update Product",
+    "viewProduct": "View Product",
+    "archived": "(archived)",
+    "discard": "Discard",
+    "restore": "Restore",
+    "archive": "Archive",
+    "update": "Update",
+    "create": "Create"
+  },
+  "history": {
+    "history": "History",
+    "created": "created",
+    "updated": "updated",
+    "archived": "archived",
+    "restored": "restored"
+  },
+  "list": {
+    "products": "Products",
+    "showArchived": "Show archived",
+    "search": "Search:",
+    "searchPlaceholder": "Search",
+    "id": "ID",
+    "name": "Name",
+    "type": "Type",
+    "newProduct": "new product"
+  }
+}

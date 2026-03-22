@@ -1,0 +1,50 @@
+{
+  "form": {
+    "productName": "שם מוצר",
+    "productType": "סוג מוצר",
+    "recorded": "מוקלט",
+    "challenge": "אתגר",
+    "club": "מועדון",
+    "bundle": "חבילה",
+    "academyCourseId": "מזהה קורס באקדמיה",
+    "academyCourses": "קורסים באקדמיה",
+    "whatsappGroupId": "מזהה קבוצת וואטסאפ",
+    "messagesGoogleSheetUrl": "כתובת גיליון הודעות בגוגל",
+    "whatsappGroups": "קבוצות וואטסאפ",
+    "facebookGroupId": "מזהה קבוצת פייסבוק",
+    "facebookGroups": "קבוצות פייסבוק",
+    "smooveListId": "מזהה רשימת סמוב",
+    "smooveCancellingListId": "מזהה רשימת ביטול סמוב",
+    "smooveCancelledListId": "מזהה רשימת מבוטלים סמוב",
+    "smooveRemovedListId": "מזהה רשימת הוסרו סמוב",
+    "notes": "הערות"
+  },
+  "createUpdate": {
+    "newProduct": "מוצר חדש",
+    "updateProduct": "עדכון מוצר",
+    "viewProduct": "צפייה במוצר",
+    "archived": "(בארכיון)",
+    "discard": "ביטול",
+    "restore": "שחזור",
+    "archive": "העברה לארכיון",
+    "update": "עדכון",
+    "create": "יצירה"
+  },
+  "history": {
+    "history": "היסטוריה",
+    "created": "נוצר",
+    "updated": "עודכן",
+    "archived": "הועבר לארכיון",
+    "restored": "שוחזר"
+  },
+  "list": {
+    "products": "מוצרים",
+    "showArchived": "הצגת ארכיון",
+    "search": "חיפוש:",
+    "searchPlaceholder": "חיפוש",
+    "id": "מספר",
+    "name": "שם",
+    "type": "סוג",
+    "newProduct": "מוצר חדש"
+  }
+}

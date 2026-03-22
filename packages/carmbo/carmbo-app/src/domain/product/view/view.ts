@@ -7,6 +7,9 @@ import {ProductCreateOrUpdateFormFields} from './form.ts'
 import {ProductCreateView, ProductHistoryView, ProductUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
 import type {Banner} from '../../../layout/banner.ts'
+import {getFixedT} from 'i18next'
+
+const t = getFixedT(null, 'product')
 
 export function renderProductsCreatePage(
   product: OngoingProduct | undefined,
@@ -27,7 +30,7 @@ export function renderProductsCreatePage(
       }
 
   return html`
-    <${MainLayout} title="Products" activeNavItem="products" banner=${banner}>
+    <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
         <${ProductCreateView} product=${finalProduct} />
       </${Layout}>
@@ -41,7 +44,7 @@ export function renderProductUpdatePage(
   {banner}: {banner?: Banner | undefined} = {},
 ) {
   return html`
-    <${MainLayout} title="Products" activeNavItem="products" banner=${banner}>
+    <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
         <${ProductUpdateView} product=${product} history=${history} />
       </${Layout}>
@@ -54,7 +57,7 @@ export function renderProductViewInHistoryPage(
   history: ProductHistory[],
 ) {
   return html`
-    <${MainLayout} title="Products" activeNavItem="products">
+    <${MainLayout} title=${t('list.products')} activeNavItem="products">
       <${Layout}>
         <${ProductHistoryView} product=${product} history=${history} operationId=${product.id} />
       </${Layout}>
