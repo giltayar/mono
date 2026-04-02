@@ -4,6 +4,7 @@ import type {
   NewSalesEvent,
   SalesEvent,
   SalesEventHistory,
+  SalesEventStats,
   SalesEventWithHistoryInfo,
 } from '../model/model.ts'
 import type {OngoingSalesEvent} from './model.ts'
@@ -44,6 +45,7 @@ export function renderSalesEventUpdatePage(
   history: SalesEventHistory[],
   {banner}: {banner?: Banner | undefined} = {},
   options: {appBaseUrl: string; apiSecret: string | undefined},
+  salesEventStats?: SalesEventStats,
 ) {
   return html`
     <${MainLayout} title=${t('list.salesEvents')} activeNavItem="sales-events" banner=${banner}>
@@ -52,6 +54,7 @@ export function renderSalesEventUpdatePage(
           salesEvent=${salesEvent}
           history=${history}
           options=${options}
+          salesEventStats=${salesEventStats}
         />
       </${Layout}>
     </${MainLayout}>

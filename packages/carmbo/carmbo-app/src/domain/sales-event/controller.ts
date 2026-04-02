@@ -6,6 +6,7 @@ import {
   listSalesEvents,
   querySalesEventByNumber,
   querySalesEventByHistoryId,
+  querySalesEventStats,
   createSalesEvent as model_createSalesEvent,
   updateSalesEvent as model_updateSalesEvent,
   deleteSalesEvent as model_deleteSalesEvent,
@@ -79,9 +80,10 @@ export async function showSalesEventUpdate(
   sql: Sql,
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
-  const [products, salesEventWithHistory] = await Promise.all([
+  const [products, salesEventWithHistory, salesEventStats] = await Promise.all([
     listProductsForChoosing(sql),
     querySalesEventByNumber(salesEventNumber, sql),
+    querySalesEventStats(salesEventNumber, sql),
   ])
   requestContext.set('products', products)
 
@@ -104,6 +106,7 @@ export async function showSalesEventUpdate(
       salesEventWithHistory.history,
       {banner},
       options,
+      salesEventStats,
     ),
   )
 }

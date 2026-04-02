@@ -1,6 +1,11 @@
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import {html} from '../../../commons/html-templates.ts'
-import type {SalesEvent, SalesEventHistory, SalesEventWithHistoryInfo} from '../model/model.ts'
+import type {
+  SalesEvent,
+  SalesEventHistory,
+  SalesEventStats,
+  SalesEventWithHistoryInfo,
+} from '../model/model.ts'
 import {SalesEventCreateOrUpdateFormFields} from './form.ts'
 import {SalesEventHistoryList, historyOperationToText} from './history.ts'
 import {getFixedT} from 'i18next'
@@ -40,10 +45,12 @@ export function SalesEventUpdateView({
   salesEvent,
   history,
   options: {appBaseUrl, apiSecret},
+  salesEventStats,
 }: {
   salesEvent: SalesEventWithHistoryInfo
   history: SalesEventHistory[]
   options: {appBaseUrl: string; apiSecret: string | undefined}
+  salesEventStats?: SalesEventStats
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -150,7 +157,32 @@ export function SalesEventUpdateView({
       </button>
       <div id="import-smoove-dialog-container"></div>
     </div>
+    <${SalesEventStatistics} salesEventStats=${salesEventStats} />
     <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
+  `
+}
+
+function SalesEventStatistics({salesEventStats}: {salesEventStats?: SalesEventStats}) {
+  if (!salesEventStats || salesEventStats.salesCount === 0) return ''
+
+  return html`
+    <div class="form-group col-md-6 mt-3" aria-label="Sales Statistics">
+      <h5 class="mb-3">${t('createUpdate.salesStatistics')}</h5>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between">
+          <span>${t('createUpdate.numberOfSales')}</span>
+          <strong>${salesEventStats.salesCount}</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>${t('createUpdate.totalRevenue')}</span>
+          <strong>${salesEventStats.totalRevenue}</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>${t('createUpdate.averageSalePrice')}</span>
+          <strong>${Math.round(salesEventStats.averageRevenue)}</strong>
+        </li>
+      </ul>
+    </div>
   `
 }
 

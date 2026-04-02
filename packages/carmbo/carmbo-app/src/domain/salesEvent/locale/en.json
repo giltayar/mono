@@ -22,7 +22,11 @@
     "cardcomWebhookUrl": "CardCom Webhook URL",
     "smooveInformation": "Smoove Information",
     "smooveWebhookUrl": "Smoove Webhook URL",
-    "importFromSmoove": "Import from Smoove"
+    "importFromSmoove": "Import from Smoove",
+    "salesStatistics": "Sales Statistics",
+    "numberOfSales": "Number of Sales",
+    "totalRevenue": "Total Revenue",
+    "averageSalePrice": "Average Sale Price"
   },
   "history": {
     "history": "History",

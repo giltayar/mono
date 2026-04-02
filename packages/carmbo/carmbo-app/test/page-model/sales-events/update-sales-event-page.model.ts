@@ -68,6 +68,20 @@ export function createUpdateSalesEventPageModel(page: Page) {
         locator: btnLocator,
       }),
     }),
+    salesStatistics: (sectionLocator = page.locator('[aria-label="Sales Statistics"]')) => ({
+      locator: sectionLocator,
+      numberOfSales: (
+        valueLocator = sectionLocator.locator('li', {hasText: 'Number of Sales'}).locator('strong'),
+      ) => ({locator: valueLocator}),
+      totalRevenue: (
+        valueLocator = sectionLocator.locator('li', {hasText: 'Total Revenue'}).locator('strong'),
+      ) => ({locator: valueLocator}),
+      averageSalePrice: (
+        valueLocator = sectionLocator
+          .locator('li', {hasText: 'Average Sale Price'})
+          .locator('strong'),
+      ) => ({locator: valueLocator}),
+    }),
     history: () => createSalesEventHistoryPageModel(page),
   }
 }

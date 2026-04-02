@@ -285,6 +285,46 @@ export async function querySalesEventByHistoryId(
   return {salesEvent: salesEvent[0], history}
 }
 
+export interface SalesEventStats {
+  salesCount: number
+  totalRevenue: number
+  averageRevenue: number
+}
+
+export async function querySalesEventStats(
+  salesEventNumber: number,
+  sql: Sql,
+): Promise<SalesEventStats> {
+  const result = await sql<{salesCount: string; totalRevenue: string}[]>`
+    SELECT
+      COUNT(sale.sale_number)::text AS sales_count,
+      COALESCE(SUM(
+        COALESCE(
+          sale_data_cardcom.cardcom_sale_revenue,
+          sale_data_cardcom_manual.cardcom_sale_revenue,
+          sale_data_no_invoice.sale_revenue,
+          0
+        )
+      ), 0)::text AS total_revenue
+    FROM
+      sale_history
+    JOIN sale ON sale.last_history_id = sale_history.id
+    LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
+    LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+    LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = sale.data_no_invoice_id
+    LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sale_history.data_manual_id
+    WHERE
+      sale_data.sales_event_number = ${salesEventNumber}
+      AND sale_history.operation <> 'delete'
+  `
+
+  const salesCount = Number(result[0].salesCount)
+  const totalRevenue = Number(result[0].totalRevenue)
+  const averageRevenue = salesCount > 0 ? totalRevenue / salesCount : 0
+
+  return {salesCount, totalRevenue, averageRevenue}
+}
+
 function salesEventSelect(salesEventNumber: number, sql: Sql) {
   return sql<SalesEventWithHistoryInfo[]>`
     SELECT

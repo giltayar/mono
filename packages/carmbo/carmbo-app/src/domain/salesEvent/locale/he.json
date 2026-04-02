@@ -22,7 +22,11 @@
     "cardcomWebhookUrl": "כתובת Webhook של קארדקום",
     "smooveInformation": "מידע סמוב",
     "smooveWebhookUrl": "כתובת Webhook של סמוב",
-    "importFromSmoove": "ייבוא מסמוב"
+    "importFromSmoove": "ייבוא מסמוב",
+    "salesStatistics": "סטטיסטיקת מכירות",
+    "numberOfSales": "מספר מכירות",
+    "totalRevenue": "הכנסה כוללת",
+    "averageSalePrice": "מחיר מכירה ממוצע"
   },
   "history": {
     "history": "היסטוריה",
