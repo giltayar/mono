@@ -112,6 +112,7 @@ export function SalesEventUpdateView({
         />
       </div>
     </form>
+    <${SalesEventStatistics} salesEventStats=${salesEventStats} />
     <div class="form-group col-md-6 mt-3">
       <h5 class="mb-3">${t('createUpdate.cardcomInformation')}</h5>
       <label style="width: 100%">
@@ -157,7 +158,6 @@ export function SalesEventUpdateView({
       </button>
       <div id="import-smoove-dialog-container"></div>
     </div>
-    <${SalesEventStatistics} salesEventStats=${salesEventStats} />
     <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
   `
 }
