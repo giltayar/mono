@@ -10,8 +10,7 @@ export function renderSalesPage(
   sales: SaleForGrid[],
   {withArchived, query, page}: {withArchived: boolean; query: string; page: number},
 ) {
-  const t = getFixedT(null, 'sales')
-  return html`${t('list.sales')}
+  return html`
     <${MainLayout} title="Sales" flash=${flash} activeNavItem="sales">
       <${Layout}>
         <${SalesView} sales=${sales} withArchived=${withArchived} query=${query} page=${page} />
@@ -39,7 +38,7 @@ function SalesView({
         <form
           class="mb-1 ms-auto"
           action="/sales"
-          hx-boost
+          hx-boostpvp
           hx-trigger="input changed throttle:500ms"
         >
           <fieldset class="row align-items-center me-0">
