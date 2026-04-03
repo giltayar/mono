@@ -37,9 +37,13 @@ function SalesView({
         <h2>${t('list.sales')}</h2>
         <form
           class="mb-1 ms-auto"
-          action="/sales"
-          hx-boostpvp
-          hx-trigger="input changed throttle:500ms"
+          hx-get="/sales"
+          hx-target=".sales-view table"
+          hx-select=".sales-view table"
+          hx-include="this"
+          hx-trigger="input changed delay:500ms from:input[type=search], change from:input[type=checkbox]"
+          hx-push-url="true"
+          hx-swap="outerHTML"
         >
           <fieldset class="row align-items-center me-0">
             <label class="form-check-label form-check col-auto"
