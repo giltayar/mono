@@ -362,7 +362,5 @@ test('create smoove list from product form', async ({page}) => {
   await expect(updateForm.smooveListIdInput().locator).toHaveValue('9: My New Smoove List')
   // The ID 10 happens to match an existing smoove list (id: 10, "Smoove List ID A"),
   // so on reload the name comes from the first match in the smoove service
-  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue(
-    '10: Smoove List ID A',
-  )
+  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue('10: Smoove List ID A')
 })
