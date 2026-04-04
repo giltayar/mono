@@ -1,3 +1,19 @@
+.products-view_form-fields:has(#smooveListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveListId {
+  display: none;
+}
+
+.products-view_form-fields:has(#smooveCancellingListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveCancellingListId {
+  display: none;
+}
+
+.products-view_form-fields:has(#smooveCancelledListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveCancelledListId {
+  display: none;
+}
+
+.products-view_form-fields:has(#smooveRemovedListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveRemovedListId {
+  display: none;
+}
+
 .products-view {
   h1 {
     margin-right: auto;

@@ -363,4 +363,18 @@ test('create smoove list from product form', async ({page}) => {
   // The ID 10 happens to match an existing smoove list (id: 10, "Smoove List ID A"),
   // so on reload the name comes from the first match in the smoove service
   await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue('10: Smoove List ID A')
+
+  // Create buttons should not be visible for fields that already have values
+  await expect(updateForm.smooveListIdCreateButton().locator).not.toBeVisible()
+  await expect(updateForm.smooveCancellingListIdCreateButton().locator).not.toBeVisible()
+
+  // Create buttons should be visible for fields that are empty
+  await expect(updateForm.smooveCancelledListIdCreateButton().locator).toBeVisible()
+  await expect(updateForm.smooveRemovedListIdCreateButton().locator).toBeVisible()
+
+  // Clear the smooveListId field — the Create button should reappear immediately (via CSS)
+  await updateForm.smooveListIdInput().locator.fill('')
+  await expect(updateForm.smooveListIdCreateButton().locator).toBeVisible()
+  // smooveCancellingListId still has a value, so its Create button should remain hidden
+  await expect(updateForm.smooveCancellingListIdCreateButton().locator).not.toBeVisible()
 })

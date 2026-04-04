@@ -224,7 +224,7 @@ export function ProductCreateOrUpdateFormFields({
             <label for="smooveListId">${t('form.smooveListId')}</label>
           </div>
           ${!isReadOnly
-            ? html`<div class="col-auto">
+            ? html`<div class="col-auto smoove-list-create-btn-smooveListId">
                 <button
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
@@ -267,7 +267,7 @@ export function ProductCreateOrUpdateFormFields({
             <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
           </div>
           ${!isReadOnly
-            ? html`<div class="col-auto">
+            ? html`<div class="col-auto smoove-list-create-btn-smooveCancellingListId">
                 <button
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
@@ -310,7 +310,7 @@ export function ProductCreateOrUpdateFormFields({
             <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
           </div>
           ${!isReadOnly
-            ? html`<div class="col-auto">
+            ? html`<div class="col-auto smoove-list-create-btn-smooveCancelledListId">
                 <button
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
@@ -353,7 +353,7 @@ export function ProductCreateOrUpdateFormFields({
             <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
           </div>
           ${!isReadOnly
-            ? html`<div class="col-auto">
+            ? html`<div class="col-auto smoove-list-create-btn-smooveRemovedListId">
                 <button
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
