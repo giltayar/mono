@@ -22,8 +22,16 @@ import {requestContext} from '@fastify/request-context'
 import {exceptionToBanner} from '../../layout/banner.ts'
 import {listAcademyCourses} from '../../commons/external-provider/academy-courses.ts'
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
-import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {
+  listSmooveLists,
+  invalidateSmooveListsCache,
+} from '../../commons/external-provider/smoove-lists.ts'
 import {submitPropagateAcademyCourseChangesJob} from '../sale/model/model-external-providers.ts'
+import {
+  renderSmooveListCreateDialog,
+  renderSmooveListCreateResult,
+  renderSmooveListCreateError,
+} from './view/smoove-list-dialog.ts'
 
 export async function showProducts(
   {
@@ -225,5 +233,24 @@ export async function deleteProduct(
       await showProductUpdate(productNumber, {product: undefined, error, operation}, sql),
       'body',
     )
+  }
+}
+
+export async function showSmooveListCreateDialog(targetFieldId: string): Promise<ControllerResult> {
+  return finalHtml(renderSmooveListCreateDialog(targetFieldId))
+}
+
+export async function createSmooveList(listName: string): Promise<ControllerResult> {
+  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const logger = requestContext.get('logger')!
+
+  try {
+    const listId = await smooveIntegration.createList(listName)
+    invalidateSmooveListsCache()
+
+    return finalHtml(renderSmooveListCreateResult(listId, listName))
+  } catch (error) {
+    logger.error({err: error}, 'create-smoove-list')
+    return finalHtml(renderSmooveListCreateError(String(error)))
   }
 }

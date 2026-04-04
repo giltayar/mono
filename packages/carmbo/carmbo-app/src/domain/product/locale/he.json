@@ -17,7 +17,14 @@
     "smooveCancellingListId": "מזהה רשימת ביטול סמוב",
     "smooveCancelledListId": "מזהה רשימת מבוטלים סמוב",
     "smooveRemovedListId": "מזהה רשימת הוסרו סמוב",
-    "notes": "הערות"
+    "notes": "הערות",
+    "createSmooveList": "יצירה"
+  },
+  "smooveListDialog": {
+    "createSmooveList": "יצירת רשימת סמוב",
+    "listName": "שם רשימה",
+    "create": "יצירה",
+    "cancel": "ביטול"
   },
   "createUpdate": {
     "newProduct": "מוצר חדש",

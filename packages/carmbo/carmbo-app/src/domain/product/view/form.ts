@@ -195,116 +195,176 @@ export function ProductCreateOrUpdateFormFields({
           />`}
         </fieldset>
 
-        <div class="mt-3 form-floating">
-          <input
-            name="smooveListId"
-            id="smooveListId_value"
-            type="hidden"
-            value=${product.smooveListId ?? ''}
-          />
-          <input
-            type="text"
-            list="smoove-lists-list"
-            placeholder=" "
-            class="form-control pick-item-title"
-            id="smooveListId"
-            spellcheck="false"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="off"
-            value=${product.smooveListId
-              ? generateItemTitle(
-                  product.smooveListId,
-                  smooveLists.find((g) => g.id === product.smooveListId)?.name,
-                )
-              : ''}
-            readonly=${isReadOnly}
-          />
-          <label for="smooveListId">${t('form.smooveListId')}</label>
+        <div class="mt-3 row">
+          <div class="col form-floating">
+            <input
+              name="smooveListId"
+              id="smooveListId_value"
+              type="hidden"
+              value=${product.smooveListId ?? ''}
+            />
+            <input
+              type="text"
+              list="smoove-lists-list"
+              placeholder=" "
+              class="form-control pick-item-title"
+              id="smooveListId"
+              spellcheck="false"
+              autocorrect="off"
+              autocomplete="off"
+              autocapitalize="off"
+              value=${product.smooveListId
+                ? generateItemTitle(
+                    product.smooveListId,
+                    smooveLists.find((g) => g.id === product.smooveListId)?.name,
+                  )
+                : ''}
+              readonly=${isReadOnly}
+            />
+            <label for="smooveListId">${t('form.smooveListId')}</label>
+          </div>
+          ${!isReadOnly
+            ? html`<div class="col-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveListId"
+                  hx-target="#smoove-list-create-dialog-container"
+                  hx-swap="innerHTML"
+                >
+                  ${t('form.createSmooveList')}
+                </button>
+              </div>`
+            : ''}
         </div>
 
-        <div class="mt-3 form-floating">
-          <input
-            name="smooveCancellingListId"
-            id="smooveCancellingListId_value"
-            type="hidden"
-            value=${product.smooveCancellingListId ?? ''}
-          />
-          <input
-            type="text"
-            list="smoove-lists-list"
-            placeholder=" "
-            class="form-control pick-item-title"
-            id="smooveCancellingListId"
-            spellcheck="false"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="off"
-            value=${product.smooveCancellingListId
-              ? generateItemTitle(
-                  product.smooveCancellingListId,
-                  smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
-                )
-              : ''}
-            readonly=${isReadOnly}
-          />
-          <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
+        <div class="mt-3 row">
+          <div class="col form-floating">
+            <input
+              name="smooveCancellingListId"
+              id="smooveCancellingListId_value"
+              type="hidden"
+              value=${product.smooveCancellingListId ?? ''}
+            />
+            <input
+              type="text"
+              list="smoove-lists-list"
+              placeholder=" "
+              class="form-control pick-item-title"
+              id="smooveCancellingListId"
+              spellcheck="false"
+              autocorrect="off"
+              autocomplete="off"
+              autocapitalize="off"
+              value=${product.smooveCancellingListId
+                ? generateItemTitle(
+                    product.smooveCancellingListId,
+                    smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
+                  )
+                : ''}
+              readonly=${isReadOnly}
+            />
+            <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
+          </div>
+          ${!isReadOnly
+            ? html`<div class="col-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancellingListId"
+                  hx-target="#smoove-list-create-dialog-container"
+                  hx-swap="innerHTML"
+                >
+                  ${t('form.createSmooveList')}
+                </button>
+              </div>`
+            : ''}
         </div>
 
-        <div class="mt-3 form-floating">
-          <input
-            name="smooveCancelledListId"
-            id="smooveCancelledListId_value"
-            type="hidden"
-            value=${product.smooveCancelledListId ?? ''}
-          />
-          <input
-            type="text"
-            list="smoove-lists-list"
-            placeholder=" "
-            class="form-control pick-item-title"
-            id="smooveCancelledListId"
-            spellcheck="false"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="off"
-            value=${product.smooveCancelledListId
-              ? generateItemTitle(
-                  product.smooveCancelledListId,
-                  smooveLists.find((g) => g.id === product.smooveCancelledListId)?.name,
-                )
-              : ''}
-            readonly=${isReadOnly}
-          />
-          <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
+        <div class="mt-3 row">
+          <div class="col form-floating">
+            <input
+              name="smooveCancelledListId"
+              id="smooveCancelledListId_value"
+              type="hidden"
+              value=${product.smooveCancelledListId ?? ''}
+            />
+            <input
+              type="text"
+              list="smoove-lists-list"
+              placeholder=" "
+              class="form-control pick-item-title"
+              id="smooveCancelledListId"
+              spellcheck="false"
+              autocorrect="off"
+              autocomplete="off"
+              autocapitalize="off"
+              value=${product.smooveCancelledListId
+                ? generateItemTitle(
+                    product.smooveCancelledListId,
+                    smooveLists.find((g) => g.id === product.smooveCancelledListId)?.name,
+                  )
+                : ''}
+              readonly=${isReadOnly}
+            />
+            <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
+          </div>
+          ${!isReadOnly
+            ? html`<div class="col-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancelledListId"
+                  hx-target="#smoove-list-create-dialog-container"
+                  hx-swap="innerHTML"
+                >
+                  ${t('form.createSmooveList')}
+                </button>
+              </div>`
+            : ''}
         </div>
 
-        <div class="mt-3 form-floating">
-          <input
-            name="smooveRemovedListId"
-            id="smooveRemovedListId_value"
-            type="hidden"
-            value=${product.smooveRemovedListId ?? ''}
-          />
-          <input
-            type="text"
-            list="smoove-lists-list"
-            placeholder=" "
-            class="form-control pick-item-title"
-            id="smooveRemovedListId"
-            spellcheck="false"
-            autocorrect="off"
-            autocomplete="off"
-            autocapitalize="off"
-            value=${product.smooveRemovedListId
-              ? generateItemTitle(
-                  product.smooveRemovedListId,
-                  smooveLists.find((g) => g.id === product.smooveRemovedListId)?.name,
-                )
-              : ''}
-            readonly=${isReadOnly}
-          />
-          <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
+        <div class="mt-3 row">
+          <div class="col form-floating">
+            <input
+              name="smooveRemovedListId"
+              id="smooveRemovedListId_value"
+              type="hidden"
+              value=${product.smooveRemovedListId ?? ''}
+            />
+            <input
+              type="text"
+              list="smoove-lists-list"
+              placeholder=" "
+              class="form-control pick-item-title"
+              id="smooveRemovedListId"
+              spellcheck="false"
+              autocorrect="off"
+              autocomplete="off"
+              autocapitalize="off"
+              value=${product.smooveRemovedListId
+                ? generateItemTitle(
+                    product.smooveRemovedListId,
+                    smooveLists.find((g) => g.id === product.smooveRemovedListId)?.name,
+                  )
+                : ''}
+              readonly=${isReadOnly}
+            />
+            <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
+          </div>
+          ${!isReadOnly
+            ? html`<div class="col-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveRemovedListId"
+                  hx-target="#smoove-list-create-dialog-container"
+                  hx-swap="innerHTML"
+                >
+                  ${t('form.createSmooveList')}
+                </button>
+              </div>`
+            : ''}
         </div>
 
         <div class="mt-3 form-floating">

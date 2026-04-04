@@ -17,7 +17,14 @@
     "smooveCancellingListId": "Smoove Cancelling List ID",
     "smooveCancelledListId": "Smoove Cancelled List ID",
     "smooveRemovedListId": "Smoove Removed List ID",
-    "notes": "Notes"
+    "notes": "Notes",
+    "createSmooveList": "Create"
+  },
+  "smooveListDialog": {
+    "createSmooveList": "Create Smoove List",
+    "listName": "List Name",
+    "create": "Create",
+    "cancel": "Cancel"
   },
   "createUpdate": {
     "newProduct": "New Product",

@@ -7,6 +7,8 @@ import {
   updateProduct,
   showOngoingProduct,
   deleteProduct,
+  showSmooveListCreateDialog,
+  createSmooveList,
 } from './controller.ts'
 import {NewProductSchema, ProductSchema} from './model.ts'
 import {OngoingProductSchema} from './view/model.ts'
@@ -69,6 +71,43 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     .post('/', {schema: {body: NewProductSchema}}, async (request, reply) => {
       return dealWithControllerResult(reply, await createProduct(request.body, sql))
     })
+
+  // Smoove list create dialog
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/smoove-list-create-dialog',
+    {
+      schema: {
+        querystring: z.object({
+          targetFieldId: z.enum([
+            'smooveListId',
+            'smooveCancellingListId',
+            'smooveCancelledListId',
+            'smooveRemovedListId',
+          ]),
+        }),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showSmooveListCreateDialog(request.query.targetFieldId),
+      ),
+  )
+
+  // Create smoove list
+  app.withTypeProvider<ZodTypeProvider>().post(
+    '/create-smoove-list',
+    {
+      schema: {
+        body: z.object({
+          listName: z.string().min(1),
+          targetFieldId: z.string(),
+        }),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(reply, await createSmooveList(request.body.listName)),
+  )
 
   // Edit existing product
   app

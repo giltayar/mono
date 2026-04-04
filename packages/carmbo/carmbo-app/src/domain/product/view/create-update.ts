@@ -33,6 +33,10 @@ export function ProductCreateView({product}: {product: Product}) {
         <${ProductCreateOrUpdateFormFields} product=${product} operation="write" />
       </div>
     </form>
+    <div
+      id="smoove-list-create-dialog-container"
+      hx-on::after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
   `
 }
 
@@ -106,6 +110,10 @@ export function ProductUpdateView({
         />
       </div>
     </form>
+    <div
+      id="smoove-list-create-dialog-container"
+      hx-on::after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
     <${ProductHistoryList} product=${product} history=${history} />
   `
 }

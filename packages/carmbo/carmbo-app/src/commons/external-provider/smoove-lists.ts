@@ -19,3 +19,8 @@ export async function listSmooveLists(smooveIntegration: SmooveIntegrationServic
 
   return cachedSmooveLists.groups
 }
+
+export function invalidateSmooveListsCache() {
+  cachedSmooveLists.groups = undefined
+  cachedSmooveLists.timestamp = 0
+}

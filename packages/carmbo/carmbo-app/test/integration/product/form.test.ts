@@ -317,3 +317,52 @@ test('remove all array fields', async ({page}) => {
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).not.toBeVisible()
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).not.toBeVisible()
 })
+
+test('create smoove list from product form', async ({page}) => {
+  await page.goto(new URL('/products', url()).href)
+
+  const productListModel = createProductListPageModel(page)
+  const newProductModel = createNewProductPageModel(page)
+  const updateProductModel = createUpdateProductPageModel(page)
+
+  await productListModel.createNewProductButton().locator.click()
+  await page.waitForURL(newProductModel.urlRegex)
+
+  const newForm = newProductModel.form()
+  await newForm.nameInput().locator.fill('Product With Created Smoove Lists')
+
+  // Click the Create button for smooveListId
+  await newForm.smooveListIdCreateButton().locator.click()
+
+  // The dialog should appear
+  const dialog = newForm.smooveListCreateDialog()
+  await expect(dialog.locator).toBeVisible()
+
+  // Fill in the list name and create
+  await dialog.listNameInput().locator.fill('My New Smoove List')
+  await dialog.createButton().locator.click()
+
+  // Dialog should close and the field should be populated
+  await expect(dialog.locator).not.toBeVisible()
+  await expect(newForm.smooveListIdInput().locator).toHaveValue('9: My New Smoove List')
+
+  // Now create another list for the cancelling field
+  await newForm.smooveCancellingListIdCreateButton().locator.click()
+  await expect(dialog.locator).toBeVisible()
+  await dialog.listNameInput().locator.fill('My Cancelling List')
+  await dialog.createButton().locator.click()
+  await expect(dialog.locator).not.toBeVisible()
+  await expect(newForm.smooveCancellingListIdInput().locator).toHaveValue('10: My Cancelling List')
+
+  // Create the product and verify the values are saved
+  await newForm.createButton().locator.click()
+  await page.waitForURL(updateProductModel.urlRegex)
+
+  const updateForm = updateProductModel.form()
+  await expect(updateForm.smooveListIdInput().locator).toHaveValue('9: My New Smoove List')
+  // The ID 10 happens to match an existing smoove list (id: 10, "Smoove List ID A"),
+  // so on reload the name comes from the first match in the smoove service
+  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue(
+    '10: Smoove List ID A',
+  )
+})

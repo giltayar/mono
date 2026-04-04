@@ -42,18 +42,58 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
     smooveListIdInput: (inputLocator = locator.getByLabel('Smoove List ID')) => ({
       locator: inputLocator,
     }),
+    smooveListIdCreateButton: (
+      btnLocator = locator
+        .locator('.row', {has: page.getByLabel('Smoove List ID')})
+        .getByRole('button', {name: 'Create'}),
+    ) => ({
+      locator: btnLocator,
+    }),
     smooveCancellingListIdInput: (
       inputLocator = locator.getByLabel('Smoove Cancelling List ID'),
     ) => ({
       locator: inputLocator,
+    }),
+    smooveCancellingListIdCreateButton: (
+      btnLocator = locator
+        .locator('.row', {has: page.getByLabel('Smoove Cancelling List ID')})
+        .getByRole('button', {name: 'Create'}),
+    ) => ({
+      locator: btnLocator,
     }),
     smooveCancelledListIdInput: (
       inputLocator = locator.getByLabel('Smoove Cancelled List ID'),
     ) => ({
       locator: inputLocator,
     }),
+    smooveCancelledListIdCreateButton: (
+      btnLocator = locator
+        .locator('.row', {has: page.getByLabel('Smoove Cancelled List ID')})
+        .getByRole('button', {name: 'Create'}),
+    ) => ({
+      locator: btnLocator,
+    }),
     smooveRemovedListIdInput: (inputLocator = locator.getByLabel('Smoove Removed List ID')) => ({
       locator: inputLocator,
+    }),
+    smooveRemovedListIdCreateButton: (
+      btnLocator = locator
+        .locator('.row', {has: page.getByLabel('Smoove Removed List ID')})
+        .getByRole('button', {name: 'Create'}),
+    ) => ({
+      locator: btnLocator,
+    }),
+    smooveListCreateDialog: (dialogLocator = page.locator('#smoove-list-create-dialog')) => ({
+      locator: dialogLocator,
+      listNameInput: (inputLocator = dialogLocator.getByLabel('List Name')) => ({
+        locator: inputLocator,
+      }),
+      createButton: (btnLocator = dialogLocator.getByRole('button', {name: 'Create'})) => ({
+        locator: btnLocator,
+      }),
+      cancelButton: (btnLocator = dialogLocator.getByRole('button', {name: 'Cancel'})) => ({
+        locator: btnLocator,
+      }),
     }),
     notesInput: (inputLocator = locator.getByLabel('Notes')) => ({
       locator: inputLocator,

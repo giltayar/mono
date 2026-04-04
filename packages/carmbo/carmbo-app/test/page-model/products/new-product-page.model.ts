@@ -8,7 +8,9 @@ export function createNewProductPageModel(page: Page) {
     urlRegex: /\/products\/new$/,
     pageTitle: (locator = page.getByRole('heading', {name: /New Product/})) => ({locator}),
     form: () => ({
-      createButton: (btnLocator = page.getByRole('button', {name: 'Create'})) => ({
+      createButton: (
+        btnLocator = page.getByLabel('Form actions').getByRole('button', {name: 'Create'}),
+      ) => ({
         locator: btnLocator,
       }),
       discardButton: (btnLocator = page.getByRole('button', {name: 'Discard'})) => ({
