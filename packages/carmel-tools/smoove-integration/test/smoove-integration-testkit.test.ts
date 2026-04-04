@@ -415,6 +415,19 @@ describe('Smoove Integration Testkit', () => {
     })
   })
 
+  describe('createList', () => {
+    it('should create a new list and return its id', async () => {
+      const service = createTestService()
+
+      const listId = await service.createList('New List')
+
+      assert.ok(typeof listId === 'number')
+      const lists = await service.fetchLists()
+      const newList = lists.find((l) => l.id === listId)
+      assert.deepStrictEqual(newList, {id: listId, name: 'New List'})
+    })
+  })
+
   describe('_test_reset_data', () => {
     it('should reset service state to original data', async () => {
       const service = createTestService()

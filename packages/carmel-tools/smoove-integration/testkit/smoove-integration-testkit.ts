@@ -45,6 +45,7 @@ export function createFakeSmooveIntegrationService(context: {
     restoreSmooveContact: sBind(restoreSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
     fetchLists: sBind(fetchLists),
+    createList: sBind(createList),
   }
 
   return {
@@ -214,6 +215,17 @@ async function restoreSmooveContact(
 
   // Remove blacklisted status (restore)
   contact.isDeleted = false
+}
+
+async function createList(s: SmooveIntegrationServiceData, name: string): Promise<number> {
+  const newId = Math.max(0, ...Object.keys(s.state.lists).map(Number)) + 1
+
+  s.state.lists[newId] = {
+    id: newId,
+    name,
+  }
+
+  return newId
 }
 
 async function fetchLists(s: SmooveIntegrationServiceData) {

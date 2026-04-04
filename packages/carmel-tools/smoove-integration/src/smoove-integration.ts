@@ -46,6 +46,7 @@ export function createSmooveIntegrationService(context: SmooveIntegrationService
     restoreSmooveContact: sBind(restoreSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
     fetchLists: sBind(fetchLists),
+    createList: sBind(createList),
   }
 }
 
@@ -273,6 +274,22 @@ async function changeContactLinkedLists(
   }
 
   return await response.json()
+}
+
+async function createList(s: SmooveIntegrationServiceData, name: string): Promise<number> {
+  const url = new URL('Lists', s.context.apiUrl)
+
+  const response = (await fetchAsJsonWithJsonBody(
+    url,
+    {name},
+    {
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    },
+  )) as {id: number}
+
+  return response.id
 }
 
 export async function fetchLists(s: SmooveIntegrationServiceData): Promise<SmooveList[]> {
