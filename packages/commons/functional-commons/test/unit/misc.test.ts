@@ -20,6 +20,7 @@ import {
   clone,
   sresult,
   assertNever,
+  when,
 } from '../../src/functional-commons.ts'
 
 describe('functional-commons', function () {
@@ -366,8 +367,24 @@ describe('functional-commons', function () {
       if (foo === 'a') {
       } else {
         //@ts-expect-error this should fail exhaustiveness
-        assert.throw(() => assertNever(foo))
+        assert.throws(() => assertNever(foo))
       }
+    })
+  })
+
+  describe('when', () => {
+    it('should return value if condition is true', () => {
+      assert.strictEqual(
+        when(true, () => 42),
+        42,
+      )
+    })
+
+    it('should return undefined if condition is false', () => {
+      assert.strictEqual(
+        when(false, () => 42),
+        undefined,
+      )
     })
   })
 })

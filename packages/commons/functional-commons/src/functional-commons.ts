@@ -257,3 +257,11 @@ export function sresult<T>(
 export function assertNever(something: never): never {
   throw new Error(`Unexpected value: ${something}`)
 }
+
+export function when<T>(condition: any, valueFunc: () => T): T | undefined {
+  if (condition) {
+    return valueFunc()
+  } else {
+    return undefined
+  }
+}
