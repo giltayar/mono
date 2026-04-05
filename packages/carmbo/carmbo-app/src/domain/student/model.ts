@@ -128,6 +128,10 @@ export async function createStudent(
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
 
+    if (await isStudentInformationUnique(normalizedStudent, sql)) {
+      throw new Error('Email or phone number already exists for another student')
+    }
+
     const studentNumberResult = await sql<{studentNumber: number}[]>`
       INSERT INTO student_history VALUES
         (${historyId}, ${dataId}, DEFAULT, ${now}, 'create', ${reason ?? null})
@@ -630,4 +634,41 @@ export async function fetchMagicLinksForStudent(
       }
     })
   ).filter((l) => !!l)
+}
+
+async function isStudentInformationUnique(student: Student | NewStudent, sql: Sql) {
+  const filters: PendingQuery<Row[]>[] = []
+
+  if (student.emails.length > 0) {
+    filters.push(sql`email IN ${sql(student.emails)}`)
+  }
+
+  if (student.phones && student.phones.length > 0) {
+    filters.push(sql`phone IN ${sql(student.phones)}`)
+  }
+
+  if (filters.length === 0) {
+    return false
+  }
+
+  if ('studentNumber' in student) {
+    filters.push(sql`student_number <> ${student.studentNumber}`)
+  } else {
+    filters.push(sql`false`)
+  }
+
+  const result = await sql`
+    SELECT
+      student.student_number
+    FROM
+      student_history
+      JOIN student ON student.last_history_id = student_history.id
+      LEFT JOIN student_email ON student_email.data_id = student_history.data_id
+      LEFT JOIN student_phone ON student_phone.data_id = student_history.data_id
+    WHERE
+      ${filters.map((f) => sql`${f}`).reduce((a, b) => sql`${a} OR ${b}`)}
+    LIMIT 1
+  `
+
+  return result.length > 0
 }

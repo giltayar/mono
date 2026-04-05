@@ -160,6 +160,9 @@ export function setup(
     overridingDate = undefined
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE student_email RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE student_phone RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE student_data RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE product_data RESTART IDENTITY CASCADE`

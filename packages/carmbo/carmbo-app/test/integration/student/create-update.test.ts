@@ -108,6 +108,38 @@ test('create student then update her', async ({page}) => {
   await expect(firstRow.nameCell().locator).toHaveText('Jane Smith')
   await expect(firstRow.emailCell().locator).toHaveText('jane.smith@example.com')
   await expect(firstRow.phoneCell().locator).toHaveText('0546344456')
+
+  // Try to create another student with the same email — should fail
+  await studentListModel.createNewStudentButton().locator.click()
+  await page.waitForURL(newStudentModel.urlRegex)
+
+  const duplicateEmailForm = newStudentModel.form()
+  await duplicateEmailForm.names().firstNameInput(0).locator.fill('Duplicate')
+  await duplicateEmailForm.names().lastNameInput(0).locator.fill('Email')
+  await duplicateEmailForm.emails().emailInput(0).locator.fill('jane.smith@example.com')
+  await duplicateEmailForm.phones().phoneInput(0).locator.fill('0501234567')
+  await duplicateEmailForm.facebookNames().trashButton(0).locator.click()
+
+  await duplicateEmailForm.createButton().locator.click()
+
+  await expect(newStudentModel.header().errorBanner().locator).toHaveText(
+    'Creating student error: Email or phone number already exists for another student',
+  )
+
+  // Try to create another student with the same phone — should fail
+  await duplicateEmailForm.discardButton().locator.click()
+
+  await duplicateEmailForm.names().firstNameInput(0).locator.fill('Duplicate')
+  await duplicateEmailForm.names().lastNameInput(0).locator.fill('Phone')
+  await duplicateEmailForm.emails().emailInput(0).locator.fill('unique@example.com')
+  await duplicateEmailForm.phones().phoneInput(0).locator.fill('0546344456')
+  await duplicateEmailForm.facebookNames().trashButton(0).locator.click()
+
+  await duplicateEmailForm.createButton().locator.click()
+
+  await expect(newStudentModel.header().errorBanner().locator).toHaveText(
+    'Creating student error: Email or phone number already exists for another student',
+  )
 })
 
 test('discard button', async ({page}) => {
