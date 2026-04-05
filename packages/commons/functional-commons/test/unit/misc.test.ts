@@ -386,5 +386,15 @@ describe('functional-commons', function () {
         undefined,
       )
     })
+
+    it('should enable callback to accept condition that is verified to be non-nullable', () => {
+      const x = Math.random() < 0.5 ? undefined : ({a: 42} as const)
+
+      const result = when(x, (x) => x.a)
+
+      if (result !== undefined && result !== 42) {
+        throw new Error('Unexpected result: ' + result)
+      }
+    })
   })
 })

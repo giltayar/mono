@@ -258,9 +258,14 @@ export function assertNever(something: never): never {
   throw new Error(`Unexpected value: ${something}`)
 }
 
-export function when<T>(condition: any, valueFunc: () => T): T | undefined {
+export function when<C, T>(condition: C, valueFunc: (value: NonNullable<C>) => T): T | undefined
+export function when<T>(condition: unknown, valueFunc: () => T): T | undefined
+export function when<C, T>(
+  condition: C,
+  valueFunc?: ((value: NonNullable<C>) => T) | (() => T),
+): T | NonNullable<C> | undefined {
   if (condition) {
-    return valueFunc()
+    return (valueFunc as (value: NonNullable<C>) => T)(condition as NonNullable<C>)
   } else {
     return undefined
   }
