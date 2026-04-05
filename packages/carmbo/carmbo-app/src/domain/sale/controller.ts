@@ -65,6 +65,7 @@ import {querySaleWithProviders} from './model/model-external-providers.ts'
 import {listAcademyCourses} from '../../commons/external-provider/academy-courses.ts'
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {when} from '@giltayar/functional-commons'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -84,7 +85,7 @@ export async function showOngoingSale(sale: NewSale): Promise<ControllerResult> 
 export async function createStudentFromInvoice(sale: NewSale): Promise<ControllerResult> {
   const sql = requestContext.get('sql')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
 
@@ -143,7 +144,7 @@ export async function quickCreateStudent(body: {
   quickCreatePhone?: string
 }): Promise<ControllerResult> {
   const sql = requestContext.get('sql')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
 
@@ -221,7 +222,7 @@ export async function dealWithCardcomOneTimeSale(
   const nowService = requestContext.get('nowService')!
   const now = nowService()
   const sql = requestContext.get('sql')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
@@ -254,7 +255,7 @@ export async function dealWithNoInvoiceSale({
   lastName: string | undefined
 }): Promise<ControllerResult> {
   const nowService = requestContext.get('nowService')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const now = nowService()
   const sql = requestContext.get('sql')!
   const logger = requestContext.get('logger')!
@@ -332,15 +333,15 @@ export async function showSalePayments(saleNumber: number, sql: Sql): Promise<Co
 }
 
 export async function showSaleProviders(saleNumber: number, sql: Sql): Promise<ControllerResult> {
-  const academyIntegration = requestContext.get('academyIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const nowService = requestContext.get('nowService')!
   const now = nowService()
   const [academyCourses, whatsappGroups, smooveLists] = await Promise.all([
-    listAcademyCourses(academyIntegration, now),
+    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
     listWhatsAppGroups(whatsappIntegration, now),
-    listSmooveLists(smooveIntegration, now),
+    when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
   ])
 
   const saleWithProviders = await querySaleWithProviders(
@@ -454,8 +455,8 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
   try {
     const sql = requestContext.get('sql')!
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
-    const smooveIntegration = requestContext.get('smooveIntegration')!
-    const academyIntegration = requestContext.get('academyIntegration')!
+    const smooveIntegration = requestContext.get('smooveIntegration')
+    const academyIntegration = requestContext.get('academyIntegration')
     const nowService = requestContext.get('nowService')!
     const logger = requestContext.get('logger')!
     const now = nowService()
@@ -503,8 +504,8 @@ export async function refundSale(saleNumber: number): Promise<ControllerResult> 
 export async function disconnectSale(saleNumber: number): Promise<ControllerResult> {
   try {
     const sql = requestContext.get('sql')!
-    const academyIntegration = requestContext.get('academyIntegration')!
-    const smooveIntegration = requestContext.get('smooveIntegration')!
+    const academyIntegration = requestContext.get('academyIntegration')
+    const smooveIntegration = requestContext.get('smooveIntegration')
     const whatsappIntegration = requestContext.get('whatsappIntegration')!
     const nowService = requestContext.get('nowService')!
     const logger = requestContext.get('logger')!
@@ -535,8 +536,7 @@ export async function cancelSubscriptionBySalesEvent(
 ): Promise<ControllerResult> {
   const sql = requestContext.get('sql')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
   const now = nowService()
@@ -564,7 +564,6 @@ export async function cancelSubscriptionBySalesEvent(
       saleNumber,
       sql,
       cardcomIntegration,
-      academyIntegration,
       smooveIntegration,
       now,
       logger,
@@ -589,8 +588,7 @@ export async function cancelSubscriptionByProduct(
 ): Promise<ControllerResult> {
   const sql = requestContext.get('sql')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
   const now = nowService()
@@ -618,7 +616,6 @@ export async function cancelSubscriptionByProduct(
       saleNumber,
       sql,
       cardcomIntegration,
-      academyIntegration,
       smooveIntegration,
       now,
       logger,

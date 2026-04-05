@@ -60,23 +60,28 @@ export function apiRoute(
   }: {
     secret: string | undefined
     sql: Sql
-    smooveIntegration: SmooveIntegrationService
-    academyIntegration: AcademyIntegrationService
+    smooveIntegration: SmooveIntegrationService | undefined
+    academyIntegration: AcademyIntegrationService | undefined
     whatsappIntegration: WhatsAppIntegrationService
     nowService: NowService
   },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  initializeSaleJobHandlers(academyIntegration, smooveIntegration, sql, nowService)
-  initializeStandingOrderJobHandlers(
-    sql,
-    academyIntegration,
-    smooveIntegration,
-    whatsappIntegration,
-    nowService,
-  )
-  initializePropagateAcademyCourseChangesJobHandlers(academyIntegration, sql, nowService)
+  if (smooveIntegration && academyIntegration) {
+    initializeSaleJobHandlers(academyIntegration, smooveIntegration, sql, nowService)
+
+    initializeStandingOrderJobHandlers(
+      sql,
+      academyIntegration,
+      smooveIntegration,
+      whatsappIntegration,
+      nowService,
+    )
+  }
+  if (academyIntegration) {
+    initializePropagateAcademyCourseChangesJobHandlers(academyIntegration, sql, nowService)
+  }
 
   for (const path of ['/cardcom/sale', '/cardcom/one-time-sale'])
     appWithTypes.post(

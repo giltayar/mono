@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
+import {generateItemTitle, When} from '../../../commons/view-commons.ts'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
@@ -11,9 +11,13 @@ const t = getFixedT(null, 'product')
 export function ProductCreateOrUpdateFormFields({
   product,
   operation,
+  withAcademyIntegration,
+  withSmooveIntegration,
 }: {
   product: Product | OngoingProduct | NewProduct
   operation: 'read' | 'write'
+  withAcademyIntegration: boolean
+  withSmooveIntegration: boolean
 }) {
   const courses = requestContext.get('courses')!
   const whatsappGroups = requestContext.get('whatsappGroups')!
@@ -63,48 +67,50 @@ export function ProductCreateOrUpdateFormFields({
           <label for="productType">${t('form.productType')}</label>
         </div>
 
-        <fieldset aria-label=${t('form.academyCourses')} class="mt-3">
-          ${product.academyCourses?.map(
-            (courseId, i, l) => html`
-              <div class="products-view_item input-group">
-                <div class="form-floating">
-                  <input
-                    name="academyCourses[${i}]"
-                    id="academyCourse-${i}_value"
-                    type="hidden"
-                    value=${courseId}
-                  />
-                  <input
-                    id="academyCourse-${i}"
-                    value=${courseId
-                      ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
-                      : ''}
-                    list="academy-courses-list"
-                    type="text"
-                    placeholder=" "
-                    required
-                    class="form-control pick-item-title"
-                    spellcheck="false"
-                    autocorrect="off"
-                    autocomplete="off"
-                    autocapitalize="off"
-                    readonly=${isReadOnly}
-                  />
-                  <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
+        <${When} cond=${withAcademyIntegration}>
+          <fieldset aria-label=${t('form.academyCourses')} class="mt-3">
+            ${product.academyCourses?.map(
+              (courseId, i, l) => html`
+                <div class="products-view_item input-group">
+                  <div class="form-floating">
+                    <input
+                      name="academyCourses[${i}]"
+                      id="academyCourse-${i}_value"
+                      type="hidden"
+                      value=${courseId}
+                    />
+                    <input
+                      id="academyCourse-${i}"
+                      value=${courseId
+                        ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
+                        : ''}
+                      list="academy-courses-list"
+                      type="text"
+                      placeholder=" "
+                      required
+                      class="form-control pick-item-title"
+                      spellcheck="false"
+                      autocorrect="off"
+                      autocomplete="off"
+                      autocapitalize="off"
+                      readonly=${isReadOnly}
+                    />
+                    <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
+                  </div>
+                  ${operation === 'write' && html`<${RemoveButton} />`}
+                  ${operation === 'write' &&
+                  html`<${AddButton} itemsName="academyCourses" i=${i} l=${l} />`}
                 </div>
-                ${operation === 'write' && html`<${RemoveButton} />`}
-                ${operation === 'write' &&
-                html`<${AddButton} itemsName="academyCourses" i=${i} l=${l} />`}
-              </div>
-            `,
-          )}
-          ${operation === 'write' &&
-          html`<${AddButton}
-            itemsName="academyCourses"
-            humanName=${t('form.academyCourses')}
-            l=${product.academyCourses}
-          />`}
-        </fieldset>
+              `,
+            )}
+            ${operation === 'write' &&
+            html`<${AddButton}
+              itemsName="academyCourses"
+              humanName=${t('form.academyCourses')}
+              l=${product.academyCourses}
+            />`}
+          </fieldset>
+        <//>
 
         <fieldset aria-label=${t('form.whatsappGroups')} class="mt-3">
           ${product.whatsappGroups?.map(
@@ -195,177 +201,179 @@ export function ProductCreateOrUpdateFormFields({
           />`}
         </fieldset>
 
-        <div class="mt-3 row">
-          <div class="col form-floating">
-            <input
-              name="smooveListId"
-              id="smooveListId_value"
-              type="hidden"
-              value=${product.smooveListId ?? ''}
-            />
-            <input
-              type="text"
-              list="smoove-lists-list"
-              placeholder=" "
-              class="form-control pick-item-title"
-              id="smooveListId"
-              spellcheck="false"
-              autocorrect="off"
-              autocomplete="off"
-              autocapitalize="off"
-              value=${product.smooveListId
-                ? generateItemTitle(
-                    product.smooveListId,
-                    smooveLists.find((g) => g.id === product.smooveListId)?.name,
-                  )
-                : ''}
-              readonly=${isReadOnly}
-            />
-            <label for="smooveListId">${t('form.smooveListId')}</label>
+        <${When} cond=${withSmooveIntegration}>
+          <div class="mt-3 row">
+            <div class="col form-floating">
+              <input
+                name="smooveListId"
+                id="smooveListId_value"
+                type="hidden"
+                value=${product.smooveListId ?? ''}
+              />
+              <input
+                type="text"
+                list="smoove-lists-list"
+                placeholder=" "
+                class="form-control pick-item-title"
+                id="smooveListId"
+                spellcheck="false"
+                autocorrect="off"
+                autocomplete="off"
+                autocapitalize="off"
+                value=${product.smooveListId
+                  ? generateItemTitle(
+                      product.smooveListId,
+                      smooveLists.find((g) => g.id === product.smooveListId)?.name,
+                    )
+                  : ''}
+                readonly=${isReadOnly}
+              />
+              <label for="smooveListId">${t('form.smooveListId')}</label>
+            </div>
+            ${!isReadOnly
+              ? html`<div class="col-auto smoove-list-create-btn-smooveListId">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveListId"
+                    hx-target="#smoove-list-create-dialog-container"
+                    hx-swap="innerHTML"
+                  >
+                    ${t('form.createSmooveList')}
+                  </button>
+                </div>`
+              : ''}
           </div>
-          ${!isReadOnly
-            ? html`<div class="col-auto smoove-list-create-btn-smooveListId">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary btn-sm"
-                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveListId"
-                  hx-target="#smoove-list-create-dialog-container"
-                  hx-swap="innerHTML"
-                >
-                  ${t('form.createSmooveList')}
-                </button>
-              </div>`
-            : ''}
-        </div>
 
-        <div class="mt-3 row">
-          <div class="col form-floating">
-            <input
-              name="smooveCancellingListId"
-              id="smooveCancellingListId_value"
-              type="hidden"
-              value=${product.smooveCancellingListId ?? ''}
-            />
-            <input
-              type="text"
-              list="smoove-lists-list"
-              placeholder=" "
-              class="form-control pick-item-title"
-              id="smooveCancellingListId"
-              spellcheck="false"
-              autocorrect="off"
-              autocomplete="off"
-              autocapitalize="off"
-              value=${product.smooveCancellingListId
-                ? generateItemTitle(
-                    product.smooveCancellingListId,
-                    smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
-                  )
-                : ''}
-              readonly=${isReadOnly}
-            />
-            <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
+          <div class="mt-3 row">
+            <div class="col form-floating">
+              <input
+                name="smooveCancellingListId"
+                id="smooveCancellingListId_value"
+                type="hidden"
+                value=${product.smooveCancellingListId ?? ''}
+              />
+              <input
+                type="text"
+                list="smoove-lists-list"
+                placeholder=" "
+                class="form-control pick-item-title"
+                id="smooveCancellingListId"
+                spellcheck="false"
+                autocorrect="off"
+                autocomplete="off"
+                autocapitalize="off"
+                value=${product.smooveCancellingListId
+                  ? generateItemTitle(
+                      product.smooveCancellingListId,
+                      smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
+                    )
+                  : ''}
+                readonly=${isReadOnly}
+              />
+              <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
+            </div>
+            ${!isReadOnly
+              ? html`<div class="col-auto smoove-list-create-btn-smooveCancellingListId">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancellingListId"
+                    hx-target="#smoove-list-create-dialog-container"
+                    hx-swap="innerHTML"
+                  >
+                    ${t('form.createSmooveList')}
+                  </button>
+                </div>`
+              : ''}
           </div>
-          ${!isReadOnly
-            ? html`<div class="col-auto smoove-list-create-btn-smooveCancellingListId">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary btn-sm"
-                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancellingListId"
-                  hx-target="#smoove-list-create-dialog-container"
-                  hx-swap="innerHTML"
-                >
-                  ${t('form.createSmooveList')}
-                </button>
-              </div>`
-            : ''}
-        </div>
 
-        <div class="mt-3 row">
-          <div class="col form-floating">
-            <input
-              name="smooveCancelledListId"
-              id="smooveCancelledListId_value"
-              type="hidden"
-              value=${product.smooveCancelledListId ?? ''}
-            />
-            <input
-              type="text"
-              list="smoove-lists-list"
-              placeholder=" "
-              class="form-control pick-item-title"
-              id="smooveCancelledListId"
-              spellcheck="false"
-              autocorrect="off"
-              autocomplete="off"
-              autocapitalize="off"
-              value=${product.smooveCancelledListId
-                ? generateItemTitle(
-                    product.smooveCancelledListId,
-                    smooveLists.find((g) => g.id === product.smooveCancelledListId)?.name,
-                  )
-                : ''}
-              readonly=${isReadOnly}
-            />
-            <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
+          <div class="mt-3 row">
+            <div class="col form-floating">
+              <input
+                name="smooveCancelledListId"
+                id="smooveCancelledListId_value"
+                type="hidden"
+                value=${product.smooveCancelledListId ?? ''}
+              />
+              <input
+                type="text"
+                list="smoove-lists-list"
+                placeholder=" "
+                class="form-control pick-item-title"
+                id="smooveCancelledListId"
+                spellcheck="false"
+                autocorrect="off"
+                autocomplete="off"
+                autocapitalize="off"
+                value=${product.smooveCancelledListId
+                  ? generateItemTitle(
+                      product.smooveCancelledListId,
+                      smooveLists.find((g) => g.id === product.smooveCancelledListId)?.name,
+                    )
+                  : ''}
+                readonly=${isReadOnly}
+              />
+              <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
+            </div>
+            ${!isReadOnly
+              ? html`<div class="col-auto smoove-list-create-btn-smooveCancelledListId">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancelledListId"
+                    hx-target="#smoove-list-create-dialog-container"
+                    hx-swap="innerHTML"
+                  >
+                    ${t('form.createSmooveList')}
+                  </button>
+                </div>`
+              : ''}
           </div>
-          ${!isReadOnly
-            ? html`<div class="col-auto smoove-list-create-btn-smooveCancelledListId">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary btn-sm"
-                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancelledListId"
-                  hx-target="#smoove-list-create-dialog-container"
-                  hx-swap="innerHTML"
-                >
-                  ${t('form.createSmooveList')}
-                </button>
-              </div>`
-            : ''}
-        </div>
 
-        <div class="mt-3 row">
-          <div class="col form-floating">
-            <input
-              name="smooveRemovedListId"
-              id="smooveRemovedListId_value"
-              type="hidden"
-              value=${product.smooveRemovedListId ?? ''}
-            />
-            <input
-              type="text"
-              list="smoove-lists-list"
-              placeholder=" "
-              class="form-control pick-item-title"
-              id="smooveRemovedListId"
-              spellcheck="false"
-              autocorrect="off"
-              autocomplete="off"
-              autocapitalize="off"
-              value=${product.smooveRemovedListId
-                ? generateItemTitle(
-                    product.smooveRemovedListId,
-                    smooveLists.find((g) => g.id === product.smooveRemovedListId)?.name,
-                  )
-                : ''}
-              readonly=${isReadOnly}
-            />
-            <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
+          <div class="mt-3 row">
+            <div class="col form-floating">
+              <input
+                name="smooveRemovedListId"
+                id="smooveRemovedListId_value"
+                type="hidden"
+                value=${product.smooveRemovedListId ?? ''}
+              />
+              <input
+                type="text"
+                list="smoove-lists-list"
+                placeholder=" "
+                class="form-control pick-item-title"
+                id="smooveRemovedListId"
+                spellcheck="false"
+                autocorrect="off"
+                autocomplete="off"
+                autocapitalize="off"
+                value=${product.smooveRemovedListId
+                  ? generateItemTitle(
+                      product.smooveRemovedListId,
+                      smooveLists.find((g) => g.id === product.smooveRemovedListId)?.name,
+                    )
+                  : ''}
+                readonly=${isReadOnly}
+              />
+              <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
+            </div>
+            ${!isReadOnly
+              ? html`<div class="col-auto smoove-list-create-btn-smooveRemovedListId">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveRemovedListId"
+                    hx-target="#smoove-list-create-dialog-container"
+                    hx-swap="innerHTML"
+                  >
+                    ${t('form.createSmooveList')}
+                  </button>
+                </div>`
+              : ''}
           </div>
-          ${!isReadOnly
-            ? html`<div class="col-auto smoove-list-create-btn-smooveRemovedListId">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary btn-sm"
-                  hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveRemovedListId"
-                  hx-target="#smoove-list-create-dialog-container"
-                  hx-swap="innerHTML"
-                >
-                  ${t('form.createSmooveList')}
-                </button>
-              </div>`
-            : ''}
-        </div>
+        <//>
 
         <div class="mt-3 form-floating">
           <textarea

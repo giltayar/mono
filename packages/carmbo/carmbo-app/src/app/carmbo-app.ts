@@ -34,10 +34,10 @@ import {version} from '../commons/version.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
-    academyIntegration: AcademyIntegrationService
-    whatsappIntegration: WhatsAppIntegrationService
-    smooveIntegration: SmooveIntegrationService
     cardcomIntegration: CardcomIntegrationService
+    whatsappIntegration: WhatsAppIntegrationService
+    academyIntegration: AcademyIntegrationService | undefined
+    smooveIntegration: SmooveIntegrationService | undefined
     nowService: () => Date
     logger: FastifyBaseLogger
     sql: Sql
@@ -82,10 +82,10 @@ export function makeApp({
     password: string
   }
   services: {
-    academyIntegration: AcademyIntegrationService
-    whatsappIntegration: WhatsAppIntegrationService
-    smooveIntegration: SmooveIntegrationService
     cardcomIntegration: CardcomIntegrationService
+    whatsappIntegration: WhatsAppIntegrationService
+    academyIntegration: AcademyIntegrationService | undefined
+    smooveIntegration: SmooveIntegrationService | undefined
     nowService: () => Date
   }
   auth0:

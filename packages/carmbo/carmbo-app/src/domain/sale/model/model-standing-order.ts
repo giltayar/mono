@@ -128,8 +128,7 @@ export async function cancelSubscription(
   saleNumber: number,
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
-  _academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
   now: Date,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -169,13 +168,16 @@ export async function cancelSubscription(
     await cardcomIntegration.enableDisableRecurringPayment(recurringOrderId, 'disable')
 
     logger.info({recurringOrderId: recurringOrderId}, 'moving-student-to-cancelled-smoove-listv')
-    await moveStudentToSmooveCancelledSubscriptionList(
-      studentNumber,
-      saleNumber,
-      smooveIntegration,
-      sql,
-      logger,
-    )
+
+    if (smooveIntegration) {
+      await moveStudentToSmooveCancelledSubscriptionList(
+        studentNumber,
+        saleNumber,
+        smooveIntegration,
+        sql,
+        logger,
+      )
+    }
 
     logger.info({recurringOrderId: recurringOrderId}, 'creating-history-for-cancellation')
     const saleDataActiveId = crypto.randomUUID()

@@ -95,7 +95,7 @@ export async function showStudentInHistory(
 
 export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {
   try {
-    const smooveIntegration = requestContext.get('smooveIntegration')!
+    const smooveIntegration = requestContext.get('smooveIntegration')
     const nowService = requestContext.get('nowService')!
 
     const studentNumber = await model_createStudent(
@@ -117,8 +117,8 @@ export async function createStudent(student: NewStudent, sql: Sql): Promise<Cont
 export async function updateStudent(student: Student, sql: Sql): Promise<ControllerResult> {
   const logger = requestContext.get('logger')!
   try {
-    const smooveIntegration = requestContext.get('smooveIntegration')!
-    const academyIntegration = requestContext.get('academyIntegration')!
+    const smooveIntegration = requestContext.get('smooveIntegration')
+    const academyIntegration = requestContext.get('academyIntegration')
     const nowService = requestContext.get('nowService')!
 
     const studentNumber = await model_updateStudent(
@@ -147,7 +147,7 @@ export async function deleteStudent(
   sql: Sql,
 ): Promise<ControllerResult> {
   try {
-    const smooveIntegration = requestContext.get('smooveIntegration')!
+    const smooveIntegration = requestContext.get('smooveIntegration')
     const nowService = requestContext.get('nowService')!
 
     const operationId = await model_deleteStudent(
@@ -195,9 +195,12 @@ export async function showStudentSales(studentNumber: number, sql: Sql): Promise
 }
 
 export async function showMagicLink(studentNumber: number, sql: Sql): Promise<ControllerResult> {
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')
 
   try {
+    if (!academyIntegration) {
+      throw new Error('Academy integration is not configured')
+    }
     const magicLinks = await fetchMagicLinksForStudent(studentNumber, academyIntegration, sql)
 
     return finalHtml(renderMagicLinks(magicLinks))

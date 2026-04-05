@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "8.2.3",
+  "version": "9.0.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -61,7 +61,7 @@
     "@giltayar/carmel-tools-cardcom-integration": "^7.1.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.2.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.5.1",
-    "@giltayar/functional-commons": "^2.1.0",
+    "@giltayar/functional-commons": "^2.2.1",
     "@giltayar/http-commons": "^3.1.1",
     "@giltayar/promise-commons": "^2.0.0",
     "@giltayar/url-commons": "^2.2.0",

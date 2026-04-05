@@ -256,8 +256,12 @@ async function listProductsForChoosing(sql: Sql) {
 }
 
 export async function showImportSmooveDialog(salesEventNumber: number): Promise<ControllerResult> {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
+
+  if (!smooveIntegration) {
+    throw new Error('Smoove integration is not configured')
+  }
 
   const smooveLists = await listSmooveLists(smooveIntegration, nowService())
 

@@ -17,37 +17,46 @@ import type {
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
 import type {NowService} from '../../../commons/now-service.ts'
+import {when} from '@giltayar/functional-commons'
 
 export type SaleWithProviders = {
   saleNumber: number
   products: {
     productNumber: number
     productName: string
-    academyCourses: {courseId: string; name: string; isConnected: boolean}[]
-    smooveLists: {
-      isListConnected: boolean
-      listName: string
-      isCancelledListConnected: boolean
-      cancelledListName: string
-      isRemovedListConnected: boolean
-      removedListName: string
-    }
+    academyCourses: {courseId: string; name: string; isConnected: boolean}[] | undefined
+    smooveLists:
+      | {
+          isListConnected: boolean
+          listName: string
+          isCancelledListConnected: boolean
+          cancelledListName: string
+          isRemovedListConnected: boolean
+          removedListName: string
+        }
+      | undefined
     whatsAppGroups: {groupId: string; name: string; isConnected: boolean}[]
   }[]
 }
 
 export async function querySaleWithProviders(
   saleNumber: number,
-  academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService | undefined,
+  smooveIntegration: SmooveIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
-  academyCourses: AcademyCourse[],
-  smooveLists: SmooveList[],
+  academyCourses: AcademyCourse[] | undefined,
+  smooveLists: SmooveList[] | undefined,
   whatsappGroups: WhatsAppGroup[],
   sql: Sql,
 ): Promise<SaleWithProviders | undefined> {
-  const academyCoursesNames = new Map<number, AcademyCourse>(academyCourses.map((c) => [c.id, c]))
-  const smooveListsMap = new Map<number, SmooveList>(smooveLists.map((l) => [l.id, l]))
+  const academyCoursesNames = when(
+    academyCourses,
+    (academyCourses) => new Map<number, AcademyCourse>(academyCourses.map((c) => [c.id, c]) || []),
+  )
+  const smooveListsMap = when(
+    smooveLists,
+    (smooveLists) => new Map<number, SmooveList>(smooveLists.map((l) => [l.id, l])),
+  )
   const whatsappGroupsMap = new Map<string, WhatsAppGroup>(whatsappGroups.map((g) => [g.id, g]))
 
   const saleResult = (await sql`
@@ -112,16 +121,20 @@ export async function querySaleWithProviders(
   const academyCoursesInSale = saleRow.products.flatMap((product) => product.academyCourses ?? [])
   const whatsAppGroupsInSale = saleRow.products.flatMap((product) => product.whatsAppGroups ?? [])
 
-  const academyConnnectionsP = email
-    ? Promise.all(
-        academyCoursesInSale.map(async (courseId) =>
-          academyIntegration.isStudentEnrolledInCourse(email, parseInt(courseId)),
-        ),
-      )
-    : Promise.resolve([])
-  const smooveContactP = saleRow.smooveContactId
-    ? smooveIntegration.fetchSmooveContact(saleRow.smooveContactId)
-    : undefined
+  const academyConnnectionsP = when(academyIntegration, (academyIntegration) =>
+    email
+      ? Promise.all(
+          academyCoursesInSale.map(async (courseId) =>
+            academyIntegration.isStudentEnrolledInCourse(email, parseInt(courseId)),
+          ),
+        )
+      : Promise.resolve([]),
+  )
+  const smooveContactP = when(smooveIntegration, (smooveIntegration) =>
+    saleRow.smooveContactId
+      ? smooveIntegration.fetchSmooveContact(saleRow.smooveContactId)
+      : undefined,
+  )
   const whatsappGroupParticipantsP = Promise.all(
     whatsAppGroupsInSale.map(async (groupId) =>
       whatsappIntegration.listParticipantsInGroup(groupId as WhatsAppGroupId),
@@ -141,27 +154,30 @@ export async function querySaleWithProviders(
     products: saleRow.products.map((product) => ({
       productNumber: product.productNumber,
       productName: product.productName,
-      academyCourses: (product.academyCourses ?? []).map((courseId) => ({
-        courseId,
-        isConnected: !!academyConnnections[academyCoursesInSale.findIndex((c) => c === courseId)],
-        name: academyCoursesNames.get(parseInt(courseId))?.name ?? '',
-      })),
-      smooveLists: {
-        isListConnected: !!smooveContact?.lists_Linked.includes(
+      academyCourses: when(academyIntegration, () =>
+        (product.academyCourses ?? []).map((courseId) => ({
+          courseId,
+          isConnected:
+            !!academyConnnections![academyCoursesInSale.findIndex((c) => c === courseId)],
+          name: academyCoursesNames!.get(parseInt(courseId))?.name ?? '',
+        })),
+      ),
+      smooveLists: when(smooveContact, (smooveContact) => ({
+        isListConnected: !!smooveContact.lists_Linked.includes(
           parseInt(product.smooveLists.listId ?? '0'),
         ),
-        listName: smooveListsMap.get(parseInt(product.smooveLists.listId ?? '0'))?.name ?? '',
-        isCancelledListConnected: !!smooveContact?.lists_Linked.includes(
+        listName: smooveListsMap!.get(parseInt(product.smooveLists.listId ?? '0'))?.name ?? '',
+        isCancelledListConnected: !!smooveContact.lists_Linked.includes(
           parseInt(product.smooveLists.cancelledListId ?? '0'),
         ),
         cancelledListName:
-          smooveListsMap.get(parseInt(product.smooveLists.cancelledListId ?? '0'))?.name ?? '',
-        isRemovedListConnected: !!smooveContact?.lists_Linked.includes(
+          smooveListsMap!.get(parseInt(product.smooveLists.cancelledListId ?? '0'))?.name ?? '',
+        isRemovedListConnected: !!smooveContact.lists_Linked.includes(
           parseInt(product.smooveLists.removedListId ?? '0'),
         ),
         removedListName:
-          smooveListsMap.get(parseInt(product.smooveLists.removedListId ?? '0'))?.name ?? '',
-      },
+          smooveListsMap!.get(parseInt(product.smooveLists.removedListId ?? '0'))?.name ?? '',
+      })),
       whatsAppGroups: phone
         ? (product.whatsAppGroups ?? []).map((groupId) => ({
             groupId,

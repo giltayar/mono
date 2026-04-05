@@ -36,8 +36,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1
       '@giltayar/functional-commons':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.2.1
+        version: 2.2.1
       '@giltayar/http-commons':
         specifier: ^3.1.1
         version: 3.1.1
@@ -286,8 +286,8 @@ packages:
     resolution: {integrity: sha512-jOzy/GzWeA1GnIFLZqEDMTMzgUhyiF4AkWPAPoXW53dI80BFa1LceFBn2R/RAoq8yM2TM2lrO4e+n2tBhtMEtw==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/1.4.2/52273a1dd0c4cda82a78739e780dbeca57b27af6}
     engines: {node: '>=15.0.0'}
 
-  '@giltayar/functional-commons@2.1.0':
-    resolution: {integrity: sha512-w89ww0ygJ3AY9SIx/IfWd51XSYBcBDAatvOdqQWTMInCT29g2fxp/fgqGdjitgtGGm15TarDxfgCkXTmP8Mkrw==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/2.1.0/83f1faa9cf9f176147590f14fb06bee1af2add1e}
+  '@giltayar/functional-commons@2.2.1':
+    resolution: {integrity: sha512-Hyj7yBU2fw963v7D/L5jomZauA87+61BvhNkhyS11ClFpgbBM83c4YdFM/i7XslW8cJ1gDDgqC+z+/K99fyWCQ==, tarball: https://npm.pkg.github.com/download/@giltayar/functional-commons/2.2.1/b05ba1715acaa7eeaf653b782b304fd45ddbc146}
     engines: {node: '>=24.0.0'}
 
   '@giltayar/http-commons@3.1.1':
@@ -2231,7 +2231,7 @@ snapshots:
 
   '@giltayar/carmel-tools-academy-integration@5.1.0':
     dependencies:
-      '@giltayar/functional-commons': 2.1.0
+      '@giltayar/functional-commons': 2.2.1
       '@giltayar/http-commons': 3.1.1
       '@giltayar/service-commons': 1.1.3
 
@@ -2245,7 +2245,7 @@ snapshots:
 
   '@giltayar/carmel-tools-smoove-integration@5.2.0':
     dependencies:
-      '@giltayar/functional-commons': 2.1.0
+      '@giltayar/functional-commons': 2.2.1
       '@giltayar/http-commons': 3.1.1
       '@giltayar/service-commons': 1.1.3
 
@@ -2269,11 +2269,11 @@ snapshots:
 
   '@giltayar/functional-commons@1.4.2': {}
 
-  '@giltayar/functional-commons@2.1.0': {}
+  '@giltayar/functional-commons@2.2.1': {}
 
   '@giltayar/http-commons@3.1.1':
     dependencies:
-      '@giltayar/functional-commons': 2.1.0
+      '@giltayar/functional-commons': 2.2.1
       '@giltayar/promise-commons': 2.0.0
       agentkeepalive: 4.6.0
       fastify: 5.8.4
@@ -2284,7 +2284,7 @@ snapshots:
 
   '@giltayar/scripting-commons@2.0.0':
     dependencies:
-      '@giltayar/functional-commons': 2.1.0
+      '@giltayar/functional-commons': 2.2.1
 
   '@giltayar/service-commons@1.1.3': {}
 

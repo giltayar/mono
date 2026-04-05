@@ -1,5 +1,5 @@
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
-import {makeError} from '@giltayar/functional-commons'
+import {makeError, when} from '@giltayar/functional-commons'
 import type {Sql, TransactionSql} from 'postgres'
 import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
@@ -14,7 +14,7 @@ export async function addCardcomSale(
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
-  smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
   cardcomIntegration: CardcomIntegrationService,
   sql: Sql,
   loggerParent: FastifyBaseLogger,
@@ -94,7 +94,7 @@ export async function addNoInvoiceSale(
   salesEventNumber: number,
   studentInfo: StudentInfoForASale,
   now: Date,
-  smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
   sql: Sql,
   loggerParent: FastifyBaseLogger,
 ) {
@@ -208,7 +208,7 @@ async function findStudent(
 async function createStudentFromStudentInfo(
   studentInfo: StudentInfoForASale,
   now: Date,
-  smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
   sql: Sql,
 ): Promise<{
   studentNumber: number
@@ -230,13 +230,15 @@ async function createStudentFromStudentInfo(
     `
   const studentNumber = parseInt(studentNumberResult[0].studentNumber)
 
-  const result = await smooveIntegration.createSmooveContact({
-    email,
-    telephone: phone,
-    firstName: studentInfo.firstName ?? '',
-    lastName: studentInfo.lastName ?? '',
-    birthday: undefined,
-  })
+  const result = await when(smooveIntegration, (smooveIntegration) =>
+    smooveIntegration.createSmooveContact({
+      email,
+      telephone: phone,
+      firstName: studentInfo.firstName ?? '',
+      lastName: studentInfo.lastName ?? '',
+      birthday: undefined,
+    }),
+  )
 
   let ops = [] as Promise<unknown>[]
 
@@ -630,7 +632,7 @@ export async function findOrCreateStudentFromInvoice(
   cardcomInvoiceNumber: string,
   now: Date,
   cardcomIntegration: CardcomIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
   sql: Sql,
 ): Promise<StudentInfoFound> {
   const invoiceInfo = await cardcomIntegration.fetchInvoiceInformation(

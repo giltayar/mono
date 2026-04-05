@@ -1,7 +1,7 @@
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
-import {makeError} from '@giltayar/functional-commons'
+import {makeError, when} from '@giltayar/functional-commons'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import {
@@ -51,8 +51,8 @@ export async function connectSale(
   now: Date,
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
-  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
+  academyIntegration: AcademyIntegrationService | undefined,
   loggerParent: FastifyBaseLogger,
 ) {
   const logger = loggerParent.child({
@@ -125,8 +125,8 @@ export async function connectSale(
 
 export async function disconnectSale(
   {saleNumber, reason}: DisconnectSalePayload,
-  academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService | undefined,
+  smooveIntegration: SmooveIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   now: Date,
   sql: Sql,
@@ -158,50 +158,46 @@ export async function disconnectSale(
 
   logger.info({email: student.email}, 'student-found-for-disconnecting-from-external-providers')
 
-  const academyConnectionP = disconnectStudentFromAcademyCourses(
-    saleNumber,
-    student.email,
-    academyIntegration,
-    sql,
-    logger,
+  const academyConnectionP = when(academyIntegration, (academyIntegration) =>
+    disconnectStudentFromAcademyCourses(saleNumber, student.email, academyIntegration, sql, logger),
   )
-  const smooveConnectionP = moveStudentToSmooveRemovedSubscriptionList(
-    student.studentNumber,
-    saleNumber,
-    smooveIntegration,
-    sql,
-    logger,
+  const smooveConnectionP = when(smooveIntegration, (smooveIntegration) =>
+    moveStudentToSmooveRemovedSubscriptionList(
+      student.studentNumber,
+      saleNumber,
+      smooveIntegration,
+      sql,
+      logger,
+    ),
   )
 
-  const whatsappConnectionP = student.phone
-    ? removeStudentFromWhatsAppGroups(
-        student.studentNumber,
-        student.phone,
-        whatsappIntegration,
-        sql,
-        logger,
-      )
-    : undefined
+  const whatsappConnectionP = when(student.phone, (phone) =>
+    removeStudentFromWhatsAppGroups(student.studentNumber, phone, whatsappIntegration, sql, logger),
+  )
 
   const [academyConnectionResult, smooveConnectionResult, whatsappConnectionResult] =
     await Promise.allSettled([academyConnectionP, smooveConnectionP, whatsappConnectionP])
 
-  if (academyConnectionResult.status === 'rejected') {
-    logger.error(
-      {err: academyConnectionResult.reason},
-      'disconnecting-student-from-academy-courses-failed',
-    )
-  } else {
-    logger.info('disconnecting-student-from-academy-courses-succeeded')
+  if (academyIntegration) {
+    if (academyConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: academyConnectionResult.reason},
+        'disconnecting-student-from-academy-courses-failed',
+      )
+    } else {
+      logger.info('disconnecting-student-from-academy-courses-succeeded')
+    }
   }
 
-  if (smooveConnectionResult.status === 'rejected') {
-    logger.error(
-      {err: smooveConnectionResult.reason},
-      'unsubscribing-student-from-smoove-lists-failed',
-    )
-  } else {
-    logger.info('unsubscribing-student-from-smoove-lists-succeeded')
+  if (smooveIntegration) {
+    if (smooveConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: smooveConnectionResult.reason},
+        'unsubscribing-student-from-smoove-lists-failed',
+      )
+    } else {
+      logger.info('unsubscribing-student-from-smoove-lists-succeeded')
+    }
   }
 
   if (whatsappConnectionResult.status === 'rejected') {
@@ -447,8 +443,8 @@ async function querySaleForConnectingSale(saleNumber: number, sql: Sql) {
 
 export async function connectSaleToExternalProviders(
   {studentNumber, saleNumber}: SaleConnectionToStudent,
-  academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService | undefined,
+  smooveIntegration: SmooveIntegrationService | undefined,
   sql: Sql,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -482,23 +478,21 @@ export async function connectSaleToExternalProviders(
     'student-found-for-connecting-to-external-providers',
   )
 
-  const academyConnectionP = connectStudentWithAcademyCourses(
-    saleNumber,
-    {
-      email: student.email,
-      name: student.firstName + ' ' + student.lastName,
-      phone: student.phone ?? '',
-    },
-    academyIntegration,
-    sql,
-    logger,
+  const academyConnectionP = when(academyIntegration, (academyIntegration) =>
+    connectStudentWithAcademyCourses(
+      saleNumber,
+      {
+        email: student.email,
+        name: student.firstName + ' ' + student.lastName,
+        phone: student.phone ?? '',
+      },
+      academyIntegration,
+      sql,
+      logger,
+    ),
   )
-  const smooveConnectionP = subscribeStudentInSmooveLists(
-    studentNumber,
-    saleNumber,
-    smooveIntegration,
-    sql,
-    logger,
+  const smooveConnectionP = when(smooveIntegration, (smooveIntegration) =>
+    subscribeStudentInSmooveLists(studentNumber, saleNumber, smooveIntegration, sql, logger),
   )
 
   const [academyConnectionResult, smooveConnectionResult] = await Promise.allSettled([
@@ -506,19 +500,26 @@ export async function connectSaleToExternalProviders(
     smooveConnectionP,
   ])
 
-  if (academyConnectionResult.status === 'rejected') {
-    logger.error(
-      {err: academyConnectionResult.reason},
-      'connecting-student-with-academy-courses-failed',
-    )
-  } else {
-    logger.info('connecting-student-with-academy-courses-succeeded')
+  if (academyConnectionResult) {
+    if (academyConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: academyConnectionResult.reason},
+        'connecting-student-with-academy-courses-failed',
+      )
+    } else {
+      logger.info('connecting-student-with-academy-courses-succeeded')
+    }
   }
 
-  if (smooveConnectionResult.status === 'rejected') {
-    logger.error({err: smooveConnectionResult.reason}, 'subscribing-student-to-smoove-lists-failed')
-  } else {
-    logger.info('subscribing-student-to-smoove-lists-succeeded')
+  if (smooveConnectionResult) {
+    if (smooveConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: smooveConnectionResult.reason},
+        'subscribing-student-to-smoove-lists-failed',
+      )
+    } else {
+      logger.info('subscribing-student-to-smoove-lists-succeeded')
+    }
   }
 
   if (

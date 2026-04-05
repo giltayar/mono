@@ -32,6 +32,7 @@ import {
   renderSmooveListCreateResult,
   renderSmooveListCreateError,
 } from './view/smoove-list-dialog.ts'
+import {when} from '@giltayar/functional-commons'
 
 export async function showProducts(
   {
@@ -51,16 +52,16 @@ export async function showProductCreate(
   product: NewProduct | undefined,
   {error}: {error?: any},
 ): Promise<ControllerResult> {
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
   const [courses, whatsappGroups, smooveLists] = await Promise.all([
-    listAcademyCourses(academyIntegration, now),
+    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
     listWhatsAppGroups(whatsappIntegration, now),
-    listSmooveLists(smooveIntegration, now),
+    when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
   ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
@@ -68,7 +69,13 @@ export async function showProductCreate(
 
   const banner = exceptionToBanner('Creating product error: ', error)
 
-  return finalHtml(renderProductsCreatePage(product, {banner}))
+  return finalHtml(
+    renderProductsCreatePage(product, {
+      banner,
+      withAcademyIntegration: Boolean(academyIntegration),
+      withSmooveIntegration: Boolean(smooveIntegration),
+    }),
+  )
 }
 
 export async function showProductUpdate(
@@ -76,16 +83,16 @@ export async function showProductUpdate(
   productWithError: {product: Product | undefined; error: any; operation: string} | undefined,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
   const [courses, whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
-    listAcademyCourses(academyIntegration, now),
+    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
     listWhatsAppGroups(whatsappIntegration, now),
-    listSmooveLists(smooveIntegration, now),
+    when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
     queryProductByNumber(productNumber, sql),
   ])
   requestContext.set('courses', courses)
@@ -106,7 +113,11 @@ export async function showProductUpdate(
   }
 
   return finalHtml(
-    renderProductUpdatePage(productWithHistory.product, productWithHistory.history, {banner}),
+    renderProductUpdatePage(productWithHistory.product, productWithHistory.history, {
+      banner,
+      withAcademyIntegration: Boolean(academyIntegration),
+      withSmooveIntegration: Boolean(smooveIntegration),
+    }),
   )
 }
 
@@ -114,22 +125,27 @@ export async function showOngoingProduct(
   product: OngoingProduct,
   {manipulations}: {manipulations: ProductManipulations},
 ): Promise<ControllerResult> {
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
   const [courses, whatsappGroups, smooveLists] = await Promise.all([
-    listAcademyCourses(academyIntegration, now),
+    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
     listWhatsAppGroups(whatsappIntegration, now),
-    listSmooveLists(smooveIntegration, now),
+    when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
   ])
   requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
 
-  return finalHtml(renderProductFormFields(product, manipulations, 'write'))
+  return finalHtml(
+    renderProductFormFields(product, manipulations, 'write', {
+      withAcademyIntegration: Boolean(academyIntegration),
+      withSmooveIntegration: Boolean(smooveIntegration),
+    }),
+  )
 }
 
 export async function showProductInHistory(
@@ -137,16 +153,16 @@ export async function showProductInHistory(
   operationId: string,
   sql: Sql,
 ): Promise<ControllerResult> {
-  const academyIntegration = requestContext.get('academyIntegration')!
+  const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
   const [courses, whatsappGroups, smooveLists, product] = await Promise.all([
-    listAcademyCourses(academyIntegration, now),
+    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
     listWhatsAppGroups(whatsappIntegration, now),
-    listSmooveLists(smooveIntegration, now),
+    when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
     queryProductByHistoryId(productNumber, operationId, sql),
   ])
   requestContext.set('courses', courses)
@@ -157,7 +173,12 @@ export async function showProductInHistory(
     return {status: 404, body: 'Product not found'}
   }
 
-  return finalHtml(renderProductViewInHistoryPage(product.product, product.history))
+  return finalHtml(
+    renderProductViewInHistoryPage(product.product, product.history, {
+      withAcademyIntegration: Boolean(academyIntegration),
+      withSmooveIntegration: Boolean(smooveIntegration),
+    }),
+  )
 }
 
 export async function createProduct(product: NewProduct, sql: Sql): Promise<ControllerResult> {
@@ -169,6 +190,7 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
   } catch (error) {
     const logger = requestContext.get('logger')!
     logger.error({err: error}, 'create-product')
+
     return showProductCreate(product, {error})
   }
 }
@@ -241,10 +263,13 @@ export async function showSmooveListCreateDialog(targetFieldId: string): Promise
 }
 
 export async function createSmooveList(listName: string): Promise<ControllerResult> {
-  const smooveIntegration = requestContext.get('smooveIntegration')!
+  const smooveIntegration = requestContext.get('smooveIntegration')
   const logger = requestContext.get('logger')!
 
   try {
+    if (!smooveIntegration) {
+      throw new Error('Smoove integration is not configured')
+    }
     const listId = await smooveIntegration.createList(listName)
     invalidateSmooveListsCache()
 

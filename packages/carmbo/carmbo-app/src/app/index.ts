@@ -4,7 +4,7 @@ import * as z from 'zod'
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
-import {throw_} from '@giltayar/functional-commons'
+import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
 import {initializei18next} from '../commons/i18next-utils.ts'
@@ -19,10 +19,10 @@ export const EnvironmentVariablesSchema = z.object({
   APP_BASE_URL: z.string().optional(),
   HOST: z.string().default('localhost'),
   PORT: z.coerce.number().default(3000),
-  ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string(),
+  ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string().optional(),
   GREEN_API_KEY: z.string(),
   GREEN_API_INSTANCE: z.coerce.number(),
-  SMOOVE_API_KEY: z.string(),
+  SMOOVE_API_KEY: z.string().optional(),
   SMOOVE_API_URL: z.url().optional().default('https://rest.smoove.io/v1/'),
   FORCE_NO_AUTH: z.string().optional(),
   CARMBO_AUTH0_CLIENT_ID: z.string(),
@@ -57,19 +57,23 @@ const {app, sql} = await makeApp({
     password: env.DB_PASSWORD,
   },
   services: {
-    academyIntegration: createAcademyIntegrationService({
-      accountApiKey: env.ACADEMY_CARMEL_ACCOUNT_API_KEY,
-      accountSubdomain: 'carmel',
-    }),
+    academyIntegration: when(env.ACADEMY_CARMEL_ACCOUNT_API_KEY, (accountApiKey) =>
+      createAcademyIntegrationService({
+        accountApiKey,
+        accountSubdomain: 'carmel',
+      }),
+    ),
     whatsappIntegration: createWhatsAppIntegrationService({
       greenApiKey: env.GREEN_API_KEY,
       greenApiInstanceId: env.GREEN_API_INSTANCE,
       greenApiBaseUrl: new URL('https://7105.api.greenapi.com'),
     }),
-    smooveIntegration: createSmooveIntegrationService({
-      apiKey: env.SMOOVE_API_KEY,
-      apiUrl: env.SMOOVE_API_URL,
-    }),
+    smooveIntegration: when(env.SMOOVE_API_KEY, (apiKey) =>
+      createSmooveIntegrationService({
+        apiKey,
+        apiUrl: env.SMOOVE_API_URL,
+      }),
+    ),
     cardcomIntegration: createCardcomIntegrationService({
       apiKey: env.CARDCOM_API_KEY,
       apiKeyPassword: env.CARDCOM_API_KEY_PASSWORD,

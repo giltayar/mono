@@ -36,15 +36,20 @@ export default function (
     sql: Sql
     appBaseUrl: string
     apiSecret: string | undefined
-    smooveIntegration: SmooveIntegrationService
-    academyIntegration: AcademyIntegrationService
+    smooveIntegration: SmooveIntegrationService | undefined
+    academyIntegration: AcademyIntegrationService | undefined
     nowService: NowService
   },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql, nowService)
-  initializePropagateSalesEventProductChangesJobHandlers(academyIntegration, sql, nowService)
+  if (smooveIntegration && academyIntegration) {
+    initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql, nowService)
+  }
+
+  if (academyIntegration) {
+    initializePropagateSalesEventProductChangesJobHandlers(academyIntegration, sql, nowService)
+  }
 
   // List sales events
   appWithTypes.get(

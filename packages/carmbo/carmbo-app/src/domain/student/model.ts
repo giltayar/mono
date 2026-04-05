@@ -167,8 +167,8 @@ export async function createStudent(
 export async function updateStudent(
   student: Student,
   reason: string | undefined,
-  smooveIntegration: SmooveIntegrationService,
-  academyIntegration: AcademyIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
+  academyIntegration: AcademyIntegrationService | undefined,
   now: Date,
   sql: Sql,
 ): Promise<number | undefined> {
@@ -209,7 +209,7 @@ export async function updateStudent(
 
     await addStudentStuff(normalizedStudent.studentNumber, normalizedStudent, smooveId, dataId, sql)
 
-    if (smooveId > 0) {
+    if (smooveIntegration && smooveId > 0) {
       await smooveIntegration.updateSmooveContact(smooveId, {
         email: normalizedStudent.emails[0],
         birthday: normalizedStudent.birthday,
@@ -219,7 +219,7 @@ export async function updateStudent(
       })
     }
 
-    if (originalEmail !== normalizedStudent.emails[0]) {
+    if (academyIntegration && originalEmail !== normalizedStudent.emails[0]) {
       await academyIntegration
         .updateStudentEmail(originalEmail, normalizedStudent.emails[0])
         .catch((err) => (err.status === 404 ? undefined : Promise.reject(err)))
@@ -248,7 +248,7 @@ export async function deleteStudent(
   studentNumber: number,
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
-  smooveIntegration: SmooveIntegrationService,
+  smooveIntegration: SmooveIntegrationService | undefined,
   now: Date,
   sql: Sql,
 ): Promise<string | undefined> {
@@ -282,12 +282,14 @@ export async function deleteStudent(
         WHERE student_number = ${studentNumber}
      `
 
-    if (deleteOperation === 'delete') {
-      await smooveIntegration.deleteSmooveContact(smooveId)
-    } else if (deleteOperation === 'restore') {
-      await smooveIntegration.restoreSmooveContact(smooveId)
-    } else {
-      assertNever(deleteOperation)
+    if (smooveIntegration) {
+      if (deleteOperation === 'delete') {
+        await smooveIntegration.deleteSmooveContact(smooveId)
+      } else if (deleteOperation === 'restore') {
+        await smooveIntegration.restoreSmooveContact(smooveId)
+      } else {
+        assertNever(deleteOperation)
+      }
     }
 
     return historyId

@@ -7,7 +7,15 @@ import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'product')
 
-export function ProductCreateView({product}: {product: Product}) {
+export function ProductCreateView({
+  product,
+  withAcademyIntegration,
+  withSmooveIntegration,
+}: {
+  product: Product
+  withAcademyIntegration: boolean
+  withSmooveIntegration: boolean
+}) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
       ${t('createUpdate.newProduct')}
@@ -30,7 +38,12 @@ export function ProductCreateView({product}: {product: Product}) {
         </section>
       </div>
       <div class="mt-3">
-        <${ProductCreateOrUpdateFormFields} product=${product} operation="write" />
+        <${ProductCreateOrUpdateFormFields}
+          product=${product}
+          operation="write"
+          withAcademyIntegration=${withAcademyIntegration}
+          withSmooveIntegration=${withSmooveIntegration}
+        />
       </div>
     </form>
     <div
@@ -44,10 +57,14 @@ export function ProductUpdateView({
   product,
   history,
   courses,
+  withAcademyIntegration,
+  withSmooveIntegration,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
   courses: AcademyCourse[]
+  withAcademyIntegration: boolean
+  withSmooveIntegration: boolean
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -107,6 +124,8 @@ export function ProductUpdateView({
           product=${product}
           operation=${product.historyOperation === 'delete' ? 'read' : 'write'}
           courses=${courses}
+          withAcademyIntegration=${withAcademyIntegration}
+          withSmooveIntegration=${withSmooveIntegration}
         />
       </div>
     </form>
@@ -121,9 +140,13 @@ export function ProductUpdateView({
 export function ProductHistoryView({
   product,
   history,
+  withAcademyIntegration,
+  withSmooveIntegration,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
+  withAcademyIntegration: boolean
+  withSmooveIntegration: boolean
 }) {
   const currentHistory = history.find((h) => h.historyId === product.id)
 
@@ -138,7 +161,12 @@ export function ProductHistoryView({
     <form class="col-md-6 mt-3" hx-indicator=".operation-spinner">
       <input name="productNumber" type="hidden" value=${product.productNumber} readonly />
       <div class="mt-3">
-        <${ProductCreateOrUpdateFormFields} product=${product} operation="read" />
+        <${ProductCreateOrUpdateFormFields}
+          product=${product}
+          operation="read"
+          withAcademyIntegration=${withAcademyIntegration}
+          withSmooveIntegration=${withSmooveIntegration}
+        />
       </div>
     </form>
     <${ProductHistoryList} product=${product} history=${history} />
