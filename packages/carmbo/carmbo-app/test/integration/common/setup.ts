@@ -142,7 +142,8 @@ export function setup(
         cardcomIntegration,
         nowService: () => (overridingDate ? overridingDate : new Date()),
       },
-      auth0: undefined,
+      firebase: undefined,
+      apiSecret: undefined,
       appBaseUrl: 'http://localhost:????',
       TEST_hooks,
     }))

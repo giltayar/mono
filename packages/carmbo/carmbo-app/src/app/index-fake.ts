@@ -66,7 +66,8 @@ const {app, sql} = await makeApp({
     cardcomIntegration: fakeCardcomIntegrationService,
     nowService: () => new Date(),
   },
-  auth0: undefined,
+  firebase: undefined,
+  apiSecret: undefined,
   appBaseUrl: 'http://localhost:3000',
 })
 

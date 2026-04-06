@@ -8,6 +8,7 @@ import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
 import {initializei18next} from '../commons/i18next-utils.ts'
+import {initializeFirebase} from '../auth/firebase-auth.ts'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_CONNECTION_STRING: z.string().optional(),
@@ -25,9 +26,9 @@ export const EnvironmentVariablesSchema = z.object({
   SMOOVE_API_KEY: z.string().optional(),
   SMOOVE_API_URL: z.url().optional().default('https://rest.smoove.io/v1/'),
   FORCE_NO_AUTH: z.string().optional(),
-  CARMBO_AUTH0_CLIENT_ID: z.string(),
-  CARMBO_AUTH0_CLIENT_SECRET: z.string(),
-  CARMBO_AUTH0_SESSION_SECRET: z.string(),
+  CARMBO_FIREBASE_API_KEY: z.string(),
+  CARMBO_FIREBASE_SERVICE_ACCOUNT_JSON: z.string(),
+  CARMBO_API_SECRET: z.string(),
   CARDCOM_API_KEY: z.string(),
   CARDCOM_API_KEY_PASSWORD: z.string(),
   CARDCOM_TERMINAL_NUMBER: z.coerce.number().default(150067),
@@ -46,6 +47,10 @@ const env = EnvironmentVariablesSchema.parse(
 const appBaseUrl = env.APP_BASE_URL
   ? env.APP_BASE_URL
   : `http://${env.HOST.includes(':') ? `[${env.HOST}]` : env.HOST}:${env.PORT}`
+
+if (!env.FORCE_NO_AUTH) {
+  initializeFirebase(env.CARMBO_FIREBASE_SERVICE_ACCOUNT_JSON)
+}
 
 const {app, sql} = await makeApp({
   db: {
@@ -81,14 +86,12 @@ const {app, sql} = await makeApp({
     }),
     nowService: () => new Date(),
   },
-  auth0: env.FORCE_NO_AUTH
+  firebase: env.FORCE_NO_AUTH
     ? undefined
     : {
-        clientId: env.CARMBO_AUTH0_CLIENT_ID,
-        clientSecret: env.CARMBO_AUTH0_CLIENT_SECRET,
-        domain: 'carmelegger.eu.auth0.com',
-        sessionSecret: env.CARMBO_AUTH0_SESSION_SECRET,
+        apiKey: env.CARMBO_FIREBASE_API_KEY,
       },
+  apiSecret: env.CARMBO_API_SECRET,
   appBaseUrl: appBaseUrl,
 })
 

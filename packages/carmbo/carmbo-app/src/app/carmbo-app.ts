@@ -2,7 +2,7 @@ import fastify, {type FastifyBaseLogger, type FastifyInstance} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
 import qs from 'qs'
-import Auth0 from '@auth0/auth0-fastify'
+import fastifyCookie from '@fastify/cookie'
 import fastifyCompress from '@fastify/compress'
 import postgres, {type Sql} from 'postgres'
 import studentRoutes from '../domain/student/route.ts'
@@ -31,6 +31,14 @@ import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {initializeJobExecutor} from '../domain/job/job-executor.ts'
 import {version} from '../commons/version.ts'
+import {
+  verifySessionCookie,
+  signInWithEmailPassword,
+  createSessionCookie,
+  revokeRefreshTokens,
+  FirebaseSignInError,
+} from '../auth/firebase-auth.ts'
+import {LoginPage} from '../auth/login-view.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -49,15 +57,19 @@ declare module '@fastify/request-context' {
   }
 }
 
-function addAuth0Hook(app: FastifyInstance, auth0Client: any) {
-  if (auth0Client)
-    app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
-      const session = await auth0Client.getSession({request, reply})
+function addFirebaseAuthHook(app: FastifyInstance) {
+  app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
+    const sessionCookie = request.cookies['__session']
 
-      if (!session) {
-        reply.redirect('/auth/login')
-      }
-    })
+    if (!sessionCookie) {
+      return reply.redirect('/auth/login')
+    }
+
+    const user = await verifySessionCookie(sessionCookie)
+    if (!user) {
+      return reply.redirect('/auth/login')
+    }
+  })
 }
 
 export function makeApp({
@@ -69,7 +81,8 @@ export function makeApp({
     cardcomIntegration,
     nowService,
   },
-  auth0,
+  firebase,
+  apiSecret,
   appBaseUrl,
   TEST_hooks,
 }: {
@@ -88,14 +101,12 @@ export function makeApp({
     smooveIntegration: SmooveIntegrationService | undefined
     nowService: () => Date
   }
-  auth0:
+  firebase:
     | {
-        domain: string
-        clientId: string
-        clientSecret: string
-        sessionSecret: string
+        apiKey: string
       }
     | undefined
+  apiSecret: string | undefined
   appBaseUrl: string
   TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
@@ -150,9 +161,7 @@ export function makeApp({
     }),
   })
 
-  if (auth0) {
-    app.register(Auth0, {...auth0, appBaseUrl})
-  }
+  app.register(fastifyCookie)
 
   app.register(fastifyCompress)
 
@@ -176,10 +185,57 @@ export function makeApp({
       pathName.endsWith('.svg'),
   })
 
+  if (firebase) {
+    app.get('/auth/login', async (_, reply) => {
+      reply.type('text/html')
+      return LoginPage({})
+    })
+
+    app.post('/auth/login', async (request, reply) => {
+      const {email, password} = request.body as {email: string; password: string}
+
+      try {
+        const idToken = await signInWithEmailPassword(firebase.apiKey, email, password)
+        const sessionCookie = await createSessionCookie(idToken)
+
+        reply.setCookie('__session', sessionCookie, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 14 * 24 * 60 * 60,
+        })
+
+        return reply.redirect('/')
+      } catch (err) {
+        const errorMessage =
+          err instanceof FirebaseSignInError ? 'Invalid email or password' : 'Login failed'
+        reply.type('text/html')
+        return LoginPage({error: errorMessage})
+      }
+    })
+
+    app.get('/auth/logout', async (request, reply) => {
+      const sessionCookie = request.cookies['__session']
+
+      if (sessionCookie) {
+        const user = await verifySessionCookie(sessionCookie)
+        if (user) {
+          await revokeRefreshTokens(user.uid)
+        }
+      }
+
+      reply.clearCookie('__session', {path: '/'})
+      return reply.redirect('/auth/login')
+    })
+  }
+
   app.get('/', async (_, reply) => reply.redirect('/sales'))
 
   app.register((app) => {
-    addAuth0Hook(app, app.auth0Client)
+    if (firebase) {
+      addFirebaseAuthHook(app)
+    }
 
     app.register(studentRoutes, {prefix: '/students', sql})
     app.register(productRoutes, {prefix: '/products', sql})
@@ -189,7 +245,7 @@ export function makeApp({
       smooveIntegration,
       academyIntegration,
       appBaseUrl,
-      apiSecret: auth0?.sessionSecret,
+      apiSecret,
       nowService,
     })
     app.register(salesRoutes, {prefix: '/sales', sql})
@@ -198,7 +254,7 @@ export function makeApp({
 
   app.register(salesApiRoute, {
     prefix: '/api/sales',
-    secret: auth0?.sessionSecret,
+    secret: apiSecret,
     sql,
     academyIntegration,
     smooveIntegration,
@@ -207,7 +263,7 @@ export function makeApp({
   })
   app.register(jobsApiRoute, {
     prefix: '/api/jobs',
-    secret: auth0?.sessionSecret,
+    secret: apiSecret,
   })
 
   app.register(salesLandingPageApiRoute, {
