@@ -21,6 +21,7 @@
   },
   "scripts": {
     "start": "run-p 'start:local:*'",
+    "start:liraz": "ACADEMY_CARMEL_ACCOUNT_API_KEY= SMOOVE_API_KEY= pnpm start",
     "start:stage": "DB_CONNECTION_STRING=$CARMBO_POSTGRES_STAGING_CONNECTION_STRING NODE_ENV=production node $INSPECT_APP --watch ./src/app/index.ts | pino-pretty",
     "stop": "run-p 'stop:*'",
     "start:local:docker-compose": "docker compose up -d",

@@ -44,7 +44,7 @@ export function renderSalesEventUpdatePage(
   salesEvent: SalesEventWithHistoryInfo,
   history: SalesEventHistory[],
   {banner}: {banner?: Banner | undefined} = {},
-  options: {appBaseUrl: string; apiSecret: string | undefined},
+  options: {appBaseUrl: string; apiSecret: string | undefined; withSmooveIntegration: boolean},
   salesEventStats?: SalesEventStats,
 ) {
   return html`
@@ -55,6 +55,7 @@ export function renderSalesEventUpdatePage(
           history=${history}
           options=${options}
           salesEventStats=${salesEventStats}
+          withSmooveIntegration=${options.withSmooveIntegration}
         />
       </${Layout}>
     </${MainLayout}>

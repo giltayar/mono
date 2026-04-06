@@ -4,7 +4,7 @@ import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whats
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {prepareDatabase} from './prepare-database.ts'
-import {range} from '@giltayar/functional-commons'
+import {range, when} from '@giltayar/functional-commons'
 import {initializei18next} from '../commons/i18next-utils.ts'
 
 const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
@@ -19,14 +19,16 @@ const {app, sql} = await makeApp({
     password: 'password',
   },
   services: {
-    academyIntegration: createFakeAcademyIntegrationService({
-      courses: [
-        {id: 1, name: 'Course 1'},
-        {id: 33, name: 'Course 2'},
-        {id: 777, name: 'Course 3'},
-      ],
-      enrolledContacts: new Map(),
-    }),
+    academyIntegration: when(process.env.ACADEMY_CARMEL_ACCOUNT_API_KEY, () =>
+      createFakeAcademyIntegrationService({
+        courses: [
+          {id: 1, name: 'Course 1'},
+          {id: 33, name: 'Course 2'},
+          {id: 777, name: 'Course 3'},
+        ],
+        enrolledContacts: new Map(),
+      }),
+    ),
     whatsappIntegration: createFakeWhatsAppIntegrationService({
       groups: {
         '1@g.us': {
@@ -46,19 +48,21 @@ const {app, sql} = await makeApp({
         },
       },
     }),
-    smooveIntegration: createFakeSmooveIntegrationService({
-      lists: [
-        {id: 2, name: 'Smoove List ID 1'},
-        {id: 4, name: 'Smoove List Cancelling 2'},
-        {id: 6, name: 'Smoove List Cancelled 3'},
-        {id: 8, name: 'Smoove List Removed 4'},
-        {id: 10, name: 'Smoove List ID A'},
-        {id: 12, name: 'Smoove List Cancelling B'},
-        {id: 14, name: 'Smoove List Cancelled C'},
-        {id: 16, name: 'Smoove List Removed D'},
-      ],
-      contacts: {},
-    }),
+    smooveIntegration: when(process.env.SMOOVE_API_KEY, () =>
+      createFakeSmooveIntegrationService({
+        lists: [
+          {id: 2, name: 'Smoove List ID 1'},
+          {id: 4, name: 'Smoove List Cancelling 2'},
+          {id: 6, name: 'Smoove List Cancelled 3'},
+          {id: 8, name: 'Smoove List Removed 4'},
+          {id: 10, name: 'Smoove List ID A'},
+          {id: 12, name: 'Smoove List Cancelling B'},
+          {id: 14, name: 'Smoove List Cancelled C'},
+          {id: 16, name: 'Smoove List Removed D'},
+        ],
+        contacts: {},
+      }),
+    ),
     cardcomIntegration: fakeCardcomIntegrationService,
     nowService: () => new Date(),
   },

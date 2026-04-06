@@ -80,6 +80,7 @@ export async function showSalesEventUpdate(
   sql: Sql,
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {
+  const withSmooveIntegration = !!requestContext.get('smooveIntegration')
   const [products, salesEventWithHistory, salesEventStats] = await Promise.all([
     listProductsForChoosing(sql),
     querySalesEventByNumber(salesEventNumber, sql),
@@ -105,7 +106,7 @@ export async function showSalesEventUpdate(
       salesEventWithHistory.salesEvent,
       salesEventWithHistory.history,
       {banner},
-      options,
+      {...options, withSmooveIntegration},
       salesEventStats,
     ),
   )

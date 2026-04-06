@@ -14,6 +14,7 @@ import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hook
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
 import {initializei18next} from '../../../src/commons/i18next-utils.ts'
+import {when} from '@giltayar/functional-commons'
 
 export type SmooveContact = {
   id: number
@@ -29,7 +30,11 @@ export type SmooveContact = {
 
 export function setup(
   testUrl: string,
-  options?: {smooveContacts?: Record<number, SmooveContact>},
+  options?: {
+    smooveContacts?: Record<number, SmooveContact>
+    withAcademyIntegration?: boolean // default is true
+    withSmooveIntegration?: boolean // default is true
+  },
 ): {
   url: () => URL
   sql: () => Sql
@@ -41,6 +46,9 @@ export function setup(
   setTime: (date: Date) => void
   resetTime: () => void
 } {
+  const withSmooveIntegration = options?.withSmooveIntegration ?? true
+  const withAcademyIntegration = options?.withAcademyIntegration ?? true
+
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
   let findAddress
   let teardown: (() => Promise<void>) | undefined
@@ -128,9 +136,9 @@ export function setup(
         password: 'password',
       },
       services: {
-        academyIntegration,
+        academyIntegration: when(withAcademyIntegration, () => academyIntegration),
         whatsappIntegration,
-        smooveIntegration,
+        smooveIntegration: when(withSmooveIntegration, () => smooveIntegration),
         cardcomIntegration,
         nowService: () => (overridingDate ? overridingDate : new Date()),
       },

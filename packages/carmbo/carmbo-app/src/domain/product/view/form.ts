@@ -1,5 +1,5 @@
 import {html} from '../../../commons/html-templates.ts'
-import {generateItemTitle, When} from '../../../commons/view-commons.ts'
+import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
@@ -67,50 +67,49 @@ export function ProductCreateOrUpdateFormFields({
           <label for="productType">${t('form.productType')}</label>
         </div>
 
-        <${When} cond=${withAcademyIntegration}>
-          <fieldset aria-label=${t('form.academyCourses')} class="mt-3">
-            ${product.academyCourses?.map(
-              (courseId, i, l) => html`
-                <div class="products-view_item input-group">
-                  <div class="form-floating">
-                    <input
-                      name="academyCourses[${i}]"
-                      id="academyCourse-${i}_value"
-                      type="hidden"
-                      value=${courseId}
-                    />
-                    <input
-                      id="academyCourse-${i}"
-                      value=${courseId
-                        ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
-                        : ''}
-                      list="academy-courses-list"
-                      type="text"
-                      placeholder=" "
-                      required
-                      class="form-control pick-item-title"
-                      spellcheck="false"
-                      autocorrect="off"
-                      autocomplete="off"
-                      autocapitalize="off"
-                      readonly=${isReadOnly}
-                    />
-                    <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
-                  </div>
-                  ${operation === 'write' && html`<${RemoveButton} />`}
-                  ${operation === 'write' &&
-                  html`<${AddButton} itemsName="academyCourses" i=${i} l=${l} />`}
+        ${withAcademyIntegration &&
+        html`<fieldset aria-label=${t('form.academyCourses')} class="mt-3">
+          ${product.academyCourses?.map(
+            (courseId, i, l) => html`
+              <div class="products-view_item input-group">
+                <div class="form-floating">
+                  <input
+                    name="academyCourses[${i}]"
+                    id="academyCourse-${i}_value"
+                    type="hidden"
+                    value=${courseId}
+                  />
+                  <input
+                    id="academyCourse-${i}"
+                    value=${courseId
+                      ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
+                      : ''}
+                    list="academy-courses-list"
+                    type="text"
+                    placeholder=" "
+                    required
+                    class="form-control pick-item-title"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    readonly=${isReadOnly}
+                  />
+                  <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
                 </div>
-              `,
-            )}
-            ${operation === 'write' &&
-            html`<${AddButton}
-              itemsName="academyCourses"
-              humanName=${t('form.academyCourses')}
-              l=${product.academyCourses}
-            />`}
-          </fieldset>
-        <//>
+                ${operation === 'write' && html`<${RemoveButton} />`}
+                ${operation === 'write' &&
+                html`<${AddButton} itemsName="academyCourses" i=${i} l=${l} />`}
+              </div>
+            `,
+          )}
+          ${operation === 'write' &&
+          html`<${AddButton}
+            itemsName="academyCourses"
+            humanName=${t('form.academyCourses')}
+            l=${product.academyCourses}
+          />`}
+        </fieldset> `}
 
         <fieldset aria-label=${t('form.whatsappGroups')} class="mt-3">
           ${product.whatsappGroups?.map(
@@ -201,7 +200,8 @@ export function ProductCreateOrUpdateFormFields({
           />`}
         </fieldset>
 
-        <${When} cond=${withSmooveIntegration}>
+        ${withSmooveIntegration &&
+        html`
           <div class="mt-3 row">
             <div class="col form-floating">
               <input
@@ -373,7 +373,7 @@ export function ProductCreateOrUpdateFormFields({
                 </div>`
               : ''}
           </div>
-        <//>
+        `}
 
         <div class="mt-3 form-floating">
           <textarea
@@ -390,24 +390,26 @@ ${product.notes ?? ''}</textarea
         </div>
       </div>
     </div>
-    <datalist id="academy-courses-list">
+    ${withAcademyIntegration &&
+    html`<datalist id="academy-courses-list">
       ${courses.map(
         (course) =>
           html`<option data-id=${course.id} value=${generateItemTitle(course.id, course.name)} />`,
       )}
-    </datalist>
+    </datalist>`}
     <datalist id="whatsapp-groups-list">
       ${whatsappGroups.map(
         (group) =>
           html`<option data-id=${group.id} value=${generateItemTitle(group.id, group.name)} />`,
       )}
     </datalist>
-    <datalist id="smoove-lists-list">
+    ${withSmooveIntegration &&
+    html`<datalist id="smoove-lists-list">
       ${smooveLists.map(
         (list) =>
           html`<option data-id=${list.id} value=${generateItemTitle(list.id, list.name)} />`,
       )}
-    </datalist>
+    </datalist>`}
   `
 }
 

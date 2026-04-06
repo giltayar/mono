@@ -46,11 +46,13 @@ export function SalesEventUpdateView({
   history,
   options: {appBaseUrl, apiSecret},
   salesEventStats,
+  withSmooveIntegration,
 }: {
   salesEvent: SalesEventWithHistoryInfo
   history: SalesEventHistory[]
   options: {appBaseUrl: string; apiSecret: string | undefined}
   salesEventStats?: SalesEventStats
+  withSmooveIntegration: boolean
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -128,7 +130,8 @@ export function SalesEventUpdateView({
         />
       </label>
     </div>
-    <div class="form-group col-md-6 mt-3">
+    ${withSmooveIntegration &&
+    html`<div class="form-group col-md-6 mt-3">
       <h5 class="mb-3">${t('createUpdate.smooveInformation')}</h5>
       <label style="width: 100%">
         ${t('createUpdate.smooveWebhookUrl')}
@@ -157,7 +160,7 @@ export function SalesEventUpdateView({
         ${t('createUpdate.importFromSmoove')}
       </button>
       <div id="import-smoove-dialog-container"></div>
-    </div>
+    </div>`}
     <${SalesEventHistoryList} salesEvent=${salesEvent} history=${history} />
   `
 }
