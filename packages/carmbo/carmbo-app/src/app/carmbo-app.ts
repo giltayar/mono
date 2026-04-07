@@ -207,7 +207,7 @@ export function makeApp({
     prefix: '/landing-page/sales',
   })
 
-  app.get('/health', async () => ({status: 'ok'}))
+  app.get('/health', async () => ({status: 'ok', version}))
 
   return {app, sql}
 }
