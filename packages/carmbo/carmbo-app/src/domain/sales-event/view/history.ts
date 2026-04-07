@@ -3,7 +3,7 @@ import type {SalesEventHistory, SalesEventWithHistoryInfo} from '../model/model.
 import type {HistoryOperation} from '../../../commons/operation-type.ts'
 import {getFixedT} from 'i18next'
 
-const t = getFixedT(null, 'salesEvent')
+const t = getFixedT(null, 'sales-event')
 
 export function SalesEventHistoryList({
   salesEvent,

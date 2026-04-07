@@ -14,7 +14,7 @@ export function MainLayout({
   title: string
   banner?: Banner
   children: string[]
-  activeNavItem: 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
+  activeNavItem: 'no-nav-bar' | 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }) {
   const dir = i18next.dir()
 
@@ -37,7 +37,10 @@ export function MainLayout({
         </head>
         <body>
           <div class="layouts-main-view">
-            <header class="container"><${NavBar} activeNavItem=${activeNavItem} /></header>
+            <header class="container">
+              ${activeNavItem !== 'no-nav-bar' &&
+              html`<${NavBar} activeNavItem=${activeNavItem} />`}
+            </header>
             <main class="container">${children}</main>
             <div id="banner-container">
               ${banner

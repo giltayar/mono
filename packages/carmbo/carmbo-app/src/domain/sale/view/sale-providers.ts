@@ -4,7 +4,7 @@ import {Tabs} from './layout.ts'
 import type {SaleWithProviders} from '../model/model-external-providers.ts'
 
 export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
       ${t('providers.saleProviders', {saleNumber: sale.saleNumber})}

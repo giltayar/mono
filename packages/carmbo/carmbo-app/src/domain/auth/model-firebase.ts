@@ -1,3 +1,4 @@
+import {makeError} from '@giltayar/functional-commons'
 import {initializeApp, cert, type App} from 'firebase-admin/app'
 import {getAuth, type Auth} from 'firebase-admin/auth'
 
@@ -28,7 +29,9 @@ export async function signInWithEmailPassword(
 
   if (!response.ok) {
     const error = await response.json()
-    throw new FirebaseSignInError(error.error?.message ?? 'UNKNOWN_ERROR')
+    throw makeError(error.error?.message ?? 'UNKNOWN_ERROR', {
+      code: error.error?.message === 'INVALID_LOGIN_CREDENTIALS' ? 'invalidCredentials' : undefined,
+    })
   }
 
   const data = (await response.json()) as {idToken: string}
@@ -52,14 +55,4 @@ export async function verifySessionCookie(
 
 export async function revokeRefreshTokens(uid: string): Promise<void> {
   await firebaseAuth.revokeRefreshTokens(uid)
-}
-
-export class FirebaseSignInError extends Error {
-  readonly code: string
-
-  constructor(code: string) {
-    super(`Firebase sign-in error: ${code}`)
-    this.name = 'FirebaseSignInError'
-    this.code = code
-  }
 }

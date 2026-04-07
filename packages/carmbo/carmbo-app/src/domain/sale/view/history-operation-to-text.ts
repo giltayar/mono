@@ -3,7 +3,7 @@ import {getFixedT} from 'i18next'
 import type {SaleHistoryOperation} from '../model/model.ts'
 
 export function saleHistoryOperationToText(operation: SaleHistoryOperation): string {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   switch (operation) {
     case 'create':
       return t('history.created')

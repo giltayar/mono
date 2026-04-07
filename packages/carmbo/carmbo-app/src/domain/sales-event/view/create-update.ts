@@ -10,7 +10,7 @@ import {SalesEventCreateOrUpdateFormFields} from './form.ts'
 import {SalesEventHistoryList, historyOperationToText} from './history.ts'
 import {getFixedT} from 'i18next'
 
-const t = getFixedT(null, 'salesEvent')
+const t = getFixedT(null, 'sales-event')
 
 export function SalesEventCreateView({salesEvent}: {salesEvent: SalesEvent}) {
   return html`

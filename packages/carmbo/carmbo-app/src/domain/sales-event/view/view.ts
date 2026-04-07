@@ -15,7 +15,7 @@ import {Layout} from './layout.ts'
 import type {Banner} from '../../../layout/banner.ts'
 import {getFixedT} from 'i18next'
 
-const t = getFixedT(null, 'salesEvent')
+const t = getFixedT(null, 'sales-event')
 
 export function renderSalesEventsCreatePage(
   salesEvent: NewSalesEvent | OngoingSalesEvent | undefined,

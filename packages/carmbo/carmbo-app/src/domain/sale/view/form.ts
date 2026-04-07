@@ -14,7 +14,7 @@ export function SalesFormFields({
 }) {
   const isReadOnly = operation === 'read' || !!sale.cardcomInvoiceDocumentUrl
   const isNotesReadOnly = operation === 'read'
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
 
   return html`
     <div class="sales-view_form-fields card">
@@ -396,7 +396,7 @@ ${sale.deliveryAddress?.notesToDeliveryPerson ?? ''}</textarea
 }
 
 function InvoiceDocumentUrlLink({url}: {url: string}) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`<a target="_blank" href=${url}>${t('form.viewInvoice')} </a
     ><object
       type="image/svg+xml"

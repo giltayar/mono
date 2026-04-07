@@ -3,7 +3,7 @@ import {getFixedT} from 'i18next'
 import {generateItemTitle} from '../../../commons/view-commons.ts'
 
 export function renderStudentSearchDialog() {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <dialog id="student-search-dialog" class="student-search-dialog">
       <h5 class="mb-3">${t('studentSearch.searchCreateStudent')}</h5>
@@ -107,7 +107,7 @@ export function renderStudentSearchDialog() {
 export function renderStudentSearchResults(
   students: {studentNumber: number; name: string; email: string | null; phone: string | null}[],
 ) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   if (students.length === 0) {
     return html`<p class="text-muted">${t('studentSearch.noStudentsFound')}</p>`
   }

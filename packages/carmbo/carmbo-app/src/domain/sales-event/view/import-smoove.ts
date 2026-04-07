@@ -3,7 +3,7 @@ import {generateItemTitle} from '../../../commons/view-commons.ts'
 import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/types'
 import {getFixedT} from 'i18next'
 
-const t = getFixedT(null, 'salesEvent')
+const t = getFixedT(null, 'sales-event')
 
 export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: SmooveList[]) {
   return html`

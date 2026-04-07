@@ -35,7 +35,7 @@ export function renderStudentInput(studentNumber: number, studentName: string) {
 }
 
 export function renderSaleCreatePage(sale: NewSale | undefined, {banner}: {banner?: Banner} = {}) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   const finalSale: NewSale = sale ?? {
     salesEventNumber: 0,
     salesEventName: '',
@@ -79,7 +79,7 @@ export function renderSaleViewPage(
   history: SaleHistory[],
   {banner}: {banner?: Banner} = {},
 ) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <${MainLayout} title=${t('list.sales')} activeNavItem="sales" banner=${banner}>
       <${Layout}>
@@ -90,7 +90,7 @@ export function renderSaleViewPage(
 }
 
 export function renderSalePaymentsPage(sale: SaleWithPayments) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <${MainLayout} title=${t('payments.salePayments', {saleNumber: sale.saleNumber})} activeNavItem="sales">
       <${Layout}>
@@ -101,7 +101,7 @@ export function renderSalePaymentsPage(sale: SaleWithPayments) {
 }
 
 export function renderSaleProvidersPage(sale: SaleWithProviders) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <${MainLayout} title=${t('providers.saleProviders', {saleNumber: sale.saleNumber})} activeNavItem="sales">
       <${Layout}>

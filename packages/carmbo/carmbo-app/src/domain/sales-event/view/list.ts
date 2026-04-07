@@ -5,7 +5,7 @@ import type {SalesEventForGrid} from '../model/model.ts'
 import {version} from '../../../commons/version.ts'
 import {getFixedT} from 'i18next'
 
-const t = getFixedT(null, 'salesEvent')
+const t = getFixedT(null, 'sales-event')
 
 export function renderSalesEventsPage(
   flash: string | undefined,

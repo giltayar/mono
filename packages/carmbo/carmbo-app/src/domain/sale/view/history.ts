@@ -11,7 +11,7 @@ export function SaleHistoryList({
   sale: SaleWithHistoryInfo
   history: SaleHistory[]
 }) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <h5 class="mt-3 col-md-6 border-bottom">${t('history.history')}</h5>
     <ul aria-label="Sale History" class="list-group mt-3 pb-3 col-md-6" style="font-size: 0.9rem">
@@ -37,7 +37,7 @@ export function SaleHistoryList({
 }
 
 export function historyOperationToText(operation: HistoryOperation | undefined): string {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   switch (operation) {
     case 'create':
       return t('history.created')

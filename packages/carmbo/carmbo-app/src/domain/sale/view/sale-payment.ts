@@ -4,7 +4,7 @@ import type {SaleWithPayments} from '../model/model.ts'
 import {Tabs} from './layout.ts'
 
 export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
       ${t('payments.salePayments', {saleNumber: sale.saleNumber})}

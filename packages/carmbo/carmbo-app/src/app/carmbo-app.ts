@@ -1,4 +1,4 @@
-import fastify, {type FastifyBaseLogger, type FastifyInstance} from 'fastify'
+import fastify, {type FastifyBaseLogger} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
 import qs from 'qs'
@@ -12,6 +12,7 @@ import salesRoutes, {
   landingPageApiRoute as salesLandingPageApiRoute,
   apiRoute as salesApiRoute,
 } from '../domain/sale/route.ts'
+import authRoutes, {useFirebaseAuth} from '../domain/auth/route.ts'
 import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {
@@ -31,14 +32,6 @@ import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {initializeJobExecutor} from '../domain/job/job-executor.ts'
 import {version} from '../commons/version.ts'
-import {
-  verifySessionCookie,
-  signInWithEmailPassword,
-  createSessionCookie,
-  revokeRefreshTokens,
-  FirebaseSignInError,
-} from '../auth/firebase-auth.ts'
-import {LoginPage} from '../auth/login-view.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -55,21 +48,6 @@ declare module '@fastify/request-context' {
     products: {id: number; name: string}[] | undefined
     TEST_hooks: Record<string, TEST_HookFunction> | undefined
   }
-}
-
-function addFirebaseAuthHook(app: FastifyInstance) {
-  app.addHook('preHandler', async function hasSessionPreHandler(request, reply) {
-    const sessionCookie = request.cookies['__session']
-
-    if (!sessionCookie) {
-      return reply.redirect('/auth/login')
-    }
-
-    const user = await verifySessionCookie(sessionCookie)
-    if (!user) {
-      return reply.redirect('/auth/login')
-    }
-  })
 }
 
 export function makeApp({
@@ -186,55 +164,14 @@ export function makeApp({
   })
 
   if (firebase) {
-    app.get('/auth/login', async (_, reply) => {
-      reply.type('text/html')
-      return LoginPage({})
-    })
-
-    app.post('/auth/login', async (request, reply) => {
-      const {email, password} = request.body as {email: string; password: string}
-
-      try {
-        const idToken = await signInWithEmailPassword(firebase.apiKey, email, password)
-        const sessionCookie = await createSessionCookie(idToken)
-
-        reply.setCookie('__session', sessionCookie, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 14 * 24 * 60 * 60,
-        })
-
-        return reply.redirect('/')
-      } catch (err) {
-        const errorMessage =
-          err instanceof FirebaseSignInError ? 'Invalid email or password' : 'Login failed'
-        reply.type('text/html')
-        return LoginPage({error: errorMessage})
-      }
-    })
-
-    app.get('/auth/logout', async (request, reply) => {
-      const sessionCookie = request.cookies['__session']
-
-      if (sessionCookie) {
-        const user = await verifySessionCookie(sessionCookie)
-        if (user) {
-          await revokeRefreshTokens(user.uid)
-        }
-      }
-
-      reply.clearCookie('__session', {path: '/'})
-      return reply.redirect('/auth/login')
-    })
+    app.register(authRoutes, {prefix: '/auth', firebase})
   }
 
   app.get('/', async (_, reply) => reply.redirect('/sales'))
 
   app.register((app) => {
     if (firebase) {
-      addFirebaseAuthHook(app)
+      useFirebaseAuth(app)
     }
 
     app.register(studentRoutes, {prefix: '/students', sql})

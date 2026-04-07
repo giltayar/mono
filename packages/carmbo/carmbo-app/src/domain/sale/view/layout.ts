@@ -17,7 +17,7 @@ export function Tabs({
   saleNumber: number
   activeTab: 'details' | 'payments' | 'providers'
 }) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <ul class="nav nav-tabs col-md-6">
       <li class="nav-item">

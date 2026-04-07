@@ -13,7 +13,7 @@ export function SaleUpdateView({
   history: SaleHistory[]
 }) {
   const isReadOnlySale = sale.isActive || sale.cardcomRefundTransactionId
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
 
   return html`
     <div class="sale-title border-bottom col-md-6 mt-3">
@@ -119,7 +119,7 @@ export function SaleUpdateView({
 }
 
 function SaleStatus({sale}: {sale: Sale}) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <div>
       ${sale.isStandingOrder

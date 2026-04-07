@@ -4,7 +4,7 @@ import type {NewSale} from '../model/model.ts'
 import {SalesFormFields} from './form.ts'
 
 export function SaleCreateView({sale}: {sale: NewSale}) {
-  const t = getFixedT(null, 'sales')
+  const t = getFixedT(null, 'sale')
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
       ${t('createUpdate.newSale')}

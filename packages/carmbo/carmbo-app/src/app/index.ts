@@ -8,7 +8,7 @@ import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
 import {initializei18next} from '../commons/i18next-utils.ts'
-import {initializeFirebase} from '../auth/firebase-auth.ts'
+import {initializeFirebase} from '../domain/auth/model-firebase.ts'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_CONNECTION_STRING: z.string().optional(),

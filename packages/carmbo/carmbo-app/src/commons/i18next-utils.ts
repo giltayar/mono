@@ -4,7 +4,7 @@ import i18nextFsBackend from 'i18next-fs-backend'
 export async function initializei18next(lng: string | undefined) {
   await i18next.use(i18nextFsBackend).init({
     lng: lng || 'en',
-    ns: ['layout', 'student', 'product', 'salesEvent', 'sales', 'job'],
+    ns: ['layout', 'student', 'product', 'sales-event', 'sale', 'job', 'auth'],
     backend: {
       loadPath: (lng: string, ns: string) => {
         if (ns === 'layout') {
