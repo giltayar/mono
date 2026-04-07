@@ -3,7 +3,6 @@ import {readFileSync} from 'node:fs'
 import {resolve, dirname} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {homedir} from 'node:os'
-import {execFileSync} from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -118,13 +117,69 @@ await railwayQuery(
   },
 )
 
-console.log(`Image updated to ${image}, triggering redeploy...`)
+console.log(`Image updated to ${image}, triggering deploy...`)
 
-execFileSync(
-  'npx',
-  ['railway', 'link', '-p', project.id, '-e', environmentName, '-s', serviceName],
-  {stdio: 'inherit'},
+// Set a variable to trigger a new deployment with the updated image config
+// (railway redeploy re-runs the old deployment, ignoring config changes)
+await railwayQuery(
+  `mutation variableUpsert($input: VariableUpsertInput!) {
+    variableUpsert(input: $input)
+  }`,
+  {
+    input: {
+      projectId: project.id,
+      environmentId: environment.id,
+      serviceId: service.id,
+      name: 'DEPLOY_VERSION',
+      value: version,
+    },
+  },
 )
-execFileSync('pnpm', ['exec', 'railway', 'redeploy', '-y'], {stdio: 'inherit'})
 
-console.log(`Successfully deployed ${image}`)
+// Poll for the latest deployment to reach a terminal state
+const POLL_INTERVAL_MS = 5000
+const TIMEOUT_MS = 5 * 60 * 1000
+const startTime = Date.now()
+
+while (true) {
+  const deploymentsData = await railwayQuery(
+    `query ($input: DeploymentListInput!) {
+      deployments(input: $input, first: 1) {
+        edges { node { id status } }
+      }
+    }`,
+    {
+      input: {
+        projectId: project.id,
+        environmentId: environment.id,
+        serviceId: service.id,
+      },
+    },
+  )
+
+  const latest = deploymentsData.deployments.edges[0]?.node
+  if (!latest) {
+    console.error('No deployment found')
+    process.exit(1)
+  }
+
+  const {status} = latest
+  process.stdout.write(`\rDeployment status: ${status}`)
+
+  if (status === 'SUCCESS') {
+    console.log(`\nSuccessfully deployed ${image}`)
+    break
+  }
+
+  if (['FAILED', 'CRASHED', 'REMOVED'].includes(status)) {
+    console.error(`\nDeployment ${status.toLowerCase()}`)
+    process.exit(1)
+  }
+
+  if (Date.now() - startTime > TIMEOUT_MS) {
+    console.error(`\nTimed out waiting for deployment (last status: ${status})`)
+    process.exit(1)
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
+}
