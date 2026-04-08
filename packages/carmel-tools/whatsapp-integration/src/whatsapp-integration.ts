@@ -43,6 +43,7 @@ export function createWhatsAppIntegrationService(context: WhatsAppIntegrationSer
     removeParticipantFromGroup: sBind(removeParticipantFromGroup),
     addParticipantToGroup: sBind(addParticipantToGroup),
     sendMessageToGroup: sBind(sendMessageToGroup),
+    sendMessageToContact: sBind(sendMessageToContact),
     listParticipantsInGroup: sBind(listParticipantsInGroup),
     fetchLatestMessagesFromGroup: sBind(fetchLatestMessagesFromGroup),
   }
@@ -151,9 +152,9 @@ function createApiUrl(s: WhatsAppIntegrationServiceData, endpoint: string): URL 
   )
 }
 
-async function sendMessageToGroup(
+async function sendMessage(
   s: WhatsAppIntegrationServiceData,
-  groupId: WhatsAppGroupId,
+  groupId: WhatsAppGroupId | WhatsAppContactId,
   message: string,
   {mediaUrl}: {mediaUrl: string | undefined} = {mediaUrl: undefined},
 ): Promise<void> {
@@ -182,6 +183,24 @@ async function sendMessageToGroup(
       caption: message,
     })
   }
+}
+
+async function sendMessageToGroup(
+  s: WhatsAppIntegrationServiceData,
+  groupId: WhatsAppGroupId,
+  message: string,
+  options: {mediaUrl: string | undefined} = {mediaUrl: undefined},
+): Promise<void> {
+  return await sendMessage(s, groupId, message, options)
+}
+
+async function sendMessageToContact(
+  s: WhatsAppIntegrationServiceData,
+  contactId: WhatsAppContactId,
+  message: string,
+  options: {mediaUrl: string | undefined} = {mediaUrl: undefined},
+): Promise<void> {
+  await sendMessage(s, contactId, message, options)
 }
 
 async function fetchLatestMessagesFromGroup(

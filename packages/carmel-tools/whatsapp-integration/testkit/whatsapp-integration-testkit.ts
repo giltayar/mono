@@ -18,6 +18,7 @@ type WhatsAppIntegrationServiceData = {
         participants: WhatsAppContactId[]
       }
     >
+    personMessages: {contactId: WhatsAppContactId; message: string}[]
   }
 }
 
@@ -33,6 +34,7 @@ export function createFakeWhatsAppIntegrationService(context: {
 }) {
   const state: WhatsAppIntegrationServiceData['state'] = {
     groups: structuredClone(context.groups),
+    personMessages: [],
   }
   const sBind: ServiceBind<WhatsAppIntegrationServiceData> = (f) => bind(f, {state})
 
@@ -41,12 +43,15 @@ export function createFakeWhatsAppIntegrationService(context: {
     removeParticipantFromGroup: sBind(removeParticipantFromGroup),
     addParticipantToGroup: sBind(addParticipantToGroup),
     sendMessageToGroup: sBind(sendMessageToGroup),
+    sendMessageToContact: sBind(sendMessageToContact),
     listParticipantsInGroup: sBind(listParticipantsInGroup),
     fetchLatestMessagesFromGroup: sBind(fetchLatestMessagesFromGroup),
   }
 
   return {
     ...service,
+    _test_sentContactMessages: (contactId: WhatsAppContactId) =>
+      state.personMessages.filter((m) => m.contactId === contactId).map((m) => m.message),
     _test_listParticipantsInGroup: async (groupId: WhatsAppGroupId) => {
       const group = state.groups[groupId]
       if (!group) throw new Error(`Group ${groupId} not found`)
@@ -105,6 +110,14 @@ async function sendMessageToGroup(
     textMessage: message,
     timestamp: new Date(),
   })
+}
+
+async function sendMessageToContact(
+  s: WhatsAppIntegrationServiceData,
+  contactId: WhatsAppContactId,
+  message: string,
+) {
+  s.state.personMessages.push({contactId, message})
 }
 
 async function listParticipantsInGroup(

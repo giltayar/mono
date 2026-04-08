@@ -151,6 +151,27 @@ describe('WhatsApp Integration Testkit', () => {
       )
     })
   })
+
+  describe('sendMessageToContact', () => {
+    it('should send a message to a person', async () => {
+      const service = createTestService()
+
+      await service.sendMessageToContact(testParticipant1, 'Hello person!')
+
+      const sent = service._test_sentContactMessages(testParticipant1)
+      assert.deepStrictEqual(sent, ['Hello person!'])
+    })
+
+    it('should accumulate multiple messages to different people', async () => {
+      const service = createTestService()
+
+      await service.sendMessageToContact(testParticipant1, 'Message 1')
+      await service.sendMessageToContact(testParticipant2, 'Message 2')
+
+      assert.deepStrictEqual(service._test_sentContactMessages(testParticipant1), ['Message 1'])
+      assert.deepStrictEqual(service._test_sentContactMessages(testParticipant2), ['Message 2'])
+    })
+  })
 })
 function createTextMessage(text: string): WhatsAppMessage {
   return {
