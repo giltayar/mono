@@ -11,14 +11,21 @@ export function renderSalesPage(
   {
     withArchived,
     onlyStandingOrders,
+    onlyCancellations,
     query,
     page,
-  }: {withArchived: boolean; onlyStandingOrders: boolean; query: string; page: number},
+  }: {
+    withArchived: boolean
+    onlyStandingOrders: boolean
+    onlyCancellations: boolean
+    query: string
+    page: number
+  },
 ) {
   return html`
     <${MainLayout} title="Sales" flash=${flash} activeNavItem="sales">
       <${Layout}>
-        <${SalesView} sales=${sales} withArchived=${withArchived} onlyStandingOrders=${onlyStandingOrders} query=${query} page=${page} />
+        <${SalesView} sales=${sales} withArchived=${withArchived} onlyStandingOrders=${onlyStandingOrders} onlyCancellations=${onlyCancellations} query=${query} page=${page} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -28,12 +35,14 @@ function SalesView({
   sales,
   withArchived,
   onlyStandingOrders,
+  onlyCancellations,
   query,
   page,
 }: {
   sales: SaleForGrid[]
   withArchived: boolean
   onlyStandingOrders: boolean
+  onlyCancellations: boolean
   query: string
   page: number
 }) {
@@ -47,6 +56,7 @@ function SalesView({
           hx-get="/sales"
           hx-target=".sales-view table"
           hx-select=".sales-view table"
+          hx-select-oob="#only-cancellations-label"
           hx-include="this"
           hx-trigger="input changed delay:500ms from:input[type=search], change from:input[type=checkbox]"
           hx-push-url="true"
@@ -70,6 +80,16 @@ function SalesView({
                 checked=${onlyStandingOrders}
               />
               ${t('list.onlyStandingOrders')}</label
+            >
+            <label class="form-check-label form-check col-auto" id="only-cancellations-label"
+              ><input
+                type="checkbox"
+                class="form-check-input"
+                name="only-cancellations"
+                checked=${onlyCancellations}
+                disabled=${!onlyStandingOrders}
+              />
+              ${t('list.onlyCancellations')}</label
             >
             <label class="form-input-label col-auto" for="query">${t('list.search')}</label>
             <input

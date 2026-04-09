@@ -220,4 +220,35 @@ test('searching sales', async ({page}) => {
   await saleListModel.search().onlyStandingOrdersCheckbox().locator.click()
 
   await expect(saleListModel.list().rows().locator).toHaveCount(2)
+
+  // Cancel Bob Williams' standing order subscription via the API endpoint
+  await page.goto(
+    new URL(
+      `/landing-page/sales/cancel-subscription?sales-event=${salesEvent1Number}&email=${encodeURIComponent('bob.williams@example.com')}`,
+      url(),
+    ).href,
+  )
+
+  await expect(async () => {
+    await page.goto(new URL('/sales', url()).href)
+
+    // Filter by standing orders first (enables cancellations checkbox)
+    await saleListModel.search().onlyStandingOrdersCheckbox().locator.click()
+    await expect(saleListModel.search().onlyCancellationsCheckbox().locator).toBeEnabled()
+
+    // Filter by cancellations only
+    await saleListModel.search().onlyCancellationsCheckbox().locator.click()
+
+    await expect(saleListModel.list().rows().locator).toHaveCount(1)
+    await expect(saleListModel.list().rows().row(0).studentCell().locator).toHaveText(
+      'Bob Williams',
+    )
+    await expect(saleListModel.list().rows().row(0).eventCell().locator).toHaveText('Fall Sale')
+  }).toPass()
+
+  // Uncheck standing orders filter - cancellations should become disabled and unchecked
+  await saleListModel.search().onlyStandingOrdersCheckbox().locator.click()
+
+  await expect(saleListModel.search().onlyCancellationsCheckbox().locator).toBeDisabled()
+  await expect(saleListModel.list().rows().locator).toHaveCount(2)
 })

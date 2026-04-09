@@ -27,6 +27,9 @@ export function createSaleListPageModel(page: Page) {
       onlyStandingOrdersCheckbox: (locator = page.getByLabel('Only standing orders')) => ({
         locator,
       }),
+      onlyCancellationsCheckbox: (locator = page.getByLabel('Only cancellations')) => ({
+        locator,
+      }),
       queryInput: (locator = page.getByLabel('Search:')) => ({locator}),
     }),
   }

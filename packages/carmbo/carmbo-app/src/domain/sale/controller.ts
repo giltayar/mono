@@ -291,27 +291,37 @@ export async function showSales(
     flash,
     withArchived,
     onlyStandingOrders,
+    onlyCancellations,
     query,
     page,
   }: {
     flash?: string
     withArchived: boolean
     onlyStandingOrders: boolean
+    onlyCancellations: boolean
     query: string | undefined
     page: number
   },
   sql: Sql,
 ): Promise<ControllerResult> {
+  const effectiveOnlyCancellations = onlyStandingOrders && onlyCancellations
   const sales = await listSales(sql, {
     withArchived,
     onlyStandingOrders,
+    onlyCancellations: effectiveOnlyCancellations,
     query: query ?? '',
     limit: 50,
     page,
   })
 
   return finalHtml(
-    renderSalesPage(flash, sales, {withArchived, onlyStandingOrders, query: query ?? '', page}),
+    renderSalesPage(flash, sales, {
+      withArchived,
+      onlyStandingOrders,
+      onlyCancellations: effectiveOnlyCancellations,
+      query: query ?? '',
+      page,
+    }),
   )
 }
 

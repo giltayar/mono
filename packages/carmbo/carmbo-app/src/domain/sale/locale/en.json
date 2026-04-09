@@ -66,6 +66,7 @@
     "sales": "Sales",
     "showArchived": "Show archived",
     "onlyStandingOrders": "Only standing orders",
+    "onlyCancellations": "Only cancellations",
     "search": "Search:",
     "searchPlaceholder": "Search",
     "saleNumber": "Sale #",

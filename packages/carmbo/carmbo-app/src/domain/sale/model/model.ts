@@ -155,12 +155,14 @@ export async function listSales(
   {
     withArchived,
     onlyStandingOrders,
+    onlyCancellations,
     query,
     limit,
     page,
   }: {
     withArchived: boolean
     onlyStandingOrders: boolean
+    onlyCancellations: boolean
     query: string
     limit: number
     page: number
@@ -174,6 +176,11 @@ export async function listSales(
 
   if (onlyStandingOrders) {
     filters.push(sql`sale_data_cardcom.recurring_order_id IS NOT NULL`)
+  }
+
+  if (onlyCancellations) {
+    filters.push(sql`sale_data_cardcom.recurring_order_id IS NOT NULL`)
+    filters.push(sql`sale_data_active.is_active = false`)
   }
 
   if (query) {
@@ -204,6 +211,7 @@ export async function listSales(
     LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
     LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = sale.data_no_invoice_id
     LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sale_history.data_manual_id
+    LEFT JOIN sale_data_active ON sale_data_active.data_active_id = sale_history.data_active_id
 
     LEFT JOIN sales_event ON sales_event.sales_event_number = sale_data.sales_event_number
     LEFT JOIN sales_event_data ON sales_event_data.data_id = sales_event.last_data_id
