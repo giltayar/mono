@@ -65,6 +65,7 @@
   "list": {
     "sales": "Sales",
     "showArchived": "Show archived",
+    "onlyStandingOrders": "Only standing orders",
     "search": "Search:",
     "searchPlaceholder": "Search",
     "saleNumber": "Sale #",

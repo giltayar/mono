@@ -290,14 +290,29 @@ export async function showSales(
   {
     flash,
     withArchived,
+    onlyStandingOrders,
     query,
     page,
-  }: {flash?: string; withArchived: boolean; query: string | undefined; page: number},
+  }: {
+    flash?: string
+    withArchived: boolean
+    onlyStandingOrders: boolean
+    query: string | undefined
+    page: number
+  },
   sql: Sql,
 ): Promise<ControllerResult> {
-  const sales = await listSales(sql, {withArchived, query: query ?? '', limit: 50, page})
+  const sales = await listSales(sql, {
+    withArchived,
+    onlyStandingOrders,
+    query: query ?? '',
+    limit: 50,
+    page,
+  })
 
-  return finalHtml(renderSalesPage(flash, sales, {withArchived, query: query ?? '', page}))
+  return finalHtml(
+    renderSalesPage(flash, sales, {withArchived, onlyStandingOrders, query: query ?? '', page}),
+  )
 }
 
 export async function showSale(

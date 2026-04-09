@@ -65,6 +65,7 @@
   "list": {
     "sales": "מכירות",
     "showArchived": "הצגת ארכיון",
+    "onlyStandingOrders": "רק הוראות קבע",
     "search": "חיפוש:",
     "searchPlaceholder": "חיפוש",
     "saleNumber": "מכירה #",

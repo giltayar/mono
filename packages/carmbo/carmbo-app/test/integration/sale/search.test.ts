@@ -6,8 +6,9 @@ import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
+import {cardcomWebhookUrl, cardcomRecurringPaymentWebhookUrl} from './common/cardcom-webhook.ts'
 
-const {url, sql, smooveIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
 
 test.use({viewport: {width: 1024, height: 1024}})
 
@@ -17,19 +18,6 @@ test('searching sales', async ({page}) => {
     {
       names: [{firstName: 'Alice', lastName: 'Johnson'}],
       emails: ['alice.johnson@example.com'],
-      phones: [],
-      facebookNames: [],
-    },
-    undefined,
-    smooveIntegration(),
-    new Date(),
-    sql(),
-  )
-
-  const student2Number = await createStudent(
-    {
-      names: [{firstName: 'Bob', lastName: 'Williams'}],
-      emails: ['bob.williams@example.com'],
       phones: [],
       facebookNames: [],
     },
@@ -114,16 +102,28 @@ test('searching sales', async ({page}) => {
     sql(),
   )
 
-  await createSale(
+  // Create a standing order sale for Bob Williams via Cardcom simulation
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
     {
-      salesEventNumber: salesEvent1Number,
-      studentNumber: student2Number,
-      finalSaleRevenue: 200,
-      products: [{productNumber, quantity: 2, unitPrice: 100}],
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 200 * 100,
+          productName: 'Test Product',
+        },
+      ],
+      customerEmail: 'bob.williams@example.com',
+      customerName: 'Bob Williams',
+      customerPhone: '0501234567',
+      cardcomCustomerId: 1776,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 200 * 100,
     },
     undefined,
-    new Date(),
-    sql(),
+    cardcomWebhookUrl(salesEvent1Number, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
   )
 
   await createSale(
@@ -204,4 +204,20 @@ test('searching sales', async ({page}) => {
 
   await expect(saleListModel.list().rows().locator).toHaveCount(1)
   await expect(saleListModel.list().rows().row(0).studentCell().locator).toHaveText('Charlie Brown')
+
+  // Clear search
+  await saleListModel.search().queryInput().locator.fill('')
+  await expect(saleListModel.list().rows().locator).toHaveCount(2)
+
+  // Filter by standing orders only
+  await saleListModel.search().onlyStandingOrdersCheckbox().locator.click()
+
+  await expect(saleListModel.list().rows().locator).toHaveCount(1)
+  await expect(saleListModel.list().rows().row(0).studentCell().locator).toHaveText('Bob Williams')
+  await expect(saleListModel.list().rows().row(0).eventCell().locator).toHaveText('Fall Sale')
+
+  // Uncheck standing orders filter
+  await saleListModel.search().onlyStandingOrdersCheckbox().locator.click()
+
+  await expect(saleListModel.list().rows().locator).toHaveCount(2)
 })

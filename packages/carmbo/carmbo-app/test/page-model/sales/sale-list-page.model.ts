@@ -24,6 +24,9 @@ export function createSaleListPageModel(page: Page) {
     search: (locator = page.getByLabel('Search')) => ({
       locator,
       showArchivedCheckbox: (locator = page.getByLabel('Show archived')) => ({locator}),
+      onlyStandingOrdersCheckbox: (locator = page.getByLabel('Only standing orders')) => ({
+        locator,
+      }),
       queryInput: (locator = page.getByLabel('Search:')) => ({locator}),
     }),
   }

@@ -154,15 +154,26 @@ export async function listSales(
   sql: Sql,
   {
     withArchived,
+    onlyStandingOrders,
     query,
     limit,
     page,
-  }: {withArchived: boolean; query: string; limit: number; page: number},
+  }: {
+    withArchived: boolean
+    onlyStandingOrders: boolean
+    query: string
+    limit: number
+    page: number
+  },
 ): Promise<SaleForGrid[]> {
   const filters: PendingQuery<Row[]>[] = [sql`true`]
 
   if (!withArchived) {
     filters.push(sql`operation <> 'delete'`)
+  }
+
+  if (onlyStandingOrders) {
+    filters.push(sql`sale_data_cardcom.recurring_order_id IS NOT NULL`)
   }
 
   if (query) {

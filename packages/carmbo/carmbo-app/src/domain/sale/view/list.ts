@@ -8,12 +8,17 @@ import {version} from '../../../commons/version.ts'
 export function renderSalesPage(
   flash: string | undefined,
   sales: SaleForGrid[],
-  {withArchived, query, page}: {withArchived: boolean; query: string; page: number},
+  {
+    withArchived,
+    onlyStandingOrders,
+    query,
+    page,
+  }: {withArchived: boolean; onlyStandingOrders: boolean; query: string; page: number},
 ) {
   return html`
     <${MainLayout} title="Sales" flash=${flash} activeNavItem="sales">
       <${Layout}>
-        <${SalesView} sales=${sales} withArchived=${withArchived} query=${query} page=${page} />
+        <${SalesView} sales=${sales} withArchived=${withArchived} onlyStandingOrders=${onlyStandingOrders} query=${query} page=${page} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -22,11 +27,13 @@ export function renderSalesPage(
 function SalesView({
   sales,
   withArchived,
+  onlyStandingOrders,
   query,
   page,
 }: {
   sales: SaleForGrid[]
   withArchived: boolean
+  onlyStandingOrders: boolean
   query: string
   page: number
 }) {
@@ -54,6 +61,15 @@ function SalesView({
                 checked=${withArchived}
               />
               ${t('list.showArchived')}</label
+            >
+            <label class="form-check-label form-check col-auto"
+              ><input
+                type="checkbox"
+                class="form-check-input"
+                name="only-standing-orders"
+                checked=${onlyStandingOrders}
+              />
+              ${t('list.onlyStandingOrders')}</label
             >
             <label class="form-input-label col-auto" for="query">${t('list.search')}</label>
             <input

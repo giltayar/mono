@@ -221,6 +221,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           .object({
             flash: z.string(),
             'with-archived': z.string(),
+            'only-standing-orders': z.string(),
             q: z.string(),
             page: z.coerce.number().int().min(0).default(0).optional(),
           })
@@ -234,6 +235,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           {
             flash: request.query.flash,
             withArchived: 'with-archived' in request.query,
+            onlyStandingOrders: 'only-standing-orders' in request.query,
             query: request.query.q,
             page: request.query.page ?? 0,
           },
