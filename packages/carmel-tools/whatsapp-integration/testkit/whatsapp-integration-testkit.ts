@@ -58,6 +58,10 @@ export function createFakeWhatsAppIntegrationService(context: {
 
       return group.participants
     },
+    _test_reset: () => {
+      state.personMessages = []
+      state.groups = structuredClone(context.groups)
+    },
   }
 }
 

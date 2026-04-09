@@ -172,6 +172,35 @@ describe('WhatsApp Integration Testkit', () => {
       assert.deepStrictEqual(service._test_sentContactMessages(testParticipant2), ['Message 2'])
     })
   })
+
+  describe('_test_reset', () => {
+    it('should reset personMessages and groups to initial state', async () => {
+      const service = createTestService()
+
+      // Mutate the state
+      await service.sendMessageToContact(testParticipant1, 'Hello!')
+      await service.addParticipantToGroup(testGroupId, '972501111111@c.us' as WhatsAppContactId)
+      await service.sendMessageToGroup(testGroupId, 'Group message')
+
+      // Verify mutations took effect
+      assert.deepStrictEqual(service._test_sentContactMessages(testParticipant1), ['Hello!'])
+      const participantsBefore = await service._test_listParticipantsInGroup(testGroupId)
+      assert.strictEqual(participantsBefore.length, 3)
+      const messagesBefore = await service.fetchLatestMessagesFromGroup(testGroupId, 10)
+      assert.strictEqual(messagesBefore.length, 3)
+
+      // Reset
+      service._test_reset()
+
+      // Verify state is back to initial
+      assert.deepStrictEqual(service._test_sentContactMessages(testParticipant1), [])
+      const participantsAfter = await service._test_listParticipantsInGroup(testGroupId)
+      assert.strictEqual(participantsAfter.length, 2)
+      assert.deepStrictEqual(participantsAfter, [testParticipant1, testParticipant2])
+      const messagesAfter = await service.fetchLatestMessagesFromGroup(testGroupId, 10)
+      assert.strictEqual(messagesAfter.length, 2)
+    })
+  })
 })
 function createTextMessage(text: string): WhatsAppMessage {
   return {
