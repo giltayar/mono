@@ -61,6 +61,10 @@
 			"path": "packages/carmel-tools/whatsapp-integration"
 		},
 		{
+			"name": "skool-integration",
+			"path": "packages/carmel-tools/skool-integration"
+		},
+		{
 			"name": "carmbo-design",
 			"path": "packages/carmbo/carmbo-design"
 		},
