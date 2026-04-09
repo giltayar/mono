@@ -137,7 +137,7 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
   }
 }
 
-// delete jobs that are more than 7 days old
+// delete jobs that are more than 30 days old
 async function garbageCollectJobs(nowService: NowService) {
   const now = nowService()
   const sql = globalSql
@@ -145,7 +145,7 @@ async function garbageCollectJobs(nowService: NowService) {
   await sql`
     DELETE FROM job
     WHERE finished_at IS NOT NULL AND finished_at < ${new Date(
-      now.getTime() - 7 * 24 * 60 * 60 * 1000,
+      now.getTime() - 30 * 24 * 60 * 60 * 1000,
     )}
     RETURNING id, finished_at
   `

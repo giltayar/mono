@@ -383,11 +383,11 @@ describe('Job Executor', () => {
 
     assert.strictEqual((await waitForJobsToComplete(sql)).length, 1)
 
-    await triggerJobsExecution(() => new Date(Date.now() + 6 * 24 * 60 * 60 * 1000)) // Trigger after 6 days
+    await triggerJobsExecution(() => new Date(Date.now() + 29 * 24 * 60 * 60 * 1000)) // Trigger after 10 days
 
     assert.strictEqual((await waitForJobsToComplete(sql)).length, 1)
 
-    await triggerJobsExecution(() => new Date(Date.now() + 8 * 24 * 60 * 60 * 1000)) // Trigger after 7 days
+    await triggerJobsExecution(() => new Date(Date.now() + 31 * 24 * 60 * 60 * 1000)) // Trigger after 31 days
 
     assert.strictEqual((await waitForJobsToComplete(sql)).length, 0)
   })
