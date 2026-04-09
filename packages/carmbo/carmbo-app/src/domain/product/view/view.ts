@@ -17,10 +17,12 @@ export function renderProductsCreatePage(
     banner,
     withAcademyIntegration,
     withSmooveIntegration,
+    withSkoolIntegration,
   }: {
     banner: Banner | undefined
     withAcademyIntegration: boolean
     withSmooveIntegration: boolean
+    withSkoolIntegration: boolean
   },
 ) {
   const finalProduct: OngoingProduct = product
@@ -40,7 +42,7 @@ export function renderProductsCreatePage(
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
-        <${ProductCreateView} product=${finalProduct} withAcademyIntegration=${withAcademyIntegration} withSmooveIntegration=${withSmooveIntegration} />
+        <${ProductCreateView} product=${finalProduct} withAcademyIntegration=${withAcademyIntegration} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -53,16 +55,18 @@ export function renderProductUpdatePage(
     banner,
     withAcademyIntegration,
     withSmooveIntegration,
+    withSkoolIntegration,
   }: {
     banner: Banner | undefined
     withAcademyIntegration: boolean
     withSmooveIntegration: boolean
+    withSkoolIntegration: boolean
   },
 ) {
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
-        <${ProductUpdateView} product=${product} history=${history} withAcademyIntegration=${withAcademyIntegration} withSmooveIntegration=${withSmooveIntegration} />
+        <${ProductUpdateView} product=${product} history=${history} withAcademyIntegration=${withAcademyIntegration} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -74,12 +78,17 @@ export function renderProductViewInHistoryPage(
   {
     withAcademyIntegration,
     withSmooveIntegration,
-  }: {withAcademyIntegration: boolean; withSmooveIntegration: boolean},
+    withSkoolIntegration,
+  }: {
+    withAcademyIntegration: boolean
+    withSmooveIntegration: boolean
+    withSkoolIntegration: boolean
+  },
 ) {
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products">
       <${Layout}>
-        <${ProductHistoryView} product=${product} history=${history} operationId=${product.id} withAcademyIntegration=${withAcademyIntegration} withSmooveIntegration=${withSmooveIntegration} />
+        <${ProductHistoryView} product=${product} history=${history} operationId=${product.id} withAcademyIntegration=${withAcademyIntegration} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -92,7 +101,12 @@ export function renderProductFormFields(
   {
     withAcademyIntegration,
     withSmooveIntegration,
-  }: {withAcademyIntegration: boolean; withSmooveIntegration: boolean},
+    withSkoolIntegration,
+  }: {
+    withAcademyIntegration: boolean
+    withSmooveIntegration: boolean
+    withSkoolIntegration: boolean
+  },
 ) {
   return html`
     <${ProductCreateOrUpdateFormFields}
@@ -100,6 +114,7 @@ export function renderProductFormFields(
       operation=${operation}
       withAcademyIntegration=${withAcademyIntegration}
       withSmooveIntegration=${withSmooveIntegration}
+      withSkoolIntegration=${withSkoolIntegration}
     />
   `
 }

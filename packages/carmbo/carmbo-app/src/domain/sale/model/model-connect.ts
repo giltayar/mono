@@ -15,6 +15,7 @@ import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-i
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import type {NowService} from '../../../commons/now-service.ts'
+import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 
 export type SaleConnectionToStudent = {
   studentNumber: number
@@ -28,11 +29,13 @@ export type DisconnectSalePayload = {
 
 export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent>
 export let submitPersonalMessageJob: JobSubmitter<SaleConnectionToStudent>
+export let submitSkoolInvitationJob: JobSubmitter<SaleConnectionToStudent>
 
 export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
   whatsappIntegration: WhatsAppIntegrationService,
+  skoolIntegration: SkoolIntegrationService | undefined,
   sql: Sql,
   nowService: NowService,
 ) {
@@ -59,6 +62,18 @@ export async function initializeJobHandlers(
       )
     },
   )
+
+  if (skoolIntegration) {
+    submitSkoolInvitationJob = registerJobHandler<SaleConnectionToStudent>(
+      'sending-skool-invitation',
+      nowService,
+      {isTrivial: true},
+      (payload) => `Send skool invitation for sale ${payload.saleNumber}`,
+      async ({payload}, _attempt, logger) => {
+        await sql.begin((sql) => sendSkoolInvitations(payload, skoolIntegration, sql, logger))
+      },
+    )
+  }
 }
 
 export async function connectSale(
@@ -69,6 +84,7 @@ export async function connectSale(
   wthatsappIntegration: WhatsAppIntegrationService,
   smooveIntegration: SmooveIntegrationService | undefined,
   academyIntegration: AcademyIntegrationService | undefined,
+  skoolIntegration: SkoolIntegrationService | undefined,
   loggerParent: FastifyBaseLogger,
 ) {
   const logger = loggerParent.child({
@@ -101,6 +117,15 @@ export async function connectSale(
       wthatsappIntegration,
       sql,
       logger,
+    )
+
+    await when(skoolIntegration, (skoolIntegration) =>
+      sendSkoolInvitations(
+        {studentNumber: parseInt(sale.studentNumber), saleNumber},
+        skoolIntegration,
+        sql,
+        logger,
+      ),
     )
 
     await connectSaleToCardcom(sale, logger, cardcomIntegration, now, sql, dataManualId)
@@ -590,5 +615,48 @@ export async function sendPersonalMessagesWhenJoining(
   for (const {personalMessageWhenJoining} of personalMessages) {
     await whatsappIntegration.sendMessageToContact(contactId, personalMessageWhenJoining)
     logger.info({saleNumber, phone: studentPhone}, 'personal-message-when-joining-sent')
+  }
+}
+
+export async function sendSkoolInvitations(
+  {studentNumber, saleNumber}: SaleConnectionToStudent,
+  skoolIntegration: SkoolIntegrationService,
+  sql: Sql,
+  baseLogger: FastifyBaseLogger,
+): Promise<void> {
+  const logger = baseLogger.child({saleNumber, studentNumber})
+  logger.info('send-skool-invitations-started')
+  const studentResult = await sql<{email: string}[]>`
+  SELECT se.email
+  FROM student s
+  JOIN student_email se ON se.data_id = s.last_data_id AND se.item_order = 0
+  WHERE s.student_number = ${studentNumber}
+  `
+
+  const studentEmail = studentResult[0]?.email
+  if (!studentEmail) {
+    logger.info({studentNumber, saleNumber}, 'no-email-for-skool-invitation-skipping')
+    return
+  }
+
+  const productsWithSkool = await sql<{productNumber: number}[]>`
+    SELECT DISTINCT
+      sdp.product_number
+    FROM sale_data_product sdp
+    JOIN sale s ON s.last_data_product_id = sdp.data_product_id
+    JOIN product p ON p.product_number = sdp.product_number
+    JOIN product_integration_skool pis ON pis.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber}
+      AND sdp.quantity > 0
+      AND pis.send_invitation = true
+  `
+  logger.info(
+    {studentEmail, products: productsWithSkool.map((p) => p.productNumber)},
+    'send-skool-invitations',
+  )
+
+  for (const {productNumber} of productsWithSkool) {
+    await skoolIntegration.sendUniqueInviteLinkToEmail({email: studentEmail})
+    logger.info({saleNumber, email: studentEmail, productNumber}, 'skool-invitation-sent')
   }
 }

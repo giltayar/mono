@@ -9,6 +9,7 @@ import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-in
 import {prepareDatabase} from './prepare-database.ts'
 import {initializei18next} from '../commons/i18next-utils.ts'
 import {initializeFirebase} from '../domain/auth/model-firebase.ts'
+import {createSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 
 export const EnvironmentVariablesSchema = z.object({
   DB_CONNECTION_STRING: z.string().optional(),
@@ -32,6 +33,7 @@ export const EnvironmentVariablesSchema = z.object({
   CARDCOM_API_KEY: z.string(),
   CARDCOM_API_KEY_PASSWORD: z.string(),
   CARDCOM_TERMINAL_NUMBER: z.coerce.number().default(150067),
+  SKOOL_API_UNIQUE_INVITE_LINK_URL: z.url().optional(),
 })
 
 const env = EnvironmentVariablesSchema.parse(
@@ -84,6 +86,11 @@ const {app, sql} = await makeApp({
       apiKeyPassword: env.CARDCOM_API_KEY_PASSWORD,
       terminalNumber: env.CARDCOM_TERMINAL_NUMBER.toString(),
     }),
+    skoolIntegration: when(env.SKOOL_API_UNIQUE_INVITE_LINK_URL, (skoolApiUniqueInviteLinkUrl) =>
+      createSkoolIntegrationService({
+        skoolApiUniqueInviteLinkUrl: new URL(skoolApiUniqueInviteLinkUrl),
+      }),
+    ),
     nowService: () => new Date(),
   },
   firebase: env.FORCE_NO_AUTH

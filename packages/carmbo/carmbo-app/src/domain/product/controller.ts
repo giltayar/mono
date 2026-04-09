@@ -55,6 +55,7 @@ export async function showProductCreate(
   const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
@@ -74,6 +75,7 @@ export async function showProductCreate(
       banner,
       withAcademyIntegration: Boolean(academyIntegration),
       withSmooveIntegration: Boolean(smooveIntegration),
+      withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
 }
@@ -86,6 +88,7 @@ export async function showProductUpdate(
   const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
@@ -117,6 +120,7 @@ export async function showProductUpdate(
       banner,
       withAcademyIntegration: Boolean(academyIntegration),
       withSmooveIntegration: Boolean(smooveIntegration),
+      withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
 }
@@ -128,6 +132,7 @@ export async function showOngoingProduct(
   const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
@@ -144,6 +149,7 @@ export async function showOngoingProduct(
     renderProductFormFields(product, manipulations, 'write', {
       withAcademyIntegration: Boolean(academyIntegration),
       withSmooveIntegration: Boolean(smooveIntegration),
+      withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
 }
@@ -156,6 +162,7 @@ export async function showProductInHistory(
   const academyIntegration = requestContext.get('academyIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
@@ -177,6 +184,7 @@ export async function showProductInHistory(
     renderProductViewInHistoryPage(product.product, product.history, {
       withAcademyIntegration: Boolean(academyIntegration),
       withSmooveIntegration: Boolean(smooveIntegration),
+      withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
 }

@@ -14,6 +14,7 @@ import type {
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import {cardcomRecurringPaymentWebhookUrl, cardcomWebhookUrl} from './common/cardcom-webhook.ts'
+import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
 
 const {
   url,
@@ -22,6 +23,7 @@ const {
   academyIntegration,
   cardcomIntegration,
   whatsappIntegration,
+  skoolIntegration,
   setTime,
 } = setup(import.meta.url)
 
@@ -38,6 +40,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       academyCourses: [academyCourseId],
       smooveListId: smooveListId,
       personalMessageWhenJoining: 'Welcome to Product One!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -155,6 +158,11 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
     const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
     expect(sentMessages).toContain('Welcome to Product One!')
     expect(sentMessages).toContain('Welcome to Product Two!')
+  }).toPass()
+
+  // Verify skool invitation was sent
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail(customerEmail)).toBe(true)
   }).toPass()
 
   // Click on the sale to view the sale detail page
@@ -381,6 +389,11 @@ test('cancelling a standing order subscription removes student from academy cour
     const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
     expect(sentMessages).toContain('Welcome to Product One!')
   }).toPass()
+
+  await waitForAllJobsToBeDone(page, url())
+
+  // Verify skool invitation was not sent
+  expect(skoolIntegration()._test_isInviteSentForEmail(customerEmail)).toBe(false)
 
   // Adding student to whatsapp group is done manually by the student
   await whatsappIntegration().addParticipantToGroup(
@@ -618,6 +631,7 @@ test('cancelling a standing order subscription by product number', async ({page}
       smooveRemovedListId,
       whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
       personalMessageWhenJoining: 'Welcome to Product One!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -687,6 +701,11 @@ test('cancelling a standing order subscription by product number', async ({page}
     const contactId = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
     const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
     expect(sentMessages).toContain('Welcome to Product One!')
+  }).toPass()
+
+  // Verify skool invitation was sent
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail(customerEmail)).toBe(true)
   }).toPass()
 
   // Cancel the subscription via the API endpoint using product number instead of sales-event

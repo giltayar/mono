@@ -30,6 +30,7 @@ import type {
 } from '@giltayar/carmel-tools-smoove-integration/service'
 import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
+import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 import {initializeJobExecutor} from '../domain/job/job-executor.ts'
 import {version} from '../commons/version.ts'
 
@@ -39,6 +40,7 @@ declare module '@fastify/request-context' {
     whatsappIntegration: WhatsAppIntegrationService
     academyIntegration: AcademyIntegrationService | undefined
     smooveIntegration: SmooveIntegrationService | undefined
+    skoolIntegration: SkoolIntegrationService | undefined
     nowService: () => Date
     logger: FastifyBaseLogger
     sql: Sql
@@ -57,6 +59,7 @@ export function makeApp({
     whatsappIntegration,
     smooveIntegration,
     cardcomIntegration,
+    skoolIntegration,
     nowService,
   },
   firebase,
@@ -77,6 +80,7 @@ export function makeApp({
     whatsappIntegration: WhatsAppIntegrationService
     academyIntegration: AcademyIntegrationService | undefined
     smooveIntegration: SmooveIntegrationService | undefined
+    skoolIntegration: SkoolIntegrationService | undefined
     nowService: () => Date
   }
   firebase:
@@ -128,6 +132,7 @@ export function makeApp({
       academyIntegration,
       whatsappIntegration,
       smooveIntegration,
+      skoolIntegration,
       cardcomIntegration,
       nowService,
       courses: undefined,
@@ -197,6 +202,7 @@ export function makeApp({
     academyIntegration,
     smooveIntegration,
     whatsappIntegration,
+    skoolIntegration,
     nowService,
   })
   app.register(jobsApiRoute, {

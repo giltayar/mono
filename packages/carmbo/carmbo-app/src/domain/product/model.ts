@@ -26,6 +26,7 @@ export const ProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
+  sendSkoolInvitation: z.coerce.boolean().optional(),
   personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),
 })
@@ -293,6 +294,7 @@ SELECT
   product_integration_smoove.cancelling_list_id AS smoove_cancelling_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
   product_integration_smoove.removed_list_id AS smoove_removed_list_id,
+  COALESCE(product_integration_skool.send_invitation, false) AS send_skool_invitation,
   COALESCE(academy_courses, json_build_array()) AS academy_courses,
   COALESCE(whatsapp_groups, json_build_array()) AS whatsapp_groups,
   COALESCE(facebook_groups, json_build_array()) AS facebook_groups
@@ -301,6 +303,7 @@ FROM
   LEFT JOIN product_history ON product_history.id = current_history_id
   LEFT JOIN product_data ON product_data.data_id = current_data_id
   LEFT JOIN product_integration_smoove ON product_integration_smoove.data_id = current_data_id
+  LEFT JOIN product_integration_skool ON product_integration_skool.data_id = current_data_id
   LEFT JOIN LATERAL (
     SELECT
       json_agg(
@@ -417,6 +420,16 @@ async function addProductStuff(
             ${product.smooveCancellingListId ?? null},
             ${product.smooveCancelledListId ?? null},
             ${product.smooveRemovedListId ?? null}
+          )
+      `)
+  }
+
+  if (product.sendSkoolInvitation !== undefined) {
+    ops = ops.concat(sql`
+        INSERT INTO product_integration_skool VALUES
+          (
+            ${dataId},
+            ${product.sendSkoolInvitation}
           )
       `)
   }

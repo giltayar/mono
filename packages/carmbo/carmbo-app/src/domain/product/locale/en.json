@@ -19,6 +19,7 @@
     "smooveRemovedListId": "Smoove Removed List ID",
     "notes": "Notes",
     "personalMessageWhenJoining": "Personal Message When Joining",
+    "sendSkoolInvitation": "Send Skool Invitation",
     "createSmooveList": "Create"
   },
   "smooveListDialog": {

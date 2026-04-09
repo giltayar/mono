@@ -10,8 +10,15 @@ import {createSaleProvidersPageModel} from '../../page-model/sales/sale-provider
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration, whatsappIntegration} =
-  setup(import.meta.url)
+const {
+  url,
+  sql,
+  smooveIntegration,
+  academyIntegration,
+  cardcomIntegration,
+  whatsappIntegration,
+  skoolIntegration,
+} = setup(import.meta.url)
 
 test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const academyCourseId = 1
@@ -24,6 +31,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       academyCourses: [academyCourseId],
       smooveListId: smooveListId,
       personalMessageWhenJoining: 'Welcome to Product One!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -180,6 +188,11 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
     expect(sentMessages).toContain('Welcome to Product One!')
     expect(sentMessages).toContain('Welcome to Product Two!')
+  }).toPass()
+
+  // Verify skool invitation was sent for Product One (has sendSkoolInvitation)
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail(customerEmail)).toBe(true)
   }).toPass()
 
   // Click on the sale to view the sale detail page
@@ -482,6 +495,7 @@ test('double call of cardcom webhook should create only one sale and one student
       academyCourses: [academyCourseId],
       smooveListId: smooveListId,
       personalMessageWhenJoining: 'Welcome to Test Product!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -588,5 +602,10 @@ test('double call of cardcom webhook should create only one sale and one student
     const contactIdDouble = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
     const sentMessagesDouble = whatsappIntegration()._test_sentContactMessages(contactIdDouble)
     expect(sentMessagesDouble.filter((m) => m === 'Welcome to Test Product!').length).toBe(1)
+  }).toPass()
+
+  // Verify skool invitation was sent
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail(customerEmail)).toBe(true)
   }).toPass()
 })

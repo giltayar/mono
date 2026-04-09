@@ -87,6 +87,10 @@ test('create product and update multiple fields', async ({page}) => {
   await expect(newForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue('group1')
   await expect(newForm.facebookGroups().facebookGroupInput(1).locator).toHaveValue('group3')
 
+  // Check the send skool invitation checkbox
+  await expect(newForm.sendSkoolInvitationCheckbox().locator).not.toBeChecked()
+  await newForm.sendSkoolInvitationCheckbox().locator.check()
+
   await newForm.createButton().locator.click()
 
   await page.waitForURL(updateProductModel.urlRegex)
@@ -116,6 +120,9 @@ test('create product and update multiple fields', async ({page}) => {
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue('group1')
   await expect(updateForm.facebookGroups().facebookGroupInput(1).locator).toHaveValue('group3')
 
+  // Verify the skool checkbox is checked after create
+  await expect(updateForm.sendSkoolInvitationCheckbox().locator).toBeChecked()
+
   // Update the fields
   await updateForm.nameInput().locator.fill('Updated Product')
   await updateForm.productTypeSelect().locator.selectOption('challenge')
@@ -138,6 +145,9 @@ test('create product and update multiple fields', async ({page}) => {
   await expect(updateForm.facebookGroups().facebookGroupInput(2).locator).toBeVisible()
   await updateForm.facebookGroups().facebookGroupInput(2).locator.fill('group4')
   await updateForm.facebookGroups().trashButton(0).locator.click()
+
+  // Uncheck the skool checkbox
+  await updateForm.sendSkoolInvitationCheckbox().locator.uncheck()
 
   await updateForm.updateButton().locator.click()
   await expect(updateProductModel.history().items().locator).toHaveCount(2)
@@ -166,6 +176,9 @@ test('create product and update multiple fields', async ({page}) => {
 
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue('group3')
   await expect(updateForm.facebookGroups().facebookGroupInput(1).locator).toHaveValue('group4')
+
+  // Verify the skool checkbox is unchecked after update
+  await expect(updateForm.sendSkoolInvitationCheckbox().locator).not.toBeChecked()
 
   await page.goto(new URL('/products', url()).href)
 

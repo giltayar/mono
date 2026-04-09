@@ -47,6 +47,7 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 
 export function apiRoute(
   app: FastifyInstance,
@@ -56,6 +57,7 @@ export function apiRoute(
     smooveIntegration,
     academyIntegration,
     whatsappIntegration,
+    skoolIntegration,
     nowService,
   }: {
     secret: string | undefined
@@ -63,6 +65,7 @@ export function apiRoute(
     smooveIntegration: SmooveIntegrationService | undefined
     academyIntegration: AcademyIntegrationService | undefined
     whatsappIntegration: WhatsAppIntegrationService
+    skoolIntegration: SkoolIntegrationService | undefined
     nowService: NowService
   },
 ) {
@@ -73,6 +76,7 @@ export function apiRoute(
       academyIntegration,
       smooveIntegration,
       whatsappIntegration,
+      skoolIntegration,
       sql,
       nowService,
     )

@@ -6,6 +6,7 @@ import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardco
 import {prepareDatabase} from './prepare-database.ts'
 import {range, when} from '@giltayar/functional-commons'
 import {initializei18next} from '../commons/i18next-utils.ts'
+import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
 
 const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
 
@@ -64,6 +65,7 @@ const {app, sql} = await makeApp({
       }),
     ),
     cardcomIntegration: fakeCardcomIntegrationService,
+    skoolIntegration: createFakeSkoolIntegrationService(),
     nowService: () => new Date(),
   },
   firebase: undefined,

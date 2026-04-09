@@ -98,6 +98,9 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
     notesInput: (inputLocator = locator.getByLabel('Notes')) => ({
       locator: inputLocator,
     }),
+    sendSkoolInvitationCheckbox: (inputLocator = locator.getByLabel('Send Skool Invitation')) => ({
+      locator: inputLocator,
+    }),
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "9.7.0",
+  "version": "9.8.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -60,6 +60,7 @@
     "@fastify/static": "^9.1.0",
     "@giltayar/carmel-tools-academy-integration": "^5.1.0",
     "@giltayar/carmel-tools-cardcom-integration": "^7.1.0",
+    "@giltayar/carmel-tools-skool-integration": "^1.0.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.2.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",
     "@giltayar/functional-commons": "^2.2.1",
@@ -97,7 +98,7 @@
     "@types/node": "^25.5.2",
     "@types/qs": "^6.15.0",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20260408.1",
+    "@typescript/native-preview": "7.0.0-dev.20260409.1",
     "eslint": "^10.2.0",
     "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-prettier": "^5.5.5",

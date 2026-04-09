@@ -11,10 +11,12 @@ export function ProductCreateView({
   product,
   withAcademyIntegration,
   withSmooveIntegration,
+  withSkoolIntegration,
 }: {
   product: Product
   withAcademyIntegration: boolean
   withSmooveIntegration: boolean
+  withSkoolIntegration: boolean
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -43,6 +45,7 @@ export function ProductCreateView({
           operation="write"
           withAcademyIntegration=${withAcademyIntegration}
           withSmooveIntegration=${withSmooveIntegration}
+          withSkoolIntegration=${withSkoolIntegration}
         />
       </div>
     </form>
@@ -59,12 +62,14 @@ export function ProductUpdateView({
   courses,
   withAcademyIntegration,
   withSmooveIntegration,
+  withSkoolIntegration,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
   courses: AcademyCourse[]
   withAcademyIntegration: boolean
   withSmooveIntegration: boolean
+  withSkoolIntegration: boolean
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -126,6 +131,7 @@ export function ProductUpdateView({
           courses=${courses}
           withAcademyIntegration=${withAcademyIntegration}
           withSmooveIntegration=${withSmooveIntegration}
+          withSkoolIntegration=${withSkoolIntegration}
         />
       </div>
     </form>
@@ -142,11 +148,13 @@ export function ProductHistoryView({
   history,
   withAcademyIntegration,
   withSmooveIntegration,
+  withSkoolIntegration,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
   withAcademyIntegration: boolean
   withSmooveIntegration: boolean
+  withSkoolIntegration: boolean
 }) {
   const currentHistory = history.find((h) => h.historyId === product.id)
 
@@ -166,6 +174,7 @@ export function ProductHistoryView({
           operation="read"
           withAcademyIntegration=${withAcademyIntegration}
           withSmooveIntegration=${withSmooveIntegration}
+          withSkoolIntegration=${withSkoolIntegration}
         />
       </div>
     </form>

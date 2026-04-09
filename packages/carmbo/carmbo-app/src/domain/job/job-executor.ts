@@ -60,7 +60,7 @@ async function executeJobs(nowService: NowService) {
     const now = nowService()
     const jobExecutionId = crypto.randomUUID()
     const jobLogger = globalLogger.child({jobExecutionId})
-    jobLogger.info({jobMutex, now: now.toISOString()}, 'execute-jobs-started')
+    jobLogger.info({jobExecutionId, now: now.toISOString()}, 'execute-jobs-started')
     const sql = globalSql
 
     const currentJobs = (await sql`

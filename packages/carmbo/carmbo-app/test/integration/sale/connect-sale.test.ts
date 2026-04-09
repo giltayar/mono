@@ -9,8 +9,15 @@ import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integra
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration, whatsappIntegration} =
-  setup(import.meta.url)
+const {
+  url,
+  sql,
+  smooveIntegration,
+  academyIntegration,
+  cardcomIntegration,
+  whatsappIntegration,
+  skoolIntegration,
+} = setup(import.meta.url)
 
 test('create sale then connect it', async ({page}) => {
   // Setup: Create a student, sales event, and products
@@ -34,6 +41,7 @@ test('create sale then connect it', async ({page}) => {
       smooveListId: 2,
       academyCourses: [1],
       personalMessageWhenJoining: 'Welcome to Product One!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -47,6 +55,7 @@ test('create sale then connect it', async ({page}) => {
       smooveListId: 10,
       academyCourses: [33, 777],
       personalMessageWhenJoining: 'Welcome to Product Two!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -217,6 +226,11 @@ test('create sale then connect it', async ({page}) => {
     expect(sentMessages).not.toContain('Welcome to Product Three!')
   }).toPass()
 
+  // Verify skool invitations were sent for products with sendSkoolInvitation
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
+  }).toPass()
+
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
   await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
@@ -258,6 +272,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       smooveListId: 2,
       academyCourses: [1],
       personalMessageWhenJoining: 'Welcome to Product One!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -433,6 +448,11 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
     expect(sentMessages2).toContain('Welcome to Product Two!')
   }).toPass()
 
+  // Verify skool invitation was sent
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
+  }).toPass()
+
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
   await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
@@ -463,6 +483,7 @@ test('connect sale then reconnect it', async ({page}) => {
       smooveListId: 2,
       academyCourses: [1],
       personalMessageWhenJoining: 'Welcome to Product One!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -476,6 +497,7 @@ test('connect sale then reconnect it', async ({page}) => {
       smooveListId: 10,
       academyCourses: [33, 777],
       personalMessageWhenJoining: 'Welcome to Product Two!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -619,6 +641,11 @@ test('connect sale then reconnect it', async ({page}) => {
     expect(sentMessages3.filter((m) => m === 'Welcome to Product Two!').length).toBe(2)
   }).toPass()
 
+  // Verify skool invitation was sent (on both connect and reconnect)
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
+  }).toPass()
+
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
   await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
@@ -649,6 +676,7 @@ test('create sale with transaction description then connect it', async ({page}) 
       smooveListId: 5,
       academyCourses: [100],
       personalMessageWhenJoining: 'Welcome to Test Product!',
+      sendSkoolInvitation: true,
     },
     undefined,
     new Date(),
@@ -733,5 +761,10 @@ test('create sale with transaction description then connect it', async ({page}) 
     const contactId4 = humanIsraeliPhoneNumberToWhatsAppId('0501234567')
     const sentMessages4 = whatsappIntegration()._test_sentContactMessages(contactId4)
     expect(sentMessages4).toContain('Welcome to Test Product!')
+  }).toPass()
+
+  // Verify skool invitation was sent
+  await expect(async () => {
+    expect(skoolIntegration()._test_isInviteSentForEmail('jane.doe@example.com')).toBe(true)
   }).toPass()
 })

@@ -15,6 +15,7 @@ import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardco
 import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
 import {initializei18next} from '../../../src/commons/i18next-utils.ts'
 import {when} from '@giltayar/functional-commons'
+import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
 
 export type SmooveContact = {
   id: number
@@ -34,6 +35,7 @@ export function setup(
     smooveContacts?: Record<number, SmooveContact>
     withAcademyIntegration?: boolean // default is true
     withSmooveIntegration?: boolean // default is true
+    withSkoolIntegration?: boolean // default is true
   },
 ): {
   url: () => URL
@@ -42,12 +44,14 @@ export function setup(
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
   cardcomIntegration: () => ReturnType<typeof createFakeCardcomIntegrationService>
   whatsappIntegration: () => ReturnType<typeof createFakeWhatsAppIntegrationService>
+  skoolIntegration: () => ReturnType<typeof createFakeSkoolIntegrationService>
   TEST_hooks: Record<string, TEST_HookFunction>
   setTime: (date: Date) => void
   resetTime: () => void
 } {
   const withSmooveIntegration = options?.withSmooveIntegration ?? true
   const withAcademyIntegration = options?.withAcademyIntegration ?? true
+  const withSkoolIntegration = options?.withSkoolIntegration ?? true
 
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
   let findAddress
@@ -60,6 +64,7 @@ export function setup(
   let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
   let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
   let whatsappIntegration: ReturnType<typeof createFakeWhatsAppIntegrationService>
+  let skoolIntegration: ReturnType<typeof createFakeSkoolIntegrationService>
 
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
@@ -107,6 +112,7 @@ export function setup(
     })
     cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
     TEST_resetJobHandlers()
+    skoolIntegration = createFakeSkoolIntegrationService()
     whatsappIntegration = createFakeWhatsAppIntegrationService({
       groups: {
         '1@g.us': {
@@ -140,6 +146,7 @@ export function setup(
         whatsappIntegration,
         smooveIntegration: when(withSmooveIntegration, () => smooveIntegration),
         cardcomIntegration,
+        skoolIntegration: when(withSkoolIntegration, () => skoolIntegration),
         nowService: () => (overridingDate ? overridingDate : new Date()),
       },
       firebase: undefined,
@@ -167,6 +174,7 @@ export function setup(
     cardcomIntegration._test_reset_data()
     smooveIntegration._test_reset_data()
     whatsappIntegration._test_reset()
+    skoolIntegration._test_reset()
     overridingDate = undefined
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
@@ -201,6 +209,7 @@ export function setup(
     academyIntegration: () => academyIntegration,
     cardcomIntegration: () => cardcomIntegration,
     whatsappIntegration: () => whatsappIntegration,
+    skoolIntegration: () => skoolIntegration,
     TEST_hooks,
     setTime: (date: Date) => (overridingDate = date),
     resetTime: () => (overridingDate = undefined),

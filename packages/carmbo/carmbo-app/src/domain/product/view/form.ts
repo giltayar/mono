@@ -13,11 +13,13 @@ export function ProductCreateOrUpdateFormFields({
   operation,
   withAcademyIntegration,
   withSmooveIntegration,
+  withSkoolIntegration,
 }: {
   product: Product | OngoingProduct | NewProduct
   operation: 'read' | 'write'
   withAcademyIntegration: boolean
   withSmooveIntegration: boolean
+  withSkoolIntegration: boolean
 }) {
   const courses = requestContext.get('courses')!
   const whatsappGroups = requestContext.get('whatsappGroups')!
@@ -372,6 +374,23 @@ export function ProductCreateOrUpdateFormFields({
                   </button>
                 </div>`
               : ''}
+          </div>
+        `}
+        ${withSkoolIntegration &&
+        html`
+          <div class="mt-3 form-check">
+            <input
+              name="sendSkoolInvitation"
+              type="checkbox"
+              class="form-check-input"
+              id="sendSkoolInvitation"
+              checked=${product.sendSkoolInvitation}
+              disabled=${isReadOnly}
+              value="true"
+            />
+            <label class="form-check-label" for="sendSkoolInvitation"
+              >${t('form.sendSkoolInvitation')}</label
+            >
           </div>
         `}
 
