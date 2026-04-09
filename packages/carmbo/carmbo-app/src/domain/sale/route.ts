@@ -69,7 +69,13 @@ export function apiRoute(
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   if (smooveIntegration && academyIntegration) {
-    initializeSaleJobHandlers(academyIntegration, smooveIntegration, sql, nowService)
+    initializeSaleJobHandlers(
+      academyIntegration,
+      smooveIntegration,
+      whatsappIntegration,
+      sql,
+      nowService,
+    )
 
     initializeStandingOrderJobHandlers(
       sql,

@@ -166,6 +166,7 @@ export function setup(
     resetHooks()
     cardcomIntegration._test_reset_data()
     smooveIntegration._test_reset_data()
+    whatsappIntegration._test_reset()
     overridingDate = undefined
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`

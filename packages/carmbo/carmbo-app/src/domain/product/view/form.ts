@@ -375,6 +375,23 @@ export function ProductCreateOrUpdateFormFields({
           </div>
         `}
 
+        <details class="mt-3">
+          <summary>${t('form.personalMessageWhenJoining')}</summary>
+          <div class="mt-2 form-floating">
+            <textarea
+              name="personalMessageWhenJoining"
+              placeholder=" "
+              class="form-control"
+              id="personalMessageWhenJoining"
+              style="height: 120px"
+              readonly=${isReadOnly}
+            >
+${product.personalMessageWhenJoining ?? ''}</textarea
+            >
+            <label for="personalMessageWhenJoining">${t('form.personalMessageWhenJoining')}</label>
+          </div>
+        </details>
+
         <div class="mt-3 form-floating">
           <textarea
             name="notes"

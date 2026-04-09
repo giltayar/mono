@@ -10,6 +10,7 @@ import {
 import {createNoInvoiceSale} from '../../sale/model/model-sale.ts'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {NowService} from '../../../commons/now-service.ts'
 
 export type ImportResult = {
@@ -41,6 +42,7 @@ let submitImportSingleContactJob: JobSubmitter<ImportSingeContactFromSmooveListJ
 export async function initialzeImportSmooveJobHandlers(
   smooveIntegration: SmooveIntegrationService,
   academyIntegration: AcademyIntegrationService,
+  whatsappIntegration: WhatsAppIntegrationService,
   sql: Sql,
   nowService: NowService,
 ) {
@@ -75,6 +77,7 @@ export async function initialzeImportSmooveJobHandlers(
         sql,
         academyIntegration,
         smooveIntegration,
+        whatsappIntegration,
         logger.child({jobId, contactEmail: payload.contact.email}),
       )
     },
@@ -171,6 +174,7 @@ async function importSingleContact(
   sql: Sql,
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
+  whatsappIntegration: WhatsAppIntegrationService,
   logger: FastifyBaseLogger,
 ): Promise<{description: string} | void> {
   return await sql.begin(async (txSql) => {
@@ -225,6 +229,7 @@ async function importSingleContact(
       {studentNumber: finalStudent.studentNumber, saleNumber},
       academyIntegration,
       smooveIntegration,
+      whatsappIntegration,
       txSql,
       logger,
     )

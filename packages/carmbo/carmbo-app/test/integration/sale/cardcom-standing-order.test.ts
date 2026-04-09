@@ -37,6 +37,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       productType: 'recorded',
       academyCourses: [academyCourseId],
       smooveListId: smooveListId,
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -48,6 +49,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
       name: 'Product Two',
       productType: 'challenge',
       academyCourses: [33],
+      personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
     new Date(),
@@ -146,6 +148,14 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
     true,
   )
+
+  // Verify personal messages were sent
+  await expect(async () => {
+    const contactId = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
+    const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+    expect(sentMessages).toContain('Welcome to Product One!')
+    expect(sentMessages).toContain('Welcome to Product Two!')
+  }).toPass()
 
   // Click on the sale to view the sale detail page
   await firstSaleRow.idLink().locator.click()
@@ -300,6 +310,7 @@ test('cancelling a standing order subscription removes student from academy cour
       smooveCancellingListId,
       smooveRemovedListId,
       whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -362,6 +373,13 @@ test('cancelling a standing order subscription removes student from academy cour
     expect(smooveContacts.length).toBe(1)
     expect(smooveContacts[0].email).toBe(customerEmail)
     expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
+  }).toPass()
+
+  // Verify personal message was sent
+  await expect(async () => {
+    const contactId = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
+    const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+    expect(sentMessages).toContain('Welcome to Product One!')
   }).toPass()
 
   // Adding student to whatsapp group is done manually by the student
@@ -599,6 +617,7 @@ test('cancelling a standing order subscription by product number', async ({page}
       smooveCancellingListId,
       smooveRemovedListId,
       whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -661,6 +680,13 @@ test('cancelling a standing order subscription by product number', async ({page}
     expect(smooveContacts.length).toBe(1)
     expect(smooveContacts[0].email).toBe(customerEmail)
     expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
+  }).toPass()
+
+  // Verify personal message was sent
+  await expect(async () => {
+    const contactId = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
+    const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+    expect(sentMessages).toContain('Welcome to Product One!')
   }).toPass()
 
   // Cancel the subscription via the API endpoint using product number instead of sales-event

@@ -18,6 +18,7 @@
     "smooveCancelledListId": "מזהה רשימת מבוטלים סמוב",
     "smooveRemovedListId": "מזהה רשימת הוסרו סמוב",
     "notes": "הערות",
+    "personalMessageWhenJoining": "הודעה אישית בהצטרפות",
     "createSmooveList": "יצירה"
   },
   "smooveListDialog": {

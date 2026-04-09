@@ -26,6 +26,7 @@ export const ProductSchema = z.object({
   smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
+  personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),
 })
 
@@ -287,6 +288,7 @@ SELECT
   product_data.name AS name,
   product_data.product_type AS product_type,
   product_data.notes AS notes,
+  product_data.personal_message_when_joining AS personal_message_when_joining,
   product_integration_smoove.list_id AS smoove_list_id,
   product_integration_smoove.cancelling_list_id AS smoove_cancelling_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
@@ -371,7 +373,7 @@ async function addProductStuff(
 
   ops = ops.concat(sql`
     INSERT INTO product_data VALUES
-      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'}, ${product.notes ?? null})
+      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'}, ${product.notes ?? null}, ${product.personalMessageWhenJoining ?? null})
   `)
 
   ops = ops.concat(

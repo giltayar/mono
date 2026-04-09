@@ -18,6 +18,7 @@
     "smooveCancelledListId": "Smoove Cancelled List ID",
     "smooveRemovedListId": "Smoove Removed List ID",
     "notes": "Notes",
+    "personalMessageWhenJoining": "Personal Message When Joining",
     "createSmooveList": "Create"
   },
   "smooveListDialog": {

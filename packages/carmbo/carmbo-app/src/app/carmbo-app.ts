@@ -181,6 +181,7 @@ export function makeApp({
       sql,
       smooveIntegration,
       academyIntegration,
+      whatsappIntegration,
       appBaseUrl,
       apiSecret,
       nowService,

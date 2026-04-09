@@ -21,6 +21,7 @@ import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
 import {initializePropagateSalesEventProductChangesJobHandlers} from '../sale/model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
 
 export default function (
@@ -29,6 +30,7 @@ export default function (
     sql,
     smooveIntegration,
     academyIntegration,
+    whatsappIntegration,
     appBaseUrl,
     apiSecret,
     nowService,
@@ -38,13 +40,20 @@ export default function (
     apiSecret: string | undefined
     smooveIntegration: SmooveIntegrationService | undefined
     academyIntegration: AcademyIntegrationService | undefined
+    whatsappIntegration: WhatsAppIntegrationService
     nowService: NowService
   },
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   if (smooveIntegration && academyIntegration) {
-    initialzeImportSmooveJobHandlers(smooveIntegration, academyIntegration, sql, nowService)
+    initialzeImportSmooveJobHandlers(
+      smooveIntegration,
+      academyIntegration,
+      whatsappIntegration,
+      sql,
+      nowService,
+    )
   }
 
   if (academyIntegration) {

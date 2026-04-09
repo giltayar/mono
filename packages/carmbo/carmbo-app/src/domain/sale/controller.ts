@@ -457,6 +457,7 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
     const smooveIntegration = requestContext.get('smooveIntegration')
     const academyIntegration = requestContext.get('academyIntegration')
+    const whatsappIntegration = requestContext.get('whatsappIntegration')!
     const nowService = requestContext.get('nowService')!
     const logger = requestContext.get('logger')!
     const now = nowService()
@@ -470,6 +471,7 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
       cardcomIntegration,
       smooveIntegration,
       academyIntegration,
+      whatsappIntegration,
       logger,
     )
 

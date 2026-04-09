@@ -7,8 +7,10 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
+import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration, whatsappIntegration} =
+  setup(import.meta.url)
 
 test('create sale then connect it', async ({page}) => {
   // Setup: Create a student, sales event, and products
@@ -31,6 +33,7 @@ test('create sale then connect it', async ({page}) => {
       productType: 'recorded',
       smooveListId: 2,
       academyCourses: [1],
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -43,6 +46,7 @@ test('create sale then connect it', async ({page}) => {
       productType: 'challenge',
       smooveListId: 10,
       academyCourses: [33, 777],
+      personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
     new Date(),
@@ -55,6 +59,7 @@ test('create sale then connect it', async ({page}) => {
       productType: 'recorded',
       smooveListId: 20,
       academyCourses: [888],
+      personalMessageWhenJoining: 'Welcome to Product Three!',
     },
     undefined,
     new Date(),
@@ -203,6 +208,13 @@ test('create sale then connect it', async ({page}) => {
     (await smooveIntegration().fetchContactsOfList(20)).map((contact) => contact.email),
   ).toEqual([])
 
+  // Verify personal messages were sent for products with quantity > 0
+  const contactId = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+  const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+  expect(sentMessages).toContain('Welcome to Product One!')
+  expect(sentMessages).toContain('Welcome to Product Two!')
+  expect(sentMessages).not.toContain('Welcome to Product Three!')
+
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
   await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
@@ -243,6 +255,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       productType: 'recorded',
       smooveListId: 2,
       academyCourses: [1],
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -255,6 +268,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       productType: 'challenge',
       smooveListId: 10,
       academyCourses: [33, 777],
+      personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
     new Date(),
@@ -409,6 +423,14 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
     (await smooveIntegration().fetchContactsOfList(10)).map((contact) => contact.email),
   ).toEqual(['john.doe@example.com'])
 
+  // Verify personal messages were sent
+  await expect(async () => {
+    const contactId2 = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+    const sentMessages2 = whatsappIntegration()._test_sentContactMessages(contactId2)
+    expect(sentMessages2).toContain('Welcome to Product One!')
+    expect(sentMessages2).toContain('Welcome to Product Two!')
+  }).toPass()
+
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
   await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
@@ -438,6 +460,7 @@ test('connect sale then reconnect it', async ({page}) => {
       productType: 'recorded',
       smooveListId: 2,
       academyCourses: [1],
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -450,6 +473,7 @@ test('connect sale then reconnect it', async ({page}) => {
       productType: 'challenge',
       smooveListId: 10,
       academyCourses: [33, 777],
+      personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
     new Date(),
@@ -585,6 +609,14 @@ test('connect sale then reconnect it', async ({page}) => {
     (await smooveIntegration().fetchContactsOfList(10)).map((contact) => contact.email),
   ).toEqual(['john.doe@example.com'])
 
+  // Verify personal messages were sent on both connect and reconnect
+  await expect(async () => {
+    const contactId3 = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+    const sentMessages3 = whatsappIntegration()._test_sentContactMessages(contactId3)
+    expect(sentMessages3.filter((m) => m === 'Welcome to Product One!').length).toBe(2)
+    expect(sentMessages3.filter((m) => m === 'Welcome to Product Two!').length).toBe(2)
+  }).toPass()
+
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
   await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
@@ -614,6 +646,7 @@ test('create sale with transaction description then connect it', async ({page}) 
       productType: 'recorded',
       smooveListId: 5,
       academyCourses: [100],
+      personalMessageWhenJoining: 'Welcome to Test Product!',
     },
     undefined,
     new Date(),
@@ -692,4 +725,11 @@ test('create sale with transaction description then connect it', async ({page}) 
   const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
   expect(taxInvoiceDocument).toBeDefined()
   expect(taxInvoiceDocument?.transactionDescription).toBe('שולם בהעברה בנקאית')
+
+  // Verify personal message was sent
+  await expect(async () => {
+    const contactId4 = humanIsraeliPhoneNumberToWhatsAppId('0501234567')
+    const sentMessages4 = whatsappIntegration()._test_sentContactMessages(contactId4)
+    expect(sentMessages4).toContain('Welcome to Test Product!')
+  }).toPass()
 })

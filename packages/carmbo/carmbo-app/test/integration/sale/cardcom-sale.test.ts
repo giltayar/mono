@@ -9,7 +9,9 @@ import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page
 import {createSaleProvidersPageModel} from '../../page-model/sales/sale-providers-page.model.ts'
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
+import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
+const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration, whatsappIntegration} =
+  setup(import.meta.url)
 
 test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const academyCourseId = 1
@@ -21,6 +23,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       productType: 'recorded',
       academyCourses: [academyCourseId],
       smooveListId: smooveListId,
+      personalMessageWhenJoining: 'Welcome to Product One!',
     },
     undefined,
     new Date(),
@@ -32,6 +35,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
       name: 'Product Two',
       productType: 'challenge',
       academyCourses: [33],
+      personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
     new Date(),
@@ -169,6 +173,14 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     ],
     transactionRevenueInCents: 2100,
   } as Omit<TaxInvoiceInformation, 'transactionDate'>)
+
+  // Verify personal messages were sent
+  await expect(async () => {
+    const contactId = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
+    const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+    expect(sentMessages).toContain('Welcome to Product One!')
+    expect(sentMessages).toContain('Welcome to Product Two!')
+  }).toPass()
 
   // Click on the sale to view the sale detail page
   await firstSaleRow.idLink().locator.click()
@@ -469,6 +481,7 @@ test('double call of cardcom webhook should create only one sale and one student
       productType: 'recorded',
       academyCourses: [academyCourseId],
       smooveListId: smooveListId,
+      personalMessageWhenJoining: 'Welcome to Test Product!',
     },
     undefined,
     new Date(),
@@ -569,4 +582,11 @@ test('double call of cardcom webhook should create only one sale and one student
 
   // There should be no second tax invoice document
   await expect(cardcomIntegration().fetchInvoiceInformation(2)).rejects.toThrow()
+
+  // Verify personal message was sent only once (despite double webhook)
+  await expect(async () => {
+    const contactIdDouble = humanIsraeliPhoneNumberToWhatsAppId(customerPhone)
+    const sentMessagesDouble = whatsappIntegration()._test_sentContactMessages(contactIdDouble)
+    expect(sentMessagesDouble.filter((m) => m === 'Welcome to Test Product!').length).toBe(1)
+  }).toPass()
 })
