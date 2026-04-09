@@ -26,7 +26,8 @@ export type DisconnectSalePayload = {
   reason: 'removed-from-subscription' | 'disconnected-manually'
 }
 
-export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent> | undefined
+export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent>
+export let submitPersonalMessageJob: JobSubmitter<SaleConnectionToStudent>
 
 export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService,
@@ -42,14 +43,19 @@ export async function initializeJobHandlers(
     (payload) => `Connected cardcom sale ${payload.saleNumber} to external providers`,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>
-        connectSaleToExternalProviders(
-          payload,
-          academyIntegration,
-          smooveIntegration,
-          whatsappIntegration,
-          sql,
-          logger,
-        ),
+        connectSaleToExternalProviders(payload, academyIntegration, smooveIntegration, sql, logger),
+      )
+    },
+  )
+
+  submitPersonalMessageJob = registerJobHandler<SaleConnectionToStudent>(
+    'sending-personal-message-when-joining',
+    nowService,
+    {isTrivial: true},
+    (payload) => `Send personal message for sale ${payload.saleNumber}`,
+    async ({payload}, _attempt, logger) => {
+      await sql.begin((sql) =>
+        sendPersonalMessagesWhenJoining(payload, whatsappIntegration, sql, logger),
       )
     },
   )
@@ -60,9 +66,9 @@ export async function connectSale(
   now: Date,
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
+  wthatsappIntegration: WhatsAppIntegrationService,
   smooveIntegration: SmooveIntegrationService | undefined,
   academyIntegration: AcademyIntegrationService | undefined,
-  whatsappIntegration: WhatsAppIntegrationService,
   loggerParent: FastifyBaseLogger,
 ) {
   const logger = loggerParent.child({
@@ -86,7 +92,13 @@ export async function connectSale(
       {studentNumber: parseInt(sale.studentNumber), saleNumber},
       academyIntegration,
       smooveIntegration,
-      whatsappIntegration,
+      sql,
+      logger,
+    )
+
+    await sendPersonalMessagesWhenJoining(
+      {studentNumber: parseInt(sale.studentNumber), saleNumber},
+      wthatsappIntegration,
       sql,
       logger,
     )
@@ -456,7 +468,6 @@ export async function connectSaleToExternalProviders(
   {studentNumber, saleNumber}: SaleConnectionToStudent,
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
-  whatsappIntegration: WhatsAppIntegrationService,
   sql: Sql,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -506,12 +517,11 @@ export async function connectSaleToExternalProviders(
   const smooveConnectionP = when(smooveIntegration, (smooveIntegration) =>
     subscribeStudentInSmooveLists(studentNumber, saleNumber, smooveIntegration, sql, logger),
   )
-  const personalMessageP = when(student.phone, (phone) =>
-    sendPersonalMessagesWhenJoining(saleNumber, phone, whatsappIntegration, sql, logger),
-  )
 
-  const [academyConnectionResult, smooveConnectionResult, personalMessageResult] =
-    await Promise.allSettled([academyConnectionP, smooveConnectionP, personalMessageP])
+  const [academyConnectionResult, smooveConnectionResult] = await Promise.allSettled([
+    academyConnectionP,
+    smooveConnectionP,
+  ])
 
   if (academyConnectionResult) {
     if (academyConnectionResult.status === 'rejected') {
@@ -535,17 +545,6 @@ export async function connectSaleToExternalProviders(
     }
   }
 
-  if (personalMessageResult) {
-    if (personalMessageResult.status === 'rejected') {
-      logger.error(
-        {err: personalMessageResult.reason},
-        'sending-personal-message-when-joining-failed',
-      )
-    } else {
-      logger.info('sending-personal-message-when-joining-succeeded')
-    }
-  }
-
   if (
     academyConnectionResult.status === 'rejected' ||
     smooveConnectionResult.status === 'rejected'
@@ -554,13 +553,25 @@ export async function connectSaleToExternalProviders(
   }
 }
 
-async function sendPersonalMessagesWhenJoining(
-  saleNumber: number,
-  studentPhone: string,
+export async function sendPersonalMessagesWhenJoining(
+  {studentNumber, saleNumber}: SaleConnectionToStudent,
   whatsappIntegration: WhatsAppIntegrationService,
   sql: Sql,
   logger: FastifyBaseLogger,
 ): Promise<void> {
+  const studentResult = await sql<{phone: string | null}[]>`
+    SELECT sp.phone
+    FROM student s
+    LEFT JOIN student_phone sp ON sp.data_id = s.last_data_id AND sp.item_order = 0
+    WHERE s.student_number = ${studentNumber}
+  `
+
+  const studentPhone = studentResult[0]?.phone
+  if (!studentPhone) {
+    logger.info({studentNumber, saleNumber}, 'no-phone-for-personal-message-skipping')
+    return
+  }
+
   const personalMessages = await sql<{personalMessageWhenJoining: string}[]>`
     SELECT DISTINCT
       pd.personal_message_when_joining
@@ -577,14 +588,7 @@ async function sendPersonalMessagesWhenJoining(
   const contactId = humanIsraeliPhoneNumberToWhatsAppId(studentPhone)
 
   for (const {personalMessageWhenJoining} of personalMessages) {
-    try {
-      await whatsappIntegration.sendMessageToContact(contactId, personalMessageWhenJoining)
-      logger.info({saleNumber, phone: studentPhone}, 'personal-message-when-joining-sent')
-    } catch (err) {
-      logger.error(
-        {err, saleNumber, phone: studentPhone},
-        'personal-message-when-joining-send-failed',
-      )
-    }
+    await whatsappIntegration.sendMessageToContact(contactId, personalMessageWhenJoining)
+    logger.info({saleNumber, phone: studentPhone}, 'personal-message-when-joining-sent')
   }
 }

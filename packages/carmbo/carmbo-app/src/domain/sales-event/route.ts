@@ -21,8 +21,8 @@ import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
 import {initializePropagateSalesEventProductChangesJobHandlers} from '../sale/model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
-import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 export default function (
   app: FastifyInstance,

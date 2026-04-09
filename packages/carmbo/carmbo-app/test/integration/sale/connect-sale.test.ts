@@ -209,11 +209,13 @@ test('create sale then connect it', async ({page}) => {
   ).toEqual([])
 
   // Verify personal messages were sent for products with quantity > 0
-  const contactId = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
-  const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
-  expect(sentMessages).toContain('Welcome to Product One!')
-  expect(sentMessages).toContain('Welcome to Product Two!')
-  expect(sentMessages).not.toContain('Welcome to Product Three!')
+  await expect(async () => {
+    const contactId = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+    const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+    expect(sentMessages).toContain('Welcome to Product One!')
+    expect(sentMessages).toContain('Welcome to Product Two!')
+    expect(sentMessages).not.toContain('Welcome to Product Three!')
+  }).toPass()
 
   await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 

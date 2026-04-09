@@ -5,13 +5,14 @@ import type {Sql, TransactionSql} from 'postgres'
 import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
 import {
   connectSaleToExternalProviders,
+  sendPersonalMessagesWhenJoining,
   submitConnectionJob,
 } from '../../sale/model/model-connect.ts'
 import {createNoInvoiceSale} from '../../sale/model/model-sale.ts'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
-import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {NowService} from '../../../commons/now-service.ts'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 export type ImportResult = {
   total: number
@@ -229,6 +230,12 @@ async function importSingleContact(
       {studentNumber: finalStudent.studentNumber, saleNumber},
       academyIntegration,
       smooveIntegration,
+      txSql,
+      logger,
+    )
+
+    await sendPersonalMessagesWhenJoining(
+      {studentNumber: finalStudent.studentNumber, saleNumber},
       whatsappIntegration,
       txSql,
       logger,

@@ -6,7 +6,7 @@ import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-int
 import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import {triggerJobsExecution} from '../../job/job-executor.ts'
-import {submitConnectionJob} from './model-connect.ts'
+import {submitConnectionJob, submitPersonalMessageJob} from './model-connect.ts'
 
 export type StandingOrderPaymentResolution = 'payed' | 'failure-but-retrying' | 'failed' | 'on-hold'
 
@@ -75,6 +75,7 @@ export async function addCardcomSale(
     if (!submitConnectionJob) throw new Error('Job handlers not initialized')
 
     await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
+    await submitPersonalMessageJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
 
     logger.info('sql-transaction-completed')
   })
@@ -142,6 +143,7 @@ export async function addNoInvoiceSale(
     if (!submitConnectionJob) throw new Error('Job handlers not initialized')
 
     await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
+    await submitPersonalMessageJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
 
     logger.info('sql-transaction-completed')
   })
