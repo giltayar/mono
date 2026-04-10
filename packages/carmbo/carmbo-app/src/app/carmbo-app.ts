@@ -33,6 +33,7 @@ import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-int
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 import {initializeJobExecutor} from '../domain/job/job-executor.ts'
 import {version} from '../commons/version.ts'
+import {setUiConfiguration} from '../commons/ui-configuration.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -65,6 +66,7 @@ export function makeApp({
   firebase,
   apiSecret,
   appBaseUrl,
+  uiConfiguration,
   TEST_hooks,
 }: {
   db: {
@@ -90,8 +92,11 @@ export function makeApp({
     | undefined
   apiSecret: string | undefined
   appBaseUrl: string
+  uiConfiguration: string
   TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
+  setUiConfiguration(uiConfiguration)
+
   const app = fastify({
     logger:
       process.env.NODE_ENV !== 'test'

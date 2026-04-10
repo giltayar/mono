@@ -80,7 +80,6 @@ export async function addCardcomSale(
 
     await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     await submitPersonalMessageJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
-    console.log('******* Submitting skool invitation job with data:', submitSkoolInvitationJob)
     if (submitSkoolInvitationJob) {
       await submitSkoolInvitationJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     }

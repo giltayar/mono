@@ -2,6 +2,7 @@ import {BannerComponent, type Banner} from './banner.ts'
 import {html} from '../commons/html-templates.ts'
 import {version} from '../commons/version.ts'
 import i18next, {getFixedT} from 'i18next'
+import {uiConfiguration} from '../commons/ui-configuration.ts'
 
 const t = getFixedT(null, 'layout')
 
@@ -64,7 +65,7 @@ function NavBar({
       <div class="container-fluid">
         <a class="navbar-brand" href="/"
           ><img
-            src=${`/src/${version}/layout/style/carmel-egger-icon.png`}
+            src=${`/src/${version}/layout/style/configurations/${uiConfiguration.name}/${uiConfiguration.logoFile}`}
             width="30"
             height="30"
             alt="Carmel Egger Logo"

@@ -71,6 +71,7 @@ const {app, sql} = await makeApp({
   firebase: undefined,
   apiSecret: undefined,
   appBaseUrl: 'http://localhost:3000',
+  uiConfiguration: process.env.UI_CONFIGURATION || 'carmel',
 })
 
 await prepareDatabase(sql)

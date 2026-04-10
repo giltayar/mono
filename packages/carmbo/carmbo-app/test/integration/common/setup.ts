@@ -152,6 +152,7 @@ export function setup(
       firebase: undefined,
       apiSecret: undefined,
       appBaseUrl: 'http://localhost:????',
+      uiConfiguration: 'carmel',
       TEST_hooks,
     }))
 
