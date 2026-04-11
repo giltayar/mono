@@ -9,6 +9,8 @@ export function dealWithControllerResult<TReply extends FastifyReply>(
     return reply.type('text/html').send(result)
   } else if ('htmxRedirect' in result) {
     return reply.header('HX-Redirect', result.htmxRedirect).send()
+  } else if ('redirect' in result) {
+    return reply.redirect(result.redirect)
   } else if ('htmxTarget' in result) {
     return reply.header('HX-Retarget', result.htmxTarget).type('text/html').send(result.body)
   } else {

@@ -167,7 +167,7 @@ export function makeApp({
     immutable: true,
     maxAge: '1y',
     allowedPath: (pathName) =>
-      pathName.endsWith('scripts.js') ||
+      pathName.endsWith('.js') ||
       pathName.endsWith('.css') ||
       pathName.endsWith('.png') ||
       pathName.endsWith('.svg'),

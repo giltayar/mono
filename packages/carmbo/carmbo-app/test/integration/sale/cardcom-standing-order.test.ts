@@ -15,6 +15,8 @@ import type {
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import {cardcomRecurringPaymentWebhookUrl, cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
+import {cancelSubscription} from '../common/cancel-subscription.ts'
+import {createCancelSubscriptionPageModel} from '../../page-model/sales/cancel-subscription-page.model.ts'
 
 const {
   url,
@@ -452,13 +454,8 @@ test('cancelling a standing order subscription removes student from academy cour
   await expect(whatsappGroups.groupCheckbox('3@g.us').locator).toBeChecked()
   await expect(whatsappGroups.groupName('3@g.us').locator).toHaveText('3@g.us: Test Group 3')
 
-  // Cancel the subscription via the API endpoint
-  await page.goto(
-    new URL(
-      `/landing-page/sales/cancel-subscription?sales-event=${salesEventNumber}&email=${encodeURIComponent(customerEmail)}`,
-      url(),
-    ).href,
-  )
+  // Cancel the subscription via the cancel subscription page
+  await cancelSubscription(page, url(), product1Number, customerEmail)
   const saleDetailModel = createUpdateSalePageModel(page)
   const saleHistory = saleDetailModel.history()
 
@@ -708,13 +705,8 @@ test('cancelling a standing order subscription by product number', async ({page}
     expect(skoolIntegration()._test_isInviteSentForEmail(customerEmail)).toBe(true)
   }).toPass()
 
-  // Cancel the subscription via the API endpoint using product number instead of sales-event
-  await page.goto(
-    new URL(
-      `/landing-page/sales/cancel-subscription?product=${product1Number}&email=${encodeURIComponent(customerEmail)}`,
-      url(),
-    ).href,
-  )
+  // Cancel the subscription via the cancel subscription page using product number
+  await cancelSubscription(page, url(), product1Number, customerEmail)
   const saleDetailModel = createUpdateSalePageModel(page)
   const saleHistory = saleDetailModel.history()
 
@@ -851,15 +843,13 @@ test('cancelling a subscription by product fails when multiple sales exist for t
   }).toPass()
 
   // Cancel subscription by product — should fail because there are two sales with the same product
-  await page.goto(
-    new URL(
-      `/landing-page/sales/cancel-subscription?product=${product1Number}&email=${encodeURIComponent(customerEmail)}`,
-      url(),
-    ).href,
-  )
+  await cancelSubscription(page, url(), product1Number, customerEmail)
 
   // Verify the error page is shown with the multiple sales error message
-  await expect(page.locator('p')).toContainText('נמצאו מספר מנויים')
+  const cancelSubscriptionPage = createCancelSubscriptionPageModel(page)
+  await expect(cancelSubscriptionPage.errorMessage().locator).toContainText(
+    'Multiple subscriptions',
+  )
 
   // unfortunately, need to wait some time because we're checking that something has NOT happened
   await page.waitForTimeout(1000)

@@ -26,9 +26,10 @@ import {
   connectSale,
   dealWithCardcomRecurringPayment,
   showSalePayments,
-  cancelSubscriptionBySalesEvent,
   cancelSubscriptionByProduct,
   dealWithNoInvoiceSale,
+  renderCancelSubscription,
+  renderSubscriptionCancelled,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -180,35 +181,60 @@ export function landingPageApiRoute(app: FastifyInstance) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
   appWithTypes.get(
-    '/cancel-subscription',
+    '/cancel-subscription/product/:product',
     {
       schema: {
-        querystring: z.union([
-          z.object({
-            'sales-event': z.coerce.number().positive(),
-            email: z.string().email(),
-          }),
-          z.object({
-            product: z.coerce.number().positive(),
-            email: z.string().email(),
-          }),
-        ]),
+        params: z.object({product: z.coerce.number().positive()}),
+        querystring: z.object({email: z.email().optional()}),
       },
     },
     async (request, reply) => {
-      const query = request.query
+      return await dealWithControllerResult(
+        reply,
+        await renderCancelSubscription(request.query.email, request.params.product),
+      )
+    },
+  )
 
-      if ('sales-event' in query) {
-        await dealWithControllerResult(
-          reply,
-          await cancelSubscriptionBySalesEvent(query.email, Number(query['sales-event'])),
-        )
-      } else {
-        await dealWithControllerResult(
-          reply,
-          await cancelSubscriptionByProduct(query.email, Number(query.product)),
-        )
-      }
+  appWithTypes.post(
+    '/cancel-subscription/product/:product',
+    {
+      schema: {
+        params: z.object({product: z.coerce.number().positive()}),
+        body: z.object({email: z.string().email()}),
+      },
+    },
+    async (request, reply) => {
+      request.log.info({query: request.query}, 'cancel-subscription-by-product-request')
+
+      return await dealWithControllerResult(
+        reply,
+        await cancelSubscriptionByProduct(request.body.email, request.params.product),
+      )
+    },
+  )
+
+  appWithTypes.get(
+    '/cancel-subscription/product/:product/cancelled',
+    {
+      schema: {
+        params: z.object({product: z.coerce.number().positive()}),
+        querystring: z.object({
+          email: z.string().email(),
+          studentName: z.string(),
+          productName: z.string(),
+        }),
+      },
+    },
+    async (request, reply) => {
+      return await dealWithControllerResult(
+        reply,
+        renderSubscriptionCancelled(
+          request.query.email,
+          request.query.studentName,
+          request.query.productName,
+        ),
+      )
     },
   )
 }

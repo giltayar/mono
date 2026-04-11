@@ -7,6 +7,7 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 import {cardcomWebhookUrl, cardcomRecurringPaymentWebhookUrl} from './common/cardcom-webhook.ts'
+import {cancelSubscription} from '../common/cancel-subscription.ts'
 
 const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
 
@@ -221,13 +222,8 @@ test('searching sales', async ({page}) => {
 
   await expect(saleListModel.list().rows().locator).toHaveCount(2)
 
-  // Cancel Bob Williams' standing order subscription via the API endpoint
-  await page.goto(
-    new URL(
-      `/landing-page/sales/cancel-subscription?sales-event=${salesEvent1Number}&email=${encodeURIComponent('bob.williams@example.com')}`,
-      url(),
-    ).href,
-  )
+  // Cancel Bob Williams' standing order subscription via the cancel subscription page
+  await cancelSubscription(page, url(), productNumber, 'bob.williams@example.com')
 
   await expect(async () => {
     await page.goto(new URL('/sales', url()).href)

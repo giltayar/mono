@@ -14,7 +14,6 @@ import {
   type Sale,
   fillInSale,
   querySalePayments,
-  findSaleAndStudentBySalesEvent,
   findSaleAndStudentByProduct,
 } from './model/model.ts'
 import {
@@ -56,6 +55,8 @@ import type {
   CardcomSaleWebhookJson,
 } from '@giltayar/carmel-tools-cardcom-integration/types'
 import {
+  showCancelSubscriptionForm,
+  showCancelSubscriptionSuccess,
   showErrorCancellingSubscription,
   showErrorMultipleSalesFound,
   showErrorSubscriptionNotFound,
@@ -559,58 +560,6 @@ export async function disconnectSale(saleNumber: number): Promise<ControllerResu
   }
 }
 
-export async function cancelSubscriptionBySalesEvent(
-  email: string,
-  salesEventNumber: number,
-): Promise<ControllerResult> {
-  const sql = requestContext.get('sql')!
-  const cardcomIntegration = requestContext.get('cardcomIntegration')!
-  const smooveIntegration = requestContext.get('smooveIntegration')
-  const nowService = requestContext.get('nowService')!
-  const logger = requestContext.get('logger')!
-  const now = nowService()
-
-  try {
-    const {studentName, productName, saleNumber} = await findSaleAndStudentBySalesEvent(
-      email,
-      salesEventNumber,
-      sql,
-    )
-
-    if (studentName === undefined || productName === undefined || saleNumber === undefined) {
-      return finalHtml(
-        showErrorSubscriptionNotFound({
-          email,
-          identifier: {salesEventNumber},
-          studentName,
-          productName,
-        }),
-      )
-    }
-
-    await model_cancelSubscription(
-      email,
-      saleNumber,
-      sql,
-      cardcomIntegration,
-      smooveIntegration,
-      now,
-      logger,
-    )
-
-    return finalHtml(showSubscriptionCancelled(email, studentName, productName))
-  } catch (err: any) {
-    const logger = requestContext.get('logger')!
-    logger.error({err}, 'cancel-subscription-by-sales-event')
-
-    if (err.code === 'ERR_MULTIPLE_SALES_FOUND') {
-      return finalHtml(showErrorMultipleSalesFound(email))
-    }
-
-    return finalHtml(showErrorCancellingSubscription(email, {salesEventNumber}))
-  }
-}
-
 export async function cancelSubscriptionByProduct(
   email: string,
   productNumber: number,
@@ -661,4 +610,19 @@ export async function cancelSubscriptionByProduct(
 
     return finalHtml(showErrorCancellingSubscription(email, {productNumber}))
   }
+}
+
+export function renderCancelSubscription(
+  email: string | undefined,
+  productNumber: number,
+): ControllerResult {
+  return finalHtml(showCancelSubscriptionForm(email, productNumber))
+}
+
+export function renderSubscriptionCancelled(
+  email: string,
+  studentName: string,
+  productName: string,
+): ControllerResult {
+  return finalHtml(showCancelSubscriptionSuccess(email, studentName, productName))
 }

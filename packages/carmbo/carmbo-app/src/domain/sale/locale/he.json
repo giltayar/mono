@@ -96,6 +96,28 @@
     "removedList": "רשימת הוסרו",
     "whatsappGroups": "קבוצות וואטסאפ"
   },
+  "cancelSubscription": {
+    "pageTitle": "ביטול מנוי",
+    "title": "ביטול מנוי",
+    "email": "אימייל",
+    "submit": "ביטול מנוי",
+    "confirmTitle": "אישור ביטול",
+    "confirmMessage": "האם את/ה בטוח/ה שברצונך לבטל את המנוי?",
+    "confirmYes": "כן, בטל/י",
+    "confirmNo": "חזרה",
+    "cancelledPageTitle": "מנוי בוטל",
+    "cancelledTitle": "מנוי בוטל",
+    "cancelledMessage": "בוטל מנוי {{productName}} עבור {{studentName}} ({{email}}).",
+    "errorPageTitle": "שגיאה בביטול מנוי",
+    "errorCancellingTitle": "שגיאה בביטול מנוי",
+    "errorCancellingMessage": "נתקלנו בשגיאה בעת ניסיון לבטל את המנוי עבור {{email}} ({{identifierText}}). אנא נסו שוב מאוחר יותר או פנו לתמיכה.",
+    "errorNotFoundTitle": "מנוי לא נמצא",
+    "errorNotFoundSubscriptionNotFound": "מנוי עבור אימייל {{email}} לא נמצא.",
+    "errorMultipleSalesTitle": "שגיאה בביטול מנוי",
+    "errorMultipleSalesMessage": "נמצאו מספר מנויים עבור אימייל זה. אנא פנו לתמיכה לקבלת עזרה.",
+    "identifierEvent": "ארוע {{salesEventNumber}}",
+    "identifierProduct": "מוצר {{productNumber}}"
+  },
   "studentSearch": {
     "searchCreateStudent": "חיפוש / יצירת תלמידה",
     "search": "חיפוש",

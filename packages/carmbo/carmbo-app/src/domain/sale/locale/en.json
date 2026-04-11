@@ -96,6 +96,28 @@
     "removedList": "Removed list",
     "whatsappGroups": "WhatsApp groups"
   },
+  "cancelSubscription": {
+    "pageTitle": "Cancel Subscription",
+    "title": "Cancel Subscription",
+    "email": "Email",
+    "submit": "Cancel Subscription",
+    "confirmTitle": "Confirm Cancellation",
+    "confirmMessage": "Are you sure you want to cancel your subscription?",
+    "confirmYes": "Yes, Cancel",
+    "confirmNo": "Go Back",
+    "cancelledPageTitle": "Subscription Cancelled",
+    "cancelledTitle": "Subscription Cancelled",
+    "cancelledMessage": "The subscription for {{productName}} has been cancelled for {{studentName}} ({{email}}).",
+    "errorPageTitle": "Error Cancelling Subscription",
+    "errorCancellingTitle": "Error Cancelling Subscription",
+    "errorCancellingMessage": "We encountered an error while trying to cancel the subscription for {{email}} ({{identifierText}}). Please try again later or contact support.",
+    "errorNotFoundTitle": "Subscription Not Found",
+    "errorNotFoundSubscriptionNotFound": "No subscription was found for email {{email}}.",
+    "errorMultipleSalesTitle": "Error Cancelling Subscription",
+    "errorMultipleSalesMessage": "Multiple subscriptions were found for this email. Please contact support for assistance.",
+    "identifierEvent": "event {{salesEventNumber}}",
+    "identifierProduct": "product {{productNumber}}"
+  },
   "studentSearch": {
     "searchCreateStudent": "Search / Create Student",
     "search": "Search",

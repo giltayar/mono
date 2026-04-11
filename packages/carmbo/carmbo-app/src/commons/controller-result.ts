@@ -9,6 +9,7 @@ export type ControllerResult =
     }
   | string
   | {htmxRedirect: string}
+  | {redirect: string}
   | {htmxTarget: string; body: string}
 
 export function finalHtml(
@@ -30,6 +31,8 @@ export function retarget(result: ControllerResult, target: string): ControllerRe
   if (typeof result === 'string') {
     return {body: result, htmxTarget: target}
   } else if ('htmxRedirect' in result) {
+    return result
+  } else if ('redirect' in result) {
     return result
   } else if ('htmxTarget' in result) {
     return {...result, htmxTarget: target}

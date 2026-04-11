@@ -11,6 +11,7 @@ import {
   cardcomWebhookUrl,
   cardcomRecurringPaymentWebhookUrl,
 } from '../sale/common/cardcom-webhook.ts'
+import {cancelSubscription} from '../common/cancel-subscription.ts'
 
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
@@ -901,12 +902,7 @@ test('unsubscribed (cancelled subscription) sales are not affected by product ac
   }).toPass()
 
   // Cancel the subscription (sets isActive = false, but sale remains connected)
-  await page.goto(
-    new URL(
-      `/landing-page/sales/cancel-subscription?sales-event=${salesEventNumber}&email=${encodeURIComponent(customerEmail)}`,
-      url(),
-    ).href,
-  )
+  await cancelSubscription(page, url(), productNumber, customerEmail)
 
   // Verify the sale is now unsubscribed but still connected
   await page.goto(new URL('/sales/1', url()).href)
