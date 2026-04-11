@@ -22,6 +22,7 @@ export const EnvironmentVariablesSchema = z.object({
   HOST: z.string().default('localhost'),
   PORT: z.coerce.number().default(3000),
   ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string().optional(),
+  GREEN_API_BASE_URL: z.url().default('https://7105.api.greenapi.com'),
   GREEN_API_KEY: z.string(),
   GREEN_API_INSTANCE: z.coerce.number(),
   SMOOVE_API_KEY: z.string().optional(),
@@ -74,7 +75,7 @@ const {app, sql} = await makeApp({
     whatsappIntegration: createWhatsAppIntegrationService({
       greenApiKey: env.GREEN_API_KEY,
       greenApiInstanceId: env.GREEN_API_INSTANCE,
-      greenApiBaseUrl: new URL('https://7105.api.greenapi.com'),
+      greenApiBaseUrl: new URL(env.GREEN_API_BASE_URL),
     }),
     smooveIntegration: when(env.SMOOVE_API_KEY, (apiKey) =>
       createSmooveIntegrationService({
