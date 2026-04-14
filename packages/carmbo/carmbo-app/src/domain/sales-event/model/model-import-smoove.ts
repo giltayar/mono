@@ -201,7 +201,7 @@ async function importSingleContact(
       if (saleNumber && submitConnectionJob) {
         const isConnected = await isSaleConnected(saleNumber, txSql)
         if (!isConnected) {
-          await submitConnectionJob({studentNumber: student.studentNumber, saleNumber}, {})
+          await submitConnectionJob?.({studentNumber: student.studentNumber, saleNumber}, {})
           logger.info({saleNumber}, 'connection-job-submitted-for-existing-sale')
         }
       }

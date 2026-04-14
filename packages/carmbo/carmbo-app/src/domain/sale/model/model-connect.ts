@@ -27,7 +27,7 @@ export type DisconnectSalePayload = {
   reason: 'removed-from-subscription' | 'disconnected-manually'
 }
 
-export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent>
+export let submitConnectionJob: JobSubmitter<SaleConnectionToStudent> | undefined
 export let submitPersonalMessageJob: JobSubmitter<SaleConnectionToStudent>
 export let submitSkoolInvitationJob: JobSubmitter<SaleConnectionToStudent>
 

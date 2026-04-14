@@ -76,9 +76,7 @@ export async function addCardcomSale(
     )
     logger.info({saleNumber}, 'sale-created')
 
-    if (!submitConnectionJob) throw new Error('Job handlers not initialized')
-
-    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
+    await submitConnectionJob?.({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     await submitPersonalMessageJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     if (submitSkoolInvitationJob) {
       await submitSkoolInvitationJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
@@ -147,9 +145,7 @@ export async function addNoInvoiceSale(
     )
     logger.info({saleNumber}, 'sale-created')
 
-    if (!submitConnectionJob) throw new Error('Job handlers not initialized')
-
-    await submitConnectionJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
+    await submitConnectionJob?.({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     await submitPersonalMessageJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
     if (submitSkoolInvitationJob) {
       await submitSkoolInvitationJob({studentNumber: finalStudent.studentNumber, saleNumber}, {})
