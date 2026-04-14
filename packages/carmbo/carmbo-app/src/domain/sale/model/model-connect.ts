@@ -32,8 +32,8 @@ export let submitPersonalMessageJob: JobSubmitter<SaleConnectionToStudent>
 export let submitSkoolInvitationJob: JobSubmitter<SaleConnectionToStudent>
 
 export async function initializeJobHandlers(
-  academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService | undefined,
+  smooveIntegration: SmooveIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   skoolIntegration: SkoolIntegrationService | undefined,
   sql: Sql,
@@ -54,7 +54,7 @@ export async function initializeJobHandlers(
   submitPersonalMessageJob = registerJobHandler<SaleConnectionToStudent>(
     'sending-personal-message-when-joining',
     nowService,
-    {isTrivial: true},
+    {isTrivial: false},
     (payload) => `Send personal message for sale ${payload.saleNumber}`,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>
@@ -67,7 +67,7 @@ export async function initializeJobHandlers(
     submitSkoolInvitationJob = registerJobHandler<SaleConnectionToStudent>(
       'sending-skool-invitation',
       nowService,
-      {isTrivial: true},
+      {isTrivial: false},
       (payload) => `Send skool invitation for sale ${payload.saleNumber}`,
       async ({payload}, _attempt, logger) => {
         await sql.begin((sql) => sendSkoolInvitations(payload, skoolIntegration, sql, logger))

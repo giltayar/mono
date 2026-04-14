@@ -72,24 +72,23 @@ export function apiRoute(
 ) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  if (smooveIntegration && academyIntegration) {
-    initializeSaleJobHandlers(
-      academyIntegration,
-      smooveIntegration,
-      whatsappIntegration,
-      skoolIntegration,
-      sql,
-      nowService,
-    )
+  initializeSaleJobHandlers(
+    academyIntegration,
+    smooveIntegration,
+    whatsappIntegration,
+    skoolIntegration,
+    sql,
+    nowService,
+  )
 
-    initializeStandingOrderJobHandlers(
-      sql,
-      academyIntegration,
-      smooveIntegration,
-      whatsappIntegration,
-      nowService,
-    )
-  }
+  initializeStandingOrderJobHandlers(
+    sql,
+    academyIntegration,
+    smooveIntegration,
+    whatsappIntegration,
+    nowService,
+  )
+
   if (academyIntegration) {
     initializePropagateAcademyCourseChangesJobHandlers(academyIntegration, sql, nowService)
   }

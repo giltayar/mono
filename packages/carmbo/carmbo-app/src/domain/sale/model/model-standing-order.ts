@@ -19,8 +19,8 @@ let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<DisconnectSalePay
 
 export async function initializeJobHandlers(
   sql: Sql,
-  academyIntegration: AcademyIntegrationService,
-  smooveIntegration: SmooveIntegrationService,
+  academyIntegration: AcademyIntegrationService | undefined,
+  smooveIntegration: SmooveIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   nowService: NowService,
 ) {
