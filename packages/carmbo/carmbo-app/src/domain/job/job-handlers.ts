@@ -36,6 +36,7 @@ export function registerJobHandler<TPayload extends JSONValue>(
         scheduledAt: scheduledAt ?? null,
         description: descriptionFn(payload),
         isTrivial: options.isTrivial,
+        createdAt: nowService(),
       })}
       RETURNING id
     `

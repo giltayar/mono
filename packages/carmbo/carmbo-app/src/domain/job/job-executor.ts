@@ -6,6 +6,7 @@ import type {NowService} from '../../commons/now-service.ts'
 import {AsyncLocalStorage} from 'async_hooks'
 import {presult, unwrapPresult} from '@giltayar/promise-commons'
 import {Mutex} from 'async-mutex'
+import {finished} from 'stream'
 
 export async function triggerJobsExecution(nowService: NowService) {
   if (!globalSql || !globalLogger)
@@ -70,7 +71,8 @@ async function executeJobs(nowService: NowService) {
         job
       WHERE
         (scheduled_at IS NULL OR scheduled_at <= ${now}) AND
-        finished_at IS NULL
+        finished_at IS NULL AND
+        type != '__direct__'
     `) as JobToExecute[]
 
     jobLogger.info({jobsToExecute: currentJobs.length}, 'found-jobs-to-execute')
@@ -80,7 +82,7 @@ async function executeJobs(nowService: NowService) {
       childLogger.info({}, 'executing-job-start')
 
       try {
-        await executeJob(job, nowService(), globalSql, childLogger)
+        await executeJob(job, nowService, globalSql, childLogger)
 
         childLogger.info({}, 'executing-job-success')
       } catch (err) {
@@ -90,13 +92,19 @@ async function executeJobs(nowService: NowService) {
   })
 }
 
-async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: FastifyBaseLogger) {
+async function executeJob(
+  job: JobToExecute,
+  nowService: NowService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+) {
   const attempts = parseInt(job.attempts)
   const numberOfRetries = parseInt(job.numberOfRetries)
 
   const handler = jobHandlers.get(job.type)
 
   if (!handler) {
+    const now = nowService()
     await sql`
       UPDATE job SET ${sql({
         updatedAt: now,
@@ -114,6 +122,8 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
   logger.info({attempts, numberOfRetries}, 'executing-job-handler')
   try {
     const result = await handler({payload: job.payload, jobId: job.id}, attempts, logger)
+    const now = nowService()
+    logger.info({}, 'executing-job-handler-success')
 
     await sql`
       UPDATE job SET ${sql({
@@ -124,6 +134,8 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
       WHERE id = ${job.id}
     `
   } catch (err) {
+    const now = nowService()
+    logger.error({err}, 'executing-job-handler-failed')
     await sql`
       UPDATE job SET ${sql({
         attempts: attempts + 1,
@@ -137,7 +149,64 @@ async function executeJob(job: JobToExecute, now: Date, sql: Sql, logger: Fastif
   }
 }
 
-// delete jobs that are more than 30 days old
+export async function executeDirectJob(
+  handler: (options: {logger: FastifyBaseLogger}) => Promise<undefined | {description: string}>,
+  nowService: NowService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+  options: {isTrivial: boolean},
+) {
+  const result = await globalSql`
+      INSERT INTO job ${globalSql({
+        parentJobId: null,
+        type: '__direct__',
+        payload: '',
+        numberOfRetries: 0,
+        scheduledAt: null,
+        description: '',
+        createdAt: nowService(),
+        isTrivial: options.isTrivial,
+      })}
+      RETURNING id
+    `
+  const jobExecutionId = result[0].id
+
+  logger.info('executing-direct-job-handler')
+  try {
+    const result = await handler({logger})
+    const now = nowService()
+    logger.info({}, 'executing-direct-job-handler-success')
+
+    await sql`
+      UPDATE job SET ${sql({
+        updatedAt: now,
+        finishedAt: now,
+        ...(result ? {description: result.description} : {}),
+      })}
+      WHERE id = ${jobExecutionId}
+    `
+  } catch (err) {
+    try {
+      const now = nowService()
+      logger.error({err}, 'executing-direct-job-handler-failed')
+
+      await sql`
+      UPDATE job SET ${sql({
+        attempts: 1,
+        updatedAt: now,
+        finishedAt: now,
+        errorMessage: (err as any).message ?? null,
+        error: (err as any).stack ?? (typeof err === 'object' ? JSON.stringify(err) : String(err)),
+      })}
+      WHERE id = ${jobExecutionId}
+    `
+    } catch (updateErr) {
+      logger.error({err: updateErr}, 'failed-to-update-direct-job-after-handler-failed')
+    }
+    throw err
+  }
+}
+
 async function garbageCollectJobs(nowService: NowService) {
   const now = nowService()
   const sql = globalSql
@@ -145,7 +214,7 @@ async function garbageCollectJobs(nowService: NowService) {
   await sql`
     DELETE FROM job
     WHERE finished_at IS NOT NULL AND finished_at < ${new Date(
-      now.getTime() - 30 * 24 * 60 * 60 * 1000,
+      now.getTime() - 30 * 24 * 60 * 60 * 1000, // 30 days old
     )}
     RETURNING id, finished_at
   `

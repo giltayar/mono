@@ -4,7 +4,11 @@ import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import postgres from 'postgres'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
-import {initializeJobExecutor, triggerJobsExecution} from '../../../src/domain/job/job-executor.ts'
+import {
+  initializeJobExecutor,
+  triggerJobsExecution,
+  executeDirectJob,
+} from '../../../src/domain/job/job-executor.ts'
 import {registerJobHandler, jobHandlers} from '../../../src/domain/job/job-handlers.ts'
 import type {FastifyBaseLogger} from 'fastify'
 import {setTimeout} from 'node:timers/promises'
@@ -368,6 +372,94 @@ describe('Job Executor', () => {
 
     // Job should only be executed once despite multiple triggers
     assert.strictEqual(executedJobs.length, 1)
+  })
+
+  test('executeDirectJob should execute handler and record success', async () => {
+    let handlerCalled = false
+
+    await executeDirectJob(
+      async () => {
+        handlerCalled = true
+        return {description: 'direct job done'}
+      },
+      nowService,
+      sql,
+      logger,
+      {isTrivial: false},
+    )
+
+    assert.ok(handlerCalled)
+
+    const jobs = await sql`SELECT * FROM job WHERE type = '__direct__'`
+    assert.strictEqual(jobs.length, 1)
+    assert.strictEqual(jobs[0].description, 'direct job done')
+    assert.ok(jobs[0].finishedAt)
+    assert.strictEqual(jobs[0].errorMessage, null)
+    assert.strictEqual(jobs[0].error, null)
+  })
+
+  test('executeDirectJob should record failure and rethrow when handler throws', async () => {
+    await assert.rejects(
+      () =>
+        executeDirectJob(
+          async () => {
+            throw new Error('direct job failed')
+          },
+          nowService,
+          sql,
+          logger,
+          {isTrivial: false},
+        ),
+      {message: 'direct job failed'},
+    )
+
+    const jobs = await sql`SELECT * FROM job WHERE type = '__direct__'`
+    assert.strictEqual(jobs.length, 1)
+    assert.strictEqual(jobs[0].errorMessage, 'direct job failed')
+    assert.ok(jobs[0].error?.includes('Error: direct job failed'))
+    assert.ok(jobs[0].finishedAt)
+    assert.strictEqual(jobs[0].attempts, 1)
+  })
+
+  test('executeDirectJob should set isTrivial flag', async () => {
+    await executeDirectJob(async () => undefined, nowService, sql, logger, {isTrivial: true})
+
+    const jobs = await sql`SELECT * FROM job WHERE type = '__direct__'`
+    assert.strictEqual(jobs.length, 1)
+    assert.strictEqual(jobs[0].isTrivial, true)
+  })
+
+  test('executeDirectJob should not be picked up by triggerJobsExecution', async () => {
+    await executeDirectJob(
+      async () => {
+        return {description: 'should stay'}
+      },
+      nowService,
+      sql,
+      logger,
+      {isTrivial: false},
+    )
+
+    // Mark the direct job as not finished so it would be picked up if not filtered
+    await sql`UPDATE job SET finished_at = NULL WHERE type = '__direct__'`
+
+    const executedJobs: string[] = []
+    const submitJob = registerJobHandler(
+      'regular-job',
+      nowService,
+      {isTrivial: false},
+      () => '',
+      async ({payload}: {payload: {id: string}}) => {
+        executedJobs.push(payload.id)
+      },
+    )
+    await submitJob({id: 'regular'}, {retries: 1})
+
+    await triggerJobsExecution(() => new Date())
+    await waitForJobsToComplete(sql, 1) // 1 left = the direct job that's unfinished
+
+    assert.strictEqual(executedJobs.length, 1)
+    assert.strictEqual(executedJobs[0], 'regular')
   })
 
   test('should garbage collect old jobs', async () => {
