@@ -373,7 +373,7 @@ export async function _test_simulateCardcomStandingOrder(
     }
   }
 
-  return {recurringOrderId}
+  return {recurringOrderId, cardcomInvoiceNumber}
 }
 
 export async function _test_simulateCardcomStandingOrderPayment(
