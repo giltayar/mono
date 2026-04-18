@@ -616,6 +616,12 @@ function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJs
     }
   }
 
+  if (products.some((p) => !p.productId)) {
+    throw new Error(
+      `You forgot to enter the Carmbo Product Id in the Product information in the Cardcom landing page`,
+    )
+  }
+
   return products
 }
 function generateStudentInfoFromCardcomSale(

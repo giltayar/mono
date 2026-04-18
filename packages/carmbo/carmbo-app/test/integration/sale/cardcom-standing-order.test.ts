@@ -289,6 +289,71 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   await expect(secondPayment.resolutionCell().locator).toContainText('payed')
 })
 
+test('cardcom standing order with no product id shows error in jobs page', async ({page}) => {
+  const product1Number = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+      academyCourses: [1],
+      personalMessageWhenJoining: 'Welcome!',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [product1Number],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  await expect(() =>
+    cardcomIntegration()._test_simulateCardcomStandingOrder(
+      {
+        productsSold: [
+          {
+            productId: '',
+            quantity: 1,
+            unitPriceInCents: 100 * 100,
+            productName: 'Product One',
+          },
+        ],
+        customerEmail: 'test-customer@example.com',
+        customerName: 'John Doe',
+        customerPhone: '0501234567',
+        cardcomCustomerId: 1776,
+        transactionDate: new Date(),
+        transactionDescription: undefined,
+        transactionRevenueInCents: 100 * 100,
+      },
+      undefined,
+      cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+      cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+    ),
+  ).rejects.toThrow()
+
+  await page.goto(new URL('/jobs', url()).href)
+
+  const jobListModel = createJobListPageModel(page)
+  const jobRows = jobListModel.list().rows()
+
+  await expect(jobRows.locator).toHaveCount(1)
+
+  const firstJobRow = jobRows.row(0)
+  await expect(firstJobRow.statusCell().locator).toContainText('❌')
+  await expect(firstJobRow.statusCell().locator).toContainText(
+    'You forgot to enter the Carmbo Product Id in the Product information in the Cardcom landing page',
+  )
+})
+
 test('cardcom master recurring webhooks are ignored', async () => {
   const result = await fetchAsTextWithJsonBody(
     new URL('/api/sales/cardcom/recurring-payment?secret=', url()),
