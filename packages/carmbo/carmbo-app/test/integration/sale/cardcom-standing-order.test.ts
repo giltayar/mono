@@ -17,6 +17,7 @@ import {cardcomRecurringPaymentWebhookUrl, cardcomWebhookUrl} from './common/car
 import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
 import {cancelSubscription} from '../common/cancel-subscription.ts'
 import {createCancelSubscriptionPageModel} from '../../page-model/sales/cancel-subscription-page.model.ts'
+import {createJobListPageModel} from '../../page-model/jobs/job-list-page.model.ts'
 
 const {
   url,
@@ -78,34 +79,35 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   const customerName = 'John Doe'
   const customerPhone = '0501234567'
 
-  const {recurringOrderId} = await cardcomIntegration()._test_simulateCardcomStandingOrder(
-    {
-      productsSold: [
-        {
-          productId: product1Number.toString(),
-          quantity: 1,
-          unitPriceInCents: 100 * 100,
-          productName: 'Product One',
-        },
-        {
-          productId: product2Number.toString(),
-          quantity: 2,
-          unitPriceInCents: 50 * 100,
-          productName: 'Product Two',
-        },
-      ],
-      customerEmail,
-      customerName,
-      customerPhone,
-      cardcomCustomerId: 1776,
-      transactionDate: new Date(),
-      transactionDescription: undefined,
-      transactionRevenueInCents: 200 * 100,
-    },
-    undefined,
-    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
-    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
-  )
+  const {recurringOrderId, cardcomInvoiceNumber} =
+    await cardcomIntegration()._test_simulateCardcomStandingOrder(
+      {
+        productsSold: [
+          {
+            productId: product1Number.toString(),
+            quantity: 1,
+            unitPriceInCents: 100 * 100,
+            productName: 'Product One',
+          },
+          {
+            productId: product2Number.toString(),
+            quantity: 2,
+            unitPriceInCents: 50 * 100,
+            productName: 'Product Two',
+          },
+        ],
+        customerEmail,
+        customerName,
+        customerPhone,
+        cardcomCustomerId: 1776,
+        transactionDate: new Date(),
+        transactionDescription: undefined,
+        transactionRevenueInCents: 200 * 100,
+      },
+      undefined,
+      cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+      cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+    )
 
   // Navigate to students list and verify student was created
   await page.goto(new URL('/students', url()).href)
@@ -228,7 +230,22 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   const firstPayment = paymentRows.row(0)
   await expect(firstPayment.amountCell().locator).toContainText('200')
   await expect(firstPayment.resolutionCell().locator).toContainText('payed')
-  await expect(firstPayment.invoiceNumberCell().locator).toContainText('1')
+  await expect(firstPayment.invoiceNumberCell().locator).toContainText(`${cardcomInvoiceNumber}`)
+
+  // Navigate to jobs page and verify the direct job was created
+  await page.goto(new URL('/jobs', url()).href)
+
+  const jobListModel = createJobListPageModel(page)
+  const jobRows = jobListModel.list().rows()
+
+  await expect(jobRows.locator).toHaveCount(4)
+
+  const firstJobRow = jobRows.row(3)
+  await expect(firstJobRow.descriptionCell().locator).not.toBeEmpty()
+  await expect(firstJobRow.statusCell().locator).toContainText('✔')
+  await expect(firstJobRow.descriptionCell().locator).toContainText(
+    `Processing Cardcom sale for sales event ${salesEventNumber}, invoice ${cardcomInvoiceNumber}, email ${customerEmail}`,
+  )
 
   // Simulate a second payment for the standing order
   await cardcomIntegration()._test_simulateCardcomStandingOrderPayment(
@@ -260,7 +277,8 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   )
 
   // Reload the payments page to verify the second payment was created
-  await page.reload()
+  await page.goto(new URL('/sales/1/payments', url()).href)
+  await page.waitForURL(/\/sales\/\d+\/payments$/)
 
   // Verify there are now two payments
   await expect(paymentRows.locator).toHaveCount(2)

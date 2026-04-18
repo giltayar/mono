@@ -385,7 +385,7 @@ describe('Job Executor', () => {
       nowService,
       sql,
       logger,
-      {isTrivial: false},
+      {isTrivial: false, description: 'Direct Job 1'},
     )
 
     assert.ok(handlerCalled)
@@ -408,7 +408,7 @@ describe('Job Executor', () => {
           nowService,
           sql,
           logger,
-          {isTrivial: false},
+          {isTrivial: false, description: 'Direct Job 1'},
         ),
       {message: 'direct job failed'},
     )
@@ -418,11 +418,15 @@ describe('Job Executor', () => {
     assert.strictEqual(jobs[0].errorMessage, 'direct job failed')
     assert.ok(jobs[0].error?.includes('Error: direct job failed'))
     assert.ok(jobs[0].finishedAt)
+    assert.strictEqual(jobs[0].description, 'Direct Job 1')
     assert.strictEqual(jobs[0].attempts, 1)
   })
 
   test('executeDirectJob should set isTrivial flag', async () => {
-    await executeDirectJob(async () => undefined, nowService, sql, logger, {isTrivial: true})
+    await executeDirectJob(async () => ({description: 'Trivial Job'}), nowService, sql, logger, {
+      isTrivial: true,
+      description: '',
+    })
 
     const jobs = await sql`SELECT * FROM job WHERE type = '__direct__'`
     assert.strictEqual(jobs.length, 1)
@@ -437,7 +441,7 @@ describe('Job Executor', () => {
       nowService,
       sql,
       logger,
-      {isTrivial: false},
+      {isTrivial: false, description: 'Direct Job 2'},
     )
 
     // Mark the direct job as not finished so it would be picked up if not filtered

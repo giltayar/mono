@@ -67,6 +67,7 @@ import {listAcademyCourses} from '../../commons/external-provider/academy-course
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
 import {when} from '@giltayar/functional-commons'
+import {executeDirectJob} from '../job/job-executor.ts'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,
@@ -227,14 +228,24 @@ export async function dealWithCardcomOneTimeSale(
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
-  await addCardcomSale(
-    salesEventNumber,
-    cardcomSaleWebhookJson,
-    now,
-    smooveIntegration,
-    cardcomIntegration,
+  await executeDirectJob(
+    () =>
+      addCardcomSale(
+        salesEventNumber,
+        cardcomSaleWebhookJson,
+        now,
+        smooveIntegration,
+        cardcomIntegration,
+        sql,
+        logger,
+      ),
+    nowService,
     sql,
     logger,
+    {
+      isTrivial: false,
+      description: `Processing Cardcom sale for sales event ${salesEventNumber}, invoice ${cardcomSaleWebhookJson.invoicenumber}, email ${cardcomSaleWebhookJson.UserEmail}`,
+    },
   )
 
   return 'ok'
@@ -261,13 +272,23 @@ export async function dealWithNoInvoiceSale({
   const sql = requestContext.get('sql')!
   const logger = requestContext.get('logger')!
 
-  await addNoInvoiceSale(
-    salesEventNumber,
-    {email, phone, cellPhone, firstName, lastName},
-    now,
-    smooveIntegration,
+  await executeDirectJob(
+    () =>
+      addNoInvoiceSale(
+        salesEventNumber,
+        {email, phone, cellPhone, firstName, lastName},
+        now,
+        smooveIntegration,
+        sql,
+        logger,
+      ),
+    nowService,
     sql,
     logger,
+    {
+      isTrivial: false,
+      description: `Processing no-invoice sale for sales event ${salesEventNumber}, email ${email}`,
+    },
   )
 
   return 'ok'
@@ -282,7 +303,17 @@ export async function dealWithCardcomRecurringPayment(
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
-  await handleCardcomRecurringPayment(cardcomSaleWebhookJson, now, sql, cardcomIntegration, logger)
+  await executeDirectJob(
+    () =>
+      handleCardcomRecurringPayment(cardcomSaleWebhookJson, now, sql, cardcomIntegration, logger),
+    nowService,
+    sql,
+    logger,
+    {
+      isTrivial: false,
+      description: `Processing Cardcom recurring payment`,
+    },
+  )
 
   return 'ok'
 }

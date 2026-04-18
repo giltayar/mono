@@ -6,7 +6,6 @@ import type {NowService} from '../../commons/now-service.ts'
 import {AsyncLocalStorage} from 'async_hooks'
 import {presult, unwrapPresult} from '@giltayar/promise-commons'
 import {Mutex} from 'async-mutex'
-import {finished} from 'stream'
 
 export async function triggerJobsExecution(nowService: NowService) {
   if (!globalSql || !globalLogger)
@@ -150,11 +149,13 @@ async function executeJob(
 }
 
 export async function executeDirectJob(
-  handler: (options: {logger: FastifyBaseLogger}) => Promise<undefined | {description: string}>,
+  handler: (options: {
+    logger: FastifyBaseLogger
+  }) => Promise<{description: string} | void | undefined>,
   nowService: NowService,
   sql: Sql,
   logger: FastifyBaseLogger,
-  options: {isTrivial: boolean},
+  options: {isTrivial: boolean; description: string | undefined},
 ) {
   const result = await globalSql`
       INSERT INTO job ${globalSql({
@@ -163,7 +164,7 @@ export async function executeDirectJob(
         payload: '',
         numberOfRetries: 0,
         scheduledAt: null,
-        description: '',
+        description: options.description,
         createdAt: nowService(),
         isTrivial: options.isTrivial,
       })}

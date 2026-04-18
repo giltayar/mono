@@ -59,7 +59,7 @@
     "@fastify/request-context": "^6.2.1",
     "@fastify/static": "^9.1.1",
     "@giltayar/carmel-tools-academy-integration": "^5.1.0",
-    "@giltayar/carmel-tools-cardcom-integration": "^7.1.0",
+    "@giltayar/carmel-tools-cardcom-integration": "^7.1.1",
     "@giltayar/carmel-tools-skool-integration": "^1.0.1",
     "@giltayar/carmel-tools-smoove-integration": "^5.2.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",

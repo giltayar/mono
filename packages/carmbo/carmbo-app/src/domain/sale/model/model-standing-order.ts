@@ -60,7 +60,7 @@ export async function handleCardcomRecurringPayment(
   }
   const cardcomDetailRecurringJson: CardcomDetailRecurringJson = cardcomRecurringOrderWebHookJson
 
-  await sql.begin(async (sql) => {
+  return await sql.begin(async (sql) => {
     const recurringId = cardcomDetailRecurringJson.RecurringId
     const saleStandingOrderPaymentId = crypto.randomUUID()
 
@@ -77,7 +77,9 @@ export async function handleCardcomRecurringPayment(
 
     if (referencesResult.length === 0) {
       logger.info({recurringId}, 'no-sale-standing-order-payment-found')
-      return
+      return {
+        description: 'Processing Cardcom recurring payment but no matching subscription was found',
+      }
     }
 
     const standingOrderPaymentExistsResult = await sql<{1: number}[]>`
@@ -91,7 +93,9 @@ export async function handleCardcomRecurringPayment(
         {invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber},
         'sale-standing-order-payment-already-exists',
       )
-      return
+      return {
+        description: `Processing Cardcom recurring payment but the payment already exists, invoice document number: ${cardcomDetailRecurringJson.DocumentNumber}`,
+      }
     }
     await sql`
       INSERT INTO sale_standing_order_payments ${sql({
@@ -120,6 +124,10 @@ export async function handleCardcomRecurringPayment(
         internalDealNumber: cardcomDetailRecurringJson.InternalDealNumber,
         invoiceDocumentUrl: cardcomInvoiceDocumentUrl,
       })}`
+
+    return {
+      description: `Processed Cardcom recurring payment for sale ${referencesResult[0].saleNumber}, cardcom recurring id ${recurringId}, invoice document number ${cardcomDetailRecurringJson.DocumentNumber}, payment resolution: ${cardcomStatusToStandingOrderPaymentResolution(cardcomDetailRecurringJson.Status)}`,
+    }
   })
 }
 
