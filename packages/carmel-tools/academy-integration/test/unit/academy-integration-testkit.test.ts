@@ -7,25 +7,43 @@ describe('Academy Integration Testkit', () => {
   const anotherCourseId = 2
   const testEmail = 'student@example.com'
   const anotherEmail = 'another@example.com'
+  const testSubdomain = 'test'
+  const anotherSubdomain = 'other'
 
   const createTestService = () => {
     return createFakeAcademyIntegrationService({
-      courses: [
-        {id: testCourseId, name: 'Test Course'},
-        {id: anotherCourseId, name: 'Another Course'},
-      ],
-      enrolledContacts: new Map<string, {name: string; phone: string; enrolledInCourses: number[]}>(
+      accounts: new Map([
         [
-          [
-            testEmail,
-            {name: 'Test Student', phone: '123-456-7890', enrolledInCourses: [testCourseId]},
-          ],
-          [
-            anotherEmail,
-            {name: 'Another Student', phone: '987-654-3210', enrolledInCourses: [anotherCourseId]},
-          ],
+          testSubdomain,
+          {
+            courses: [
+              {id: testCourseId, name: 'Test Course'},
+              {id: anotherCourseId, name: 'Another Course'},
+            ],
+            enrolledContacts: new Map([
+              [
+                testEmail,
+                {name: 'Test Student', phone: '123-456-7890', enrolledInCourses: [testCourseId]},
+              ],
+              [
+                anotherEmail,
+                {
+                  name: 'Another Student',
+                  phone: '987-654-3210',
+                  enrolledInCourses: [anotherCourseId],
+                },
+              ],
+            ]),
+          },
         ],
-      ),
+        [
+          anotherSubdomain,
+          {
+            courses: [{id: 99, name: 'Other Account Course'}],
+            enrolledContacts: new Map(),
+          },
+        ],
+      ]),
     })
   }
 
@@ -33,13 +51,13 @@ describe('Academy Integration Testkit', () => {
     it('should remove contact', async () => {
       const service = createTestService()
 
-      assert.ok(service._test_getContact(testEmail))
-      assert.ok(service._test_getContact(anotherEmail))
+      assert.ok(service._test_getContact(testEmail, testSubdomain))
+      assert.ok(service._test_getContact(anotherEmail, testSubdomain))
 
-      await service.removeContactFromAccount(testEmail)
+      await service.removeContactFromAccount(testEmail, {accountSubdomain: testSubdomain})
 
-      assert.equal(await service._test_getContact(testEmail), undefined)
-      assert.ok(await service._test_getContact(anotherEmail))
+      assert.equal(await service._test_getContact(testEmail, testSubdomain), undefined)
+      assert.ok(await service._test_getContact(anotherEmail, testSubdomain))
     })
   })
 
@@ -47,7 +65,7 @@ describe('Academy Integration Testkit', () => {
     it('should return courses', async () => {
       const service = createTestService()
 
-      const courses = await service.listCourses()
+      const courses = await service.listCourses({accountSubdomain: testSubdomain})
 
       assert.deepStrictEqual(courses, [
         {id: testCourseId, name: 'Test Course'},
@@ -67,18 +85,28 @@ describe('Academy Integration Testkit', () => {
       }
 
       // Verify student doesn't exist initially
-      assert.equal(service._test_getContact(newEmail), undefined)
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, testCourseId), false)
+      assert.equal(service._test_getContact(newEmail, testSubdomain), undefined)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
 
-      await service.addStudentToCourse(newStudent, testCourseId)
+      await service.addStudentToCourse(newStudent, testCourseId, {accountSubdomain: testSubdomain})
 
       // Verify student was created and enrolled
-      const contact = service._test_getContact(newEmail)
+      const contact = service._test_getContact(newEmail, testSubdomain)
       assert.ok(contact)
       assert.equal(contact.name, 'New Student')
       assert.equal(contact.phone, '555-123-4567')
       assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, testCourseId), true)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
     })
 
     it('should enroll existing student in additional course', async () => {
@@ -90,23 +118,44 @@ describe('Academy Integration Testkit', () => {
       }
 
       // Verify student exists and is enrolled in testCourseId
-      assert.ok(service._test_getContact(testEmail))
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), false)
+      assert.ok(service._test_getContact(testEmail, testSubdomain))
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
 
       await service.addStudentToCourse(
         {email: existingStudent.email, name: 'another name', phone: 'another phone'},
         anotherCourseId,
+        {accountSubdomain: testSubdomain},
       )
 
       // Verify student is now enrolled in both courses
-      const contact = service._test_getContact(testEmail)
+      const contact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(contact)
       assert.equal(contact.name, 'Test Student')
       assert.equal(contact.phone, '123-456-7890')
       assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId, anotherCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), true)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
     })
 
     it('should handle enrolling student in same course multiple times', async () => {
@@ -118,18 +167,23 @@ describe('Academy Integration Testkit', () => {
       }
 
       // Verify initial state
-      const initialContact = service._test_getContact(testEmail)
+      const initialContact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(initialContact)
       assert.deepStrictEqual(initialContact.enrolledInCourses, [testCourseId])
 
       // Enroll in the same course again
-      await service.addStudentToCourse(student, testCourseId)
+      await service.addStudentToCourse(student, testCourseId, {accountSubdomain: testSubdomain})
 
       // Verify the course was added again (duplicate enrollment)
-      const contact = service._test_getContact(testEmail)
+      const contact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(contact)
       assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId, testCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
     })
   })
 
@@ -144,18 +198,30 @@ describe('Academy Integration Testkit', () => {
       }
 
       // Verify student doesn't exist initially
-      assert.equal(service._test_getContact(newEmail), undefined)
+      assert.equal(service._test_getContact(newEmail, testSubdomain), undefined)
 
-      await service.addStudentToCourses(newStudent, [testCourseId, anotherCourseId])
+      await service.addStudentToCourses(newStudent, [testCourseId, anotherCourseId], {
+        accountSubdomain: testSubdomain,
+      })
 
       // Verify student was created and enrolled in both courses
-      const contact = service._test_getContact(newEmail)
+      const contact = service._test_getContact(newEmail, testSubdomain)
       assert.ok(contact)
       assert.equal(contact.name, 'New Student')
       assert.equal(contact.phone, '555-123-4567')
       assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId, anotherCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, anotherCourseId), true)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
     })
 
     it('should enroll existing student in additional courses', async () => {
@@ -167,17 +233,28 @@ describe('Academy Integration Testkit', () => {
       }
 
       // Verify student exists and is enrolled only in testCourseId
-      assert.ok(service._test_getContact(testEmail))
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), false)
+      assert.ok(service._test_getContact(testEmail, testSubdomain))
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
 
       await service.addStudentToCourses(
         {email: existingStudent.email, name: 'another name', phone: 'another phone'},
         [anotherCourseId],
+        {accountSubdomain: testSubdomain},
       )
 
       // Verify student is now enrolled in both courses, original data preserved
-      const contact = service._test_getContact(testEmail)
+      const contact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(contact)
       assert.equal(contact.name, 'Test Student')
       assert.equal(contact.phone, '123-456-7890')
@@ -193,10 +270,10 @@ describe('Academy Integration Testkit', () => {
         phone: '555-123-4567',
       }
 
-      await service.addStudentToCourses(newStudent, [])
+      await service.addStudentToCourses(newStudent, [], {accountSubdomain: testSubdomain})
 
       // Student should be created with no enrollments
-      const contact = service._test_getContact(newEmail)
+      const contact = service._test_getContact(newEmail, testSubdomain)
       assert.ok(contact)
       assert.equal(contact.name, 'New Student')
       assert.deepStrictEqual(contact.enrolledInCourses, [])
@@ -211,10 +288,12 @@ describe('Academy Integration Testkit', () => {
         phone: '555-123-4567',
       }
 
-      await service.addStudentToCourses(newStudent, [testCourseId, testCourseId])
+      await service.addStudentToCourses(newStudent, [testCourseId, testCourseId], {
+        accountSubdomain: testSubdomain,
+      })
 
       // Both instances should be added (matching addStudentToCourse behavior)
-      const contact = service._test_getContact(newEmail)
+      const contact = service._test_getContact(newEmail, testSubdomain)
       assert.ok(contact)
       assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId, testCourseId])
     })
@@ -225,16 +304,28 @@ describe('Academy Integration Testkit', () => {
       const service = createTestService()
 
       // Verify initial state
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      const initialContact = service._test_getContact(testEmail)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      const initialContact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(initialContact)
       assert.deepStrictEqual(initialContact.enrolledInCourses, [testCourseId])
 
-      await service.removeStudentFromCourse(testEmail, testCourseId)
+      await service.removeStudentFromCourse(testEmail, testCourseId, {
+        accountSubdomain: testSubdomain,
+      })
 
       // Verify student is no longer enrolled in the course
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), false)
-      const updatedContact = service._test_getContact(testEmail)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
+      const updatedContact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(updatedContact)
       assert.deepStrictEqual(updatedContact.enrolledInCourses, [])
 
@@ -250,21 +341,44 @@ describe('Academy Integration Testkit', () => {
       await service.addStudentToCourse(
         {email: testEmail, name: 'Test Student', phone: '123-456-7890'},
         anotherCourseId,
+        {accountSubdomain: testSubdomain},
       )
 
       // Verify student is enrolled in both courses
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), true)
-      const beforeRemoval = service._test_getContact(testEmail)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      const beforeRemoval = service._test_getContact(testEmail, testSubdomain)
       assert.ok(beforeRemoval)
       assert.deepStrictEqual(beforeRemoval.enrolledInCourses, [testCourseId, anotherCourseId])
 
-      await service.removeStudentFromCourse(testEmail, testCourseId)
+      await service.removeStudentFromCourse(testEmail, testCourseId, {
+        accountSubdomain: testSubdomain,
+      })
 
       // Verify student is only enrolled in anotherCourseId now
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), false)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), true)
-      const afterRemoval = service._test_getContact(testEmail)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      const afterRemoval = service._test_getContact(testEmail, testSubdomain)
       assert.ok(afterRemoval)
       assert.deepStrictEqual(afterRemoval.enrolledInCourses, [anotherCourseId])
     })
@@ -274,12 +388,14 @@ describe('Academy Integration Testkit', () => {
       const nonExistentEmail = 'nonexistent@example.com'
 
       // Verify student doesn't exist
-      assert.equal(service._test_getContact(nonExistentEmail), undefined)
+      assert.equal(service._test_getContact(nonExistentEmail, testSubdomain), undefined)
 
       // Attempt to remove non-existent student should throw
       await assert.rejects(
         async () => {
-          await service.removeStudentFromCourse(nonExistentEmail, testCourseId)
+          await service.removeStudentFromCourse(nonExistentEmail, testCourseId, {
+            accountSubdomain: testSubdomain,
+          })
         },
         {
           name: 'Error',
@@ -293,19 +409,41 @@ describe('Academy Integration Testkit', () => {
       const service = createTestService()
 
       // Verify student exists but is not enrolled in anotherCourseId
-      assert.ok(service._test_getContact(testEmail))
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), false)
+      assert.ok(service._test_getContact(testEmail, testSubdomain))
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
 
       // Remove from course they're not enrolled in
-      await service.removeStudentFromCourse(testEmail, anotherCourseId)
+      await service.removeStudentFromCourse(testEmail, anotherCourseId, {
+        accountSubdomain: testSubdomain,
+      })
 
       // Verify enrollments unchanged
-      const contact = service._test_getContact(testEmail)
+      const contact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(contact)
       assert.deepStrictEqual(contact.enrolledInCourses, [testCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, anotherCourseId), false)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
     })
 
     it('should handle removing duplicate enrollments correctly', async () => {
@@ -315,21 +453,29 @@ describe('Academy Integration Testkit', () => {
       await service.addStudentToCourse(
         {email: testEmail, name: 'Test Student', phone: '123-456-7890'},
         testCourseId,
+        {accountSubdomain: testSubdomain},
       )
 
       // Verify duplicate enrollments
-      const beforeRemoval = service._test_getContact(testEmail)
+      const beforeRemoval = service._test_getContact(testEmail, testSubdomain)
       assert.ok(beforeRemoval)
       assert.deepStrictEqual(beforeRemoval.enrolledInCourses, [testCourseId, testCourseId])
 
       // Remove student from course (should remove all instances)
-      await service.removeStudentFromCourse(testEmail, testCourseId)
+      await service.removeStudentFromCourse(testEmail, testCourseId, {
+        accountSubdomain: testSubdomain,
+      })
 
       // Verify all instances of the course were removed
-      const afterRemoval = service._test_getContact(testEmail)
+      const afterRemoval = service._test_getContact(testEmail, testSubdomain)
       assert.ok(afterRemoval)
       assert.deepStrictEqual(afterRemoval.enrolledInCourses, [])
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), false)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
     })
   })
 
@@ -339,26 +485,36 @@ describe('Academy Integration Testkit', () => {
       const newEmail = 'updated@example.com'
 
       // Verify initial state
-      const initialContact = service._test_getContact(testEmail)
+      const initialContact = service._test_getContact(testEmail, testSubdomain)
       assert.ok(initialContact)
       assert.equal(initialContact.name, 'Test Student')
       assert.equal(initialContact.phone, '123-456-7890')
       assert.deepStrictEqual(initialContact.enrolledInCourses, [testCourseId])
-      assert.equal(service._test_getContact(newEmail), undefined)
+      assert.equal(service._test_getContact(newEmail, testSubdomain), undefined)
 
-      await service.updateStudentEmail(testEmail, newEmail)
+      await service.updateStudentEmail(testEmail, newEmail, {accountSubdomain: testSubdomain})
 
       // Verify old email no longer exists
-      assert.equal(service._test_getContact(testEmail), undefined)
-      assert.equal(await service.isStudentEnrolledInCourse(testEmail, testCourseId), false)
+      assert.equal(service._test_getContact(testEmail, testSubdomain), undefined)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(testEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        false,
+      )
 
       // Verify student exists with new email and same data
-      const updatedContact = service._test_getContact(newEmail)
+      const updatedContact = service._test_getContact(newEmail, testSubdomain)
       assert.ok(updatedContact)
       assert.equal(updatedContact.name, 'Test Student')
       assert.equal(updatedContact.phone, '123-456-7890')
       assert.deepStrictEqual(updatedContact.enrolledInCourses, [testCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, testCourseId), true)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
     })
 
     it('should preserve all course enrollments when updating email', async () => {
@@ -369,24 +525,35 @@ describe('Academy Integration Testkit', () => {
       await service.addStudentToCourse(
         {email: testEmail, name: 'Test Student', phone: '123-456-7890'},
         anotherCourseId,
+        {accountSubdomain: testSubdomain},
       )
 
       // Verify student is enrolled in both courses
-      const beforeUpdate = service._test_getContact(testEmail)
+      const beforeUpdate = service._test_getContact(testEmail, testSubdomain)
       assert.ok(beforeUpdate)
       assert.deepStrictEqual(beforeUpdate.enrolledInCourses, [testCourseId, anotherCourseId])
 
-      await service.updateStudentEmail(testEmail, newEmail)
+      await service.updateStudentEmail(testEmail, newEmail, {accountSubdomain: testSubdomain})
 
       // Verify all enrollments are preserved with new email
-      const afterUpdate = service._test_getContact(newEmail)
+      const afterUpdate = service._test_getContact(newEmail, testSubdomain)
       assert.ok(afterUpdate)
       assert.deepStrictEqual(afterUpdate.enrolledInCourses, [testCourseId, anotherCourseId])
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, testCourseId), true)
-      assert.equal(await service.isStudentEnrolledInCourse(newEmail, anotherCourseId), true)
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, testCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
+      assert.equal(
+        await service.isStudentEnrolledInCourse(newEmail, anotherCourseId, {
+          accountSubdomain: testSubdomain,
+        }),
+        true,
+      )
 
       // Verify old email is completely removed
-      assert.equal(service._test_getContact(testEmail), undefined)
+      assert.equal(service._test_getContact(testEmail, testSubdomain), undefined)
     })
 
     it('should throw error when trying to update non-existent student', async () => {
@@ -395,12 +562,14 @@ describe('Academy Integration Testkit', () => {
       const newEmail = 'new@example.com'
 
       // Verify student doesn't exist
-      assert.equal(service._test_getContact(nonExistentEmail), undefined)
+      assert.equal(service._test_getContact(nonExistentEmail, testSubdomain), undefined)
 
       // Attempt to update non-existent student should throw
       await assert.rejects(
         async () => {
-          await service.updateStudentEmail(nonExistentEmail, newEmail)
+          await service.updateStudentEmail(nonExistentEmail, newEmail, {
+            accountSubdomain: testSubdomain,
+          })
         },
         {
           name: 'Error',
@@ -410,25 +579,25 @@ describe('Academy Integration Testkit', () => {
       )
 
       // Verify no student was created with the new email
-      assert.equal(service._test_getContact(newEmail), undefined)
+      assert.equal(service._test_getContact(newEmail, testSubdomain), undefined)
     })
 
     it('should handle updating to an email that already exists', async () => {
       const service = createTestService()
 
       // Verify both students exist initially
-      assert.ok(service._test_getContact(testEmail))
-      assert.ok(service._test_getContact(anotherEmail))
+      assert.ok(service._test_getContact(testEmail, testSubdomain))
+      assert.ok(service._test_getContact(anotherEmail, testSubdomain))
 
       // Update testEmail to anotherEmail (which already exists)
       // This should overwrite the existing anotherEmail entry
-      await service.updateStudentEmail(testEmail, anotherEmail)
+      await service.updateStudentEmail(testEmail, anotherEmail, {accountSubdomain: testSubdomain})
 
       // Verify testEmail no longer exists
-      assert.equal(service._test_getContact(testEmail), undefined)
+      assert.equal(service._test_getContact(testEmail, testSubdomain), undefined)
 
       // Verify anotherEmail now has testEmail's original data
-      const updatedContact = service._test_getContact(anotherEmail)
+      const updatedContact = service._test_getContact(anotherEmail, testSubdomain)
       assert.ok(updatedContact)
       assert.equal(updatedContact.name, 'Test Student') // Original testEmail data
       assert.equal(updatedContact.phone, '123-456-7890') // Original testEmail data
@@ -440,7 +609,7 @@ describe('Academy Integration Testkit', () => {
     it('should return a magic link for the student', async () => {
       const service = createTestService()
 
-      const magicLink = await service.fetchMagicLink(testEmail)
+      const magicLink = await service.fetchMagicLink(testEmail, {accountSubdomain: testSubdomain})
 
       assert.strictEqual(
         magicLink?.link,
@@ -452,9 +621,53 @@ describe('Academy Integration Testkit', () => {
       const service = createTestService()
       const nonExistentEmail = 'foo@sldafhj.com'
 
-      const magicLink = await service.fetchMagicLink(nonExistentEmail)
+      const magicLink = await service.fetchMagicLink(nonExistentEmail, {
+        accountSubdomain: testSubdomain,
+      })
 
       assert.strictEqual(magicLink, undefined)
+    })
+  })
+
+  describe('account isolation', () => {
+    it('should return different courses for different accounts', async () => {
+      const service = createTestService()
+
+      const testCourses = await service.listCourses({accountSubdomain: testSubdomain})
+      const otherCourses = await service.listCourses({accountSubdomain: anotherSubdomain})
+
+      assert.deepStrictEqual(testCourses, [
+        {id: testCourseId, name: 'Test Course'},
+        {id: anotherCourseId, name: 'Another Course'},
+      ])
+      assert.deepStrictEqual(otherCourses, [{id: 99, name: 'Other Account Course'}])
+    })
+
+    it('should not see contacts from another account', async () => {
+      const service = createTestService()
+
+      assert.ok(service._test_getContact(testEmail, testSubdomain))
+      assert.equal(service._test_getContact(testEmail, anotherSubdomain), undefined)
+    })
+
+    it('should add student to correct account only', async () => {
+      const service = createTestService()
+      const newEmail = 'new@example.com'
+
+      await service.addStudentToCourse({email: newEmail, name: 'New', phone: '555'}, 99, {
+        accountSubdomain: anotherSubdomain,
+      })
+
+      assert.ok(service._test_getContact(newEmail, anotherSubdomain))
+      assert.equal(service._test_getContact(newEmail, testSubdomain), undefined)
+    })
+
+    it('should throw for unknown subdomain', async () => {
+      const service = createTestService()
+
+      assert.throws(() => service._test_getContact(testEmail, 'nonexistent'), {
+        message: 'Account with subdomain nonexistent not found',
+      })
     })
   })
 })
