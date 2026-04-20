@@ -125,7 +125,9 @@ export async function querySaleWithProviders(
     email
       ? Promise.all(
           academyCoursesInSale.map(async (courseId) =>
-            academyIntegration.isStudentEnrolledInCourse(email, parseInt(courseId)),
+            academyIntegration.isStudentEnrolledInCourse(email, parseInt(courseId), {
+              accountSubdomain: 'carmel',
+            }),
           ),
         )
       : Promise.resolve([]),
@@ -360,7 +362,10 @@ export async function disconnectStudentFromAcademyCourses(
   for (const {courseId} of courses) {
     try {
       await retry(
-        () => academyIntegration.removeStudentFromCourse(studentEmail, parseInt(courseId)),
+        () =>
+          academyIntegration.removeStudentFromCourse(studentEmail, parseInt(courseId), {
+            accountSubdomain: 'carmel',
+          }),
         {
           retries: 5,
           minTimeout: 1000,
@@ -538,6 +543,7 @@ export async function connectStudentWithAcademyCourses(
         academyIntegration.addStudentToCourses(
           student,
           courses.map(({courseId}) => parseInt(courseId)),
+          {accountSubdomain: 'carmel'},
         ),
       {
         retries: 5,
@@ -778,6 +784,7 @@ async function propagateAcademyCourseChangesForSingleSale(
             phone: saleInfo.studentPhone,
           },
           saleInfo.addedCourses,
+          {accountSubdomain: 'carmel'},
         ),
       {
         retries: 5,
@@ -804,7 +811,10 @@ async function propagateAcademyCourseChangesForSingleSale(
 
     try {
       await retry(
-        () => academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, courseId),
+        () =>
+          academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, courseId, {
+            accountSubdomain: 'carmel',
+          }),
         {
           retries: 5,
           minTimeout: 1000,
@@ -1080,6 +1090,7 @@ async function propagateSalesEventProductChangesForSingleSale(
             phone: saleInfo.studentPhone,
           },
           courses,
+          {accountSubdomain: 'carmel'},
         )
       },
       {

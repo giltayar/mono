@@ -98,10 +98,14 @@ test('updating product to add academy course enrolls students from connected sal
 
   // Verify student is enrolled in Course 1
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
 
   // Navigate to the product page and update it to add Course 33
@@ -123,10 +127,14 @@ test('updating product to add academy course enrolls students from connected sal
 
   // Verify student is now enrolled in both courses
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 })
 
@@ -207,10 +215,14 @@ test('updating product to remove academy course unenrolls students from connecte
 
   // Verify student is enrolled in both courses
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 
   // Navigate to the product page and update it to remove Course 33
@@ -232,10 +244,14 @@ test('updating product to remove academy course unenrolls students from connecte
 
   // Verify student is still enrolled in Course 1 but not Course 33
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
 })
 
@@ -326,11 +342,15 @@ test('removing course from product does NOT unenroll if another product in same 
   )
 
   // Verify student is enrolled in both courses
-  expect(await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 1)).toBe(
-    true,
-  )
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 
   // Navigate to product 1 page and update it to remove Course 33 (but product 2 still has it)
@@ -351,12 +371,16 @@ test('removing course from product does NOT unenroll if another product in same 
   await waitForAllJobsToBeDone(page, url())
 
   // Verify student is still enrolled in Course 1
-  expect(await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 1)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
   // Student should STILL be enrolled in Course 33 because product 2 still has it
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 })
 
@@ -434,10 +458,14 @@ test('disconnected sales are not affected by product academy course updates', as
 
   // Verify student is NOT enrolled (sale not connected)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
 
   // Navigate to the product page and update it to add Course 33
@@ -459,10 +487,14 @@ test('disconnected sales are not affected by product academy course updates', as
 
   // Student should still NOT be enrolled in any course (sale was not connected)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('alice.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
 })
 
@@ -539,11 +571,15 @@ test('removing course from non-club product does NOT unenroll students', async (
   )
 
   // Verify student is enrolled in both courses
-  expect(await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 1)).toBe(
-    true,
-  )
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 
   // Navigate to the product page and remove Course 33
@@ -560,11 +596,15 @@ test('removing course from non-club product does NOT unenroll students', async (
   await waitForAllJobsToBeDone(page, url())
 
   // Student should STILL be enrolled in both courses because product is not a club
-  expect(await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 1)).toBe(
-    true,
-  )
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('eve.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 })
 
@@ -694,10 +734,14 @@ test('removing course from club product does NOT unenroll if another sale has th
 
   // Verify student is enrolled in both courses
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 
   // Navigate to the club product and remove Course 33
@@ -715,11 +759,15 @@ test('removing course from club product does NOT unenroll if another sale has th
 
   // Student should still be enrolled in Course 1 (still on club product)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
   // Student should STILL be enrolled in Course 33 because the recorded product in another sale has it
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('frank.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 })
 
@@ -799,7 +847,9 @@ test('disconnected (previously connected) sales are not affected by product acad
 
   // Verify student is enrolled in Course 1
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 
   // Disconnect the sale (unenrolls student from Course 1)
@@ -810,7 +860,9 @@ test('disconnected (previously connected) sales are not affected by product acad
 
   // Verify student is no longer enrolled in Course 1 after disconnect
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
 
   // Navigate to the product page and add Course 33
@@ -829,10 +881,14 @@ test('disconnected (previously connected) sales are not affected by product acad
 
   // Student should NOT be enrolled in any course (sale was disconnected)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 1),
+    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('grace.propagate@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(false)
 })
 
@@ -898,7 +954,11 @@ test('unsubscribed (cancelled subscription) sales are not affected by product ac
 
   // Verify student is enrolled in Course 1
   await expect(async () => {
-    expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, 1)).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse(customerEmail, 1, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
   }).toPass()
 
   // Cancel the subscription (sets isActive = false, but sale remains connected)
@@ -928,7 +988,15 @@ test('unsubscribed (cancelled subscription) sales are not affected by product ac
   await waitForAllJobsToBeDone(page, url())
 
   // Student should still be enrolled in Course 1 (from original sale connection)
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, 1)).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
   // Student should NOT be enrolled in Course 33 (sale is inactive due to unsubscription)
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, 33)).toBe(false)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, 33, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
 })

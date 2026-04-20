@@ -196,16 +196,26 @@ test('create sale then connect it', async ({page}) => {
 
   expect(taxInvoiceDocument?.transactionDescription).toBeUndefined()
 
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1)).toBe(true)
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33)).toBe(
-    true,
-  )
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777)).toBe(
-    true,
-  )
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 888)).toBe(
-    false,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 888, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
 
   expect(
     (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
@@ -425,13 +435,21 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
     transactionRevenueInCents: 100,
   } as Omit<TaxInvoiceInformation, 'transactionDate'>)
 
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1)).toBe(true)
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33)).toBe(
-    true,
-  )
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   expect(
     (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
@@ -582,10 +600,14 @@ test('connect sale then reconnect it', async ({page}) => {
   })
   expect(await smooveIntegration().fetchContactsOfList(2)).toEqual([])
 
-  await academyIntegration().removeContactFromAccount('john.doe@example.com')
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1)).toBe(
-    false,
-  )
+  await academyIntegration().removeContactFromAccount('john.doe@example.com', {
+    accountSubdomain: 'carmel',
+  })
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
 
   await updateSaleModel.form().reconnectButton().locator.click()
   await expect(updateSaleModel.history().items().locator).toHaveCount(5)
@@ -618,13 +640,21 @@ test('connect sale then reconnect it', async ({page}) => {
     transactionRevenueInCents: 2700,
   } as Omit<TaxInvoiceInformation, 'transactionDate'>)
 
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1)).toBe(true)
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33)).toBe(
-    true,
-  )
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   expect(
     (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),

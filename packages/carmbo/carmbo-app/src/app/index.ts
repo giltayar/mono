@@ -21,7 +21,17 @@ export const EnvironmentVariablesSchema = z.object({
   APP_BASE_URL: z.string().optional(),
   HOST: z.string().default('localhost'),
   PORT: z.coerce.number().default(3000),
-  ACADEMY_CARMEL_ACCOUNT_API_KEY: z.string().optional(),
+  ACADEMY_ACCOUNTS_APIKEYS: z
+    .string()
+    .optional()
+    .transform((value) =>
+      value
+        ? value.split(',').map((entry) => {
+            const [subdomain, apiKey] = entry.split(':')
+            return {subdomain, apiKey}
+          })
+        : undefined,
+    ),
   GREEN_API_BASE_URL: z.url().default('https://7105.api.greenapi.com'),
   GREEN_API_KEY: z.string(),
   GREEN_API_INSTANCE: z.coerce.number(),
@@ -66,11 +76,8 @@ const {app, sql} = await makeApp({
     password: env.DB_PASSWORD,
   },
   services: {
-    academyIntegration: when(env.ACADEMY_CARMEL_ACCOUNT_API_KEY, (accountApiKey) =>
-      createAcademyIntegrationService({
-        accountApiKey,
-        accountSubdomain: 'carmel',
-      }),
+    academyIntegration: when(env.ACADEMY_ACCOUNTS_APIKEYS, (accounts) =>
+      createAcademyIntegrationService({accounts}),
     ),
     whatsappIntegration: createWhatsAppIntegrationService({
       greenApiKey: env.GREEN_API_KEY,

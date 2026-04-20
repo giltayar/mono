@@ -112,9 +112,11 @@ test('create student from invoice and connect', async ({page}) => {
   )
 
   // Verify academy enrollment
-  expect(await academyIntegration().isStudentEnrolledInCourse('new-student@example.com', 1)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('new-student@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   // Verify smoove list
   expect(
@@ -286,7 +288,11 @@ test('find existing student from invoice and connect', async ({page}) => {
   )
 
   // Verify academy enrollment for the existing student
-  expect(await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1)).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 })
 
 test('error when invoice number does not exist', async ({page}) => {

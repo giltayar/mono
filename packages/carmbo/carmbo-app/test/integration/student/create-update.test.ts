@@ -93,7 +93,9 @@ test('create student then update her', async ({page}) => {
     birthday: new Date('2001-02-02'),
   })
 
-  expect(await academyIntegration()._test_getContact('jane.smith@example.com')).toMatchObject({
+  expect(
+    await academyIntegration()._test_getContact('jane.smith@example.com', 'carmel'),
+  ).toMatchObject({
     name: 'John Already-Enrolled',
     phone: '123-456-7890',
   })

@@ -89,24 +89,31 @@ export function setup(
       contacts: options?.smooveContacts ?? {},
     })
     academyIntegration = createFakeAcademyIntegrationService({
-      courses: [
-        {id: 1, name: 'Course 1'},
-        {id: 33, name: 'Course 2'},
-        {id: 777, name: 'Course 3'},
-        {id: 888, name: 'Course 4'},
-      ],
-      enrolledContacts: new Map([
+      accounts: new Map([
         [
-          'john.already-enrolled@example.com',
-          {name: 'John Already-Enrolled', phone: '123-456-7890', enrolledInCourses: [1, 33]},
-        ],
-        [
-          'jane.already-enrolled@example.com',
-          {name: 'Jane Already-Enrolled', phone: '234-567-8901', enrolledInCourses: [1]},
-        ],
-        [
-          'bob.already-enrolled@example.com',
-          {name: 'Bob Already-Enrolled', phone: '345-678-9012', enrolledInCourses: [33]},
+          'carmel',
+          {
+            courses: [
+              {id: 1, name: 'Course 1'},
+              {id: 33, name: 'Course 2'},
+              {id: 777, name: 'Course 3'},
+              {id: 888, name: 'Course 4'},
+            ],
+            enrolledContacts: new Map([
+              [
+                'john.already-enrolled@example.com',
+                {name: 'John Already-Enrolled', phone: '123-456-7890', enrolledInCourses: [1, 33]},
+              ],
+              [
+                'jane.already-enrolled@example.com',
+                {name: 'Jane Already-Enrolled', phone: '234-567-8901', enrolledInCourses: [1]},
+              ],
+              [
+                'bob.already-enrolled@example.com',
+                {name: 'Bob Already-Enrolled', phone: '345-678-9012', enrolledInCourses: [33]},
+              ],
+            ]),
+          },
         ],
       ]),
     })

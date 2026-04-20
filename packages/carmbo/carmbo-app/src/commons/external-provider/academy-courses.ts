@@ -15,7 +15,7 @@ export async function listAcademyCourses(academyIntegration: AcademyIntegrationS
   const nowTime = now.getTime()
 
   if (nowTime - cachedCourses.timestamp > 1 * 60 * 1000 || !cachedCourses.courses) {
-    cachedCourses.courses = await academyIntegration.listCourses()
+    cachedCourses.courses = await academyIntegration.listCourses({accountSubdomain: 'carmel'})
     cachedCourses.timestamp = nowTime
   }
 

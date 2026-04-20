@@ -383,7 +383,7 @@ async function addProductStuff(
     product.academyCourses?.map(
       (workshopId, index) => sql`
         INSERT INTO product_academy_course VALUES
-          (${dataId}, ${index}, ${workshopId})
+          (${dataId}, ${index}, ${workshopId}, ${'carmel'})
       `,
     ) ?? [],
   )

@@ -20,14 +20,21 @@ const {app, sql} = await makeApp({
     password: 'password',
   },
   services: {
-    academyIntegration: when(process.env.ACADEMY_CARMEL_ACCOUNT_API_KEY, () =>
+    academyIntegration: when(process.env.ACADEMY_ACCOUNTS_APIKEYS, () =>
       createFakeAcademyIntegrationService({
-        courses: [
-          {id: 1, name: 'Course 1'},
-          {id: 33, name: 'Course 2'},
-          {id: 777, name: 'Course 3'},
-        ],
-        enrolledContacts: new Map(),
+        accounts: new Map([
+          [
+            'carmel',
+            {
+              courses: [
+                {id: 1, name: 'Course 1'},
+                {id: 33, name: 'Course 2'},
+                {id: 777, name: 'Course 3'},
+              ],
+              enrolledContacts: new Map(),
+            },
+          ],
+        ]),
       }),
     ),
     whatsappIntegration: createFakeWhatsAppIntegrationService({

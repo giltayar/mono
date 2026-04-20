@@ -149,13 +149,15 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
   }).toPass()
 
-  const academyContact = academyIntegration()._test_getContact(customerEmail)
+  const academyContact = academyIntegration()._test_getContact(customerEmail, 'carmel')
   expect(academyContact).toBeDefined()
   expect(academyContact?.name).toBe(customerName)
   expect(academyContact?.phone).toBe(customerPhone)
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
 
@@ -289,10 +291,14 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   })
   expect(await smooveIntegration().fetchContactsOfList(2)).toEqual([])
 
-  await academyIntegration().removeContactFromAccount('test-customer@example.com')
-  expect(await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 1)).toBe(
-    false,
-  )
+  await academyIntegration().removeContactFromAccount('test-customer@example.com', {
+    accountSubdomain: 'carmel',
+  })
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
 
   await saleDetailModel.form().reconnectButton().locator.click()
 
@@ -326,11 +332,15 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   await expect(product2x.quantity().locator).toHaveValue('2')
   await expect(product2x.unitPrice().locator).toHaveValue('50')
 
-  expect(await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 1)).toBe(
-    true,
-  )
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 33),
+    await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 1, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('test-customer@example.com', 33, {
+      accountSubdomain: 'carmel',
+    }),
   ).toBe(true)
 
   expect(
@@ -582,13 +592,15 @@ test('double call of cardcom webhook should create only one sale and one student
   expect(smooveContacts[0].lastName).toBe('Smith')
   expect(smooveContacts[0].telephone).toBe(customerPhone)
 
-  const academyContact = academyIntegration()._test_getContact(customerEmail)
+  const academyContact = academyIntegration()._test_getContact(customerEmail, 'carmel')
   expect(academyContact).toBeDefined()
   expect(academyContact?.name).toBe(customerName)
   expect(academyContact?.phone).toBe(customerPhone)
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   // Verify only one tax invoice document was created
   const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)

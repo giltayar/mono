@@ -120,9 +120,11 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
   await expect(smooveLists.removedListCheckbox().locator).toBeChecked()
 
   // Verify in academy integration that student is no longer enrolled
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    false,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
 })
 
 test('disconnect manual sale removes disconnect button and disconnects from external providers', async ({
@@ -226,9 +228,11 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   )
 
   // Verify the student is enrolled in academy before disconnecting
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   // Click the disconnect button
   await saleDetailModel.form().disconnectButton().locator.click()
@@ -267,9 +271,11 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   await expect(smooveLists.removedListCheckbox().locator).toBeChecked()
 
   // Verify in academy integration that student is no longer enrolled
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    false,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
 
   // Go back to the sale page
   await page.goto(new URL('/sales/1', url()).href)
@@ -314,7 +320,9 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   await expect(smooveLists2.mainListCheckbox().locator).toBeChecked()
 
   // Verify in academy integration that student is enrolled again
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 })

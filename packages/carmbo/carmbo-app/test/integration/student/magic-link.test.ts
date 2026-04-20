@@ -113,6 +113,7 @@ test('magic links appear for all enrolled emails including historical ones', asy
   await academyIntegration().addStudentToCourse(
     {email: 'john.already-enrolled@example.com', name: 'John', phone: '0541234567'},
     1,
+    {accountSubdomain: 'carmel'},
   )
 
   await updateStudentModel.magicLink().fetchButton().locator.click()

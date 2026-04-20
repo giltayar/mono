@@ -221,7 +221,9 @@ export async function updateStudent(
 
     if (academyIntegration && originalEmail !== normalizedStudent.emails[0]) {
       await academyIntegration
-        .updateStudentEmail(originalEmail, normalizedStudent.emails[0])
+        .updateStudentEmail(originalEmail, normalizedStudent.emails[0], {
+          accountSubdomain: 'carmel',
+        })
         .catch((err) => (err.status === 404 ? undefined : Promise.reject(err)))
     }
 
@@ -627,7 +629,7 @@ export async function fetchMagicLinksForStudent(
 
   return (
     await pMapSeries(allEmailsFromHistory, async ({email}) => {
-      const link = await academyIntegration.fetchMagicLink(email)
+      const link = await academyIntegration.fetchMagicLink(email, {accountSubdomain: 'carmel'})
 
       if (link) {
         return {email, link: link.link}

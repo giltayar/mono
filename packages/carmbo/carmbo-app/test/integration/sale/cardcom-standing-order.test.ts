@@ -148,13 +148,15 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
     expect(smooveContacts[0].lists_Linked).toContain(smooveListId)
   }).toPass()
 
-  const academyContact = academyIntegration()._test_getContact(customerEmail)
+  const academyContact = academyIntegration()._test_getContact(customerEmail, 'carmel')
   expect(academyContact).toBeDefined()
   expect(academyContact?.name).toBe(customerName)
   expect(academyContact?.phone).toBe(customerPhone)
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   // Verify personal messages were sent
   await expect(async () => {
@@ -453,10 +455,12 @@ test('cancelling a standing order subscription removes student from academy cour
 
   // Verify student was enrolled in academy course
   await expect(async () => {
-    const academyContact = academyIntegration()._test_getContact(customerEmail)
+    const academyContact = academyIntegration()._test_getContact(customerEmail, 'carmel')
     expect(academyContact).toBeDefined()
     expect(
-      await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId),
+      await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+        accountSubdomain: 'carmel',
+      }),
     ).toBe(true)
   }).toPass()
 
@@ -558,9 +562,11 @@ test('cancelling a standing order subscription removes student from academy cour
   )
 
   // Verify student was NOT removed from academy course
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
   await expect(async () => {
@@ -609,9 +615,11 @@ test('cancelling a standing order subscription removes student from academy cour
   await fetchAsBuffer(new URL('/api/jobs/trigger-job-execution?secret=', url()), {method: 'POST'})
 
   // Verify student was STILL not removed from academy course
-  expect(await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId)).toBe(
-    true,
-  )
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
 
   // Verify smoove lists were STILL the same
   await expect(async () => {
@@ -637,7 +645,9 @@ test('cancelling a standing order subscription removes student from academy cour
   await expect
     .poll(async () =>
       // Verify student WAS removed from academy course
-      academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId),
+      academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+        accountSubdomain: 'carmel',
+      }),
     )
     .toBe(false)
 
@@ -761,10 +771,12 @@ test('cancelling a standing order subscription by product number', async ({page}
 
   // Verify student was enrolled in academy course
   await expect(async () => {
-    const academyContact = academyIntegration()._test_getContact(customerEmail)
+    const academyContact = academyIntegration()._test_getContact(customerEmail, 'carmel')
     expect(academyContact).toBeDefined()
     expect(
-      await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId),
+      await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
+        accountSubdomain: 'carmel',
+      }),
     ).toBe(true)
   }).toPass()
 
