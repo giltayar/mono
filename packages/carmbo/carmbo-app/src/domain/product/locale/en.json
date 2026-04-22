@@ -7,6 +7,7 @@
     "club": "Club",
     "bundle": "Bundle",
     "academyCourseId": "Academy Course ID",
+    "academySubdomain": "Academy Account",
     "academyCourses": "Academy Courses",
     "whatsappGroupId": "WhatsApp Group ID",
     "messagesGoogleSheetUrl": "Messages Google Sheet URL",

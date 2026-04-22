@@ -4,7 +4,14 @@ import {ProductTypeSchema} from '../model.ts'
 export const OngoingProductSchema = z.object({
   name: z.string().optional(),
   productType: ProductTypeSchema,
-  academyCourses: z.array(z.coerce.number().int().positive().optional()).optional(),
+  academyCourses: z
+    .array(
+      z.object({
+        courseId: z.coerce.number().int().positive().optional(),
+        accountSubdomain: z.string().min(1).optional(),
+      }),
+    )
+    .optional(),
   whatsappGroups: z
     .array(
       z.object({

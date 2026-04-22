@@ -12,16 +12,19 @@ export function ProductCreateOrUpdateFormFields({
   product,
   operation,
   withAcademyIntegration,
+  academyAccountSubdomains,
+  academyCoursesBySubdomain,
   withSmooveIntegration,
   withSkoolIntegration,
 }: {
   product: Product | OngoingProduct | NewProduct
   operation: 'read' | 'write'
   withAcademyIntegration: boolean
+  academyAccountSubdomains: string[]
+  academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
   withSkoolIntegration: boolean
 }) {
-  const courses = requestContext.get('courses')!
   const whatsappGroups = requestContext.get('whatsappGroups')!
   const smooveLists = requestContext.get('smooveLists')!
   const isReadOnly = operation === 'read'
@@ -72,21 +75,56 @@ export function ProductCreateOrUpdateFormFields({
         ${withAcademyIntegration &&
         html`<fieldset aria-label=${t('form.academyCourses')} class="mt-3">
           ${product.academyCourses?.map(
-            (courseId, i, l) => html`
+            (course, i, l) => html`
               <div class="products-view_item input-group">
                 <div class="form-floating">
+                  <select
+                    name=${`academyCourses[${i}][accountSubdomain]`}
+                    class="form-select"
+                    id="academyCourseSubdomain-${i}"
+                    readonly=${isReadOnly}
+                    hx-post="/products/academy-courses-datalist"
+                    hx-target="#academy-courses-datalist-${i}"
+                    hx-swap="innerHTML"
+                    hx-include="this"
+                    hx-vals=${JSON.stringify({index: i})}
+                  >
+                    ${academyAccountSubdomains.map(
+                      (subdomain) => html`
+                        <option
+                          value=${subdomain}
+                          selected=${course.courseId
+                            ? course.accountSubdomain == subdomain
+                            : subdomain === academyAccountSubdomains[0]}
+                        >
+                          ${subdomain}
+                        </option>
+                      `,
+                    )}
+                  </select>
+                  <label for="academyCourseSubdomain-${i}">${t('form.academySubdomain')}</label>
+                </div>
+                <div class="form-floating">
                   <input
-                    name="academyCourses[${i}]"
+                    name="academyCourses[${i}][courseId]"
                     id="academyCourse-${i}_value"
                     type="hidden"
-                    value=${courseId}
+                    value=${course.courseId}
                   />
                   <input
                     id="academyCourse-${i}"
-                    value=${courseId
-                      ? generateItemTitle(courseId, courses.find((c) => c.id === courseId)?.name)
-                      : ''}
-                    list="academy-courses-list"
+                    value=${(() => {
+                      const courses = course.accountSubdomain
+                        ? (academyCoursesBySubdomain?.get(course.accountSubdomain) ?? [])
+                        : []
+                      return course.courseId
+                        ? generateItemTitle(
+                            course.courseId,
+                            courses.find((c) => c.id === course.courseId)?.name,
+                          )
+                        : ''
+                    })()}
+                    list="academy-courses-list-${i}"
                     type="text"
                     placeholder=" "
                     required
@@ -98,6 +136,16 @@ export function ProductCreateOrUpdateFormFields({
                     readonly=${isReadOnly}
                   />
                   <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
+                </div>
+                <div id="academy-courses-datalist-${i}">
+                  <${AcademyCoursesDatalist}
+                    index=${i}
+                    courses=${academyCoursesBySubdomain?.get(
+                      course && typeof course === 'object'
+                        ? (course.accountSubdomain ?? academyAccountSubdomains[0])
+                        : academyAccountSubdomains[0],
+                    ) ?? []}
+                  />
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -426,13 +474,6 @@ ${product.notes ?? ''}</textarea
         </div>
       </div>
     </div>
-    ${withAcademyIntegration &&
-    html`<datalist id="academy-courses-list">
-      ${courses.map(
-        (course) =>
-          html`<option data-id=${course.id} value=${generateItemTitle(course.id, course.name)} />`,
-      )}
-    </datalist>`}
     <datalist id="whatsapp-groups-list">
       ${whatsappGroups.map(
         (group) =>
@@ -498,5 +539,22 @@ function RemoveButton() {
         data=${`/src/${version}/layout/style/minus-circle.svg`}
       ></object>
     </button>
+  `
+}
+
+export function AcademyCoursesDatalist({
+  index,
+  courses,
+}: {
+  index: number
+  courses: {id: number; name: string}[]
+}) {
+  return html`
+    <datalist id="academy-courses-list-${index}">
+      ${courses.map(
+        (course) =>
+          html`<option data-id=${course.id} value=${generateItemTitle(course.id, course.name)} />`,
+      )}
+    </datalist>
   `
 }

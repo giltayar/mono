@@ -169,6 +169,7 @@ export async function updateStudent(
   reason: string | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
   academyIntegration: AcademyIntegrationService | undefined,
+  academyAccountSubdomains: string[] | undefined,
   now: Date,
   sql: Sql,
 ): Promise<number | undefined> {
@@ -220,11 +221,13 @@ export async function updateStudent(
     }
 
     if (academyIntegration && originalEmail !== normalizedStudent.emails[0]) {
-      await academyIntegration
-        .updateStudentEmail(originalEmail, normalizedStudent.emails[0], {
-          accountSubdomain: 'carmel',
-        })
-        .catch((err) => (err.status === 404 ? undefined : Promise.reject(err)))
+      for (const accountSubdomain of academyAccountSubdomains ?? []) {
+        await academyIntegration
+          .updateStudentEmail(originalEmail, normalizedStudent.emails[0], {
+            accountSubdomain,
+          })
+          .catch((err) => (err.status === 404 ? undefined : Promise.reject(err)))
+      }
     }
 
     return student.studentNumber
@@ -615,6 +618,7 @@ export async function listSalesForStudent(
 export async function fetchMagicLinksForStudent(
   studentNumber: number,
   academyIntegration: AcademyIntegrationService,
+  academyAccountSubdomains: string[],
   sql: Sql,
 ): Promise<{email: string; link: string}[]> {
   const allEmailsFromHistory = (await sql`
@@ -629,13 +633,13 @@ export async function fetchMagicLinksForStudent(
 
   return (
     await pMapSeries(allEmailsFromHistory, async ({email}) => {
-      const link = await academyIntegration.fetchMagicLink(email, {accountSubdomain: 'carmel'})
-
-      if (link) {
-        return {email, link: link.link}
-      } else {
-        return undefined
+      for (const accountSubdomain of academyAccountSubdomains) {
+        const link = await academyIntegration.fetchMagicLink(email, {accountSubdomain})
+        if (link) {
+          return {email, link: link.link}
+        }
       }
+      return undefined
     })
   ).filter((l) => !!l)
 }

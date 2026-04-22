@@ -13,6 +13,9 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
       coursesLocator = locator.getByRole('group', {name: 'Academy Courses', exact: true}),
     ) => ({
       locator: coursesLocator,
+      subdomainSelect: (i: number) => ({
+        locator: coursesLocator.getByLabel(`Academy Account`).nth(i),
+      }),
       academyCourseInput: (i: number) => ({
         locator: coursesLocator.getByLabel(`Academy Course ID`).nth(i),
       }),

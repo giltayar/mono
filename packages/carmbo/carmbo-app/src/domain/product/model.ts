@@ -12,7 +12,11 @@ export const ProductSchema = z.object({
   productNumber: z.coerce.number().int().positive(),
   name: z.string().min(1),
   productType: ProductTypeSchema,
-  academyCourses: z.array(z.coerce.number().int().positive()).optional(),
+  academyCourses: z
+    .array(
+      z.object({courseId: z.coerce.number().int().positive(), accountSubdomain: z.string().min(1)}),
+    )
+    .optional(),
   whatsappGroups: z
     .array(
       z.object({
@@ -120,8 +124,8 @@ export async function createProduct(
 
 export interface UpdateProductResult {
   productNumber: number
-  addedAcademyCourses: number[]
-  removedAcademyCourses: number[]
+  addedAcademyCourses: {courseId: number; accountSubdomain: string}[]
+  removedAcademyCourses: {courseId: number; accountSubdomain: string}[]
 }
 
 export async function updateProduct(
@@ -133,8 +137,8 @@ export async function updateProduct(
   await TEST_executeHook('updateProduct')
   return await sql.begin(async (sql) => {
     // Query current academy courses before update
-    const oldCoursesResult = await sql<{workshopId: number}[]>`
-      SELECT workshop_id as workshop_id
+    const oldCoursesResult = await sql<{workshopId: number; accountSubdomain: string}[]>`
+      SELECT workshop_id as workshop_id, account_subdomain
       FROM product_academy_course
       WHERE data_id = (
         SELECT ph.data_id
@@ -143,8 +147,12 @@ export async function updateProduct(
         WHERE p.product_number = ${product.productNumber}
       )
     `
-    const oldCourses = new Set(oldCoursesResult.map((r) => r.workshopId))
-    const newCourses = new Set(product.academyCourses ?? [])
+    const oldCoursesSet = new Set(
+      oldCoursesResult.map((r) => `${r.workshopId}:${r.accountSubdomain}`),
+    )
+    const newCoursesSet = new Set(
+      (product.academyCourses ?? []).map((c) => `${c.courseId}:${c.accountSubdomain}`),
+    )
 
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
@@ -171,14 +179,19 @@ export async function updateProduct(
     await addProductStuff(product.productNumber, product, dataId, sql)
 
     // Compute diff using Set methods
-    const addedAcademyCourses = [...newCourses.difference(oldCourses)]
-    const removedAcademyCourses =
-      product.productType === 'club' ? [...oldCourses.difference(newCourses)] : []
+    const addedKeys = [...newCoursesSet.difference(oldCoursesSet)]
+    const removedKeys =
+      product.productType === 'club' ? [...oldCoursesSet.difference(newCoursesSet)] : []
+
+    const parseKey = (key: string) => {
+      const [courseId, accountSubdomain] = key.split(':')
+      return {courseId: parseInt(courseId), accountSubdomain}
+    }
 
     return {
       productNumber: product.productNumber,
-      addedAcademyCourses,
-      removedAcademyCourses,
+      addedAcademyCourses: addedKeys.map(parseKey),
+      removedAcademyCourses: removedKeys.map(parseKey),
     }
   })
 }
@@ -307,7 +320,10 @@ FROM
   LEFT JOIN LATERAL (
     SELECT
       json_agg(
-        workshop_id
+        json_build_object(
+          'courseId', workshop_id,
+          'accountSubdomain', account_subdomain
+        )
         ORDER BY
           item_order
       ) AS academy_courses
@@ -381,9 +397,9 @@ async function addProductStuff(
 
   ops = ops.concat(
     product.academyCourses?.map(
-      (workshopId, index) => sql`
+      (course, index) => sql`
         INSERT INTO product_academy_course VALUES
-          (${dataId}, ${index}, ${workshopId}, ${'carmel'})
+          (${dataId}, ${index}, ${course.courseId}, ${course.accountSubdomain})
       `,
     ) ?? [],
   )
@@ -472,8 +488,8 @@ export async function TEST_seedProducts(sql: Sql, count: number) {
         name: `${chance.word()} ${chance.word()}`,
         productType: chance.pickone(productTypes),
         academyCourses: [
-          chance.integer({min: 1000, max: 9999}),
-          chance.integer({min: 1000, max: 9999}),
+          {courseId: chance.integer({min: 1000, max: 9999}), accountSubdomain: 'carmel'},
+          {courseId: chance.integer({min: 1000, max: 9999}), accountSubdomain: 'carmel'},
         ],
         whatsappGroups: [
           {

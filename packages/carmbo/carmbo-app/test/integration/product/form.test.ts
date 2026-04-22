@@ -28,7 +28,8 @@ test('create product and update multiple fields', async ({page}) => {
   await newForm.academyCourses().addButton().locator.click()
   await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
   await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(1).locator.fill('33')
+  await newForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
+  await newForm.academyCourses().academyCourseInput(1).locator.fill('100')
   await newForm.academyCourses().addButton().locator.click()
   await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
 
@@ -129,7 +130,8 @@ test('create product and update multiple fields', async ({page}) => {
 
   await updateForm.academyCourses().addButton().locator.click()
   await expect(updateForm.academyCourses().academyCourseInput(2).locator).toBeVisible()
-  await updateForm.academyCourses().academyCourseInput(2).locator.fill('33')
+  await updateForm.academyCourses().subdomainSelect(2).locator.selectOption('inspiredlivingdaily')
+  await updateForm.academyCourses().academyCourseInput(2).locator.fill('200')
   await updateForm.academyCourses().trashButton(0).locator.click()
 
   await updateForm.whatsappGroups().addButton().locator.click()
@@ -159,7 +161,7 @@ test('create product and update multiple fields', async ({page}) => {
     '777: Course 3',
   )
   await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue(
-    '33: Course 2',
+    '200: ILD Course 2',
   )
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(
     '3@g.us: Test Group 3',

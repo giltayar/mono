@@ -32,7 +32,52 @@ import {
   renderSmooveListCreateResult,
   renderSmooveListCreateError,
 } from './view/smoove-list-dialog.ts'
+import {AcademyCoursesDatalist} from './view/form.ts'
 import {when} from '@giltayar/functional-commons'
+import type {
+  AcademyCourse,
+  AcademyIntegrationService,
+} from '@giltayar/carmel-tools-academy-integration/service'
+import {html} from '../../commons/html-templates.ts'
+
+async function listCoursesForSubdomains(
+  academyIntegration: AcademyIntegrationService | undefined,
+  subdomains: string[],
+  now: Date,
+) {
+  const result = new Map<string, AcademyCourse[]>()
+  if (academyIntegration) {
+    await Promise.all(
+      subdomains.map(async (subdomain) => {
+        const courses = await listAcademyCourses(academyIntegration, subdomain, now)
+        result.set(subdomain, courses)
+      }),
+    )
+  }
+  return result
+}
+
+function getSubdomainsFromProduct(
+  product: {
+    academyCourses?: ({accountSubdomain?: string} | string)[]
+  },
+  options: {alsoIncludeFirstSubdomain: boolean},
+): string[] {
+  const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
+
+  if (!academyAccountSubdomains) {
+    return []
+  }
+
+  return [
+    ...new Set(
+      (product.academyCourses ?? [])
+        .map((c) => (typeof c === 'object' ? c.accountSubdomain : undefined))
+        .filter((s): s is string => !!s)
+        .concat(options.alsoIncludeFirstSubdomain ? [academyAccountSubdomains[0]] : []),
+    ),
+  ]
+}
 
 export async function showProducts(
   {
@@ -53,18 +98,22 @@ export async function showProductCreate(
   {error}: {error?: any},
 ): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
+  const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [courses, whatsappGroups, smooveLists] = await Promise.all([
-    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
+  const [whatsappGroups, smooveLists] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
   ])
-  requestContext.set('courses', courses)
+  const academyCoursesBySubdomain = await listCoursesForSubdomains(
+    academyIntegration,
+    getSubdomainsFromProduct(product ?? {}, {alsoIncludeFirstSubdomain: true}),
+    now,
+  )
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
 
@@ -74,6 +123,8 @@ export async function showProductCreate(
     renderProductsCreatePage(product, {
       banner,
       withAcademyIntegration: Boolean(academyIntegration),
+      academyAccountSubdomains: academyAccountSubdomains ?? [],
+      academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
@@ -86,19 +137,18 @@ export async function showProductUpdate(
   sql: Sql,
 ): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
+  const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [courses, whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
-    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
+  const [whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
     queryProductByNumber(productNumber, sql),
   ])
-  requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
 
@@ -115,10 +165,18 @@ export async function showProductUpdate(
     ...productWithError?.product,
   }
 
+  const academyCoursesBySubdomain = await listCoursesForSubdomains(
+    academyIntegration,
+    getSubdomainsFromProduct(productWithHistory.product, {alsoIncludeFirstSubdomain: true}),
+    now,
+  )
+
   return finalHtml(
     renderProductUpdatePage(productWithHistory.product, productWithHistory.history, {
       banner,
       withAcademyIntegration: Boolean(academyIntegration),
+      academyAccountSubdomains: academyAccountSubdomains ?? [],
+      academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
@@ -130,24 +188,30 @@ export async function showOngoingProduct(
   {manipulations}: {manipulations: ProductManipulations},
 ): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
+  const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [courses, whatsappGroups, smooveLists] = await Promise.all([
-    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
+  const [whatsappGroups, smooveLists] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
   ])
-  requestContext.set('courses', courses)
+  const academyCoursesBySubdomain = await listCoursesForSubdomains(
+    academyIntegration,
+    getSubdomainsFromProduct(product, {alsoIncludeFirstSubdomain: true}),
+    now,
+  )
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
 
   return finalHtml(
     renderProductFormFields(product, manipulations, 'write', {
       withAcademyIntegration: Boolean(academyIntegration),
+      academyAccountSubdomains: academyAccountSubdomains ?? [],
+      academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
@@ -160,19 +224,18 @@ export async function showProductInHistory(
   sql: Sql,
 ): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
+  const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [courses, whatsappGroups, smooveLists, product] = await Promise.all([
-    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
+  const [whatsappGroups, smooveLists, product] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
     queryProductByHistoryId(productNumber, operationId, sql),
   ])
-  requestContext.set('courses', courses)
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
 
@@ -180,9 +243,17 @@ export async function showProductInHistory(
     return {status: 404, body: 'Product not found'}
   }
 
+  const academyCoursesBySubdomain = await listCoursesForSubdomains(
+    academyIntegration,
+    getSubdomainsFromProduct(product.product, {alsoIncludeFirstSubdomain: false}),
+    now,
+  )
+
   return finalHtml(
     renderProductViewInHistoryPage(product.product, product.history, {
       withAcademyIntegration: Boolean(academyIntegration),
+      academyAccountSubdomains: academyAccountSubdomains ?? [],
+      academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
@@ -286,4 +357,25 @@ export async function createSmooveList(listName: string): Promise<ControllerResu
     logger.error({err: error}, 'create-smoove-list')
     return finalHtml(renderSmooveListCreateError(String(error)))
   }
+}
+
+export async function showAcademyCoursesDatalist(
+  academyCourse: NonNullable<OngoingProduct['academyCourses']>[number],
+  academyCourseIndex: number,
+): Promise<ControllerResult> {
+  const academyIntegration = requestContext.get('academyIntegration')
+  const nowService = requestContext.get('nowService')!
+  const now = nowService()
+
+  if (!academyIntegration) {
+    return finalHtml('')
+  }
+
+  const courses = academyCourse.accountSubdomain
+    ? await listAcademyCourses(academyIntegration, academyCourse.accountSubdomain, now)
+    : []
+
+  return finalHtml(
+    html`<${AcademyCoursesDatalist} index=${academyCourseIndex} courses=${courses} />`,
+  )
 }

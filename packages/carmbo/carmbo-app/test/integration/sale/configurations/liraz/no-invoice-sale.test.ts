@@ -21,7 +21,7 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [academyCourseId],
+      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
       smooveListId: smooveListId,
     },
     undefined,
@@ -33,7 +33,7 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
     {
       name: 'Product Two',
       productType: 'challenge',
-      academyCourses: [33],
+      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -171,7 +171,7 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
 
   // Verify academy course connection
   const product1Academies = product1Card.academyCourses()
-  await expect(product1Academies.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
+  await expect(product1Academies.courseCheckbox(`carmel/${academyCourseId}`).locator).toBeChecked()
 
   // Verify smoove list connections
   const product1Smoove = product1Card.smooveLists()
@@ -185,7 +185,7 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
 
   // Verify academy course connection
   const product2Academies = product2Card.academyCourses()
-  await expect(product2Academies.courseCheckbox('33').locator).toBeChecked()
+  await expect(product2Academies.courseCheckbox(`carmel/33`).locator).toBeChecked()
 
   // Go back to sale detail page
   await page.goto(new URL('/sales/1', url()).href)

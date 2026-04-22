@@ -34,7 +34,8 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                         checked=${academyCourse.isConnected}
                       />
                       <label class="form-check-label" for="academy-course-${academyCourse.courseId}"
-                        >${academyCourse.courseId}: ${academyCourse.name}</label
+                        >${academyCourse.accountSubdomain}/${academyCourse.courseId}:<span
+                        > </span> ${academyCourse.name}</label
                       >
                     </div>
                   </li>

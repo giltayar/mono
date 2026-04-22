@@ -3,7 +3,7 @@ import type {Page} from '@playwright/test'
 export async function initializeHtmxSettled(page: Page) {
   await page.evaluate(() => {
     // console.log('****** Initializing htmx settled state for testing...')
-    // htmx.logAll();
+    // htmx.logAll()
     ;(window as any).TEST_isHtmxSettled = false
     const cleanupListener = new AbortController()
 
@@ -17,5 +17,10 @@ export async function initializeHtmxSettled(page: Page) {
     )
   })
 
-  return () => page.waitForFunction(() => (window as any).TEST_isHtmxSettled === true)
+  return async () => {
+    // console.log('****** Waiting for htmx to be settled...')
+    await page.waitForFunction(() => (window as any).TEST_isHtmxSettled === true)
+
+    await initializeHtmxSettled(page)
+  }
 }

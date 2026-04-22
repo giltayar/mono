@@ -18,13 +18,16 @@ import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsa
 import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
 import type {NowService} from '../../../commons/now-service.ts'
 import {when} from '@giltayar/functional-commons'
+import {listAcademyCourses} from '../../../commons/external-provider/academy-courses.ts'
 
 export type SaleWithProviders = {
   saleNumber: number
   products: {
     productNumber: number
     productName: string
-    academyCourses: {courseId: string; name: string; isConnected: boolean}[] | undefined
+    academyCourses:
+      | {courseId: string; accountSubdomain: string; name: string; isConnected: boolean}[]
+      | undefined
     smooveLists:
       | {
           isListConnected: boolean
@@ -44,15 +47,11 @@ export async function querySaleWithProviders(
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
-  academyCourses: AcademyCourse[] | undefined,
+  now: Date,
   smooveLists: SmooveList[] | undefined,
   whatsappGroups: WhatsAppGroup[],
   sql: Sql,
 ): Promise<SaleWithProviders | undefined> {
-  const academyCoursesNames = when(
-    academyCourses,
-    (academyCourses) => new Map<number, AcademyCourse>(academyCourses.map((c) => [c.id, c]) || []),
-  )
   const smooveListsMap = when(
     smooveLists,
     (smooveLists) => new Map<number, SmooveList>(smooveLists.map((l) => [l.id, l])),
@@ -72,7 +71,7 @@ export async function querySaleWithProviders(
             'product_name', pd.name,
             'academy_courses',
               (
-                SELECT json_agg(pac.workshop_id)
+                SELECT json_agg(json_build_object('courseId', pac.workshop_id, 'accountSubdomain', pac.account_subdomain))
                 FROM product_academy_course pac
                 WHERE pac.data_id = ph.data_id
               ),
@@ -121,12 +120,24 @@ export async function querySaleWithProviders(
   const academyCoursesInSale = saleRow.products.flatMap((product) => product.academyCourses ?? [])
   const whatsAppGroupsInSale = saleRow.products.flatMap((product) => product.whatsAppGroups ?? [])
 
+  const uniqueSubdomains = [...new Set(academyCoursesInSale.map((c) => c.accountSubdomain))]
+  const coursesMapP = when(academyIntegration, async (academyIntegration) => {
+    const map = new Map<string, AcademyCourse[]>()
+    await Promise.all(
+      uniqueSubdomains.map(async (subdomain) => {
+        const courses = await listAcademyCourses(academyIntegration, subdomain, now)
+        map.set(subdomain, courses)
+      }),
+    )
+    return map
+  })
+
   const academyConnnectionsP = when(academyIntegration, (academyIntegration) =>
     email
       ? Promise.all(
-          academyCoursesInSale.map(async (courseId) =>
-            academyIntegration.isStudentEnrolledInCourse(email, parseInt(courseId), {
-              accountSubdomain: 'carmel',
+          academyCoursesInSale.map(async (course) =>
+            academyIntegration.isStudentEnrolledInCourse(email, parseInt(course.courseId), {
+              accountSubdomain: course.accountSubdomain,
             }),
           ),
         )
@@ -143,11 +154,13 @@ export async function querySaleWithProviders(
     ),
   )
 
-  const [academyConnnections, smooveContact, whatsappGroupParticipants] = await Promise.all([
-    academyConnnectionsP,
-    smooveContactP,
-    whatsappGroupParticipantsP,
-  ])
+  const [academyConnnections, smooveContact, whatsappGroupParticipants, coursesMap] =
+    await Promise.all([
+      academyConnnectionsP,
+      smooveContactP,
+      whatsappGroupParticipantsP,
+      coursesMapP,
+    ])
   const phone = saleRow.phone
   const whatsappContactId = phone ? humanIsraeliPhoneNumberToWhatsAppId(phone) : undefined
 
@@ -157,11 +170,20 @@ export async function querySaleWithProviders(
       productNumber: product.productNumber,
       productName: product.productName,
       academyCourses: when(academyIntegration, () =>
-        (product.academyCourses ?? []).map((courseId) => ({
-          courseId,
+        (product.academyCourses ?? []).map((course) => ({
+          courseId: course.courseId,
+          accountSubdomain: course.accountSubdomain,
           isConnected:
-            !!academyConnnections![academyCoursesInSale.findIndex((c) => c === courseId)],
-          name: academyCoursesNames!.get(parseInt(courseId))?.name ?? '',
+            !!academyConnnections![
+              academyCoursesInSale.findIndex(
+                (c) =>
+                  c.courseId === course.courseId && c.accountSubdomain === course.accountSubdomain,
+              )
+            ],
+          name:
+            coursesMap
+              ?.get(course.accountSubdomain)
+              ?.find((c) => c.id === parseInt(course.courseId))?.name ?? '',
         })),
       ),
       smooveLists: when(smooveContact, (smooveContact) => ({
@@ -345,9 +367,10 @@ export async function disconnectStudentFromAcademyCourses(
   logger: FastifyBaseLogger,
 ): Promise<void> {
   // Get student info and all academy courses for products in the actual sale
-  const courses = await sql<{courseId: string}[]>`
+  const courses = await sql<{courseId: string; accountSubdomain: string}[]>`
     SELECT DISTINCT
-      pac.workshop_id as course_id
+      pac.workshop_id as course_id,
+      pac.account_subdomain
 
     FROM sale_data_product sip
     INNER JOIN sale s ON s.last_data_product_id = sip.data_product_id
@@ -359,12 +382,12 @@ export async function disconnectStudentFromAcademyCourses(
 
   logger.info({courses}, 'academy-courses-to-disconnect')
 
-  for (const {courseId} of courses) {
+  for (const {courseId, accountSubdomain} of courses) {
     try {
       await retry(
         () =>
           academyIntegration.removeStudentFromCourse(studentEmail, parseInt(courseId), {
-            accountSubdomain: 'carmel',
+            accountSubdomain,
           }),
         {
           retries: 5,
@@ -527,7 +550,8 @@ export async function connectStudentWithAcademyCourses(
   // Get student info and all academy courses for products in the actual sale
   const courses = (await sql`
     SELECT DISTINCT
-      pac.workshop_id as course_id
+      pac.workshop_id as course_id,
+      pac.account_subdomain
 
     FROM sale_data_product sip
     INNER JOIN sale s ON s.last_data_product_id = sip.data_product_id
@@ -535,26 +559,37 @@ export async function connectStudentWithAcademyCourses(
     INNER JOIN product_academy_course pac ON pac.data_id = p.last_data_id
     WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0
     ORDER BY pac.workshop_id
-  `) as {courseId: string}[]
+  `) as {courseId: string; accountSubdomain: string}[]
 
-  try {
-    await retry(
-      () =>
-        academyIntegration.addStudentToCourses(
-          student,
-          courses.map(({courseId}) => parseInt(courseId)),
-          {accountSubdomain: 'carmel'},
-        ),
-      {
-        retries: 5,
-        minTimeout: 1000,
-        maxTimeout: 5000,
-      },
-    )
+  // Group courses by subdomain
+  const coursesBySubdomain = new Map<string, number[]>()
+  for (const {courseId, accountSubdomain} of courses) {
+    const list = coursesBySubdomain.get(accountSubdomain) ?? []
+    list.push(parseInt(courseId))
+    coursesBySubdomain.set(accountSubdomain, list)
+  }
 
-    logger.info({courses, student: student.email}, 'adding-student-to-academy-course-succeeded')
-  } catch (err) {
-    logger.error({err, courses, student: student.email}, 'adding-student-to-academy-course-failed')
+  for (const [accountSubdomain, courseIds] of coursesBySubdomain) {
+    try {
+      await retry(
+        () => academyIntegration.addStudentToCourses(student, courseIds, {accountSubdomain}),
+        {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 5000,
+        },
+      )
+
+      logger.info(
+        {courseIds, accountSubdomain, student: student.email},
+        'adding-student-to-academy-course-succeeded',
+      )
+    } catch (err) {
+      logger.error(
+        {err, courseIds, accountSubdomain, student: student.email},
+        'adding-student-to-academy-course-failed',
+      )
+    }
   }
 }
 
@@ -566,7 +601,7 @@ type SaleWithProvidersResult = {
   products: {
     productNumber: number
     productName: string
-    academyCourses: string[] | null
+    academyCourses: {courseId: string; accountSubdomain: string}[] | null
     smooveLists: {
       listId: string | null
       cancelledListId: string | null
@@ -578,19 +613,23 @@ type SaleWithProvidersResult = {
 
 type PropagateAcademyCourseChangesPayload = {
   productNumber: number
-  addedCourses: number[]
-  removedCourses: number[]
+  addedCourses: {courseId: number; accountSubdomain: string}[]
+  removedCourses: {courseId: number; accountSubdomain: string}[]
 }
 
 type PropagateAcademyCourseChangesSingleSalePayload = {
   productNumber: number
-  addedCourses: number[]
-  removedCourses: number[]
+  addedCourses: {courseId: number; accountSubdomain: string}[]
+  removedCourses: {courseId: number; accountSubdomain: string}[]
   saleNumber: number
   studentEmail: string
   studentName: string
   studentPhone: string
-  productCourses: Array<{productNumber: number; academyCourseId: number}> | null
+  productCourses: Array<{
+    productNumber: number
+    academyCourseId: number
+    accountSubdomain: string
+  }> | null
   coursesFromOtherSales: number[]
 }
 
@@ -639,8 +678,8 @@ export function initializePropagateAcademyCourseChangesJobHandlers(
  */
 async function propagateAcademyCourseChangesToSales(
   productNumber: number,
-  addedCourses: number[],
-  removedCourses: number[],
+  addedCourses: {courseId: number; accountSubdomain: string}[],
+  removedCourses: {courseId: number; accountSubdomain: string}[],
   sql: Sql,
   logger: FastifyBaseLogger,
   jobId: number,
@@ -663,7 +702,11 @@ async function propagateAcademyCourseChangesToSales(
       studentEmail: string
       studentName: string
       studentPhone: string
-      productCourses: Array<{productNumber: number; academyCourseId: number}> | null
+      productCourses: Array<{
+        productNumber: number
+        academyCourseId: number
+        accountSubdomain: string
+      }> | null
       coursesFromOtherSales: number[]
     }[]
   >`
@@ -691,7 +734,8 @@ async function propagateAcademyCourseChangesToSales(
         json_agg(
           json_build_object(
             'productNumber', sdp.product_number,
-            'academyCourseId', pac.workshop_id
+            'academyCourseId', pac.workshop_id,
+            'accountSubdomain', pac.account_subdomain
           )
         ) AS courses
       FROM sale_data_product sdp
@@ -768,52 +812,69 @@ async function propagateAcademyCourseChangesForSingleSale(
   const coursesFromOtherProducts = new Set(
     (saleInfo.productCourses ?? [])
       .filter((pc) => pc.productNumber !== saleInfo.productNumber)
-      .map((pc) => pc.academyCourseId),
+      .map((pc) => `${pc.academyCourseId}:${pc.accountSubdomain}`),
   )
 
   // Also consider courses from the student's other connected sales
   const coursesFromOtherSales = new Set(saleInfo.coursesFromOtherSales ?? [])
 
-  try {
-    await retry(
-      () =>
-        academyIntegration.addStudentToCourses(
-          {
-            email: saleInfo.studentEmail,
-            name: saleInfo.studentName,
-            phone: saleInfo.studentPhone,
-          },
-          saleInfo.addedCourses,
-          {accountSubdomain: 'carmel'},
-        ),
-      {
-        retries: 5,
-        minTimeout: 1000,
-        maxTimeout: 5000,
-      },
-    )
-    saleLogger.info({courses: saleInfo.addedCourses}, 'propagate-added-course-succeeded')
-  } catch (err) {
-    saleLogger.error({err, courses: saleInfo.addedCourses}, 'propagate-added-course-failed')
+  // Group added courses by subdomain
+  const addedBySubdomain = new Map<string, number[]>()
+  for (const course of saleInfo.addedCourses) {
+    const list = addedBySubdomain.get(course.accountSubdomain) ?? []
+    list.push(course.courseId)
+    addedBySubdomain.set(course.accountSubdomain, list)
+  }
+
+  for (const [accountSubdomain, courseIds] of addedBySubdomain) {
+    try {
+      await retry(
+        () =>
+          academyIntegration.addStudentToCourses(
+            {
+              email: saleInfo.studentEmail,
+              name: saleInfo.studentName,
+              phone: saleInfo.studentPhone,
+            },
+            courseIds,
+            {accountSubdomain},
+          ),
+        {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 5000,
+        },
+      )
+      saleLogger.info({courseIds, accountSubdomain}, 'propagate-added-course-succeeded')
+    } catch (err) {
+      saleLogger.error({err, courseIds, accountSubdomain}, 'propagate-added-course-failed')
+    }
   }
 
   // For removed courses: only unenroll if no other product in this sale or other sales has that course
-  for (const courseId of saleInfo.removedCourses) {
-    if (coursesFromOtherProducts.has(courseId)) {
-      saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-product')
+  for (const course of saleInfo.removedCourses) {
+    const courseKey = `${course.courseId}:${course.accountSubdomain}`
+    if (coursesFromOtherProducts.has(courseKey)) {
+      saleLogger.info(
+        {courseId: course.courseId, accountSubdomain: course.accountSubdomain},
+        'skipping-course-removal-exists-in-another-product',
+      )
       continue
     }
 
-    if (coursesFromOtherSales.has(courseId)) {
-      saleLogger.info({courseId}, 'skipping-course-removal-exists-in-another-sale')
+    if (coursesFromOtherSales.has(course.courseId)) {
+      saleLogger.info(
+        {courseId: course.courseId, accountSubdomain: course.accountSubdomain},
+        'skipping-course-removal-exists-in-another-sale',
+      )
       continue
     }
 
     try {
       await retry(
         () =>
-          academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, courseId, {
-            accountSubdomain: 'carmel',
+          academyIntegration.removeStudentFromCourse(saleInfo.studentEmail, course.courseId, {
+            accountSubdomain: course.accountSubdomain,
           }),
         {
           retries: 5,
@@ -821,9 +882,15 @@ async function propagateAcademyCourseChangesForSingleSale(
           maxTimeout: 5000,
         },
       )
-      saleLogger.info({courseId}, 'propagate-removed-course-succeeded')
+      saleLogger.info(
+        {courseId: course.courseId, accountSubdomain: course.accountSubdomain},
+        'propagate-removed-course-succeeded',
+      )
     } catch (err) {
-      saleLogger.error({err, courseId}, 'propagate-removed-course-failed')
+      saleLogger.error(
+        {err, courseId: course.courseId, accountSubdomain: course.accountSubdomain},
+        'propagate-removed-course-failed',
+      )
     }
   }
 }
@@ -835,7 +902,7 @@ type PropagateSalesEventProductChangesPayload = {
 
 type PropagateSalesEventProductChangesSingleSalePayload = {
   addedProducts: number[]
-  addedProductCourses: Array<{productNumber: number; courseId: number}>
+  addedProductCourses: Array<{productNumber: number; courseId: number; accountSubdomain: string}>
   saleNumber: number
   studentEmail: string
   studentName: string
@@ -913,8 +980,10 @@ async function propagateSalesEventProductChangesToSales(
   )
 
   // Get academy courses for the added products
-  const addedProductCourses = await sql<{productNumber: number; courseId: number}[]>`
-    SELECT p.product_number, pac.workshop_id as course_id
+  const addedProductCourses = await sql<
+    {productNumber: number; courseId: number; accountSubdomain: string}[]
+  >`
+    SELECT p.product_number, pac.workshop_id as course_id, pac.account_subdomain
     FROM product p
     JOIN product_academy_course pac ON pac.data_id = p.last_data_id
     WHERE p.product_number IN ${sql(addedProducts)}
@@ -1076,31 +1145,41 @@ async function propagateSalesEventProductChangesForSingleSale(
     return
   }
 
-  // Enroll in courses for added products
-  const courses = saleInfo.addedProductCourses
-    .filter((pc) => productsToAdd.includes(pc.productNumber))
-    .map((pc) => pc.courseId)
-  try {
-    await retry(
-      () => {
-        return academyIntegration.addStudentToCourses(
-          {
-            email: saleInfo.studentEmail,
-            name: saleInfo.studentName,
-            phone: saleInfo.studentPhone,
-          },
-          courses,
-          {accountSubdomain: 'carmel'},
-        )
-      },
-      {
-        retries: 5,
-        minTimeout: 1000,
-        maxTimeout: 5000,
-      },
-    )
-    saleLogger.info({courses}, 'propagate-added-product-course-succeeded')
-  } catch (err) {
-    saleLogger.error({err, courses}, 'propagate-added-product-course-failed')
+  // Enroll in courses for added products, grouped by subdomain
+  const coursesForAdded = saleInfo.addedProductCourses.filter((pc) =>
+    productsToAdd.includes(pc.productNumber),
+  )
+
+  const coursesBySubdomain = new Map<string, number[]>()
+  for (const pc of coursesForAdded) {
+    const list = coursesBySubdomain.get(pc.accountSubdomain) ?? []
+    list.push(pc.courseId)
+    coursesBySubdomain.set(pc.accountSubdomain, list)
+  }
+
+  for (const [accountSubdomain, courses] of coursesBySubdomain) {
+    try {
+      await retry(
+        () => {
+          return academyIntegration.addStudentToCourses(
+            {
+              email: saleInfo.studentEmail,
+              name: saleInfo.studentName,
+              phone: saleInfo.studentPhone,
+            },
+            courses,
+            {accountSubdomain},
+          )
+        },
+        {
+          retries: 5,
+          minTimeout: 1000,
+          maxTimeout: 5000,
+        },
+      )
+      saleLogger.info({courses, accountSubdomain}, 'propagate-added-product-course-succeeded')
+    } catch (err) {
+      saleLogger.error({err, courses, accountSubdomain}, 'propagate-added-product-course-failed')
+    }
   }
 }

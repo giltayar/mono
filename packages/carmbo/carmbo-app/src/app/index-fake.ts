@@ -34,9 +34,22 @@ const {app, sql} = await makeApp({
               enrolledContacts: new Map(),
             },
           ],
+          [
+            'inspiredlivingdaily',
+            {
+              courses: [
+                {id: 100, name: 'ILD Course 1'},
+                {id: 200, name: 'ILD Course 2'},
+              ],
+              enrolledContacts: new Map(),
+            },
+          ],
         ]),
       }),
     ),
+    academyAccountSubdomains: process.env.ACADEMY_ACCOUNTS_APIKEYS
+      ? ['carmel', 'inspiredlivingdaily']
+      : undefined,
     whatsappIntegration: createFakeWhatsAppIntegrationService({
       groups: {
         '1@g.us': {

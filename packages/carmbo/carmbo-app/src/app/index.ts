@@ -79,6 +79,7 @@ const {app, sql} = await makeApp({
     academyIntegration: when(env.ACADEMY_ACCOUNTS_APIKEYS, (accounts) =>
       createAcademyIntegrationService({accounts}),
     ),
+    academyAccountSubdomains: env.ACADEMY_ACCOUNTS_APIKEYS?.map((a) => a.subdomain),
     whatsappIntegration: createWhatsAppIntegrationService({
       greenApiKey: env.GREEN_API_KEY,
       greenApiInstanceId: env.GREEN_API_INSTANCE,

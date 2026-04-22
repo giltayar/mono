@@ -34,7 +34,7 @@ test('adding product to sales event enrolls students from connected sales', asyn
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -46,7 +46,7 @@ test('adding product to sales event enrolls students from connected sales', asyn
     {
       name: 'Product Two',
       productType: 'recorded',
-      academyCourses: [33],
+      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -170,7 +170,7 @@ test('removing product from sales event does NOT unenroll students (they already
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -182,7 +182,7 @@ test('removing product from sales event does NOT unenroll students (they already
     {
       name: 'Product Two',
       productType: 'recorded',
-      academyCourses: [33],
+      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -301,7 +301,7 @@ test('disconnected sales are not affected by sales event product updates', async
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -313,7 +313,7 @@ test('disconnected sales are not affected by sales event product updates', async
     {
       name: 'Product Two',
       productType: 'recorded',
-      academyCourses: [33],
+      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),

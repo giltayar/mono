@@ -18,7 +18,7 @@ export function manipulateProduct<T extends OngoingProduct>(
 
   if (addItem) {
     // @ts-expect-error dynamic stuff!
-    ;(transformed[addItem] ??= []).push('')
+    ;(transformed[addItem] ??= []).push(addItem === 'academyCourses' ? {} : '')
   }
 
   return transformed

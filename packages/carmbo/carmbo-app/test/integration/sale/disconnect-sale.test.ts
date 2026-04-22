@@ -16,6 +16,7 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
   page,
 }) => {
   const academyCourseId = 1
+  const ildAcademyCourseId = 100
   const smooveListId = 2
 
   // Create a simple product with external providers
@@ -25,7 +26,10 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
       productType: 'recorded',
       smooveListId,
       smooveRemovedListId: 3,
-      academyCourses: [academyCourseId],
+      academyCourses: [
+        {courseId: academyCourseId, accountSubdomain: 'carmel'},
+        {courseId: ildAcademyCourseId, accountSubdomain: 'inspiredlivingdaily'},
+      ],
     },
     undefined,
     new Date(),
@@ -112,7 +116,10 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
 
   // Academy course should now be disconnected (unchecked)
   const academyCourses = productCard.academyCourses()
-  await expect(academyCourses.courseCheckbox(academyCourseId.toString()).locator).not.toBeChecked()
+  await expect(academyCourses.courseCheckbox(`carmel/${academyCourseId}`).locator).not.toBeChecked()
+  await expect(
+    academyCourses.courseCheckbox(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).not.toBeChecked()
 
   // Smoove main list should be unchecked, removed list should be checked
   const smooveLists = productCard.smooveLists()
@@ -125,12 +132,18 @@ test('disconnect cardcom sale removes disconnect button and disconnects from ext
       accountSubdomain: 'carmel',
     }),
   ).toBe(false)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
+    }),
+  ).toBe(false)
 })
 
 test('disconnect manual sale removes disconnect button and disconnects from external providers', async ({
   page,
 }) => {
   const academyCourseId = 1
+  const ildAcademyCourseId = 100
   const smooveListId = 2
   const smooveRemovedListId = 3
   const customerEmail = 'manual-disconnect-customer@example.com'
@@ -155,7 +168,10 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
       productType: 'recorded',
       smooveListId,
       smooveRemovedListId,
-      academyCourses: [academyCourseId],
+      academyCourses: [
+        {courseId: academyCourseId, accountSubdomain: 'carmel'},
+        {courseId: ildAcademyCourseId, accountSubdomain: 'inspiredlivingdaily'},
+      ],
     },
     undefined,
     new Date(),
@@ -233,6 +249,11 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
       accountSubdomain: 'carmel',
     }),
   ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
+    }),
+  ).toBe(true)
 
   // Click the disconnect button
   await saleDetailModel.form().disconnectButton().locator.click()
@@ -263,7 +284,10 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
 
   // Academy course should now be disconnected (unchecked)
   const academyCourses = productCard.academyCourses()
-  await expect(academyCourses.courseCheckbox(academyCourseId.toString()).locator).not.toBeChecked()
+  await expect(academyCourses.courseCheckbox(`carmel/${academyCourseId}`).locator).not.toBeChecked()
+  await expect(
+    academyCourses.courseCheckbox(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).not.toBeChecked()
 
   // Smoove main list should be unchecked, removed list should be checked
   const smooveLists = productCard.smooveLists()
@@ -274,6 +298,11 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   expect(
     await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
       accountSubdomain: 'carmel',
+    }),
+  ).toBe(false)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(false)
 
@@ -313,7 +342,10 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
 
   // Academy course should now be connected again (checked)
   const academyCourses2 = productCard2.academyCourses()
-  await expect(academyCourses2.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
+  await expect(academyCourses2.courseCheckbox(`carmel/${academyCourseId}`).locator).toBeChecked()
+  await expect(
+    academyCourses2.courseCheckbox(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).toBeChecked()
 
   // Smoove main list should be checked again
   const smooveLists2 = productCard2.smooveLists()
@@ -323,6 +355,11 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   expect(
     await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
       accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 })

@@ -1,4 +1,3 @@
-import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/types'
 import {html} from '../../../commons/html-templates.ts'
 import type {Product, ProductHistory, ProductWithHistoryInfo} from '../model.ts'
 import {ProductCreateOrUpdateFormFields} from './form.ts'
@@ -10,11 +9,15 @@ const t = getFixedT(null, 'product')
 export function ProductCreateView({
   product,
   withAcademyIntegration,
+  academyAccountSubdomains,
+  academyCoursesBySubdomain,
   withSmooveIntegration,
   withSkoolIntegration,
 }: {
   product: Product
   withAcademyIntegration: boolean
+  academyAccountSubdomains: string[]
+  academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
   withSkoolIntegration: boolean
 }) {
@@ -44,6 +47,8 @@ export function ProductCreateView({
           product=${product}
           operation="write"
           withAcademyIntegration=${withAcademyIntegration}
+          academyAccountSubdomains=${academyAccountSubdomains}
+          academyCoursesBySubdomain=${academyCoursesBySubdomain}
           withSmooveIntegration=${withSmooveIntegration}
           withSkoolIntegration=${withSkoolIntegration}
         />
@@ -59,15 +64,17 @@ export function ProductCreateView({
 export function ProductUpdateView({
   product,
   history,
-  courses,
   withAcademyIntegration,
+  academyAccountSubdomains,
+  academyCoursesBySubdomain,
   withSmooveIntegration,
   withSkoolIntegration,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
-  courses: AcademyCourse[]
   withAcademyIntegration: boolean
+  academyAccountSubdomains: string[]
+  academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
   withSkoolIntegration: boolean
 }) {
@@ -128,8 +135,9 @@ export function ProductUpdateView({
         <${ProductCreateOrUpdateFormFields}
           product=${product}
           operation=${product.historyOperation === 'delete' ? 'read' : 'write'}
-          courses=${courses}
           withAcademyIntegration=${withAcademyIntegration}
+          academyAccountSubdomains=${academyAccountSubdomains}
+          academyCoursesBySubdomain=${academyCoursesBySubdomain}
           withSmooveIntegration=${withSmooveIntegration}
           withSkoolIntegration=${withSkoolIntegration}
         />
@@ -147,12 +155,16 @@ export function ProductHistoryView({
   product,
   history,
   withAcademyIntegration,
+  academyAccountSubdomains,
+  academyCoursesBySubdomain,
   withSmooveIntegration,
   withSkoolIntegration,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
   withAcademyIntegration: boolean
+  academyAccountSubdomains: string[]
+  academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
   withSkoolIntegration: boolean
 }) {
@@ -173,6 +185,8 @@ export function ProductHistoryView({
           product=${product}
           operation="read"
           withAcademyIntegration=${withAcademyIntegration}
+          academyAccountSubdomains=${academyAccountSubdomains}
+          academyCoursesBySubdomain=${academyCoursesBySubdomain}
           withSmooveIntegration=${withSmooveIntegration}
           withSkoolIntegration=${withSkoolIntegration}
         />

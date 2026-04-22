@@ -17,7 +17,7 @@ export function createSaleProvidersPageModel(page: Page) {
           courseCheckbox: (
             courseId: string,
             checkboxLocator = cardLocator.getByRole('checkbox', {
-              name: new RegExp(`^${courseId}: .*`, 'i'),
+              name: new RegExp(`${RegExp.escape(courseId)}: .*`, 'i'),
               exact: true,
             }),
           ) => ({
@@ -25,7 +25,7 @@ export function createSaleProvidersPageModel(page: Page) {
           }),
           courseName: (
             courseId: string,
-            nameLocator = cardLocator.getByText(new RegExp(`^${courseId}: .*`, 'i')),
+            nameLocator = cardLocator.getByText(new RegExp(`${RegExp.escape(courseId)}: .*`, 'i')),
           ) => ({
             locator: nameLocator,
           }),

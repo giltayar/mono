@@ -115,6 +115,16 @@ export function setup(
             ]),
           },
         ],
+        [
+          'inspiredlivingdaily',
+          {
+            courses: [
+              {id: 100, name: 'ILD Course 1'},
+              {id: 200, name: 'ILD Course 2'},
+            ],
+            enrolledContacts: new Map(),
+          },
+        ],
       ]),
     })
     cardcomIntegration = createFakeCardcomIntegrationService({accounts: {}})
@@ -150,6 +160,9 @@ export function setup(
       },
       services: {
         academyIntegration: when(withAcademyIntegration, () => academyIntegration),
+        academyAccountSubdomains: withAcademyIntegration
+          ? ['carmel', 'inspiredlivingdaily']
+          : undefined,
         whatsappIntegration,
         smooveIntegration: when(withSmooveIntegration, () => smooveIntegration),
         cardcomIntegration,

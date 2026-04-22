@@ -119,6 +119,7 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')
     const academyIntegration = requestContext.get('academyIntegration')
+    const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
     const nowService = requestContext.get('nowService')!
 
     const studentNumber = await model_updateStudent(
@@ -126,6 +127,7 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
       undefined,
       smooveIntegration,
       academyIntegration,
+      academyAccountSubdomains,
       nowService(),
       sql,
     )
@@ -196,12 +198,18 @@ export async function showStudentSales(studentNumber: number, sql: Sql): Promise
 
 export async function showMagicLink(studentNumber: number, sql: Sql): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
+  const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
 
   try {
     if (!academyIntegration) {
       throw new Error('Academy integration is not configured')
     }
-    const magicLinks = await fetchMagicLinksForStudent(studentNumber, academyIntegration, sql)
+    const magicLinks = await fetchMagicLinksForStudent(
+      studentNumber,
+      academyIntegration,
+      academyAccountSubdomains ?? [],
+      sql,
+    )
 
     return finalHtml(renderMagicLinks(magicLinks))
   } catch (error) {

@@ -9,6 +9,7 @@ import {
   deleteProduct,
   showSmooveListCreateDialog,
   createSmooveList,
+  showAcademyCoursesDatalist,
 } from './controller.ts'
 import {NewProductSchema, ProductSchema} from './model.ts'
 import {OngoingProductSchema} from './view/model.ts'
@@ -16,8 +17,8 @@ import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
-import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {z} from 'zod'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   // List products
@@ -107,6 +108,24 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     },
     async (request, reply) =>
       dealWithControllerResult(reply, await createSmooveList(request.body.listName)),
+  )
+
+  // Academy courses datalist (HTMX endpoint)
+  app.withTypeProvider<ZodTypeProvider>().post(
+    '/academy-courses-datalist',
+    {
+      schema: {
+        body: OngoingProductSchema.extend({index: z.coerce.number().int().min(0)}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showAcademyCoursesDatalist(
+          request.body.academyCourses![request.body.index],
+          request.body.index,
+        ),
+      ),
   )
 
   // Edit existing product

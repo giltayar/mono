@@ -63,7 +63,6 @@ import {
   showSubscriptionCancelled,
 } from './view/cancel-subscription.ts'
 import {querySaleWithProviders} from './model/model-external-providers.ts'
-import {listAcademyCourses} from '../../commons/external-provider/academy-courses.ts'
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
 import {when} from '@giltayar/functional-commons'
@@ -395,8 +394,8 @@ export async function showSaleProviders(saleNumber: number, sql: Sql): Promise<C
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const nowService = requestContext.get('nowService')!
   const now = nowService()
-  const [academyCourses, whatsappGroups, smooveLists] = await Promise.all([
-    when(academyIntegration, (academyIntegration) => listAcademyCourses(academyIntegration, now)),
+
+  const [whatsappGroups, smooveLists] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
   ])
@@ -406,7 +405,7 @@ export async function showSaleProviders(saleNumber: number, sql: Sql): Promise<C
     academyIntegration,
     smooveIntegration,
     whatsappIntegration,
-    academyCourses,
+    now,
     smooveLists,
     whatsappGroups,
     sql,

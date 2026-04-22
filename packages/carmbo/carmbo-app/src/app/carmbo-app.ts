@@ -15,10 +15,7 @@ import salesRoutes, {
 import authRoutes, {useFirebaseAuth} from '../domain/auth/route.ts'
 import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
-import type {
-  AcademyCourse,
-  AcademyIntegrationService,
-} from '@giltayar/carmel-tools-academy-integration/service'
+import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {fastifyRequestContext} from '@fastify/request-context'
 import type {
   WhatsAppGroup,
@@ -40,12 +37,12 @@ declare module '@fastify/request-context' {
     cardcomIntegration: CardcomIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
     academyIntegration: AcademyIntegrationService | undefined
+    academyAccountSubdomains: string[] | undefined
     smooveIntegration: SmooveIntegrationService | undefined
     skoolIntegration: SkoolIntegrationService | undefined
     nowService: () => Date
     logger: FastifyBaseLogger
     sql: Sql
-    courses: AcademyCourse[] | undefined
     whatsappGroups: WhatsAppGroup[] | undefined
     smooveLists: SmooveList[] | undefined
     products: {id: number; name: string}[] | undefined
@@ -57,6 +54,7 @@ export function makeApp({
   db: {connectionString, database, host, port, username, password},
   services: {
     academyIntegration,
+    academyAccountSubdomains,
     whatsappIntegration,
     smooveIntegration,
     cardcomIntegration,
@@ -81,6 +79,7 @@ export function makeApp({
     cardcomIntegration: CardcomIntegrationService
     whatsappIntegration: WhatsAppIntegrationService
     academyIntegration: AcademyIntegrationService | undefined
+    academyAccountSubdomains: string[] | undefined
     smooveIntegration: SmooveIntegrationService | undefined
     skoolIntegration: SkoolIntegrationService | undefined
     nowService: () => Date
@@ -135,12 +134,12 @@ export function makeApp({
     defaultStoreValues: (request) => ({
       sql,
       academyIntegration,
+      academyAccountSubdomains,
       whatsappIntegration,
       smooveIntegration,
       skoolIntegration,
       cardcomIntegration,
       nowService,
-      courses: undefined,
       logger: request.log,
       whatsappGroups: undefined,
       smooveLists: undefined,

@@ -19,7 +19,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [academyCourseId],
+      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
       smooveListId: smooveListId,
     },
     undefined,
@@ -31,7 +31,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     {
       name: 'Product Two',
       productType: 'challenge',
-      academyCourses: [33],
+      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),

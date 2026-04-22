@@ -40,7 +40,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [academyCourseId],
+      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
       smooveListId: smooveListId,
       personalMessageWhenJoining: 'Welcome to Product One!',
       sendSkoolInvitation: true,
@@ -54,7 +54,7 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
     {
       name: 'Product Two',
       productType: 'challenge',
-      academyCourses: [33],
+      academyCourses: [{courseId: 100, accountSubdomain: 'inspiredlivingdaily'}],
       personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
@@ -155,6 +155,19 @@ test('cardcom standing order creates student, sale with one payment', async ({pa
   expect(
     await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
       accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+
+  const academyContactId = academyIntegration()._test_getContact(
+    customerEmail,
+    'inspiredlivingdaily',
+  )
+  expect(academyContactId).toBeDefined()
+  expect(academyContactId?.name).toBe(customerName)
+  expect(academyContactId?.phone).toBe(customerPhone)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 
@@ -296,7 +309,7 @@ test('cardcom standing order with no product id shows error in jobs page', async
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
       personalMessageWhenJoining: 'Welcome!',
     },
     undefined,
@@ -390,6 +403,7 @@ test('cancelling a standing order subscription removes student from academy cour
   page,
 }) => {
   const academyCourseId = 1
+  const ildAcademyCourseId = 100
   const smooveListId = 2
   const smooveCancellingListId = 4
   const smooveCancelledListId = 6
@@ -399,7 +413,10 @@ test('cancelling a standing order subscription removes student from academy cour
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [academyCourseId],
+      academyCourses: [
+        {courseId: academyCourseId, accountSubdomain: 'carmel'},
+        {courseId: ildAcademyCourseId, accountSubdomain: 'inspiredlivingdaily'},
+      ],
       smooveListId,
       smooveCancelledListId,
       smooveCancellingListId,
@@ -516,10 +533,16 @@ test('cancelling a standing order subscription removes student from academy cour
 
   // Verify academy course is connected
   const academyCourses = productCard.academyCourses()
-  await expect(academyCourses.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
-  await expect(academyCourses.courseName(academyCourseId.toString()).locator).toHaveText(
-    '1: Course 1',
+  await expect(academyCourses.courseCheckbox(`carmel/${academyCourseId}`).locator).toBeChecked()
+  await expect(academyCourses.courseName(`carmel/${academyCourseId}`).locator).toHaveText(
+    'carmel/1: Course 1',
   )
+  await expect(
+    academyCourses.courseCheckbox(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).toBeChecked()
+  await expect(
+    academyCourses.courseName(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).toHaveText('inspiredlivingdaily/100: ILD Course 1')
 
   // Verify smoove main list is connected
   const smooveLists = productCard.smooveLists()
@@ -567,6 +590,11 @@ test('cancelling a standing order subscription removes student from academy cour
       accountSubdomain: 'carmel',
     }),
   ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
+    }),
+  ).toBe(true)
 
   // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
   await expect(async () => {
@@ -598,6 +626,9 @@ test('cancelling a standing order subscription removes student from academy cour
   // Academy course should still be connected
   const academyCourses2 = productCard2.academyCourses()
   await expect(academyCourses2.courseCheckbox(academyCourseId.toString()).locator).toBeChecked()
+  await expect(
+    academyCourses2.courseCheckbox(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).toBeChecked()
 
   // Smoove cancelled list should now be connected
   const smooveLists2 = productCard2.smooveLists()
@@ -618,6 +649,11 @@ test('cancelling a standing order subscription removes student from academy cour
   expect(
     await academyIntegration().isStudentEnrolledInCourse(customerEmail, academyCourseId, {
       accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 
@@ -651,6 +687,12 @@ test('cancelling a standing order subscription removes student from academy cour
     )
     .toBe(false)
 
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse(customerEmail, ildAcademyCourseId, {
+      accountSubdomain: 'inspiredlivingdaily',
+    }),
+  ).toBe(false)
+
   // Verify smoove lists were updated according to unsubscribeStudentFromSmooveLists
   const smooveContacts1 = await smooveIntegration().fetchContactsOfList(smooveListId)
   // Student should no longer be in the main list
@@ -681,7 +723,12 @@ test('cancelling a standing order subscription removes student from academy cour
 
   // Academy course should now be disconnected
   const academyCourses3 = productCard3.academyCourses()
-  await expect(academyCourses3.courseCheckbox(academyCourseId.toString()).locator).not.toBeChecked()
+  await expect(
+    academyCourses3.courseCheckbox(`carmel/${academyCourseId}`).locator,
+  ).not.toBeChecked()
+  await expect(
+    academyCourses3.courseCheckbox(`inspiredlivingdaily/${ildAcademyCourseId}`).locator,
+  ).not.toBeChecked()
 
   // Smoove removed list should now be connected
   const smooveLists3 = productCard3.smooveLists()
@@ -714,7 +761,7 @@ test('cancelling a standing order subscription by product number', async ({page}
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [academyCourseId],
+      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
       smooveListId,
       smooveCancelledListId,
       smooveCancellingListId,
@@ -843,7 +890,7 @@ test('cancelling a subscription by product fails when multiple sales exist for t
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [academyCourseId],
+      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
       smooveListId,
       smooveCancelledListId,
     },

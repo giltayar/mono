@@ -39,7 +39,7 @@ test('create sale then connect it', async ({page}) => {
       name: 'Product One',
       productType: 'recorded',
       smooveListId: 2,
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
       personalMessageWhenJoining: 'Welcome to Product One!',
       sendSkoolInvitation: true,
     },
@@ -53,7 +53,10 @@ test('create sale then connect it', async ({page}) => {
       name: 'Product Two',
       productType: 'challenge',
       smooveListId: 10,
-      academyCourses: [33, 777],
+      academyCourses: [
+        {courseId: 33, accountSubdomain: 'carmel'},
+        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+      ],
       personalMessageWhenJoining: 'Welcome to Product Two!',
       sendSkoolInvitation: true,
     },
@@ -67,7 +70,7 @@ test('create sale then connect it', async ({page}) => {
       name: 'Product Three',
       productType: 'recorded',
       smooveListId: 20,
-      academyCourses: [888],
+      academyCourses: [{courseId: 888, accountSubdomain: 'carmel'}],
       personalMessageWhenJoining: 'Welcome to Product Three!',
     },
     undefined,
@@ -207,8 +210,8 @@ test('create sale then connect it', async ({page}) => {
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
   expect(
@@ -280,7 +283,7 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       name: 'Product One',
       productType: 'recorded',
       smooveListId: 2,
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
       personalMessageWhenJoining: 'Welcome to Product One!',
       sendSkoolInvitation: true,
     },
@@ -294,7 +297,10 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
       name: 'Product Two',
       productType: 'challenge',
       smooveListId: 10,
-      academyCourses: [33, 777],
+      academyCourses: [
+        {courseId: 33, accountSubdomain: 'carmel'},
+        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+      ],
       personalMessageWhenJoining: 'Welcome to Product Two!',
     },
     undefined,
@@ -446,8 +452,8 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 
@@ -499,7 +505,7 @@ test('connect sale then reconnect it', async ({page}) => {
       name: 'Product One',
       productType: 'recorded',
       smooveListId: 2,
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
       personalMessageWhenJoining: 'Welcome to Product One!',
       sendSkoolInvitation: true,
     },
@@ -513,7 +519,10 @@ test('connect sale then reconnect it', async ({page}) => {
       name: 'Product Two',
       productType: 'challenge',
       smooveListId: 10,
-      academyCourses: [33, 777],
+      academyCourses: [
+        {courseId: 33, accountSubdomain: 'carmel'},
+        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+      ],
       personalMessageWhenJoining: 'Welcome to Product Two!',
       sendSkoolInvitation: true,
     },
@@ -651,8 +660,8 @@ test('connect sale then reconnect it', async ({page}) => {
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 777, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 
@@ -704,7 +713,7 @@ test('create sale with transaction description then connect it', async ({page}) 
       name: 'Test Product',
       productType: 'recorded',
       smooveListId: 5,
-      academyCourses: [100],
+      academyCourses: [{courseId: 100, accountSubdomain: 'carmel'}],
       personalMessageWhenJoining: 'Welcome to Test Product!',
       sendSkoolInvitation: true,
     },

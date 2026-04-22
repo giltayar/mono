@@ -3,21 +3,27 @@ import type {
   AcademyIntegrationService,
 } from '@giltayar/carmel-tools-academy-integration/service'
 
-const cachedCourses: {
-  courses: AcademyCourse[] | undefined
-  timestamp: number
-} = {
-  courses: undefined,
-  timestamp: 0,
-}
+const cachedCoursesPerSubdomain = new Map<
+  string,
+  {
+    courses: AcademyCourse[]
+    timestamp: number
+  }
+>()
 
-export async function listAcademyCourses(academyIntegration: AcademyIntegrationService, now: Date) {
+export async function listAcademyCourses(
+  academyIntegration: AcademyIntegrationService,
+  accountSubdomain: string,
+  now: Date,
+) {
   const nowTime = now.getTime()
+  const cached = cachedCoursesPerSubdomain.get(accountSubdomain)
 
-  if (nowTime - cachedCourses.timestamp > 1 * 60 * 1000 || !cachedCourses.courses) {
-    cachedCourses.courses = await academyIntegration.listCourses({accountSubdomain: 'carmel'})
-    cachedCourses.timestamp = nowTime
+  if (!cached || nowTime - cached.timestamp > 1 * 60 * 1000) {
+    const courses = await academyIntegration.listCourses({accountSubdomain})
+    cachedCoursesPerSubdomain.set(accountSubdomain, {courses, timestamp: nowTime})
+    return courses
   }
 
-  return cachedCourses.courses
+  return cached.courses
 }

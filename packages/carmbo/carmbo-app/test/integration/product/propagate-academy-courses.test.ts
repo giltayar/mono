@@ -12,6 +12,7 @@ import {
   cardcomRecurringPaymentWebhookUrl,
 } from '../sale/common/cardcom-webhook.ts'
 import {cancelSubscription} from '../common/cancel-subscription.ts'
+import {initializeHtmxSettled} from '../common/wait-for-htmx.ts'
 
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
 
@@ -41,7 +42,7 @@ test('updating product to add academy course enrolls students from connected sal
     {
       name: 'Test Product',
       productType: 'recorded',
-      academyCourses: [1], // Course 1
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}], // Course 1
     },
     undefined,
     new Date(),
@@ -103,24 +104,30 @@ test('updating product to add academy course enrolls students from connected sal
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(false)
 
-  // Navigate to the product page and update it to add Course 33
+  // Navigate to the product page and update it to add Course 100 from inspiredlivingdaily
   await page.goto(new URL(`/products/${productNumber}`, url()).href)
   await page.waitForURL(updateProductModel.urlRegex)
 
   const updateForm = updateProductModel.form()
+  const wait = await initializeHtmxSettled(page)
   await updateForm.academyCourses().addButton().locator.click()
-  await updateForm.academyCourses().academyCourseInput(1).locator.fill('33')
+  await wait()
+
+  await updateForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
+  await wait()
+  await updateForm.academyCourses().academyCourseInput(1).locator.fill('100')
+  await updateForm.academyCourses().academyCourseInput(1).locator.blur()
 
   // Save the product update (this triggers propagation)
   await updateForm.updateButton().locator.click()
 
   // Wait for the update to complete by checking the form reflects the new values
-  await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue(/^33:/)
+  await expect(updateForm.academyCourses().academyCourseInput(1).locator).toHaveValue(/^100:/)
 
   // Wait for all background jobs to finish before asserting
   await waitForAllJobsToBeDone(page, url())
@@ -132,8 +139,8 @@ test('updating product to add academy course enrolls students from connected sal
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 33, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('john.propagate@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 })
@@ -164,7 +171,10 @@ test('updating product to remove academy course unenrolls students from connecte
     {
       name: 'Test Product',
       productType: 'club',
-      academyCourses: [1, 33], // Course 1 and 33
+      academyCourses: [
+        {courseId: 1, accountSubdomain: 'carmel'},
+        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+      ], // Course 1 (carmel) and Course 100 (inspiredlivingdaily)
     },
     undefined,
     new Date(),
@@ -220,17 +230,17 @@ test('updating product to remove academy course unenrolls students from connecte
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 
-  // Navigate to the product page and update it to remove Course 33
+  // Navigate to the product page and update it to remove Course 100 (inspiredlivingdaily)
   await page.goto(new URL(`/products/${productNumber}`, url()).href)
   await page.waitForURL(updateProductModel.urlRegex)
 
   const updateForm = updateProductModel.form()
-  // Remove the second course (Course 33) by clicking the trash button
+  // Remove the second course (Course 100) by clicking the trash button
   await updateForm.academyCourses().trashButton(1).locator.click()
 
   // Save the product update (this triggers propagation)
@@ -242,15 +252,15 @@ test('updating product to remove academy course unenrolls students from connecte
   // Wait for all background jobs to finish before asserting
   await waitForAllJobsToBeDone(page, url())
 
-  // Verify student is still enrolled in Course 1 but not Course 33
+  // Verify student is still enrolled in Course 1 but not Course 100
   expect(
     await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 1, {
       accountSubdomain: 'carmel',
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 33, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('jane.propagate@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(false)
 })
@@ -276,24 +286,27 @@ test('removing course from product does NOT unenroll if another product in same 
     sql(),
   )
 
-  // Create product 1 with Course 1 and Course 33 (club type triggers unenrollment)
+  // Create product 1 with Course 1 (carmel) and Course 100 (inspiredlivingdaily) (club type triggers unenrollment)
   const product1Number = await createProduct(
     {
       name: 'Product One',
       productType: 'club',
-      academyCourses: [1, 33],
+      academyCourses: [
+        {courseId: 1, accountSubdomain: 'carmel'},
+        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+      ],
     },
     undefined,
     new Date(),
     sql(),
   )
 
-  // Create product 2 with Course 33 (shared with product 1)
+  // Create product 2 with Course 100 (inspiredlivingdaily) (shared with product 1)
   const product2Number = await createProduct(
     {
       name: 'Product Two',
       productType: 'challenge',
-      academyCourses: [33],
+      academyCourses: [{courseId: 100, accountSubdomain: 'inspiredlivingdaily'}],
     },
     undefined,
     new Date(),
@@ -348,17 +361,17 @@ test('removing course from product does NOT unenroll if another product in same 
     }),
   ).toBe(true)
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 33, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 
-  // Navigate to product 1 page and update it to remove Course 33 (but product 2 still has it)
+  // Navigate to product 1 page and update it to remove Course 100 (but product 2 still has it)
   await page.goto(new URL(`/products/${product1Number}`, url()).href)
   await page.waitForURL(updateProductModel.urlRegex)
 
   const updateForm = updateProductModel.form()
-  // Remove the second course (Course 33) by clicking the trash button
+  // Remove the second course (Course 100) by clicking the trash button
   await updateForm.academyCourses().trashButton(1).locator.click()
 
   // Save the product update (this triggers propagation)
@@ -376,10 +389,10 @@ test('removing course from product does NOT unenroll if another product in same 
       accountSubdomain: 'carmel',
     }),
   ).toBe(true)
-  // Student should STILL be enrolled in Course 33 because product 2 still has it
+  // Student should STILL be enrolled in Course 100 because product 2 still has it
   expect(
-    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 33, {
-      accountSubdomain: 'carmel',
+    await academyIntegration().isStudentEnrolledInCourse('bob.propagate@example.com', 100, {
+      accountSubdomain: 'inspiredlivingdaily',
     }),
   ).toBe(true)
 })
@@ -408,7 +421,7 @@ test('disconnected sales are not affected by product academy course updates', as
     {
       name: 'Test Product',
       productType: 'recorded',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -522,7 +535,10 @@ test('removing course from non-club product does NOT unenroll students', async (
     {
       name: 'Recorded Product',
       productType: 'recorded',
-      academyCourses: [1, 33],
+      academyCourses: [
+        {courseId: 1, accountSubdomain: 'carmel'},
+        {courseId: 33, accountSubdomain: 'carmel'},
+      ],
     },
     undefined,
     new Date(),
@@ -634,7 +650,10 @@ test('removing course from club product does NOT unenroll if another sale has th
     {
       name: 'Club Product',
       productType: 'club',
-      academyCourses: [1, 33],
+      academyCourses: [
+        {courseId: 1, accountSubdomain: 'carmel'},
+        {courseId: 33, accountSubdomain: 'carmel'},
+      ],
     },
     undefined,
     new Date(),
@@ -646,7 +665,7 @@ test('removing course from club product does NOT unenroll if another sale has th
     {
       name: 'Recorded Product',
       productType: 'recorded',
-      academyCourses: [33],
+      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -797,7 +816,7 @@ test('disconnected (previously connected) sales are not affected by product acad
     {
       name: 'Club Product',
       productType: 'club',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -907,7 +926,7 @@ test('unsubscribed (cancelled subscription) sales are not affected by product ac
     {
       name: 'Club Product',
       productType: 'club',
-      academyCourses: [1],
+      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
