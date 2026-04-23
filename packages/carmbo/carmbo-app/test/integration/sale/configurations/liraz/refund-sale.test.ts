@@ -8,7 +8,11 @@ import {cardcomWebhookUrl} from '../../common/cardcom-webhook.ts'
 import {createStudent} from '../../../../../src/domain/student/model.ts'
 import {createNewSalePageModel} from '../../../../page-model/sales/new-sale-page.model.ts'
 
-const {url, sql, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, cardcomIntegration} = setup(import.meta.url, {
+  withAcademyIntegration: false,
+  withSmooveIntegration: false,
+  withSkoolIntegration: true,
+})
 
 test.use({viewport: {width: 1024, height: 1024}})
 

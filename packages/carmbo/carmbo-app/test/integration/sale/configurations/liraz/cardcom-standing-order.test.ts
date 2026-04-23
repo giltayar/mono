@@ -17,7 +17,11 @@ import {createSaleProvidersPageModel} from '../../../../page-model/sales/sale-pr
 import {cancelSubscription} from '../../../common/cancel-subscription.ts'
 import {createCancelSubscriptionPageModel} from '../../../../page-model/sales/cancel-subscription-page.model.ts'
 
-const {url, sql, cardcomIntegration, whatsappIntegration} = setup(import.meta.url)
+const {url, sql, cardcomIntegration, whatsappIntegration} = setup(import.meta.url, {
+  withAcademyIntegration: false,
+  withSmooveIntegration: false,
+  withSkoolIntegration: true,
+})
 
 test.use({viewport: {width: 1280, height: 1280}})
 

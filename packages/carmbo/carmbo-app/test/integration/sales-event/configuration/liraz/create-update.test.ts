@@ -9,6 +9,7 @@ import {waitForAllJobsToBeDone} from '../../../common/wait-for-all-jobs-to-be-do
 const {url, sql} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withSkoolIntegration: true,
 })
 
 test.use({viewport: {width: 1280, height: 1400}})

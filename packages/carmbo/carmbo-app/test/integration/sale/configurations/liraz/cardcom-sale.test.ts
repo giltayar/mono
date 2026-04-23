@@ -9,18 +9,18 @@ import {createUpdateSalePageModel} from '../../../../page-model/sales/update-sal
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {cardcomWebhookUrl} from '../../common/cardcom-webhook.ts'
 import {createSaleProvidersPageModel} from '../../../../page-model/sales/sale-providers-page.model.ts'
-const {url, sql, cardcomIntegration} = setup(import.meta.url)
+
+const {url, sql, cardcomIntegration} = setup(import.meta.url, {
+  withAcademyIntegration: false,
+  withSmooveIntegration: false,
+  withSkoolIntegration: true,
+})
 
 test('cardcom sale creates student, sale, and integrations', async ({page}) => {
-  const academyCourseId = 1
-  const smooveListId = 2
-
   const product1Number = await createProduct(
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
-      smooveListId: smooveListId,
     },
     undefined,
     new Date(),
@@ -31,7 +31,6 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
     {
       name: 'Product Two',
       productType: 'challenge',
-      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -211,9 +210,13 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   const productCards = providersPageModel.productCards()
   await expect(productCards.locator).toHaveCount(2)
 
-  // Check first product (Product One) - has academy course and smoove list
+  // Check first product (Product One) - does not have smoove list
   const product1Card = productCards.card(0)
-  await expect(product1Card.title().locator).toContainText('Product One')
+  // Verify smoove list connections
+  const product1Smoove = product1Card.smooveLists()
+  await expect(product1Smoove.mainListCheckbox().locator).toBeHidden()
+  await expect(product1Smoove.cancelledListCheckbox().locator).toBeHidden()
+  await expect(product1Smoove.removedListCheckbox().locator).toBeHidden()
 
   // Go back to sale detail page
   await page.goto(new URL('/sales/1', url()).href)

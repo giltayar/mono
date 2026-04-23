@@ -10,7 +10,11 @@ import {createUpdateStudentPageModel} from '../../../../page-model/students/upda
 import {createUpdateSalesEventPageModel} from '../../../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createUpdateProductPageModel} from '../../../../page-model/products/update-product-page.model.ts'
 
-const {url, sql, TEST_hooks} = setup(import.meta.url)
+const {url, sql, TEST_hooks} = setup(import.meta.url, {
+  withAcademyIntegration: false,
+  withSmooveIntegration: false,
+  withSkoolIntegration: true,
+})
 
 test.use({viewport: {width: 1024, height: 1024}})
 

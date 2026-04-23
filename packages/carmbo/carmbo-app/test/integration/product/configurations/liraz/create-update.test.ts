@@ -7,6 +7,7 @@ import {createUpdateProductPageModel} from '../../../../page-model/products/upda
 const {url} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withSkoolIntegration: true,
 })
 
 test('create product then update it', async ({page}) => {

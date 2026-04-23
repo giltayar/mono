@@ -9,20 +9,20 @@ import {createUpdateSalePageModel} from '../../../../page-model/sales/update-sal
 import {createSaleProvidersPageModel} from '../../../../page-model/sales/sale-providers-page.model.ts'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import {fetchAsText} from '@giltayar/http-commons'
-const {url, sql} = setup(import.meta.url)
+
+const {url, sql} = setup(import.meta.url, {
+  withAcademyIntegration: false,
+  withSmooveIntegration: false,
+  withSkoolIntegration: true,
+})
 
 test.use({viewport: {width: 1280, height: 1280}})
 
 test('no invoice sale creates student, sale, and integrations', async ({page}) => {
-  const academyCourseId = 1
-  const smooveListId = 2
-
   const product1Number = await createProduct(
     {
       name: 'Product One',
       productType: 'recorded',
-      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
-      smooveListId: smooveListId,
     },
     undefined,
     new Date(),
@@ -33,7 +33,6 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
     {
       name: 'Product Two',
       productType: 'challenge',
-      academyCourses: [{courseId: 33, accountSubdomain: 'carmel'}],
     },
     undefined,
     new Date(),
@@ -165,27 +164,23 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   const productCards = providersPageModel.productCards()
   await expect(productCards.locator).toHaveCount(2)
 
-  // Check first product (Product One) - has academy course and smoove list
+  // Check first product (Product One) - does not have smoove list
   const product1Card = productCards.card(0)
   await expect(product1Card.title().locator).toContainText('Product One')
 
-  // Verify academy course connection
-  const product1Academies = product1Card.academyCourses()
-  await expect(product1Academies.courseCheckbox(`carmel/${academyCourseId}`).locator).toBeChecked()
-
   // Verify smoove list connections
   const product1Smoove = product1Card.smooveLists()
-  await expect(product1Smoove.mainListCheckbox().locator).toBeChecked()
-  await expect(product1Smoove.cancelledListCheckbox().locator).not.toBeChecked()
-  await expect(product1Smoove.removedListCheckbox().locator).not.toBeChecked()
+  await expect(product1Smoove.mainListCheckbox().locator).toBeHidden()
+  await expect(product1Smoove.cancelledListCheckbox().locator).toBeHidden()
+  await expect(product1Smoove.removedListCheckbox().locator).toBeHidden()
 
-  // Check second product (Product Two) - has academy course
+  // Check second product (Product Two) - does not have academy course
   const product2Card = productCards.card(1)
   await expect(product2Card.title().locator).toContainText('Product Two')
 
   // Verify academy course connection
   const product2Academies = product2Card.academyCourses()
-  await expect(product2Academies.courseCheckbox(`carmel/33`).locator).toBeChecked()
+  await expect(product2Academies.courseCheckbox(`carmel/33`).locator).toBeHidden()
 
   // Go back to sale detail page
   await page.goto(new URL('/sales/1', url()).href)
