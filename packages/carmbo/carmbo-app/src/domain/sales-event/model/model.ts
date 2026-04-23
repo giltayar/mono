@@ -419,31 +419,6 @@ function searchableSalesEventText(
   return `${salesEventNumber} ${name} ${landingPageUrl} ${fromDate} ${toDate} ${notes}`.trim()
 }
 
-export async function TEST_seedSalesEvents(sql: Sql, count: number, productCount: number) {
-  const chance = new (await import('chance')).Chance(0)
-
-  for (const i of range(0, count)) {
-    if (i % 1000 === 0) {
-      console.log(`Seeding sales event ${i}`)
-    }
-    await createSalesEvent(
-      {
-        name: `${chance.word()} ${chance.word()}`,
-        fromDate: chance.date(),
-        toDate: chance.date(),
-        landingPageUrl: chance.url(),
-        productsForSale: [
-          chance.integer({min: 1, max: productCount}),
-          chance.integer({min: 1, max: productCount}),
-        ],
-      },
-      chance.word(),
-      new Date(),
-      sql,
-    )
-  }
-}
-
 export async function listProductsForChoosing(sql: Sql): Promise<{id: number; name: string}[]> {
   return await sql<{id: number; name: string}[]>`
       SELECT product.product_number as id, name
@@ -451,8 +426,4 @@ export async function listProductsForChoosing(sql: Sql): Promise<{id: number; na
       JOIN product ON product.last_data_id = product_data.data_id
       ORDER BY product.product_number
   `
-}
-
-function range(start: number, end: number): number[] {
-  return Array.from({length: end - start}, (_, i) => i + start)
 }

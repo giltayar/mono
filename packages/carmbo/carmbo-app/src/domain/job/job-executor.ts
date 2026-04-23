@@ -19,7 +19,6 @@ export async function triggerJobsExecution(nowService: NowService) {
   })
 
   await unwrapPresult(garbagCollectionP).catch((err) => {
-    console.error('******* garbage collection of jobs failed', err)
     globalLogger.error({err}, 'garbage-collect-jobs-under-trigger-failed')
   })
 }

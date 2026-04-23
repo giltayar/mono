@@ -2,7 +2,6 @@ import type {PendingQuery, Row, Sql} from 'postgres'
 import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
 import {assert} from 'node:console'
 import {z} from 'zod'
-import {range} from '@giltayar/functional-commons'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import {assertNever} from '@giltayar/functional-commons'
@@ -526,37 +525,6 @@ function searchableStudentText(studentNumber: number, student: Student | NewStud
   const notes = student.notes ?? ''
 
   return `${studentNumber} ${names} ${emails} ${phones} ${facebookNames} ${notes}`.trim()
-}
-
-export async function TEST_seedStudents(
-  sql: Sql,
-  smooveIntegration: SmooveIntegrationService | undefined,
-  count: number,
-) {
-  const chance = new (await import('chance')).Chance(0)
-
-  for (const i of range(0, count)) {
-    if (i % 1000 === 0) {
-      console.log(`Seeding student ${i}`)
-    }
-    await createStudent(
-      {
-        emails: [chance.email(), chance.email()],
-        facebookNames: [chance.name()],
-        names: [
-          {firstName: chance.first(), lastName: chance.last()},
-          {firstName: chance.first(), lastName: chance.last()},
-          {firstName: chance.first(), lastName: chance.last()},
-        ],
-        phones: [chance.phone(), chance.phone(), chance.phone()],
-        birthday: chance.date(),
-      },
-      chance.word(),
-      smooveIntegration,
-      new Date(),
-      sql,
-    )
-  }
 }
 
 function normalizeStudent<TStudent extends Student | NewStudent>(student: TStudent): TStudent {
