@@ -411,7 +411,7 @@ test('cancelling a standing order subscription removes student from academy cour
   const product1Number = await createProduct(
     {
       name: 'Product One',
-      productType: 'recorded',
+      productType: 'club',
       academyCourses: [
         {courseId: academyCourseId, accountSubdomain: 'carmel'},
         {courseId: ildAcademyCourseId, accountSubdomain: 'inspiredlivingdaily'},

@@ -209,6 +209,7 @@ test('form validations', async ({page}) => {
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   await newForm.nameInput().locator.fill('Valid Product')
+  await newForm.productTypeSelect().locator.selectOption('club')
 
   // Add invalid WhatsApp group (must be in the list)
   await newForm.whatsappGroups().addButton().locator.click()
@@ -368,7 +369,6 @@ test('create smoove list from product form', async ({page}) => {
   await expect(updateForm.smooveListIdCreateButton().locator).not.toBeVisible()
 
   // Create buttons should be visible for fields that are empty
-  await expect(updateForm.smooveCancelledListIdCreateButton().locator).toBeVisible()
   await expect(updateForm.smooveRemovedListIdCreateButton().locator).toBeVisible()
 
   // Clear the smooveListId field — the Create button should reappear immediately (via CSS)

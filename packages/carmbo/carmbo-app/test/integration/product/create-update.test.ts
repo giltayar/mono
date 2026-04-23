@@ -6,6 +6,8 @@ import {createUpdateProductPageModel} from '../../page-model/products/update-pro
 
 const {url, TEST_hooks} = setup(import.meta.url)
 
+test.use({viewport: {width: 1280, height: 1280}})
+
 test('create product then update it', async ({page}) => {
   await page.goto(new URL('/products', url()).href)
 
@@ -40,7 +42,7 @@ test('create product then update it', async ({page}) => {
   await newForm.facebookGroups().facebookGroupInput(0).locator.fill('test-fb-group')
 
   await newForm.smooveListIdInput().locator.fill('2')
-  await newForm.smooveCancelledListIdInput().locator.fill('6')
+  await expect(newForm.smooveCancelledListIdInput().locator).toBeHidden()
   await newForm.smooveRemovedListIdInput().locator.fill('8')
   await newForm.notesInput().locator.fill('Initial product notes')
 
@@ -69,9 +71,7 @@ test('create product then update it', async ({page}) => {
   )
 
   await expect(updateForm.smooveListIdInput().locator).toHaveValue('2: Smoove List ID 1')
-  await expect(updateForm.smooveCancelledListIdInput().locator).toHaveValue(
-    '6: Smoove List Cancelled 3',
-  )
+  await expect(updateForm.smooveCancelledListIdInput().locator).toBeHidden()
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '8: Smoove List Removed 4',
   )
@@ -79,7 +79,7 @@ test('create product then update it', async ({page}) => {
 
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
-  await updateForm.productTypeSelect().locator.selectOption('challenge')
+  await updateForm.productTypeSelect().locator.selectOption('club')
   await updateForm.academyCourses().academyCourseInput(0).locator.fill('33')
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('33')
   await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('2@g.us')
@@ -97,7 +97,7 @@ test('create product then update it', async ({page}) => {
 
   await updateForm.updateButton().locator.click()
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Product')
-  await expect(updateForm.productTypeSelect().locator).toHaveValue('challenge')
+  await expect(updateForm.productTypeSelect().locator).toHaveValue('club')
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue(
     '33: Course 2',
   )
@@ -127,7 +127,7 @@ test('create product then update it', async ({page}) => {
   await expect(rows.locator).toHaveCount(1)
   const firstRow = productListModel.list().rows().row(0)
   await expect(firstRow.nameCell().locator).toHaveText('Updated Product')
-  await expect(firstRow.typeCell().locator).toHaveText('challenge')
+  await expect(firstRow.typeCell().locator).toHaveText('club')
 })
 
 test('discard button', async ({page}) => {
@@ -153,7 +153,6 @@ test('discard button', async ({page}) => {
   await newForm.nameInput().locator.fill('Test Product')
   await newForm.productTypeSelect().locator.selectOption('bundle')
   await newForm.smooveListIdInput().locator.fill('2')
-  await newForm.smooveCancelledListIdInput().locator.fill('6')
   await newForm.smooveRemovedListIdInput().locator.fill('8')
 
   await newForm.createButton().locator.click()
@@ -169,7 +168,6 @@ test('discard button', async ({page}) => {
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toBeVisible()
 
   await updateForm.smooveListIdInput().locator.fill('10')
-  await updateForm.smooveCancelledListIdInput().locator.fill('14')
   await updateForm.smooveRemovedListIdInput().locator.fill('16')
 
   await updateForm.discardButton().locator.click()
@@ -178,9 +176,6 @@ test('discard button', async ({page}) => {
   await expect(updateForm.productTypeSelect().locator).toHaveValue('bundle')
 
   await expect(updateForm.smooveListIdInput().locator).toHaveValue('2: Smoove List ID 1')
-  await expect(updateForm.smooveCancelledListIdInput().locator).toHaveValue(
-    '6: Smoove List Cancelled 3',
-  )
   await expect(updateForm.smooveRemovedListIdInput().locator).toHaveValue(
     '8: Smoove List Removed 4',
   )

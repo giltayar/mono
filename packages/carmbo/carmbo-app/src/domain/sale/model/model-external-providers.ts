@@ -25,6 +25,7 @@ export type SaleWithProviders = {
   products: {
     productNumber: number
     productName: string
+    productType: string
     academyCourses:
       | {courseId: string; accountSubdomain: string; name: string; isConnected: boolean}[]
       | undefined
@@ -69,6 +70,7 @@ export async function querySaleWithProviders(
           json_build_object(
             'product_number', p.product_number,
             'product_name', pd.name,
+            'product_type', pd.product_type,
             'academy_courses',
               (
                 SELECT json_agg(json_build_object('courseId', pac.workshop_id, 'accountSubdomain', pac.account_subdomain))
@@ -169,6 +171,7 @@ export async function querySaleWithProviders(
     products: saleRow.products.map((product) => ({
       productNumber: product.productNumber,
       productName: product.productName,
+      productType: product.productType,
       academyCourses: when(academyIntegration, () =>
         (product.academyCourses ?? []).map((course) => ({
           courseId: course.courseId,
@@ -592,6 +595,7 @@ type SaleWithProvidersResult = {
   products: {
     productNumber: number
     productName: string
+    productType: string
     academyCourses: {courseId: string; accountSubdomain: string}[] | null
     smooveLists: {
       listId: string | null

@@ -267,7 +267,7 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   // Verify smoove list connections
   const product1Smoove = product1Card.smooveLists()
   await expect(product1Smoove.mainListCheckbox().locator).toBeChecked()
-  await expect(product1Smoove.cancelledListCheckbox().locator).not.toBeChecked()
+  await expect(product1Smoove.cancelledListCheckbox().locator).toBeHidden()
   await expect(product1Smoove.removedListCheckbox().locator).not.toBeChecked()
 
   // Check second product (Product Two) - has academy course

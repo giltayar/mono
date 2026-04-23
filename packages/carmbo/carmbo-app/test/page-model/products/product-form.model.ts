@@ -53,7 +53,7 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
       locator: btnLocator,
     }),
     smooveCancelledListIdInput: (
-      inputLocator = locator.getByLabel('Smoove Cancelled List ID'),
+      inputLocator = locator.getByLabel('Smoove Cancelled Club List ID'),
     ) => ({
       locator: inputLocator,
     }),

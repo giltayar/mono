@@ -59,7 +59,8 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                   >
                 </div>
               </li>
-              <li class="list-group-item">
+              ${product.productType === 'club' &&
+              html`<li class="list-group-item">
                 <div class="form-check">
                   <input
                     id="smoove-list-cancelled"
@@ -73,7 +74,7 @@ export function SaleProvidersView({sale}: {sale: SaleWithProviders}) {
                     (${product.smooveLists!.cancelledListName})</label
                   >
                 </div>
-              </li>
+              </li>`}
               <li class="list-group-item">
                 <div class="form-check">
                   <input

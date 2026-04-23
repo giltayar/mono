@@ -13,7 +13,7 @@ test('cancel subscription shows error when email is not found', async ({page}) =
   const productNumber = await createProduct(
     {
       name: 'Test Product',
-      productType: 'recorded',
+      productType: 'club',
     },
     undefined,
     new Date(),
@@ -37,7 +37,7 @@ test('cancel subscription shows error when student exists but has no subscriptio
   const productNumber = await createProduct(
     {
       name: 'Product Two',
-      productType: 'recorded',
+      productType: 'club',
     },
     undefined,
     new Date(),

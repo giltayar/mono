@@ -55,6 +55,9 @@ export function ProductCreateOrUpdateFormFields({
             id="productType"
             readonly=${isReadOnly}
             required
+            hx-post=""
+            hx-target="closest .products-view_form-fields"
+            hx-swap="innerHTML"
           >
             <option value="recorded" selected=${product.productType === 'recorded'}>
               ${t('form.recorded')}
@@ -296,7 +299,8 @@ export function ProductCreateOrUpdateFormFields({
               : ''}
           </div>
 
-          <div class="mt-3 row">
+          ${product.productType === 'club' &&
+          html`<div class="mt-3 row">
             <div class="col form-floating">
               <input
                 name="smooveCancelledListId"
@@ -338,7 +342,7 @@ export function ProductCreateOrUpdateFormFields({
                   </button>
                 </div>`
               : ''}
-          </div>
+          </div>`}
 
           <div class="mt-3 row">
             <div class="col form-floating">
