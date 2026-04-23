@@ -51,6 +51,9 @@ function SalesView({
     <div class="mt-3">
       <div class="title-and-search d-flex flex-row border-bottom align-items-baseline">
         <h2>${t('list.sales')}</h2>
+        <a class="btn btn-outline-secondary btn-sm ms-3" href="/sales/revenue"
+          >${t('revenue.viewRevenue')}</a
+        >
         <form
           class="mb-1 ms-auto"
           hx-get="/sales"

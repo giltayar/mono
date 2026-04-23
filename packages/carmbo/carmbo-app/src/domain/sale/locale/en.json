@@ -131,5 +131,16 @@
     "phone": "Phone",
     "createAndChoose": "Create & Choose",
     "cancel": "Cancel"
+  },
+  "revenue": {
+    "title": "Revenue Summary",
+    "period": "Period",
+    "totalRevenue": "Total Revenue",
+    "week": "Last 7 Days",
+    "month": "Last 30 Days",
+    "ytd": "Year to Date",
+    "year": "Last 365 Days",
+    "backToSales": "Back to Sales",
+    "viewRevenue": "Revenue"
   }
 }

@@ -32,7 +32,7 @@ const {
 
 test.use({viewport: {width: 1280, height: 1280}})
 
-test('cardcom standing order creates student, sale with one payment', async ({page}) => {
+test('cardcom standing order creates student, sale with two payments', async ({page}) => {
   const academyCourseId = 1
   const smooveListId = 2
 

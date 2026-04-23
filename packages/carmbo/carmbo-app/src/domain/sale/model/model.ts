@@ -1078,3 +1078,67 @@ function mergeSaleProducts(
     unitPrice: originalProducts[index]?.unitPrice ?? 0,
   }))
 }
+
+export interface RevenueSummary {
+  week: number
+  month: number
+  ytd: number
+  year: number
+}
+
+export async function queryRevenueSummary(sql: Sql, now: Date): Promise<RevenueSummary> {
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const yearStart = new Date(now.getFullYear(), 0, 1)
+  const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+
+  // Revenue from non-standing-order sales (one-time sales + manual + no-invoice)
+  const oneTimeRevenue = sql<{week: string; month: string; ytd: string; year: string}[]>`
+    SELECT
+      COALESCE(SUM(CASE WHEN sale_data.timestamp >= ${weekAgo} THEN
+        COALESCE(sale_data_cardcom.cardcom_sale_revenue, sale_data_cardcom_manual.cardcom_sale_revenue, sale_data_no_invoice.sale_revenue, 0)
+      ELSE 0 END), 0)::text AS week,
+      COALESCE(SUM(CASE WHEN sale_data.timestamp >= ${monthAgo} THEN
+        COALESCE(sale_data_cardcom.cardcom_sale_revenue, sale_data_cardcom_manual.cardcom_sale_revenue, sale_data_no_invoice.sale_revenue, 0)
+      ELSE 0 END), 0)::text AS month,
+      COALESCE(SUM(CASE WHEN sale_data.timestamp >= ${yearStart} THEN
+        COALESCE(sale_data_cardcom.cardcom_sale_revenue, sale_data_cardcom_manual.cardcom_sale_revenue, sale_data_no_invoice.sale_revenue, 0)
+      ELSE 0 END), 0)::text AS ytd,
+      COALESCE(SUM(CASE WHEN sale_data.timestamp >= ${yearAgo} THEN
+        COALESCE(sale_data_cardcom.cardcom_sale_revenue, sale_data_cardcom_manual.cardcom_sale_revenue, sale_data_no_invoice.sale_revenue, 0)
+      ELSE 0 END), 0)::text AS year
+    FROM sale_history
+    JOIN sale ON sale.last_history_id = sale_history.id
+    LEFT JOIN sale_data ON sale_data.data_id = sale.last_data_id
+    LEFT JOIN sale_data_cardcom ON sale_data_cardcom.data_cardcom_id = sale.data_cardcom_id
+    LEFT JOIN sale_data_cardcom_manual ON sale_data_cardcom_manual.data_manual_id = sale_history.data_manual_id
+    LEFT JOIN sale_data_no_invoice ON sale_data_no_invoice.data_no_invoice_id = sale.data_no_invoice_id
+    WHERE sale_history.operation <> 'delete'
+      AND (sale_data_cardcom.recurring_order_id IS NULL OR sale_data_cardcom.data_cardcom_id IS NULL)
+      AND sale_data.timestamp >= ${yearAgo}
+  `
+
+  // Revenue from standing order payments (includes first + subsequent, avoids double-counting)
+  const standingOrderRevenue = sql<{week: string; month: string; ytd: string; year: string}[]>`
+    SELECT
+      COALESCE(SUM(CASE WHEN sop.timestamp >= ${weekAgo} THEN sop.payment_revenue ELSE 0 END), 0)::text AS week,
+      COALESCE(SUM(CASE WHEN sop.timestamp >= ${monthAgo} THEN sop.payment_revenue ELSE 0 END), 0)::text AS month,
+      COALESCE(SUM(CASE WHEN sop.timestamp >= ${yearStart} THEN sop.payment_revenue ELSE 0 END), 0)::text AS ytd,
+      COALESCE(SUM(CASE WHEN sop.timestamp >= ${yearAgo} THEN sop.payment_revenue ELSE 0 END), 0)::text AS year
+    FROM sale_standing_order_payments sop
+    JOIN sale ON sale.sale_number = sop.sale_number
+    JOIN sale_history ON sale.last_history_id = sale_history.id
+    WHERE sale_history.operation <> 'delete'
+      AND sop.resolution = 'payed'
+      AND sop.timestamp >= ${yearAgo}
+  `
+
+  const [oneTime, standing] = await Promise.all([oneTimeRevenue, standingOrderRevenue])
+
+  return {
+    week: Number(oneTime[0].week) + Number(standing[0].week),
+    month: Number(oneTime[0].month) + Number(standing[0].month),
+    ytd: Number(oneTime[0].ytd) + Number(standing[0].ytd),
+    year: Number(oneTime[0].year) + Number(standing[0].year),
+  }
+}

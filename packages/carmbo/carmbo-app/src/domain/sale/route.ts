@@ -30,6 +30,7 @@ import {
   dealWithNoInvoiceSale,
   renderCancelSubscription,
   renderSubscriptionCancelled,
+  showRevenue,
 } from './controller.ts'
 import {
   dealWithControllerResult,
@@ -340,6 +341,11 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     },
     async (request, reply) =>
       dealWithControllerResult(reply, await quickCreateStudent(request.body)),
+  )
+
+  // Revenue summary
+  appWithTypes.get('/revenue', async (_request, reply) =>
+    dealWithControllerResult(reply, await showRevenue()),
   )
 
   // View sale

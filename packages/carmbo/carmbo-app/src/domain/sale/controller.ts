@@ -15,6 +15,7 @@ import {
   fillInSale,
   querySalePayments,
   findSaleAndStudentByProduct,
+  queryRevenueSummary,
 } from './model/model.ts'
 import {
   addCardcomSale,
@@ -32,6 +33,7 @@ import {
 } from './model/model-standing-order.ts'
 import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
 import {renderSalesPage} from './view/list.ts'
+import {renderRevenuePage} from './view/revenue.ts'
 import {
   renderSaleCreatePage,
   renderSaleFormFields,
@@ -655,4 +657,13 @@ export function renderSubscriptionCancelled(
   productName: string,
 ): ControllerResult {
   return finalHtml(showCancelSubscriptionSuccess(email, studentName, productName))
+}
+
+export async function showRevenue(): Promise<ControllerResult> {
+  const sql = requestContext.get('sql')!
+  const nowService = requestContext.get('nowService')!
+
+  const revenue = await queryRevenueSummary(sql, nowService())
+
+  return finalHtml(renderRevenuePage(revenue))
 }
