@@ -277,6 +277,7 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
+                hx-preserve
               />
               <label for="smooveListId">${t('form.smooveListId')}</label>
             </div>
@@ -320,6 +321,7 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
+                hx-preserve
               />
               <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
             </div>
@@ -363,6 +365,7 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
+                hx-preserve
               />
               <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
             </div>
@@ -406,6 +409,7 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
+                hx-preserve
               />
               <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
             </div>

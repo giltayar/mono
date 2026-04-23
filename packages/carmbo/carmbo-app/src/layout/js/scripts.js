@@ -10,6 +10,12 @@ document.addEventListener('change', (/** @type {any} */ event) => {
     const datalist = document.getElementById(datalistId ?? '')
     const options = datalist?.children
 
+    if (itemId === '') {
+      element.setCustomValidity('')
+      hiddenIdInput?.setAttribute('value', '')
+      return
+    }
+
     let found = false
 
     //@ts-expect-error - typescript is wrong and you can iterate over an HTMLCollection
