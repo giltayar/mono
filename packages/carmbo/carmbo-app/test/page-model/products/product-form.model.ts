@@ -52,18 +52,6 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
     ) => ({
       locator: btnLocator,
     }),
-    smooveCancellingListIdInput: (
-      inputLocator = locator.getByLabel('Smoove Cancelling List ID'),
-    ) => ({
-      locator: inputLocator,
-    }),
-    smooveCancellingListIdCreateButton: (
-      btnLocator = locator
-        .locator('.row', {has: page.getByLabel('Smoove Cancelling List ID')})
-        .getByRole('button', {name: 'Create'}),
-    ) => ({
-      locator: btnLocator,
-    }),
     smooveCancelledListIdInput: (
       inputLocator = locator.getByLabel('Smoove Cancelled List ID'),
     ) => ({

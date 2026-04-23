@@ -79,12 +79,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     {
       schema: {
         querystring: z.object({
-          targetFieldId: z.enum([
-            'smooveListId',
-            'smooveCancellingListId',
-            'smooveCancelledListId',
-            'smooveRemovedListId',
-          ]),
+          targetFieldId: z.enum(['smooveListId', 'smooveCancelledListId', 'smooveRemovedListId']),
         }),
       },
     },

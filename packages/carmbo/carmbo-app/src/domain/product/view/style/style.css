@@ -2,10 +2,6 @@
   display: none;
 }
 
-.products-view_form-fields:has(#smooveCancellingListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveCancellingListId {
-  display: none;
-}
-
 .products-view_form-fields:has(#smooveCancelledListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveCancelledListId {
   display: none;
 }

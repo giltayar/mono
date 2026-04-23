@@ -42,7 +42,6 @@ test('create product then update it', async ({page}) => {
 
   await expect(newForm.academyCourses().locator).toBeHidden()
   await expect(newForm.smooveListIdInput().locator).toBeHidden()
-  await expect(newForm.smooveCancellingListIdInput().locator).toBeHidden()
   await expect(newForm.smooveCancelledListIdInput().locator).toBeHidden()
   await expect(newForm.smooveRemovedListIdInput().locator).toBeHidden()
 

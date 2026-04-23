@@ -299,50 +299,6 @@ export function ProductCreateOrUpdateFormFields({
           <div class="mt-3 row">
             <div class="col form-floating">
               <input
-                name="smooveCancellingListId"
-                id="smooveCancellingListId_value"
-                type="hidden"
-                value=${product.smooveCancellingListId ?? ''}
-              />
-              <input
-                type="text"
-                list="smoove-lists-list"
-                placeholder=" "
-                class="form-control pick-item-title"
-                id="smooveCancellingListId"
-                spellcheck="false"
-                autocorrect="off"
-                autocomplete="off"
-                autocapitalize="off"
-                value=${product.smooveCancellingListId
-                  ? generateItemTitle(
-                      product.smooveCancellingListId,
-                      smooveLists.find((g) => g.id === product.smooveCancellingListId)?.name,
-                    )
-                  : ''}
-                readonly=${isReadOnly}
-                hx-preserve
-              />
-              <label for="smooveCancellingListId">${t('form.smooveCancellingListId')}</label>
-            </div>
-            ${!isReadOnly
-              ? html`<div class="col-auto smoove-list-create-btn-smooveCancellingListId">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancellingListId"
-                    hx-target="#smoove-list-create-dialog-container"
-                    hx-swap="innerHTML"
-                  >
-                    ${t('form.createSmooveList')}
-                  </button>
-                </div>`
-              : ''}
-          </div>
-
-          <div class="mt-3 row">
-            <div class="col form-floating">
-              <input
                 name="smooveCancelledListId"
                 id="smooveCancelledListId_value"
                 type="hidden"

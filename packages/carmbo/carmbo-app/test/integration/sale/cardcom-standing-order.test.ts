@@ -405,7 +405,6 @@ test('cancelling a standing order subscription removes student from academy cour
   const academyCourseId = 1
   const ildAcademyCourseId = 100
   const smooveListId = 2
-  const smooveCancellingListId = 4
   const smooveCancelledListId = 6
   const smooveRemovedListId = 8
 
@@ -419,7 +418,6 @@ test('cancelling a standing order subscription removes student from academy cour
       ],
       smooveListId,
       smooveCancelledListId,
-      smooveCancellingListId,
       smooveRemovedListId,
       whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
       personalMessageWhenJoining: 'Welcome to Product One!',
@@ -753,7 +751,6 @@ test('cancelling a standing order subscription removes student from academy cour
 test('cancelling a standing order subscription by product number', async ({page}) => {
   const academyCourseId = 1
   const smooveListId = 2
-  const smooveCancellingListId = 4
   const smooveCancelledListId = 6
   const smooveRemovedListId = 8
 
@@ -764,7 +761,6 @@ test('cancelling a standing order subscription by product number', async ({page}
       academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
       smooveListId,
       smooveCancelledListId,
-      smooveCancellingListId,
       smooveRemovedListId,
       whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
       personalMessageWhenJoining: 'Welcome to Product One!',

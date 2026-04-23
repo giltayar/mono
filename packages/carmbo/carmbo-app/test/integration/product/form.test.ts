@@ -224,11 +224,6 @@ test('form validations', async ({page}) => {
   await expect(page.url()).toMatch(newProductModel.urlRegex)
   await newForm.smooveListIdInput().locator.fill('')
 
-  await newForm.smooveCancellingListIdInput().locator.fill('34343443')
-  await newForm.createButton().locator.click()
-  await expect(page.url()).toMatch(newProductModel.urlRegex)
-  await newForm.smooveCancellingListIdInput().locator.fill('')
-
   await newForm.smooveCancelledListIdInput().locator.fill('34343443')
   await newForm.createButton().locator.click()
   await expect(page.url()).toMatch(newProductModel.urlRegex)
@@ -362,27 +357,15 @@ test('create smoove list from product form', async ({page}) => {
   await expect(dialog.locator).not.toBeVisible()
   await expect(newForm.smooveListIdInput().locator).toHaveValue('9: My New Smoove List')
 
-  // Now create another list for the cancelling field
-  await newForm.smooveCancellingListIdCreateButton().locator.click()
-  await expect(dialog.locator).toBeVisible()
-  await dialog.listNameInput().locator.fill('My Cancelling List')
-  await dialog.createButton().locator.click()
-  await expect(dialog.locator).not.toBeVisible()
-  await expect(newForm.smooveCancellingListIdInput().locator).toHaveValue('10: My Cancelling List')
-
   // Create the product and verify the values are saved
   await newForm.createButton().locator.click()
   await page.waitForURL(updateProductModel.urlRegex)
 
   const updateForm = updateProductModel.form()
   await expect(updateForm.smooveListIdInput().locator).toHaveValue('9: My New Smoove List')
-  // The ID 10 happens to match an existing smoove list (id: 10, "Smoove List ID A"),
-  // so on reload the name comes from the first match in the smoove service
-  await expect(updateForm.smooveCancellingListIdInput().locator).toHaveValue('10: Smoove List ID A')
 
   // Create buttons should not be visible for fields that already have values
   await expect(updateForm.smooveListIdCreateButton().locator).not.toBeVisible()
-  await expect(updateForm.smooveCancellingListIdCreateButton().locator).not.toBeVisible()
 
   // Create buttons should be visible for fields that are empty
   await expect(updateForm.smooveCancelledListIdCreateButton().locator).toBeVisible()
@@ -391,6 +374,4 @@ test('create smoove list from product form', async ({page}) => {
   // Clear the smooveListId field — the Create button should reappear immediately (via CSS)
   await updateForm.smooveListIdInput().locator.fill('')
   await expect(updateForm.smooveListIdCreateButton().locator).toBeVisible()
-  // smooveCancellingListId still has a value, so its Create button should remain hidden
-  await expect(updateForm.smooveCancellingListIdCreateButton().locator).not.toBeVisible()
 })

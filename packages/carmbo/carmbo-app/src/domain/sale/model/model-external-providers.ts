@@ -225,14 +225,12 @@ export async function moveStudentToSmooveCancelledSubscriptionList(
   const smooveProductsLists = await sql<
     {
       listId: string
-      cancellingListId: string
       cancelledListId: string
       removedListId: string
     }[]
   >`
     SELECT
       pis.list_id as list_id,
-      pis.cancelling_list_id,
       pis.cancelled_list_id,
       pis.removed_list_id
     FROM sale_data_product sip
@@ -264,7 +262,6 @@ export async function moveStudentToSmooveCancelledSubscriptionList(
         subscribeTo: [parseInt(smooveProductLists.cancelledListId)],
         unsubscribeFrom: [
           parseInt(smooveProductLists.listId),
-          parseInt(smooveProductLists.cancellingListId),
           parseInt(smooveProductLists.removedListId),
         ],
       }),
@@ -297,14 +294,12 @@ export async function moveStudentToSmooveRemovedSubscriptionList(
   const smooveProductsLists = await sql<
     {
       listId: string
-      cancellingListId: string
       cancelledListId: string
       removedListId: string
     }[]
   >`
     SELECT
       pis.list_id as list_id,
-      pis.cancelling_list_id,
       pis.cancelled_list_id,
       pis.removed_list_id
     FROM sale_data_product sip
@@ -336,7 +331,6 @@ export async function moveStudentToSmooveRemovedSubscriptionList(
         subscribeTo: [parseInt(smooveProductLists.removedListId)],
         unsubscribeFrom: [
           parseInt(smooveProductLists.listId),
-          parseInt(smooveProductLists.cancellingListId),
           parseInt(smooveProductLists.cancelledListId),
         ],
       }),
@@ -479,14 +473,12 @@ export async function subscribeStudentInSmooveLists(
   const smooveProductsLists = await sql<
     {
       listId: string
-      cancellingListId: string
       cancelledListId: string
       removedListId: string
     }[]
   >`
     SELECT
       pis.list_id as list_id,
-      pis.cancelling_list_id,
       pis.cancelled_list_id,
       pis.removed_list_id
     FROM sale_data_product sip
@@ -516,7 +508,6 @@ export async function subscribeStudentInSmooveLists(
       smooveIntegration.changeContactLinkedLists(parseInt(smooveContactId), {
         subscribeTo: [parseInt(smooveProductLists.listId)],
         unsubscribeFrom: [
-          parseInt(smooveProductLists.cancellingListId),
           parseInt(smooveProductLists.cancelledListId),
           parseInt(smooveProductLists.removedListId),
         ],

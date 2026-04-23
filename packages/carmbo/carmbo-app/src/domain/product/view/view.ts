@@ -38,7 +38,6 @@ export function renderProductsCreatePage(
         whatsappGroups: [],
         facebookGroups: [],
         smooveListId: undefined,
-        smooveCancellingListId: undefined,
         smooveCancelledListId: undefined,
         smooveRemovedListId: undefined,
       }

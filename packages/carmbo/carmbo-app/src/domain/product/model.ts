@@ -27,7 +27,6 @@ export const ProductSchema = z.object({
     .optional(),
   facebookGroups: z.array(z.string().min(1)).optional(),
   smooveListId: z.coerce.number().int().positive().optional(),
-  smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
@@ -304,7 +303,6 @@ SELECT
   product_data.notes AS notes,
   product_data.personal_message_when_joining AS personal_message_when_joining,
   product_integration_smoove.list_id AS smoove_list_id,
-  product_integration_smoove.cancelling_list_id AS smoove_cancelling_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
   product_integration_smoove.removed_list_id AS smoove_removed_list_id,
   COALESCE(product_integration_skool.send_invitation, false) AS send_skool_invitation,
@@ -424,7 +422,6 @@ async function addProductStuff(
 
   if (
     product.smooveListId !== undefined ||
-    product.smooveCancellingListId !== undefined ||
     product.smooveCancelledListId !== undefined ||
     product.smooveRemovedListId !== undefined
   ) {
@@ -433,7 +430,6 @@ async function addProductStuff(
           (
             ${dataId},
             ${product.smooveListId ?? null},
-            ${product.smooveCancellingListId ?? null},
             ${product.smooveCancelledListId ?? null},
             ${product.smooveRemovedListId ?? null}
           )
@@ -460,8 +456,6 @@ function searchableProductText(productNumber: number, product: Product | NewProd
   const facebookGroups = product.facebookGroups?.join(' ') ?? ''
   const smoveListIds = [
     product.smooveListId,
-    product.smooveCancelledListId,
-    product.smooveCancellingListId,
     product.smooveCancelledListId,
     product.smooveRemovedListId,
   ]
@@ -499,7 +493,6 @@ export async function TEST_seedProducts(sql: Sql, count: number) {
         ],
         facebookGroups: [chance.word()],
         smooveListId: chance.integer({min: 1, max: 9999}),
-        smooveCancellingListId: chance.integer({min: 1, max: 9999}),
         smooveCancelledListId: chance.integer({min: 1, max: 9999}),
         smooveRemovedListId: chance.integer({min: 1, max: 9999}),
       },

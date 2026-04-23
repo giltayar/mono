@@ -22,7 +22,6 @@ export const OngoingProductSchema = z.object({
     .optional(),
   facebookGroups: z.array(z.string().optional()).optional(),
   smooveListId: z.coerce.number().int().positive().optional(),
-  smooveCancellingListId: z.coerce.number().int().positive().optional(),
   smooveCancelledListId: z.coerce.number().int().positive().optional(),
   smooveRemovedListId: z.coerce.number().int().positive().optional(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
