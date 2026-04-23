@@ -1,4 +1,4 @@
-FROM node:24.11-slim
+FROM node:24.15-slim
 
 # Update system packages to patch vulnerabilities
 RUN apt update -y && apt upgrade -y
