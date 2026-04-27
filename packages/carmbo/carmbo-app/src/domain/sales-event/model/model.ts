@@ -4,6 +4,7 @@ import {assert} from 'node:console'
 import {z} from 'zod'
 import {sqlTextSearch} from '../../../commons/sql-commons.ts'
 import {TEST_executeHook} from '../../../commons/TEST_hooks.ts'
+import {itemPickerSchema} from '../../../commons/schema-commons.ts'
 
 export const SalesEventSchema = z.object({
   salesEventNumber: z.coerce.number().int().positive(),
@@ -11,7 +12,7 @@ export const SalesEventSchema = z.object({
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
   landingPageUrl: z.url().optional(),
-  productsForSale: z.array(z.coerce.number().int().positive().optional()).optional(),
+  productsForSale: z.array(itemPickerSchema()).optional(),
   notes: z.string().optional(),
 })
 

@@ -14,6 +14,9 @@ import salesRoutes, {
 } from '../domain/sale/route.ts'
 import authRoutes, {useFirebaseAuth} from '../domain/auth/route.ts'
 import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
+import smooveRoutes from '../domain/smoove/route.ts'
+import whatsappRoutes from '../domain/whatsapp/route.ts'
+import academyRoutes from '../domain/academy/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {fastifyRequestContext} from '@fastify/request-context'
@@ -197,6 +200,9 @@ export function makeApp({
     })
     app.register(salesRoutes, {prefix: '/sales', sql})
     app.register(jobsRoute, {prefix: '/jobs', sql})
+    app.register(smooveRoutes, {prefix: '/smoove'})
+    app.register(whatsappRoutes, {prefix: '/whatsapp'})
+    app.register(academyRoutes, {prefix: '/academy'})
   })
 
   app.register(salesApiRoute, {

@@ -4,6 +4,10 @@ import {assert} from 'node:console'
 import {z} from 'zod'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
+import {itemPickerSchema, stringItemPickerSchema} from '../../commons/schema-commons.ts'
+import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/types'
+import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 
 export const ProductTypeSchema = z.enum(['recorded', 'challenge', 'club', 'bundle'])
 export type ProductType = z.infer<typeof ProductTypeSchema>
@@ -14,21 +18,24 @@ export const ProductSchema = z.object({
   productType: ProductTypeSchema,
   academyCourses: z
     .array(
-      z.object({courseId: z.coerce.number().int().positive(), accountSubdomain: z.string().min(1)}),
+      z.object({
+        courseId: itemPickerSchema().pipe(z.number()),
+        accountSubdomain: z.string().min(1),
+      }),
     )
     .optional(),
   whatsappGroups: z
     .array(
       z.object({
-        id: z.string().regex(/[0-9]+\@g\.us/),
+        id: stringItemPickerSchema().pipe(z.string().regex(/[0-9]+\@g\.us/)),
         timedMessagesGoogleSheetUrl: z.url().optional(),
       }),
     )
     .optional(),
   facebookGroups: z.array(z.string().min(1)).optional(),
-  smooveListId: z.coerce.number().int().positive().optional(),
-  smooveCancelledListId: z.coerce.number().int().positive().optional(),
-  smooveRemovedListId: z.coerce.number().int().positive().optional(),
+  smooveListId: itemPickerSchema(),
+  smooveCancelledListId: itemPickerSchema(),
+  smooveRemovedListId: itemPickerSchema(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
   personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),
@@ -90,6 +97,63 @@ export async function listProducts(
     ORDER BY product.product_number DESC
     LIMIT ${limit} OFFSET ${page * limit}
     `
+}
+
+export function isValidProduct(
+  product: Product | NewProduct,
+  {
+    smooveLists,
+    whatsappGroups,
+    academyCoursesBySubdomain,
+  }: {
+    smooveLists: SmooveList[] | undefined
+    whatsappGroups: WhatsAppGroup[]
+    academyCoursesBySubdomain: Map<string, AcademyCourse[]> | undefined
+  },
+): boolean {
+  if (smooveLists && product.smooveListId) {
+    const smooveListIds = smooveLists.map((l) => l.id)
+    if (!smooveListIds.includes(product.smooveListId)) {
+      return false
+    }
+  }
+
+  if (smooveLists && product.smooveCancelledListId) {
+    const smooveListIds = smooveLists.map((l) => l.id)
+    if (!smooveListIds.includes(product.smooveCancelledListId)) {
+      return false
+    }
+  }
+
+  if (smooveLists && product.smooveRemovedListId) {
+    const smooveListIds = smooveLists.map((l) => l.id)
+    if (!smooveListIds.includes(product.smooveRemovedListId)) {
+      return false
+    }
+  }
+
+  if (product.whatsappGroups) {
+    const whatsappGroupIds = whatsappGroups.map((g) => g.id)
+    for (const group of product.whatsappGroups) {
+      if (!whatsappGroupIds.includes(group.id as WhatsAppGroup['id'])) {
+        return false
+      }
+    }
+  }
+
+  if (academyCoursesBySubdomain && product.academyCourses) {
+    for (const course of product.academyCourses) {
+      if (
+        !academyCoursesBySubdomain
+          .get(course.accountSubdomain)
+          ?.find((c) => c.id === course.courseId)
+      ) {
+        return false
+      }
+    }
+  }
+
+  return true
 }
 
 export async function createProduct(

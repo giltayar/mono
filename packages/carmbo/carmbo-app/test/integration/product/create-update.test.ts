@@ -3,6 +3,7 @@ import {setup} from '../common/setup.ts'
 import {createProductListPageModel} from '../../page-model/products/product-list-page.model.ts'
 import {createNewProductPageModel} from '../../page-model/products/new-product-page.model.ts'
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
+import {initializeHtmxSettled} from '../common/wait-for-htmx.ts'
 
 const {url, TEST_hooks} = setup(import.meta.url)
 
@@ -26,10 +27,15 @@ test('create product then update it', async ({page}) => {
   await newForm.productTypeSelect().locator.selectOption('recorded')
 
   // Add and fill array fields
+  const wait = await initializeHtmxSettled(page)
   await newForm.academyCourses().addButton().locator.click()
+  await wait()
   await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+  await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  await wait()
   await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1')
   await newForm.whatsappGroups().addButton().locator.click()
+  await wait()
   await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toBeVisible()
   await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
   await expect(newForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toBeVisible()
@@ -41,9 +47,14 @@ test('create product then update it', async ({page}) => {
   await expect(newForm.facebookGroups().facebookGroupInput(0).locator).toBeVisible()
   await newForm.facebookGroups().facebookGroupInput(0).locator.fill('test-fb-group')
 
+  const wait3 = await initializeHtmxSettled(page)
   await newForm.smooveListIdInput().locator.fill('2')
+  await newForm.smooveListIdInput().locator.blur()
+  await wait3()
   await expect(newForm.smooveCancelledListIdInput().locator).toBeHidden()
   await newForm.smooveRemovedListIdInput().locator.fill('8')
+  await newForm.smooveRemovedListIdInput().locator.blur()
+  await wait3()
   await newForm.notesInput().locator.fill('Initial product notes')
 
   // Save the product
@@ -79,18 +90,33 @@ test('create product then update it', async ({page}) => {
 
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
+  const wait4 = await initializeHtmxSettled(page)
   await updateForm.productTypeSelect().locator.selectOption('club')
+  await wait4()
   await updateForm.academyCourses().academyCourseInput(0).locator.fill('33')
-  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue('33')
+  await updateForm.academyCourses().academyCourseInput(0).locator.blur()
+  await wait4()
+  await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue(
+    '33: Course 2',
+  )
   await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('2@g.us')
+  await updateForm.whatsappGroups().whatsappGroupInput(0).locator.blur()
+  await wait4()
   await updateForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)
     .locator.fill('https://docs.google.com/spreadsheets/d/test2')
   await updateForm.facebookGroups().facebookGroupInput(0).locator.fill('updated-fb-group')
+  const wait2 = await initializeHtmxSettled(page)
   await updateForm.smooveListIdInput().locator.fill('10')
+  await updateForm.smooveListIdInput().locator.blur()
+  await wait2()
   await updateForm.smooveCancelledListIdInput().locator.fill('14')
+  await updateForm.smooveCancelledListIdInput().locator.blur()
+  await wait2()
   await updateForm.smooveRemovedListIdInput().locator.fill('16')
+  await updateForm.smooveRemovedListIdInput().locator.blur()
+  await wait2()
   await updateForm.notesInput().locator.fill('Updated product notes')
 
   // Save the product and verify data

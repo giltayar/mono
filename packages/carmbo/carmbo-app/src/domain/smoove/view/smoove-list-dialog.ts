@@ -9,7 +9,7 @@ export function renderSmooveListCreateDialog(targetFieldId: string) {
       <h5 class="mb-3">${t('smooveListDialog.createSmooveList')}</h5>
 
       <form
-        hx-post="/products/create-smoove-list"
+        hx-post="/smoove/create-list"
         hx-target="#smoove-list-create-result"
         hx-swap="innerHTML"
         hx-indicator="#smoove-list-create-spinner"
@@ -17,9 +17,7 @@ export function renderSmooveListCreateDialog(targetFieldId: string) {
           var result = document.querySelector('#smoove-list-create-result [data-list-id]');
           if (result) {
             var tf = document.getElementById(${JSON.stringify(targetFieldId)});
-            var th = document.getElementById(${JSON.stringify(targetFieldId + '_value')});
             if (tf) { tf.value = result.dataset.listId + ': ' + result.dataset.listName; }
-            if (th) { th.value = result.dataset.listId; }
             this.closest('dialog')?.close();
           }
         `}

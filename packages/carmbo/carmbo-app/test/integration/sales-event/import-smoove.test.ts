@@ -68,11 +68,7 @@ test('import from Smoove list creates a job that imports contacts as sales', asy
 
   // Select a Smoove list - fill and then blur to trigger change event
   const smooveListInput = updateModel.importSmooveDialog().smooveListInput().locator
-  await smooveListInput.fill('2: Smoove List ID 1')
-  await smooveListInput.dispatchEvent('change')
-
-  // Verify the hidden input has the list ID
-  await expect(updateModel.importSmooveDialog().smooveListHiddenInput().locator).toHaveValue('2')
+  await smooveListInput.fill('2')
 
   // Start the import
   await updateModel.importSmooveDialog().startImportButton().locator.click()

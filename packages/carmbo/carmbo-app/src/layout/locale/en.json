@@ -6,5 +6,8 @@
     "sales": "Sales",
     "jobs": "Jobs",
     "toggleNavigation": "Toggle navigation"
+  },
+  "form": {
+    "invalidListItem": "Please select a valid item from the list"
   }
 }

@@ -18,7 +18,7 @@ import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsa
 import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
 import type {NowService} from '../../../commons/now-service.ts'
 import {when} from '@giltayar/functional-commons'
-import {listAcademyCourses} from '../../../commons/external-provider/academy-courses.ts'
+import {listAcademyCourses} from '../../academy/model.ts'
 
 export type SaleWithProviders = {
   saleNumber: number

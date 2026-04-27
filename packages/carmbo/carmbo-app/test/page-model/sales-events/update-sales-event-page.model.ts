@@ -48,9 +48,6 @@ export function createUpdateSalesEventPageModel(page: Page) {
       smooveListInput: (inputLocator = page.locator('#import-smooveListId')) => ({
         locator: inputLocator,
       }),
-      smooveListHiddenInput: (inputLocator = page.locator('#import-smooveListId_value')) => ({
-        locator: inputLocator,
-      }),
       cancelButton: (
         btnLocator = page.locator('#import-smoove-dialog button', {hasText: 'Cancel'}),
       ) => ({

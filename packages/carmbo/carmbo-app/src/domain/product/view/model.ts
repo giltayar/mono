@@ -1,5 +1,6 @@
 import {z} from 'zod'
 import {ProductTypeSchema} from '../model.ts'
+import {itemPickerSchema, stringItemPickerSchema} from '../../../commons/schema-commons.ts'
 
 export const OngoingProductSchema = z.object({
   name: z.string().optional(),
@@ -7,7 +8,7 @@ export const OngoingProductSchema = z.object({
   academyCourses: z
     .array(
       z.object({
-        courseId: z.coerce.number().int().positive().optional(),
+        courseId: itemPickerSchema(),
         accountSubdomain: z.string().min(1).optional(),
       }),
     )
@@ -15,15 +16,15 @@ export const OngoingProductSchema = z.object({
   whatsappGroups: z
     .array(
       z.object({
-        id: z.string().optional(),
+        id: stringItemPickerSchema(),
         timedMessagesGoogleSheetUrl: z.string().optional(),
       }),
     )
     .optional(),
   facebookGroups: z.array(z.string().optional()).optional(),
-  smooveListId: z.coerce.number().int().positive().optional(),
-  smooveCancelledListId: z.coerce.number().int().positive().optional(),
-  smooveRemovedListId: z.coerce.number().int().positive().optional(),
+  smooveListId: itemPickerSchema(),
+  smooveCancelledListId: itemPickerSchema(),
+  smooveRemovedListId: itemPickerSchema(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
   personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),

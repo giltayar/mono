@@ -1,11 +1,21 @@
+import {requestContext} from '@fastify/request-context'
 import {html} from '../../../commons/html-templates.ts'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
-import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/types'
 import {getFixedT} from 'i18next'
+import {generateItemTitle} from '../../../commons/view-commons.ts'
 
 const t = getFixedT(null, 'sales-event')
 
-export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: SmooveList[]) {
+export function renderImportSmooveDialog(
+  salesEventNumber: number,
+  form: {smooveListId: string} | undefined,
+) {
+  const smooveLists = requestContext.get('smooveLists')!
+  const smooveListRealId = form?.smooveListId.split(':')[0]
+
+  const smooveList = smooveListRealId
+    ? smooveLists.find((l) => String(l.id) === smooveListRealId)
+    : undefined
+
   return html`
     <dialog id="import-smoove-dialog" class="import-smoove-dialog">
       <form
@@ -24,29 +34,30 @@ export function renderImportSmooveDialog(salesEventNumber: number, smooveLists: 
           >
           <input
             name="smooveListId"
-            id="import-smooveListId_value"
-            type="hidden"
-            value=""
-            required
-          />
-          <input
             type="text"
             list="import-smoove-lists-list"
             placeholder=${t('importSmoove.selectSmooveList')}
-            class="form-control pick-item-title"
+            class="form-control"
             id="import-smooveListId"
             spellcheck="false"
             autocorrect="off"
             autocomplete="off"
             autocapitalize="off"
+            hx-post="/sales-events/${salesEventNumber}/import-smoove-dialog"
+            hx-target="closest form"
+            hx-select="form"
+            hx-swap="outerHTML"
+            hx-trigger="change delay:1ms"
             required
+            value=${generateItemTitle(smooveListRealId, smooveList?.name)}
           />
-          <datalist id="import-smoove-lists-list">
-            ${smooveLists.map(
-              (list) =>
-                html`<option data-id=${list.id} value=${generateItemTitle(list.id, list.name)} />`,
-            )}
-          </datalist>
+          <datalist
+            id="import-smoove-lists-list"
+            hx-trigger="input changed from:#import-smooveListId"
+            hx-target="this"
+            hx-vals='js:{q: document.getElementById("import-smooveListId").value}'
+            hx-get="/smoove/query/datalist"
+          ></datalist>
         </div>
 
         <div class="d-flex gap-2 justify-content-end">

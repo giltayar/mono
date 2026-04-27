@@ -5,6 +5,7 @@ import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/upd
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
+import {initializeHtmxSettled} from '../common/wait-for-htmx.ts'
 
 const {url, sql} = setup(import.meta.url)
 
@@ -75,23 +76,25 @@ test('create sales event and update multiple fields', async ({page}) => {
   await newForm.landingPageUrlInput().locator.fill('https://example.com/sale')
 
   // Fill the products for sale
+  const wait = await initializeHtmxSettled(page)
   await newForm.productsForSale().addButton().locator.click()
+  await wait()
   await newForm.productsForSale().productInput(0).locator.fill('1')
   await newForm.productsForSale().productInput(0).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await wait()
   await newForm.productsForSale().addButton().locator.click()
-  await page.waitForLoadState('networkidle')
+  await wait()
   await newForm.productsForSale().productInput(1).locator.fill('2')
   await newForm.productsForSale().productInput(1).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await wait()
   await newForm.productsForSale().addButton().locator.click()
-  await page.waitForLoadState('networkidle')
+  await wait()
   await newForm.productsForSale().productInput(2).locator.fill('3')
   await newForm.productsForSale().productInput(2).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await wait()
 
   await newForm.productsForSale().trashButton(1).locator.click()
-  await page.waitForLoadState('networkidle')
+  await wait()
 
   await expect(newForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
   await expect(newForm.productsForSale().productInput(1).locator).toHaveValue('3: ghi')

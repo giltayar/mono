@@ -6,5 +6,8 @@
     "sales": "מכירות",
     "jobs": "משימות",
     "toggleNavigation": "פתיחת תפריט ניווט"
+  },
+  "form": {
+    "invalidListItem": "נא לבחור פריט תקין מהרשימה"
   }
 }

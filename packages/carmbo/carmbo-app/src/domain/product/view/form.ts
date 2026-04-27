@@ -5,8 +5,10 @@ import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
 import {version} from '../../../commons/version.ts'
 import {getFixedT} from 'i18next'
+import {ValidityError} from '../../../commons/validity-error.ts'
 
 const t = getFixedT(null, 'product')
+const tCommon = getFixedT(null, 'layout')
 
 export function ProductCreateOrUpdateFormFields({
   product,
@@ -86,7 +88,7 @@ export function ProductCreateOrUpdateFormFields({
                     class="form-select"
                     id="academyCourseSubdomain-${i}"
                     readonly=${isReadOnly}
-                    hx-post="/products/academy-courses-datalist"
+                    hx-post="/academy/courses-datalist"
                     hx-target="#academy-courses-datalist-${i}"
                     hx-swap="innerHTML"
                     hx-include="this"
@@ -110,11 +112,6 @@ export function ProductCreateOrUpdateFormFields({
                 <div class="form-floating">
                   <input
                     name="academyCourses[${i}][courseId]"
-                    id="academyCourse-${i}_value"
-                    type="hidden"
-                    value=${course.courseId}
-                  />
-                  <input
                     id="academyCourse-${i}"
                     value=${(() => {
                       const courses = course.accountSubdomain
@@ -131,24 +128,37 @@ export function ProductCreateOrUpdateFormFields({
                     type="text"
                     placeholder=" "
                     required
-                    class="form-control pick-item-title"
+                    class="form-control"
                     spellcheck="false"
                     autocorrect="off"
                     autocomplete="off"
                     autocapitalize="off"
+                    hx-post=""
+                    hx-target="closest .products-view_form-fields"
+                    hx-swap="outerHTML"
+                    hx-trigger="change delay:1ms"
                     readonly=${isReadOnly}
+                  />
+                  <${ValidityError}
+                    valid=${course.courseId
+                      ? (course.accountSubdomain
+                          ? (academyCoursesBySubdomain?.get(course.accountSubdomain) ?? [])
+                          : []
+                        ).find((c) => c.id === course.courseId)
+                      : true}
+                    elementId=${`academyCourse-${i}`}
+                    errorMessage=${tCommon('form.invalidListItem')}
                   />
                   <label for="academyCourse-${i}">${t('form.academyCourseId')}</label>
                 </div>
                 <div id="academy-courses-datalist-${i}">
-                  <${AcademyCoursesDatalist}
-                    index=${i}
-                    courses=${academyCoursesBySubdomain?.get(
-                      course && typeof course === 'object'
-                        ? (course.accountSubdomain ?? academyAccountSubdomains[0])
-                        : academyAccountSubdomains[0],
-                    ) ?? []}
-                  />
+                  <datalist
+                    id="academy-courses-list-${i}"
+                    hx-trigger="input changed from:#academyCourse-${i}"
+                    hx-target="this"
+                    hx-vals=${'js:{q: document.getElementById("academyCourse-' + i + '").value}'}
+                    hx-get=${`/academy/query/${course.accountSubdomain ?? academyAccountSubdomains[0]}/datalist`}
+                  ></datalist>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
@@ -171,21 +181,20 @@ export function ProductCreateOrUpdateFormFields({
                 <div class="form-floating">
                   <input
                     name="whatsappGroups[${i}][id]"
-                    id="whatsappGroup-${i}_value"
-                    type="hidden"
-                    value=${group.id}
-                  />
-                  <input
                     type="text"
-                    list="whatsapp-groups-list"
+                    list="whatsapp-groups-list-${i}"
                     placeholder=" "
                     required
-                    class="form-control pick-item-title"
+                    class="form-control"
                     id="whatsappGroup-${i}"
                     spellcheck="false"
                     autocorrect="off"
                     autocomplete="off"
                     autocapitalize="off"
+                    hx-post=""
+                    hx-target="closest .products-view_form-fields"
+                    hx-swap="outerHTML"
+                    hx-trigger="change delay:1ms"
                     value=${group.id
                       ? generateItemTitle(
                           group.id,
@@ -194,8 +203,20 @@ export function ProductCreateOrUpdateFormFields({
                       : ''}
                     readonly=${isReadOnly}
                   />
+                  <${ValidityError}
+                    valid=${group.id ? whatsappGroups.find((g) => g.id === group.id) : true}
+                    elementId=${`whatsappGroup-${i}`}
+                    errorMessage=${tCommon('form.invalidListItem')}
+                  />
                   <label for="whatsappGroup-${i}">${t('form.whatsappGroupId')}</label>
                 </div>
+                <datalist
+                  id="whatsapp-groups-list-${i}"
+                  hx-trigger="input changed from:#whatsappGroup-${i}"
+                  hx-target="this"
+                  hx-vals=${'js:{q: document.getElementById("whatsappGroup-' + i + '").value}'}
+                  hx-get="/whatsapp/query/datalist"
+                ></datalist>
                 <div class="form-floating">
                   <input
                     name="whatsappGroups[${i}][timedMessagesGoogleSheetUrl]"
@@ -259,20 +280,19 @@ export function ProductCreateOrUpdateFormFields({
             <div class="col form-floating">
               <input
                 name="smooveListId"
-                id="smooveListId_value"
-                type="hidden"
-                value=${product.smooveListId ?? ''}
-              />
-              <input
                 type="text"
-                list="smoove-lists-list"
+                list="smoove-lists-list-main"
                 placeholder=" "
-                class="form-control pick-item-title"
+                class="form-control"
                 id="smooveListId"
                 spellcheck="false"
                 autocorrect="off"
                 autocomplete="off"
                 autocapitalize="off"
+                hx-post=""
+                hx-target="closest .products-view_form-fields"
+                hx-swap="outerHTML"
+                hx-trigger="change delay:1ms"
                 value=${product.smooveListId
                   ? generateItemTitle(
                       product.smooveListId,
@@ -280,16 +300,28 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
-                hx-preserve
+              />
+              <${ValidityError}
+                valid=${!product.smooveListId ||
+                smooveLists.find((g) => g.id === product.smooveListId)}
+                elementId="smooveListId"
+                errorMessage=${tCommon('form.invalidListItem')}
               />
               <label for="smooveListId">${t('form.smooveListId')}</label>
             </div>
+            <datalist
+              id="smoove-lists-list-main"
+              hx-trigger="input changed from:#smooveListId"
+              hx-target="this"
+              hx-vals='js:{q: document.getElementById("smooveListId").value}'
+              hx-get="/smoove/query/datalist"
+            ></datalist>
             ${!isReadOnly
               ? html`<div class="col-auto smoove-list-create-btn-smooveListId">
                   <button
                     type="button"
                     class="btn btn-outline-secondary btn-sm"
-                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveListId"
+                    hx-get="/smoove/list-create-dialog?targetFieldId=smooveListId"
                     hx-target="#smoove-list-create-dialog-container"
                     hx-swap="innerHTML"
                   >
@@ -304,20 +336,19 @@ export function ProductCreateOrUpdateFormFields({
             <div class="col form-floating">
               <input
                 name="smooveCancelledListId"
-                id="smooveCancelledListId_value"
-                type="hidden"
-                value=${product.smooveCancelledListId ?? ''}
-              />
-              <input
                 type="text"
-                list="smoove-lists-list"
+                list="smoove-lists-list-cancelled"
                 placeholder=" "
-                class="form-control pick-item-title"
+                class="form-control"
                 id="smooveCancelledListId"
                 spellcheck="false"
                 autocorrect="off"
                 autocomplete="off"
                 autocapitalize="off"
+                hx-post=""
+                hx-target="closest .products-view_form-fields"
+                hx-swap="outerHTML"
+                hx-trigger="change delay:1ms"
                 value=${product.smooveCancelledListId
                   ? generateItemTitle(
                       product.smooveCancelledListId,
@@ -325,16 +356,28 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
-                hx-preserve
+              />
+              <${ValidityError}
+                valid=${!product.smooveCancelledListId ||
+                smooveLists.find((g) => g.id === product.smooveCancelledListId)}
+                elementId="smooveCancelledListId"
+                errorMessage=${tCommon('form.invalidListItem')}
               />
               <label for="smooveCancelledListId">${t('form.smooveCancelledListId')}</label>
             </div>
+            <datalist
+              id="smoove-lists-list-cancelled"
+              hx-trigger="input changed from:#smooveCancelledListId"
+              hx-target="this"
+              hx-vals='js:{q: document.getElementById("smooveCancelledListId").value}'
+              hx-get="/smoove/query/datalist"
+            ></datalist>
             ${!isReadOnly
               ? html`<div class="col-auto smoove-list-create-btn-smooveCancelledListId">
                   <button
                     type="button"
                     class="btn btn-outline-secondary btn-sm"
-                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveCancelledListId"
+                    hx-get="/smoove/list-create-dialog?targetFieldId=smooveCancelledListId"
                     hx-target="#smoove-list-create-dialog-container"
                     hx-swap="innerHTML"
                   >
@@ -348,20 +391,19 @@ export function ProductCreateOrUpdateFormFields({
             <div class="col form-floating">
               <input
                 name="smooveRemovedListId"
-                id="smooveRemovedListId_value"
-                type="hidden"
-                value=${product.smooveRemovedListId ?? ''}
-              />
-              <input
                 type="text"
-                list="smoove-lists-list"
+                list="smoove-lists-list-removed"
                 placeholder=" "
-                class="form-control pick-item-title"
+                class="form-control"
                 id="smooveRemovedListId"
                 spellcheck="false"
                 autocorrect="off"
                 autocomplete="off"
                 autocapitalize="off"
+                hx-post=""
+                hx-target="closest .products-view_form-fields"
+                hx-swap="outerHTML"
+                hx-trigger="change delay:1ms"
                 value=${product.smooveRemovedListId
                   ? generateItemTitle(
                       product.smooveRemovedListId,
@@ -369,16 +411,28 @@ export function ProductCreateOrUpdateFormFields({
                     )
                   : ''}
                 readonly=${isReadOnly}
-                hx-preserve
+              />
+              <${ValidityError}
+                valid=${!product.smooveRemovedListId ||
+                smooveLists.find((g) => g.id === product.smooveRemovedListId)}
+                elementId="smooveRemovedListId"
+                errorMessage=${tCommon('form.invalidListItem')}
               />
               <label for="smooveRemovedListId">${t('form.smooveRemovedListId')}</label>
             </div>
+            <datalist
+              id="smoove-lists-list-removed"
+              hx-trigger="input changed from:#smooveRemovedListId"
+              hx-target="this"
+              hx-vals='js:{q: document.getElementById("smooveRemovedListId").value}'
+              hx-get="/smoove/query/datalist"
+            ></datalist>
             ${!isReadOnly
               ? html`<div class="col-auto smoove-list-create-btn-smooveRemovedListId">
                   <button
                     type="button"
                     class="btn btn-outline-secondary btn-sm"
-                    hx-get="/products/smoove-list-create-dialog?targetFieldId=smooveRemovedListId"
+                    hx-get="/smoove/list-create-dialog?targetFieldId=smooveRemovedListId"
                     hx-target="#smoove-list-create-dialog-container"
                     hx-swap="innerHTML"
                   >
@@ -438,19 +492,6 @@ ${product.notes ?? ''}</textarea
         </div>
       </div>
     </div>
-    <datalist id="whatsapp-groups-list">
-      ${whatsappGroups.map(
-        (group) =>
-          html`<option data-id=${group.id} value=${generateItemTitle(group.id, group.name)} />`,
-      )}
-    </datalist>
-    ${withSmooveIntegration &&
-    html`<datalist id="smoove-lists-list">
-      ${smooveLists.map(
-        (list) =>
-          html`<option data-id=${list.id} value=${generateItemTitle(list.id, list.name)} />`,
-      )}
-    </datalist>`}
   `
 }
 
@@ -503,22 +544,5 @@ function RemoveButton() {
         data=${`/src/${version}/layout/style/minus-circle.svg`}
       ></object>
     </button>
-  `
-}
-
-export function AcademyCoursesDatalist({
-  index,
-  courses,
-}: {
-  index: number
-  courses: {id: number; name: string}[]
-}) {
-  return html`
-    <datalist id="academy-courses-list-${index}">
-      ${courses.map(
-        (course) =>
-          html`<option data-id=${course.id} value=${generateItemTitle(course.id, course.name)} />`,
-      )}
-    </datalist>
   `
 }

@@ -256,7 +256,10 @@ async function listProductsForChoosing(sql: Sql) {
   return cachedProductsForChoosing.groups
 }
 
-export async function showImportSmooveDialog(salesEventNumber: number): Promise<ControllerResult> {
+export async function showImportSmooveDialog(
+  salesEventNumber: number,
+  form: {smooveListId: string} | undefined,
+): Promise<ControllerResult> {
   const smooveIntegration = requestContext.get('smooveIntegration')
   const nowService = requestContext.get('nowService')!
 
@@ -266,7 +269,9 @@ export async function showImportSmooveDialog(salesEventNumber: number): Promise<
 
   const smooveLists = await listSmooveLists(smooveIntegration, nowService())
 
-  return finalHtml(renderImportSmooveDialog(salesEventNumber, smooveLists))
+  requestContext.set('smooveLists', smooveLists)
+
+  return finalHtml(renderImportSmooveDialog(salesEventNumber, form))
 }
 
 export async function executeImportFromSmooveList(

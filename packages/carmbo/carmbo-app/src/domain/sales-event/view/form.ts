@@ -83,11 +83,6 @@ export function SalesEventCreateOrUpdateFormFields({
                 <div class="form-floating">
                   <input
                     name="productsForSale[${i}]"
-                    id="productsForSale-${i}_value"
-                    type="hidden"
-                    value=${productForSaleId}
-                  />
-                  <input
                     id="productsForSale-${i}"
                     value=${productForSaleId
                       ? generateItemTitle(
@@ -95,11 +90,11 @@ export function SalesEventCreateOrUpdateFormFields({
                           products.find((p) => p.id === productForSaleId)?.name,
                         )
                       : ''}
-                    list="products-list"
+                    list="products-list-${i}"
                     type="text"
                     placeholder=" "
                     required
-                    class="form-control pick-item-title"
+                    class="form-control"
                     hx-post=""
                     hx-target="closest .sales-events-view_form-fields"
                     hx-swap="outerHTML"
@@ -107,6 +102,13 @@ export function SalesEventCreateOrUpdateFormFields({
                   />
                   <label for="productsForSale-${i}">${t('form.productForSale')}</label>
                 </div>
+                <datalist
+                  id="products-list-${i}"
+                  hx-trigger="input changed from:#productsForSale-${i}"
+                  hx-target="this"
+                  hx-vals=${'js:{q: document.getElementById("productsForSale-' + i + '").value}'}
+                  hx-get="/products/query/datalist"
+                ></datalist>
                 ${operation === 'write' && html`<${RemoveButton} />`}
                 ${operation === 'write' &&
                 html`<${AddButton} itemsName="productsForSale" i=${i} l=${l} />`}
@@ -148,11 +150,6 @@ ${salesEvent.notes ?? ''}</textarea
         </div>
       </div>
     </div>
-    <datalist id="products-list">
-      ${products.map(
-        (p) => html`<option data-id=${p.id} value=${generateItemTitle(p.id, p.name)} />`,
-      )}
-    </datalist>
   `
 }
 

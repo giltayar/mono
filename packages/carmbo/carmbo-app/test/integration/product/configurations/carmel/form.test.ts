@@ -3,6 +3,7 @@ import {createProductListPageModel} from '../../../../page-model/products/produc
 import {createNewProductPageModel} from '../../../../page-model/products/new-product-page.model.ts'
 import {createUpdateProductPageModel} from '../../../../page-model/products/update-product-page.model.ts'
 import {setup} from '../../../common/setup.ts'
+import {initializeHtmxSettled} from '../../../common/wait-for-htmx.ts'
 
 const {url} = setup(import.meta.url, {withSkoolIntegration: false})
 
@@ -26,9 +27,15 @@ test('create product and update multiple fields', async ({page}) => {
 
   // Fill the academy courses
   await newForm.academyCourses().addButton().locator.click()
+  const wait = await initializeHtmxSettled(page)
   await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+  await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  await wait()
   await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(1).locator.fill('33')
+  await newForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
+  await newForm.academyCourses().academyCourseInput(1).locator.fill('100')
+  await newForm.academyCourses().academyCourseInput(1).locator.blur()
+  await wait()
   await newForm.academyCourses().addButton().locator.click()
   await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
 

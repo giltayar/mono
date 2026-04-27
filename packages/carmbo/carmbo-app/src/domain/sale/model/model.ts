@@ -7,17 +7,7 @@ import assert from 'node:assert'
 import {TEST_executeHook} from '../../../commons/TEST_hooks.ts'
 import type {StandingOrderPaymentResolution} from './model-sale.ts'
 import {makeError} from '@giltayar/functional-commons'
-
-function itemPickerSchema() {
-  return z
-    .string()
-    .transform((val) => val.split(':')[0])
-    .transform((val) => {
-      const parsed = parseInt(val, 10)
-      return isNaN(parsed) ? undefined : parsed
-    })
-    .optional()
-}
+import {itemPickerSchema} from '../../../commons/schema-commons.ts'
 
 export const SaleSchema = z.object({
   saleNumber: z.coerce.number().int().positive(),

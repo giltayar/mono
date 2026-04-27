@@ -17,6 +17,7 @@ import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {itemPickerSchema} from '../../commons/schema-commons.ts'
 import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
 import {initializePropagateSalesEventProductChangesJobHandlers} from '../sale/model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
@@ -210,7 +211,25 @@ export default function (
       },
     },
     async (request, reply) =>
-      dealWithControllerResult(reply, await showImportSmooveDialog(request.params.number)),
+      dealWithControllerResult(
+        reply,
+        await showImportSmooveDialog(request.params.number, undefined),
+      ),
+  )
+
+  appWithTypes.post(
+    '/:number/import-smoove-dialog',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number()}),
+        body: z.object({smooveListId: z.string()}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showImportSmooveDialog(request.params.number, request.body),
+      ),
   )
 
   // Import from Smoove
@@ -219,7 +238,7 @@ export default function (
     {
       schema: {
         params: z.object({number: z.coerce.number()}),
-        body: z.object({smooveListId: z.coerce.number()}),
+        body: z.object({smooveListId: itemPickerSchema().pipe(z.number())}),
       },
     },
     async (request, reply) =>
