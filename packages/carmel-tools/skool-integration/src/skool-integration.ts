@@ -24,5 +24,5 @@ async function sendUniqueInviteLinkToEmail(
   {context: {skoolApiUniqueInviteLinkUrl}}: SkoolIntegrationServiceData,
   {email}: {email: string},
 ) {
-  await fetchAsBuffer(addQueryParamsToUrl(skoolApiUniqueInviteLinkUrl, {email}))
+  await fetchAsBuffer(addQueryParamsToUrl(skoolApiUniqueInviteLinkUrl, {email}), {method: 'POST'})
 }
