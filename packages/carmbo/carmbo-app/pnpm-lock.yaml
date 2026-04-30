@@ -30,8 +30,8 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0
       '@giltayar/carmel-tools-skool-integration':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^1.0.1000
+        version: 1.0.1000
       '@giltayar/carmel-tools-smoove-integration':
         specifier: ^5.2.0
         version: 5.2.0
@@ -297,8 +297,8 @@ packages:
     resolution: {integrity: sha512-FzTXMPPvXZrj+omEqFwoS6UF0qyXDNz9vcVnotPytLK2yml01SbAOaINvmzJx3X34k2IjTzirpZHQua2oY+KIw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-cardcom-integration/7.1.0/f4e2e4a95f6dafd0c14ef1d21aeff14521fa5b43}
     engines: {node: '>=24.3.0'}
 
-  '@giltayar/carmel-tools-skool-integration@1.0.1':
-    resolution: {integrity: sha512-9ydaG4HswPPEgwD18/pHZc/dJd+HaZrSrUiLcmPsf7Z+evYV+NvVXIzQYGDwBr/atgNORD4P+39VbUIID8VaxQ==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-skool-integration/1.0.1/6be5fff1977832156d705e35ce5e07a00622a75d}
+  '@giltayar/carmel-tools-skool-integration@1.0.1000':
+    resolution: {integrity: sha512-igM51+dBXgQrGB+hwQD6Q7B5CQuXkGrksyMPFe6q2uDX8zQ0rNjhE/TSzp9ogRwoz6z6ZXy6Hd+DKv7Us7QtLw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmel-tools-skool-integration/1.0.1000/716aa4615e177a31d6343c7ed6123c20288fbf60}
     engines: {node: '>=24.3.0'}
 
   '@giltayar/carmel-tools-smoove-integration@5.2.0':
@@ -2708,7 +2708,7 @@ snapshots:
       execa: 9.6.1
       zod: 4.3.6
 
-  '@giltayar/carmel-tools-skool-integration@1.0.1':
+  '@giltayar/carmel-tools-skool-integration@1.0.1000':
     dependencies:
       '@giltayar/http-commons': 3.1.1
       '@giltayar/service-commons': 1.1.3
