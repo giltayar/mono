@@ -125,7 +125,7 @@ export function makeApp({
         database,
         username,
         password,
-        ssl: host.includes('neon') ? 'require' : undefined,
+        ssl: process.env.NODE_ENV === 'production' ? 'require' : undefined,
         ...postgresJsOptions,
       })
   initializeJobExecutor(sql, app.log)
