@@ -121,8 +121,8 @@ importers:
         specifier: ^1.59.1
         version: 1.59.1
       '@railway/cli':
-        specifier: ^4.48.0
-        version: 4.48.0
+        specifier: ^4.54.0
+        version: 4.54.0
       '@types/chance':
         specifier: ^1.1.8
         version: 1.1.8
@@ -463,8 +463,8 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  '@railway/cli@4.48.0':
-    resolution: {integrity: sha512-13x3csTMd/iu9UYKjv6/J0FLcXlQoa6R7uefj7+sNvH3ClUyQgrZpPVv6JSsLy7zav3HqxGHJcWTWzrM2IYm8g==}
+  '@railway/cli@4.54.0':
+    resolution: {integrity: sha512-fnMf3x4HUu58BTqfvLgLN9H6JkeJ5FkB9nu3NP++KeRBz7kp2hgi35IDH/LCfWfqeiMzeWKqhjaAHJFVLyN+Tg==}
     engines: {node: '>=16.0.0'}
     hasBin: true
 
@@ -2922,7 +2922,7 @@ snapshots:
   '@protobufjs/utf8@1.1.0':
     optional: true
 
-  '@railway/cli@4.48.0':
+  '@railway/cli@4.54.0':
     dependencies:
       '@napi-rs/triples': 1.2.0
       node-fetch: 3.3.2

@@ -1,7 +1,7 @@
 
 allowBuilds:
+  '@railway/cli': true
   '@firebase/util': false
-  '@railway/cli': false
   '@swc/core': false
   protobufjs: false
   es5-ext: false
