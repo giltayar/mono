@@ -20,7 +20,7 @@ export const SaleSchema = z.object({
     (s) => (typeof s === 'string' ? (s ? parseFloat(s) : undefined) : s),
     z.number().optional(),
   ),
-  isStandingOrder: z.coerce.boolean(),
+  isStandingOrder: z.coerce.boolean().optional().default(false),
   isNoInvoiceOrder: z.coerce.boolean().default(false),
   isActive: z.coerce.boolean().optional().default(false),
   isConnected: z.coerce.boolean().optional().default(false),

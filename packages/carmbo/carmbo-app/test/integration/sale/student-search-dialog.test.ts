@@ -6,7 +6,7 @@ import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
-import {initializeHtmxSettled} from '../common/wait-for-htmx.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
 const {url, sql, smooveIntegration} = setup(import.meta.url)
 
@@ -58,11 +58,11 @@ test('search for student and choose', async ({page}) => {
   await newForm.salesEventInput().locator.blur()
   await page.waitForLoadState('networkidle')
 
-  const wait = await initializeHtmxSettled(page)
-  // Click "Search / Create" button
-  await newForm.searchCreateStudentButton().locator.click()
+  await waitForHtmx(page, async () => {
+    // Click "Search / Create" button
+    await newForm.searchCreateStudentButton().locator.click()
+  })
   await expect(dialog.locator).toBeVisible()
-  await wait()
 
   // Search for student
 
@@ -121,10 +121,10 @@ test('create new student from dialog', async ({page}) => {
   await page.waitForLoadState('networkidle')
 
   // Open dialog
-  const wait = await initializeHtmxSettled(page)
-  await newForm.searchCreateStudentButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.searchCreateStudentButton().locator.click()
+  })
   await expect(dialog.locator).toBeVisible()
-  await wait()
 
   // Open create section
   await dialog.createSection().summary().locator.click()
@@ -136,9 +136,9 @@ test('create new student from dialog', async ({page}) => {
   await dialog.createSection().phoneInput().locator.fill('0509876543')
 
   // Click "Create & Choose"
-  const wait2 = await initializeHtmxSettled(page)
-  await dialog.createSection().createAndChooseButton().locator.click()
-  await wait2()
+  await waitForHtmx(page, async () => {
+    await dialog.createSection().createAndChooseButton().locator.click()
+  })
 
   // Dialog should close and student field should be populated
   await expect(dialog.locator).not.toBeVisible()
@@ -205,11 +205,10 @@ test('cancel dialog leaves form unchanged', async ({page}) => {
   await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
 
   // Open dialog then cancel
-  const wait = await initializeHtmxSettled(page)
-
-  await newForm.searchCreateStudentButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.searchCreateStudentButton().locator.click()
+  })
   await expect(dialog.locator).toBeVisible()
-  await wait()
 
   await dialog.cancelButton().locator.click()
   await expect(dialog.locator).not.toBeVisible()
@@ -251,10 +250,10 @@ test('search with no results', async ({page}) => {
   await page.waitForLoadState('networkidle')
 
   // Open dialog
-  const wait = await initializeHtmxSettled(page)
-  await newForm.searchCreateStudentButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.searchCreateStudentButton().locator.click()
+  })
   await expect(dialog.locator).toBeVisible()
-  await wait()
 
   // Search for non-existent student
   await dialog.searchInput().locator.fill('nonexistent-person')
@@ -336,14 +335,14 @@ test('search and choose on update sale page', async ({page}) => {
 
   // Use dialog to switch to student 2
   const dialog = studentSearchDialogPageModel(page)
-  const wait = await initializeHtmxSettled(page)
-  await updateForm.searchCreateStudentButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await updateForm.searchCreateStudentButton().locator.click()
+  })
   await expect(dialog.locator).toBeVisible()
-  await wait()
 
-  const wait2 = await initializeHtmxSettled(page)
-  await dialog.searchInput().locator.fill('Jane')
-  await wait2()
+  await waitForHtmx(page, async () => {
+    await dialog.searchInput().locator.fill('Jane')
+  })
 
   await expect(dialog.results().items().locator).toHaveCount(1)
   await dialog.results().items().item(0).chooseButton().locator.click()
@@ -386,10 +385,10 @@ test('create button requires email and name fields', async ({page}) => {
   await page.waitForLoadState('networkidle')
 
   // Open dialog
-  const wait = await initializeHtmxSettled(page)
-  await newForm.searchCreateStudentButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.searchCreateStudentButton().locator.click()
+  })
   await expect(dialog.locator).toBeVisible()
-  await wait()
 
   // Open create section
   await dialog.createSection().summary().locator.click()
@@ -426,9 +425,9 @@ test('create button requires email and name fields', async ({page}) => {
   // Now fill last name too — should succeed and fire the request
   quickCreateRequestFired = false
   await dialog.createSection().lastNameInput().locator.fill('User')
-  const wait2 = await initializeHtmxSettled(page)
-  await dialog.createSection().createAndChooseButton().locator.click()
-  await wait2()
+  await waitForHtmx(page, async () => {
+    await dialog.createSection().createAndChooseButton().locator.click()
+  })
 
   expect(quickCreateRequestFired).toBe(true)
   await expect(dialog.locator).not.toBeVisible()

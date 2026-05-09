@@ -12,9 +12,11 @@ import {
   cardcomRecurringPaymentWebhookUrl,
 } from '../sale/common/cardcom-webhook.ts'
 import {cancelSubscription} from '../common/cancel-subscription.ts'
-import {initializeHtmxSettled} from '../common/wait-for-htmx.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
 const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
+
+test.use({viewport: {width: 1280, height: 1400}})
 
 test('updating product to add academy course enrolls students from connected sales', async ({
   page,
@@ -93,6 +95,13 @@ test('updating product to add academy course enrolls students from connected sal
 
   // Connect the sale via UI (this enrolls student in Course 1)
   await updateSaleModel.form().connectButton().locator.click()
+
+  await expect(updateSaleModel.history().items().locator).toHaveCount(3)
+
+  await waitForAllJobsToBeDone(page, url())
+
+  await page.goto(new URL(`/sales/1`, url()).href)
+
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -114,15 +123,18 @@ test('updating product to add academy course enrolls students from connected sal
   await page.waitForURL(updateProductModel.urlRegex)
 
   const updateForm = updateProductModel.form()
-  const wait = await initializeHtmxSettled(page)
-  await updateForm.academyCourses().addButton().locator.click()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await updateForm.academyCourses().addButton().locator.click()
+  })
 
-  await updateForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
-  await wait()
-  await updateForm.academyCourses().academyCourseInput(1).locator.fill('100')
-  await updateForm.academyCourses().academyCourseInput(1).locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await updateForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
+  })
+
+  await waitForHtmx(page, async () => {
+    await updateForm.academyCourses().academyCourseInput(1).locator.fill('100')
+    await updateForm.academyCourses().academyCourseInput(1).locator.blur()
+  })
 
   // Save the product update (this triggers propagation)
   await updateForm.updateButton().locator.click()

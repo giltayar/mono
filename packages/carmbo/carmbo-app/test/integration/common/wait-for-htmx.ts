@@ -1,26 +1,30 @@
 import type {Page} from '@playwright/test'
 
-export async function initializeHtmxSettled(page: Page) {
-  await page.evaluate(() => {
-    // console.log('****** Initializing htmx settled state for testing...')
-    // htmx.logAll()
-    ;(window as any).TEST_isHtmxSettled = false
-    const cleanupListener = new AbortController()
-
-    window.addEventListener(
-      'htmx:afterSettle',
-      () => {
-        ;(window as any).TEST_isHtmxSettled = true
-        cleanupListener.abort()
-      },
-      {signal: cleanupListener.signal},
+export async function waitForHtmx<T>(page: Page, f: () => Promise<T>): Promise<T> {
+  try {
+    await page.evaluate(() =>
+      window.addEventListener(
+        'htmx:afterSettle',
+        () =>
+          //@ts-expect-error
+          (window.TEST_isHtmxSettled = true),
+        {once: true},
+      ),
     )
-  })
+    const ret = await f()
 
-  return async () => {
-    // console.log('****** Waiting for htmx to be settled...')
-    await page.waitForFunction(() => (window as any).TEST_isHtmxSettled === true)
+    await page.waitForFunction(
+      () =>
+        //@ts-expect-error
+        window.TEST_isHtmxSettled === true,
+    )
+    await page.evaluate(
+      () =>
+        //@ts-expect-error
+        delete window.TEST_isHtmxSettled,
+    )
 
-    await initializeHtmxSettled(page)
+    return ret
+  } finally {
   }
 }

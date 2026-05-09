@@ -3,7 +3,7 @@ import {createProductListPageModel} from '../../../../page-model/products/produc
 import {createNewProductPageModel} from '../../../../page-model/products/new-product-page.model.ts'
 import {createUpdateProductPageModel} from '../../../../page-model/products/update-product-page.model.ts'
 import {setup} from '../../../common/setup.ts'
-import {initializeHtmxSettled} from '../../../common/wait-for-htmx.ts'
+import {waitForHtmx} from '../../../common/wait-for-htmx.ts'
 
 const {url} = setup(import.meta.url, {withSkoolIntegration: false})
 
@@ -27,26 +27,40 @@ test('create product and update multiple fields', async ({page}) => {
 
   // Fill the academy courses
   await newForm.academyCourses().addButton().locator.click()
-  const wait = await initializeHtmxSettled(page)
-  await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
-  await newForm.academyCourses().academyCourseInput(0).locator.blur()
-  await wait()
-  await newForm.academyCourses().addButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+    await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().addButton().locator.click()
+  })
   await newForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
-  await newForm.academyCourses().academyCourseInput(1).locator.fill('100')
-  await newForm.academyCourses().academyCourseInput(1).locator.blur()
-  await wait()
-  await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(1).locator.fill('100')
+    await newForm.academyCourses().academyCourseInput(1).locator.blur()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().addButton().locator.click()
+  })
 
-  await newForm.academyCourses().trashButton(1).locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
+  })
+
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().trashButton(1).locator.click()
+  })
 
   await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
   await expect(newForm.academyCourses().academyCourseInput(1).locator).toHaveValue('777: Course 3')
 
   // Fill the WhatsApp groups
-  await newForm.whatsappGroups().addButton().locator.click()
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
+  await waitForHtmx(page, async () => {
+    await newForm.whatsappGroups().addButton().locator.click()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
+  })
   await newForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)

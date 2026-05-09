@@ -106,6 +106,7 @@ export function SalesFormFields({
               type="checkbox"
               value=${sale.isStandingOrder ? 'on' : undefined}
               id="is-standing-order-checkbox"
+              name="isStandingOrder"
               readonly
               onclick="return false"
             />

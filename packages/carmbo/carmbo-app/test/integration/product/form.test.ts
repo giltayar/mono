@@ -3,7 +3,7 @@ import {createProductListPageModel} from '../../page-model/products/product-list
 import {createNewProductPageModel} from '../../page-model/products/new-product-page.model.ts'
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 import {setup} from '../common/setup.ts'
-import {initializeHtmxSettled} from '../common/wait-for-htmx.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
 const {url} = setup(import.meta.url)
 
@@ -27,19 +27,28 @@ test('create product and update multiple fields', async ({page}) => {
 
   // Fill the academy courses
   await newForm.academyCourses().addButton().locator.click()
-  const wait = await initializeHtmxSettled(page)
-  await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
-  await newForm.academyCourses().academyCourseInput(0).locator.blur()
-  await wait()
-  await newForm.academyCourses().addButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+    await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().addButton().locator.click()
+  })
   await newForm.academyCourses().subdomainSelect(1).locator.selectOption('inspiredlivingdaily')
-  await newForm.academyCourses().academyCourseInput(1).locator.fill('100')
-  await newForm.academyCourses().academyCourseInput(1).locator.blur()
-  await wait()
-  await newForm.academyCourses().addButton().locator.click()
-  await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(1).locator.fill('100')
+    await newForm.academyCourses().academyCourseInput(1).locator.blur()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().addButton().locator.click()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(2).locator.fill('777')
+  })
 
-  await newForm.academyCourses().trashButton(1).locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().trashButton(1).locator.click()
+  })
 
   await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1: Course 1')
   await expect(newForm.academyCourses().academyCourseInput(1).locator).toHaveValue('777: Course 3')
@@ -224,58 +233,76 @@ test('form validations', async ({page}) => {
   await newForm.createButton().locator.click()
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
-  await newForm.smooveListIdInput().locator.fill('34343443')
+  await waitForHtmx(page, async () => {
+    await newForm.smooveListIdInput().locator.fill('34343443')
+    await newForm.smooveListIdInput().locator.blur()
+  })
 
   await newForm.createButton().locator.click()
 
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
-  const wait = await initializeHtmxSettled(page)
-  await newForm.smooveListIdInput().locator.fill('')
-  await newForm.smooveListIdInput().locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await newForm.smooveListIdInput().locator.fill('')
+    await newForm.smooveListIdInput().locator.blur()
+  })
 
-  await newForm.smooveCancelledListIdInput().locator.fill('34343443')
-  await newForm.smooveCancelledListIdInput().locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await newForm.smooveCancelledListIdInput().locator.fill('34343443')
+    await newForm.smooveCancelledListIdInput().locator.blur()
+  })
 
   await newForm.createButton().locator.click()
   await expect(page.url()).toMatch(newProductModel.urlRegex)
-  await newForm.smooveCancelledListIdInput().locator.fill('')
-  await newForm.smooveRemovedListIdInput().locator.blur()
-  await wait()
 
-  await newForm.smooveRemovedListIdInput().locator.fill('34343443')
-  await newForm.smooveRemovedListIdInput().locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await newForm.smooveCancelledListIdInput().locator.fill('')
+    await newForm.smooveCancelledListIdInput().locator.blur()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.smooveRemovedListIdInput().locator.fill('34343443')
+    await newForm.smooveRemovedListIdInput().locator.blur()
+  })
   await newForm.createButton().locator.click()
   await expect(page.url()).toMatch(newProductModel.urlRegex)
-  await newForm.smooveRemovedListIdInput().locator.fill('')
-  await newForm.smooveRemovedListIdInput().locator.blur()
-  await wait()
 
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
+  await waitForHtmx(page, async () => {
+    await newForm.smooveRemovedListIdInput().locator.fill('')
+    await newForm.smooveRemovedListIdInput().locator.blur()
+  })
+
+  await waitForHtmx(page, async () => {
+    await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
+  })
   await newForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)
     .locator.fill('https://docs.google.com/spreadsheets/d/test1')
-  await wait()
 
-  await newForm.academyCourses().addButton().locator.click()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().addButton().locator.click()
+  })
   // Fill invalid academy course (must be a number)
-  await newForm.academyCourses().academyCourseInput(0).locator.fill('723674')
-  await newForm.academyCourses().academyCourseInput(0).locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(0).locator.fill('invalid')
+    await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  })
+
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(0).locator.fill('723674')
+    await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  })
 
   await newForm.createButton().locator.click()
-
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   // Fill valid academy course (must be a number)
   await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('723674')
-  await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
-  await newForm.academyCourses().academyCourseInput(0).locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
+    await newForm.academyCourses().academyCourseInput(0).locator.blur()
+  })
+
   // Now it should succeed
   await newForm.createButton().locator.click()
 
@@ -313,24 +340,29 @@ test('remove all array fields', async ({page}) => {
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).not.toBeVisible()
 
   // Add new fields
-  const wait = await initializeHtmxSettled(page)
-  await updateForm.academyCourses().addButton().locator.click()
-  await wait()
-  await updateForm.academyCourses().academyCourseInput(0).locator.fill('1')
-  await updateForm.academyCourses().academyCourseInput(0).locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await updateForm.academyCourses().addButton().locator.click()
+  })
+  await waitForHtmx(page, async () => {
+    await updateForm.academyCourses().academyCourseInput(0).locator.fill('1')
+    await updateForm.academyCourses().academyCourseInput(0).locator.blur()
+  })
 
-  await updateForm.whatsappGroups().addButton().locator.click()
-  await wait()
-  await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('999999999@g.us')
-  await updateForm.whatsappGroups().whatsappGroupInput(0).locator.blur()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await updateForm.whatsappGroups().addButton().locator.click()
+  })
+
+  await waitForHtmx(page, async () => {
+    await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('999999999@g.us')
+    await updateForm.whatsappGroups().whatsappGroupInput(0).locator.blur()
+  })
   await updateForm
     .whatsappGroups()
     .whatsappGroupGoogleSheetUrlInput(0)
     .locator.fill('https://docs.google.com/spreadsheets/d/url5')
-  await updateForm.facebookGroups().addButton().locator.click()
-  await wait()
+  await waitForHtmx(page, async () => {
+    await updateForm.facebookGroups().addButton().locator.click()
+  })
   await updateForm.facebookGroups().facebookGroupInput(0).locator.fill('newgroup')
 
   await updateForm.updateButton().locator.click()

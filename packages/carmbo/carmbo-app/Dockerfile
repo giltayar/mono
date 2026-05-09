@@ -15,7 +15,7 @@ WORKDIR /app
 RUN pwd #
 
 # install dependencies
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=secret,id=npmrc,target=.npmrc pnpm install --frozen-lockfile --prod
 RUN pnpm cache clean
 

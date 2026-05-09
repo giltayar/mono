@@ -1,6 +1,12 @@
-neverBuiltDependencies:
-  - es5-ext
+
+allowBuilds:
+  '@firebase/util': false
+  '@railway/cli': false
+  '@swc/core': false
+  protobufjs: false
+  es5-ext: false
 
 updateConfig:
   ignoreDependencies:
     - postgres
+
