@@ -1,6 +1,7 @@
 // https://rest.smoove.io/#!/Account/Account_Get
 
 import {bind, type ServiceBind} from '@giltayar/service-commons/bind'
+import {mapValues} from '@giltayar/functional-commons'
 import {
   fetchAsJson,
   fetchAsJsonWithJsonBody,
@@ -42,6 +43,7 @@ export function createSmooveIntegrationService(context: SmooveIntegrationService
     fetchSmooveContact: sBind(fetchSmooveContact),
     createSmooveContact: sBind(createSmooveContact),
     updateSmooveContact: sBind(updateSmooveContact),
+    updateSmooveContactCustomFields: sBind(updateSmooveContactCustomFields),
     deleteSmooveContact: sBind(deleteSmooveContact),
     restoreSmooveContact: sBind(restoreSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
@@ -208,6 +210,29 @@ async function updateSmooveContact(
       cellPhone: contact.telephone,
       dateOfBirth: contact.birthday ? contact.birthday.toISOString().slice(0, 10) : undefined,
     }),
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${s.context.apiKey}`,
+      },
+    },
+  )
+}
+
+async function updateSmooveContactCustomFields(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+  customFields: Record<string, string | boolean | number | Date>,
+): Promise<void> {
+  const url = new URL(`Contacts/${encodeURIComponent(smooveId)}?by=ContactId`, s.context.apiUrl)
+
+  await fetchAsJsonWithJsonBody(
+    url,
+    {
+      customFields: mapValues(customFields, (value) =>
+        value instanceof Date ? value.toISOString() : value,
+      ),
+    },
     {
       method: 'PUT',
       headers: {

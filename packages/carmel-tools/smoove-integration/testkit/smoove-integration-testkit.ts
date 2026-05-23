@@ -25,6 +25,7 @@ export function createFakeSmooveIntegrationService(context: {
       signupDate: Date
       birthday?: Date
       isDeleted?: boolean
+      customFields?: Record<string, string | boolean | number | Date>
     }
   >
   lists: Record<number, {id: number; name: string}>
@@ -41,6 +42,7 @@ export function createFakeSmooveIntegrationService(context: {
     fetchSmooveContact: sBind(fetchSmooveContact),
     createSmooveContact: sBind(createSmooveContact),
     updateSmooveContact: sBind(updateSmooveContact),
+    updateSmooveContactCustomFields: sBind(updateSmooveContactCustomFields),
     deleteSmooveContact: sBind(deleteSmooveContact),
     restoreSmooveContact: sBind(restoreSmooveContact),
     changeContactLinkedLists: sBind(changeContactLinkedLists),
@@ -57,6 +59,7 @@ export function createFakeSmooveIntegrationService(context: {
       })
     },
     _test_isContactDeleted: (id: number) => !!state.contacts[id].isDeleted,
+    _test_getCustomFields: (id: number) => state.contacts[id]?.customFields,
   }
 }
 
@@ -189,6 +192,22 @@ async function updateSmooveContact(
   existingContact.firstName = contact.firstName
   existingContact.lastName = contact.lastName
   existingContact.birthday = contact.birthday
+}
+
+async function updateSmooveContactCustomFields(
+  s: SmooveIntegrationServiceData,
+  smooveId: number,
+  customFields: Record<string, string | boolean | number | Date>,
+): Promise<void> {
+  const contact = s.state.contacts[smooveId]
+  if (!contact) {
+    throw new Error(`Contact ${smooveId} not found`)
+  }
+
+  if (!contact.customFields) {
+    contact.customFields = {}
+  }
+  Object.assign(contact.customFields, customFields)
 }
 
 async function deleteSmooveContact(

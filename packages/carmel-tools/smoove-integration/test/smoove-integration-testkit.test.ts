@@ -428,6 +428,80 @@ describe('Smoove Integration Testkit', () => {
     })
   })
 
+  describe('updateSmooveContactCustomFields', () => {
+    it('should store custom fields for a contact', async () => {
+      const service = createTestService()
+
+      await service.updateSmooveContactCustomFields(testContactId, {
+        i11: 'some value',
+        i12: 42,
+      })
+
+      const customFields = service._test_getCustomFields(testContactId)
+      assert.deepStrictEqual(customFields, {i11: 'some value', i12: 42})
+    })
+
+    it('should merge custom fields on subsequent calls', async () => {
+      const service = createTestService()
+
+      await service.updateSmooveContactCustomFields(testContactId, {i11: 'first'})
+      await service.updateSmooveContactCustomFields(testContactId, {i12: 'second'})
+
+      const customFields = service._test_getCustomFields(testContactId)
+      assert.deepStrictEqual(customFields, {i11: 'first', i12: 'second'})
+    })
+
+    it('should overwrite existing custom field values', async () => {
+      const service = createTestService()
+
+      await service.updateSmooveContactCustomFields(testContactId, {i11: 'original'})
+      await service.updateSmooveContactCustomFields(testContactId, {i11: 'updated'})
+
+      const customFields = service._test_getCustomFields(testContactId)
+      assert.deepStrictEqual(customFields, {i11: 'updated'})
+    })
+
+    it('should support boolean and Date values', async () => {
+      const service = createTestService()
+      const date = new Date('2025-06-15')
+
+      await service.updateSmooveContactCustomFields(testContactId, {
+        i11: true,
+        i12: date,
+      })
+
+      const customFields = service._test_getCustomFields(testContactId)
+      assert.strictEqual(customFields!.i11, true)
+      assert.strictEqual(customFields!.i12, date)
+    })
+
+    it('should throw error for non-existent contact', async () => {
+      const service = createTestService()
+
+      await assert.rejects(
+        () => service.updateSmooveContactCustomFields(999999, {i11: 'value'}),
+        /Contact 999999 not found/,
+      )
+    })
+
+    it('should return undefined for contact with no custom fields', async () => {
+      const service = createTestService()
+
+      const customFields = service._test_getCustomFields(testContactId)
+      assert.strictEqual(customFields, undefined)
+    })
+
+    it('should be reset by _test_reset_data', async () => {
+      const service = createTestService()
+
+      await service.updateSmooveContactCustomFields(testContactId, {i11: 'value'})
+      service._test_reset_data()
+
+      const customFields = service._test_getCustomFields(testContactId)
+      assert.strictEqual(customFields, undefined)
+    })
+  })
+
   describe('_test_reset_data', () => {
     it('should reset service state to original data', async () => {
       const service = createTestService()
