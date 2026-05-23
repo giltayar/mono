@@ -18,6 +18,7 @@ import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
 import {cancelSubscription} from '../common/cancel-subscription.ts'
 import {createCancelSubscriptionPageModel} from '../../page-model/sales/cancel-subscription-page.model.ts'
 import {createJobListPageModel} from '../../page-model/jobs/job-list-page.model.ts'
+import {computeDisconnectTime} from '../../../src/domain/sale/model/model-standing-order.ts'
 
 const {
   url,
@@ -407,6 +408,7 @@ test('cancelling a standing order subscription removes student from academy cour
   const smooveListId = 2
   const smooveCancelledListId = 6
   const smooveRemovedListId = 8
+  const smooveRemovedDateCustomField = 42
 
   const product1Number = await createProduct(
     {
@@ -419,6 +421,7 @@ test('cancelling a standing order subscription removes student from academy cour
       smooveListId,
       smooveCancelledListId,
       smooveRemovedListId,
+      smooveRemovedDateCustomField,
       whatsappGroups: [{id: '1@g.us'}, {id: '3@g.us'}],
       personalMessageWhenJoining: 'Welcome to Product One!',
     },
@@ -604,6 +607,19 @@ test('cancelling a standing order subscription removes student from academy cour
     expect(cancelledContacts[0].email).toBe(customerEmail)
     expect(cancelledContacts[0].lists_Linked).toContain(smooveCancelledListId)
   }).toPass()
+
+  const smooveContact = await smooveIntegration().fetchSmooveContact(customerEmail, {
+    by: 'email',
+  })
+  const customFields = smooveIntegration()._test_getCustomFields(smooveContact.id)
+  const removedDateValue = customFields![`i${smooveRemovedDateCustomField}`] as Date
+  const expectedDisconnectTime = computeDisconnectTime({
+    unsubscribeTimestamp: new Date(),
+    subscriptionTimestamp: new Date(),
+  })
+  expect(removedDateValue.toISOString().slice(0, 10)).toBe(
+    expectedDisconnectTime.toISOString().slice(0, 10),
+  )
 
   // Verify student was NOT removed from whatsapp groups yet
   expect(await whatsappIntegration()._test_listParticipantsInGroup('1@g.us')).toContain(

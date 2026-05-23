@@ -385,6 +385,21 @@ export function ProductCreateOrUpdateFormFields({
                   </button>
                 </div>`
               : ''}
+            <div class="col-auto form-floating">
+              <input
+                name="smooveRemovedDateCustomField"
+                type="number"
+                placeholder=" "
+                class="form-control form-control-sm"
+                id="smooveRemovedDateCustomField"
+                value=${product.smooveRemovedDateCustomField ?? ''}
+                readonly=${isReadOnly}
+                style="max-width: 180px; font-size: 0.8rem; height: 2.5rem"
+              />
+              <label for="smooveRemovedDateCustomField" style="font-size: 0.75rem"
+                >${t('form.smooveRemovedDateCustomField')}</label
+              >
+            </div>
           </div>`}
 
           <div class="mt-3 row">

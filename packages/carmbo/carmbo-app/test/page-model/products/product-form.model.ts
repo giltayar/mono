@@ -74,6 +74,11 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
     ) => ({
       locator: btnLocator,
     }),
+    smooveRemovedDateCustomFieldInput: (
+      inputLocator = locator.getByLabel('Removed Date Custom Field'),
+    ) => ({
+      locator: inputLocator,
+    }),
     smooveListCreateDialog: (dialogLocator = page.locator('#smoove-list-create-dialog')) => ({
       locator: dialogLocator,
       listNameInput: (inputLocator = dialogLocator.getByLabel('List Name')) => ({

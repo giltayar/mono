@@ -224,11 +224,17 @@ test('form validations', async ({page}) => {
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   await newForm.nameInput().locator.fill('Valid Product')
-  await newForm.productTypeSelect().locator.selectOption('club')
+  await waitForHtmx(page, async () => {
+    await newForm.productTypeSelect().locator.selectOption('club')
+  })
 
   // Add invalid WhatsApp group (must be in the list)
-  await newForm.whatsappGroups().addButton().locator.click()
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('76736@g.us')
+  await waitForHtmx(page, async () => {
+    await newForm.whatsappGroups().addButton().locator.click()
+  })
+  await waitForHtmx(page, async () => {
+    await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('76736@g.us')
+  })
 
   await newForm.createButton().locator.click()
   await expect(page.url()).toMatch(newProductModel.urlRegex)
@@ -324,6 +330,9 @@ test('remove all array fields', async ({page}) => {
   await newForm.nameInput().locator.fill('Minimal Product')
   await newForm.productTypeSelect().locator.selectOption('club')
 
+  // Fill the removed date custom field (only visible for club type)
+  await newForm.smooveRemovedDateCustomFieldInput().locator.fill('14')
+
   // Don't add any array fields - they should all be empty by default for products
 
   await newForm.createButton().locator.click()
@@ -338,6 +347,12 @@ test('remove all array fields', async ({page}) => {
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).not.toBeVisible()
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).not.toBeVisible()
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).not.toBeVisible()
+
+  // Verify the removed date custom field was saved
+  await expect(updateForm.smooveRemovedDateCustomFieldInput().locator).toHaveValue('14')
+
+  // Update the removed date custom field
+  await updateForm.smooveRemovedDateCustomFieldInput().locator.fill('25')
 
   // Add new fields
   await waitForHtmx(page, async () => {
@@ -377,6 +392,9 @@ test('remove all array fields', async ({page}) => {
     'https://docs.google.com/spreadsheets/d/url5',
   )
   await expect(updateForm.facebookGroups().facebookGroupInput(0).locator).toHaveValue('newgroup')
+
+  // Verify the removed date custom field was updated
+  await expect(updateForm.smooveRemovedDateCustomFieldInput().locator).toHaveValue('25')
 
   // Now remove them all
   await updateForm.academyCourses().trashButton(0).locator.click()

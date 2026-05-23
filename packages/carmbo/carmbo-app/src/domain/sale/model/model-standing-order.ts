@@ -175,6 +175,11 @@ export async function cancelSubscription(
     logger.info({recurringOrderId: recurringOrderId}, 'disabling-cardcom-recurring-payment')
     await cardcomIntegration.enableDisableRecurringPayment(recurringOrderId, 'disable')
 
+    const disconnectTime = computeDisconnectTime({
+      unsubscribeTimestamp: now,
+      subscriptionTimestamp: saleCreationTimestamp,
+    })
+
     logger.info({recurringOrderId: recurringOrderId}, 'moving-student-to-cancelled-smoove-listv')
 
     if (smooveIntegration) {
@@ -182,6 +187,7 @@ export async function cancelSubscription(
         studentNumber,
         saleNumber,
         smooveIntegration,
+        disconnectTime,
         sql,
         logger,
       )
@@ -228,10 +234,6 @@ export async function cancelSubscription(
       WHERE sale_number = ${saleNumber}
     `
 
-    const disconnectTime = computeDisconnectTime({
-      unsubscribeTimestamp: now,
-      subscriptionTimestamp: saleCreationTimestamp,
-    })
     logger.info(
       {saleNumber, studentNumber, disconnectTime: disconnectTime.toISOString()},
       'creating-disconnect-job',
@@ -262,7 +264,7 @@ export function cardcomStatusToStandingOrderPaymentResolution(
   }
 }
 
-function computeDisconnectTime({
+export function computeDisconnectTime({
   unsubscribeTimestamp: unsubscriptionTimestamp,
   subscriptionTimestamp,
 }: {

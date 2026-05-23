@@ -25,6 +25,7 @@ export const OngoingProductSchema = z.object({
   smooveListId: itemPickerSchema(),
   smooveCancelledListId: itemPickerSchema(),
   smooveRemovedListId: itemPickerSchema(),
+  smooveRemovedDateCustomField: z.coerce.number().int().positive().optional(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
   personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),

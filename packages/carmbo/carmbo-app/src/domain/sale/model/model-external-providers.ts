@@ -222,6 +222,7 @@ export async function moveStudentToSmooveCancelledSubscriptionList(
   studentNumber: number,
   saleNumber: number,
   smooveIntegration: SmooveIntegrationService,
+  disconnectTime: Date,
   sql: Sql,
   logger: FastifyBaseLogger,
 ) {
@@ -230,12 +231,14 @@ export async function moveStudentToSmooveCancelledSubscriptionList(
       listId: string
       cancelledListId: string
       removedListId: string
+      removedDateCustomField: number | null
     }[]
   >`
     SELECT
       pis.list_id as list_id,
       pis.cancelled_list_id,
-      pis.removed_list_id
+      pis.removed_list_id,
+      pis.removed_date_custom_field
     FROM sale_data_product sip
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number
@@ -282,6 +285,34 @@ export async function moveStudentToSmooveCancelledSubscriptionList(
       logger.info(
         {courseId: smooveProductsLists[i].listId, i, studentNumber},
         'adding-student-to-academy-course-succeeded',
+      )
+    }
+  }
+
+  // Update the removed date custom field in Smoove for each product that has one configured
+  const customFieldUpdates = new Set(
+    smooveProductsLists
+      .filter((p) => p.removedDateCustomField != null)
+      .map((p) => p.removedDateCustomField!),
+  )
+    .values()
+    .map((cf) =>
+      smooveIntegration.updateSmooveContactCustomFields(parseInt(smooveContactId), {
+        [`i${cf}`]: disconnectTime,
+      }),
+    )
+
+  const customFieldResults = await Promise.allSettled(customFieldUpdates)
+  for (const [i, res] of customFieldResults.entries()) {
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, studentNumber, i, disconnectTime},
+        'updating-smoove-removed-date-custom-field-failed',
+      )
+    } else {
+      logger.info(
+        {studentNumber, i, disconnectTime},
+        'updating-smoove-removed-date-custom-field-succeeded',
       )
     }
   }

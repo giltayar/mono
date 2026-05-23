@@ -36,6 +36,7 @@ export const ProductSchema = z.object({
   smooveListId: itemPickerSchema(),
   smooveCancelledListId: itemPickerSchema(),
   smooveRemovedListId: itemPickerSchema(),
+  smooveRemovedDateCustomField: z.coerce.number().int().positive().optional(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
   personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),
@@ -369,6 +370,7 @@ SELECT
   product_integration_smoove.list_id AS smoove_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
   product_integration_smoove.removed_list_id AS smoove_removed_list_id,
+  product_integration_smoove.removed_date_custom_field AS smoove_removed_date_custom_field,
   COALESCE(product_integration_skool.send_invitation, false) AS send_skool_invitation,
   COALESCE(academy_courses, json_build_array()) AS academy_courses,
   COALESCE(whatsapp_groups, json_build_array()) AS whatsapp_groups,
@@ -487,7 +489,8 @@ async function addProductStuff(
   if (
     product.smooveListId !== undefined ||
     product.smooveCancelledListId !== undefined ||
-    product.smooveRemovedListId !== undefined
+    product.smooveRemovedListId !== undefined ||
+    product.smooveRemovedDateCustomField !== undefined
   ) {
     ops = ops.concat(sql`
         INSERT INTO product_integration_smoove VALUES
@@ -495,7 +498,8 @@ async function addProductStuff(
             ${dataId},
             ${product.smooveListId ?? null},
             ${product.smooveCancelledListId ?? null},
-            ${product.smooveRemovedListId ?? null}
+            ${product.smooveRemovedListId ?? null},
+            ${product.smooveRemovedDateCustomField ?? null}
           )
       `)
   }

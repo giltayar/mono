@@ -17,6 +17,7 @@
     "smooveListId": "Smoove List ID",
     "smooveCancelledListId": "Smoove Cancelled Club List ID",
     "smooveRemovedListId": "Smoove Removed List ID",
+    "smooveRemovedDateCustomField": "Removed Date Custom Field",
     "notes": "Notes",
     "personalMessageWhenJoining": "Personal Message When Joining",
     "sendSkoolInvitation": "Send Skool Invitation",

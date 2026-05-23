@@ -17,6 +17,7 @@
     "smooveListId": "מזהה רשימת סמוב",
     "smooveCancelledListId": "מזהה רשימת מבוטלות מועדון סמוב",
     "smooveRemovedListId": "מזהה רשימת הוסרו סמוב",
+    "smooveRemovedDateCustomField": "שדה מותאם לתאריך הסרה",
     "notes": "הערות",
     "personalMessageWhenJoining": "הודעה אישית בהצטרפות",
     "sendSkoolInvitation": "לשלוח הזמנה לסקול",
