@@ -1,4 +1,5 @@
 import {test} from '@playwright/test'
+import crypto from 'crypto'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import type {Sql} from 'postgres'
 import {makeApp} from '../../../src/app/carmbo-app.ts'
@@ -52,12 +53,14 @@ export function setup(
   const withSmooveIntegration = options?.withSmooveIntegration ?? true
   const withAcademyIntegration = options?.withAcademyIntegration ?? true
   const withSkoolIntegration = options?.withSkoolIntegration ?? true
+  const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
 
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
   let findAddress
   let teardown: (() => Promise<void>) | undefined
   let app: FastifyInstance
   let sql: Sql
+  let globalSql: ReturnType<typeof postgres>
   let url: URL
   let overridingDate: Date | undefined
   let smooveIntegration: ReturnType<typeof createFakeSmooveIntegrationService>
@@ -69,10 +72,25 @@ export function setup(
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
       new URL('../docker-compose.yaml', import.meta.url),
-      {variation: testUrl, containerCleanup: !!process.env.CI, forceRecreate: !!process.env.CI},
     ))
-
     const host = await findAddress('carmbo-postgres', 5432, {healthCheck: postgresHealthCheck})
+    globalSql = postgres({
+      host: host.split(':')[0],
+      port: parseInt(host.split(':')[1], 10),
+      database: 'postgres',
+      user: 'user',
+      password: 'password',
+    })
+    if (process.env.CI) {
+      await globalSql`DROP DATABASE IF EXISTS ${globalSql(databaseName)}`
+    }
+    await globalSql`CREATE DATABASE ${globalSql(databaseName)}`.catch((error) => {
+      if (error.code === '42P04') {
+        // Database already exists
+        return
+      }
+      throw error
+    })
 
     smooveIntegration = createFakeSmooveIntegrationService({
       lists: [
@@ -152,7 +170,7 @@ export function setup(
     ;({app, sql} = makeApp({
       db: {
         connectionString: undefined,
-        database: 'carmbo',
+        database: databaseName,
         host: host.split(':')[0],
         port: parseInt(host.split(':')[1]),
         username: 'user',
