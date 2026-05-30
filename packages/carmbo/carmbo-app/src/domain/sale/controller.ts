@@ -20,6 +20,7 @@ import {
 import {
   addCardcomSale,
   addNoInvoiceSale,
+  generateStudentInfoFromCardcomSale,
   findOrCreateStudentFromInvoice as model_findOrCreateStudentFromInvoice,
   refundSale as model_refundSale,
 } from './model/model-sale.ts'
@@ -228,18 +229,28 @@ export async function dealWithCardcomOneTimeSale(
   const smooveIntegration = requestContext.get('smooveIntegration')
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
+  const invoiceNumber = cardcomSaleWebhookJson.invoicenumber?.trim()
 
   await executeDirectJob(
     () =>
-      addCardcomSale(
-        salesEventNumber,
-        cardcomSaleWebhookJson,
-        now,
-        smooveIntegration,
-        cardcomIntegration,
-        sql,
-        logger,
-      ),
+      invoiceNumber && invoiceNumber !== '0'
+        ? addCardcomSale(
+            salesEventNumber,
+            cardcomSaleWebhookJson,
+            now,
+            smooveIntegration,
+            cardcomIntegration,
+            sql,
+            logger,
+          )
+        : addNoInvoiceSale(
+            salesEventNumber,
+            generateStudentInfoFromCardcomSale(cardcomSaleWebhookJson),
+            now,
+            smooveIntegration,
+            sql,
+            logger,
+          ),
     nowService,
     sql,
     logger,

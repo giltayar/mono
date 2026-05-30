@@ -589,42 +589,7 @@ export async function createNoInvoiceSale(
   return saleNumber
 }
 
-function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
-  const products = []
-
-  products.push({
-    productId: cardcomSaleWebhookJson.ProductID,
-    quantity: cardcomSaleWebhookJson.ProdQuantity,
-    price: cardcomSaleWebhookJson.ProdPrice,
-  })
-
-  for (let i = 1; i <= parseInt(cardcomSaleWebhookJson.ProdTotalLines); i++) {
-    const productIdKey = `ProductID${i}` as keyof CardcomSaleWebhookJson
-    const quantityKey = `ProdQuantity${i}` as keyof CardcomSaleWebhookJson
-    const priceKey = `ProdPrice${i}` as keyof CardcomSaleWebhookJson
-
-    const productId = cardcomSaleWebhookJson[productIdKey] as string
-    const quantity = cardcomSaleWebhookJson[quantityKey] as string
-    const price = cardcomSaleWebhookJson[priceKey] as string
-
-    if (productId && quantity && price) {
-      products.push({
-        productId: productId,
-        quantity: quantity,
-        price: price,
-      })
-    }
-  }
-
-  if (products.some((p) => !p.productId)) {
-    throw new Error(
-      `You forgot to enter the Carmbo Product Id in the Product information in the Cardcom landing page`,
-    )
-  }
-
-  return products
-}
-function generateStudentInfoFromCardcomSale(
+export function generateStudentInfoFromCardcomSale(
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
 ): StudentInfoForASale {
   const cardcomSaleName = cardcomSaleWebhookJson.intTo || cardcomSaleWebhookJson.CardOwnerName
@@ -780,7 +745,41 @@ export async function refundSale(
     logger.info('refund-sale-completed')
   })
 }
+function extractProductsFromCardcom(cardcomSaleWebhookJson: CardcomSaleWebhookJson) {
+  const products = []
 
+  products.push({
+    productId: cardcomSaleWebhookJson.ProductID,
+    quantity: cardcomSaleWebhookJson.ProdQuantity,
+    price: cardcomSaleWebhookJson.ProdPrice,
+  })
+
+  for (let i = 1; i <= parseInt(cardcomSaleWebhookJson.ProdTotalLines); i++) {
+    const productIdKey = `ProductID${i}` as keyof CardcomSaleWebhookJson
+    const quantityKey = `ProdQuantity${i}` as keyof CardcomSaleWebhookJson
+    const priceKey = `ProdPrice${i}` as keyof CardcomSaleWebhookJson
+
+    const productId = cardcomSaleWebhookJson[productIdKey] as string
+    const quantity = cardcomSaleWebhookJson[quantityKey] as string
+    const price = cardcomSaleWebhookJson[priceKey] as string
+
+    if (productId && quantity && price) {
+      products.push({
+        productId: productId,
+        quantity: quantity,
+        price: price,
+      })
+    }
+  }
+
+  if (products.some((p) => !p.productId)) {
+    throw new Error(
+      `You forgot to enter the Carmbo Product Id in the Product information in the Cardcom landing page`,
+    )
+  }
+
+  return products
+}
 async function querySaleForRefund(saleNumber: number, sql: Sql) {
   const result = (await sql`
     SELECT

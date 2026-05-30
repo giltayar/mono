@@ -9,8 +9,9 @@ import {createUpdateSalePageModel} from '../../../../page-model/sales/update-sal
 import {createSaleProvidersPageModel} from '../../../../page-model/sales/sale-providers-page.model.ts'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import {fetchAsText} from '@giltayar/http-commons'
+import {cardcomWebhookUrl} from '../../common/cardcom-webhook.ts'
 
-const {url, sql} = setup(import.meta.url, {
+const {url, sql, cardcomIntegration} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
   withSkoolIntegration: true,
@@ -217,4 +218,117 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   await expect(product2x.title().locator).toContainText('Product Two')
   await expect(product2x.quantity().locator).toHaveValue('1')
   await expect(product2x.unitPrice().locator).toHaveValue('0')
+})
+
+test('cardcom sale with no invoiceNumber creates a no-invoice sale', async ({page}) => {
+  const product1Number = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const product2Number = await createProduct(
+    {
+      name: 'Product Two',
+      productType: 'challenge',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [product1Number, product2Number],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const customerEmail = 'no-invoice@example.com'
+  const customerName = 'Jane Smith'
+  const customerPhone = '0509876543'
+
+  // Simulate a cardcom sale with no invoice number (invoiceNumberToSend: 0)
+  await cardcomIntegration()._test_simulateCardcomSale(
+    {
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 50 * 100,
+          productName: 'Product One',
+        },
+        {
+          productId: product2Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 50 * 100,
+          productName: 'Product Two',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: undefined,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+    {cardcomInvoiceNumberToSend: 0},
+  )
+
+  await page.goto(new URL('/students', url()).href)
+
+  const studentListModel = createStudentListPageModel(page)
+  const studentRows = studentListModel.list().rows()
+
+  await expect(studentRows.locator).toHaveCount(1)
+
+  const firstStudentRow = studentRows.row(0)
+  await expect(firstStudentRow.nameCell().locator).toHaveText('Jane Smith')
+  await expect(firstStudentRow.emailCell().locator).toHaveText(customerEmail)
+  await expect(firstStudentRow.phoneCell().locator).toHaveText(customerPhone)
+
+  await page.goto(new URL('/sales', url()).href)
+
+  const saleListModel = createSaleListPageModel(page)
+  const saleRows = saleListModel.list().rows()
+
+  await expect(saleRows.locator).toHaveCount(1)
+
+  const firstSaleRow = saleRows.row(0)
+  await expect(firstSaleRow.eventCell().locator).toHaveText('Test Sales Event')
+  await expect(firstSaleRow.studentCell().locator).toHaveText('Jane Smith')
+  await expect(firstSaleRow.productsCell().locator).toContainText('Product One')
+  await expect(firstSaleRow.productsCell().locator).toContainText('Product Two')
+
+  // Click on the sale to view the sale detail page
+  await firstSaleRow.idLink().locator.click()
+  await page.waitForURL(/\/sales\/\d+$/)
+
+  const saleDetailModel = createUpdateSalePageModel(page)
+
+  await expect(saleDetailModel.pageTitle().locator).toHaveText('Sale 1')
+
+  // Verify this is a no-invoice sale: no invoice number, no view invoice link
+  await expect(saleDetailModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
+  await expect(saleDetailModel.form().viewInvoiceLink().locator).not.toBeVisible()
+
+  // Verify sale details
+  await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
+    `${salesEventNumber}: Test Sales Event`,
+  )
+  await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: Jane Smith')
+  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('0')
 })

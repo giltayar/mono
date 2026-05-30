@@ -5,8 +5,9 @@ allowBuilds:
   protobufjs: false
   es5-ext: false
 
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
-  - '@giltayar/carmel-tools-smoove-integration@5.3.0'
+  - '@giltayar/*'
 
 updateConfig:
   ignoreDependencies:

@@ -3,7 +3,7 @@ import {z} from 'zod'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import {
-  dealWithCardcomOneTimeSale,
+  dealWithCardcomOneTimeSale as dealWithCardcomOneTimeOrRecurringSale,
   refundSale,
   disconnectSale,
   showSales,
@@ -112,7 +112,7 @@ export function apiRoute(
         request.log.info({body: request.body}, 'cardcom-sale-webhook')
 
         return await dealWithControllerResultAsync(reply, () =>
-          dealWithCardcomOneTimeSale(request.body, request.query['sales-event']),
+          dealWithCardcomOneTimeOrRecurringSale(request.body, request.query['sales-event']),
         )
       },
     )
