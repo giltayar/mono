@@ -286,7 +286,7 @@ export async function _test_simulateCardcomSale(
 ) {
   let cardcomInvoiceNumber: number
 
-  if (!options.cardcomInvoiceNumberToSend) {
+  if (options.cardcomInvoiceNumberToSend == null) {
     const result = await createTaxInvoiceDocument(s, sale, {
       sendInvoiceByMail: false,
     })
@@ -296,11 +296,18 @@ export async function _test_simulateCardcomSale(
     cardcomInvoiceNumber = options.cardcomInvoiceNumberToSend
   }
 
-  const paymentTransactionId = Object.entries(s.state.payments).find(
-    ([, p]) => p.invoiceNumber === cardcomInvoiceNumber,
-  )?.[0]
+  let paymentTransactionId: string
 
-  assert(paymentTransactionId, 'payment transaction ID should be found')
+  if (cardcomInvoiceNumber === 0) {
+    paymentTransactionId = String((Math.random() * 100_000_000) | 0)
+  } else {
+    const found = Object.entries(s.state.payments).find(
+      ([, p]) => p.invoiceNumber === cardcomInvoiceNumber,
+    )?.[0]
+
+    assert(found, 'payment transaction ID should be found')
+    paymentTransactionId = found
+  }
 
   if (webhook) {
     await simulateCardcomSale(
