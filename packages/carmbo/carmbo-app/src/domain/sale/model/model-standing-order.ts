@@ -82,13 +82,15 @@ export async function handleCardcomRecurringPayment(
       }
     }
 
-    const standingOrderPaymentExistsResult = await sql<{1: number}[]>`
+    const standingOrderPaymentExistsResult =
+      !!cardcomDetailRecurringJson.DocumentNumber &&
+      (await sql<{1: number}[]>`
       SELECT 1
       FROM sale_standing_order_cardcom_recurring_payment ssocrp
       WHERE ssocrp.invoice_document_number = ${cardcomDetailRecurringJson.DocumentNumber}
-    `
+    `)
 
-    if (standingOrderPaymentExistsResult.length > 0) {
+    if (standingOrderPaymentExistsResult && standingOrderPaymentExistsResult.length > 0) {
       logger.info(
         {invoiceDocumentNumber: cardcomDetailRecurringJson.DocumentNumber},
         'sale-standing-order-payment-already-exists',
@@ -110,11 +112,13 @@ export async function handleCardcomRecurringPayment(
         isFirstPayment: false,
       })}`
 
-    const cardcomInvoiceDocumentUrl = (
-      await cardcomIntegration.createTaxInvoiceDocumentUrl(
-        cardcomDetailRecurringJson.DocumentNumber.toString(),
-      )
-    ).url
+    const cardcomInvoiceDocumentUrl = cardcomDetailRecurringJson.DocumentNumber
+      ? (
+          await cardcomIntegration.createTaxInvoiceDocumentUrl(
+            cardcomDetailRecurringJson.DocumentNumber.toString(),
+          )
+        ).url
+      : undefined
 
     await sql`
       INSERT INTO sale_standing_order_cardcom_recurring_payment ${sql({
