@@ -90,9 +90,9 @@ export const CardcomDetailRecurringJsonSchema = z.looseObject({
   ...CardcomStandingOrderBaseJsonSchema.shape,
   Status: z.string(),
   InternalDealNumber: z.coerce.string(),
-  DocumentNumber: z.number(),
-  BillingAttempts: z.number(),
-  Sum: z.number(),
+  DocumentNumber: z.number().optional(),
+  BillingAttempts: z.coerce.number(),
+  Sum: z.coerce.number(),
 })
 
 export const CardcomRecurringOrderWebHookJsonSchema = z.discriminatedUnion('RecordType', [
