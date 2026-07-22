@@ -92,7 +92,7 @@
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
     "@giltayar/docker-compose-testkit": "^2.1.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.60.0",
     "@railway/cli": "^5.27.2",
     "@types/chance": "^1.1.8",
     "@types/node": "^26.1.1",

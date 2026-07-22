@@ -3,6 +3,7 @@ import {setup} from '../../../common/setup.ts'
 import {createProductListPageModel} from '../../../../page-model/products/product-list-page.model.ts'
 import {createNewProductPageModel} from '../../../../page-model/products/new-product-page.model.ts'
 import {createUpdateProductPageModel} from '../../../../page-model/products/update-product-page.model.ts'
+import {waitForHtmx} from '../../../common/wait-for-htmx.ts'
 
 const {url} = setup(import.meta.url, {
   withAcademyIntegration: false,
@@ -25,12 +26,14 @@ test('create product then update it', async ({page}) => {
   // Fill the new product form
   const newForm = newProductModel.form()
   await newForm.nameInput().locator.fill('Test Product')
-  await newForm.productTypeSelect().locator.selectOption('recorded')
+  await waitForHtmx(page, () => newForm.productTypeSelect().locator.selectOption('recorded'))
 
   // Add and fill array fields
-  await newForm.whatsappGroups().addButton().locator.click()
+  await waitForHtmx(page, () => newForm.whatsappGroups().addButton().locator.click())
   await expect(newForm.whatsappGroups().whatsappGroupInput(0).locator).toBeVisible()
-  await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us')
+  await waitForHtmx(page, async () =>
+    newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('1@g.us'),
+  )
   await expect(newForm.whatsappGroups().whatsappGroupGoogleSheetUrlInput(0).locator).toBeVisible()
   await newForm
     .whatsappGroups()
@@ -72,12 +75,16 @@ test('create product then update it', async ({page}) => {
 
   // Update the product data
   await updateForm.nameInput().locator.fill('Updated Product')
-  await updateForm.productTypeSelect().locator.selectOption('challenge')
-  await updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('2@g.us')
-  await updateForm
-    .whatsappGroups()
-    .whatsappGroupGoogleSheetUrlInput(0)
-    .locator.fill('https://docs.google.com/spreadsheets/d/test2')
+  await waitForHtmx(page, () => updateForm.productTypeSelect().locator.selectOption('challenge'))
+  await waitForHtmx(page, () =>
+    updateForm.whatsappGroups().whatsappGroupInput(0).locator.fill('2@g.us'),
+  )
+  await waitForHtmx(page, () =>
+    updateForm
+      .whatsappGroups()
+      .whatsappGroupGoogleSheetUrlInput(0)
+      .locator.fill('https://docs.google.com/spreadsheets/d/test2'),
+  )
   await updateForm.facebookGroups().facebookGroupInput(0).locator.fill('updated-fb-group')
   await updateForm.notesInput().locator.fill('Updated product notes')
 
