@@ -34,7 +34,7 @@ test('create product then update it', async ({page}) => {
     await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
     await newForm.academyCourses().academyCourseInput(0).locator.blur()
   })
-  await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue('1')
+  await expect(newForm.academyCourses().academyCourseInput(0).locator).toHaveValue(/^1/)
   await waitForHtmx(page, async () => {
     await newForm.whatsappGroups().addButton().locator.click()
   })

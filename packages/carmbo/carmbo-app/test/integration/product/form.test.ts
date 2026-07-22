@@ -236,7 +236,7 @@ test('form validations', async ({page}) => {
     await newForm.whatsappGroups().whatsappGroupInput(0).locator.fill('76736@g.us')
   })
 
-  await newForm.createButton().locator.click()
+  await waitForHtmx(page, () => newForm.createButton().locator.click())
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   await waitForHtmx(page, async () => {
@@ -244,7 +244,7 @@ test('form validations', async ({page}) => {
     await newForm.smooveListIdInput().locator.blur()
   })
 
-  await newForm.createButton().locator.click()
+  await waitForHtmx(page, () => newForm.createButton().locator.click())
 
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
@@ -258,7 +258,7 @@ test('form validations', async ({page}) => {
     await newForm.smooveCancelledListIdInput().locator.blur()
   })
 
-  await newForm.createButton().locator.click()
+  await waitForHtmx(page, () => newForm.createButton().locator.click())
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   await waitForHtmx(page, async () => {
@@ -269,7 +269,7 @@ test('form validations', async ({page}) => {
     await newForm.smooveRemovedListIdInput().locator.fill('34343443')
     await newForm.smooveRemovedListIdInput().locator.blur()
   })
-  await newForm.createButton().locator.click()
+  await waitForHtmx(page, () => newForm.createButton().locator.click())
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   await waitForHtmx(page, async () => {
@@ -432,7 +432,7 @@ test('create smoove list from product form', async ({page}) => {
 
   // Fill in the list name and create
   await dialog.listNameInput().locator.fill('My New Smoove List')
-  await dialog.createButton().locator.click()
+  await waitForHtmx(page, () => dialog.createButton().locator.click())
 
   // Dialog should close and the field should be populated
   await expect(dialog.locator).not.toBeVisible()
