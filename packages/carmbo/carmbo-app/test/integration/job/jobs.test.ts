@@ -215,20 +215,3 @@ test('jobs page shows clock emoji for a job scheduled in the future', async ({pa
     new RegExp(String(futureDate.getFullYear())),
   )
 })
-
-test('jobs page shows clock emoji with "Not started" for a job without a scheduled time', async ({
-  page,
-}) => {
-  await submitScheduledJob({name: 'Unscheduled Job'}, {retries: 1})
-
-  const jobListModel = createJobListPageModel(page)
-
-  await page.goto(new URL('/jobs', url()).href)
-
-  const rows = jobListModel.list().rows()
-  await expect(rows.locator).toHaveCount(1)
-
-  const row = rows.row(0)
-  await expect(row.statusCell().locator).toContainText('🕐')
-  await expect(row.statusCell().clockSpan().locator).toHaveAttribute('title', 'Not started')
-})

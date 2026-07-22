@@ -121,15 +121,17 @@ function SalesView({
           ${sales.map(
             (sale, i, l) => html`
               <tr
-                ...${i === l.length - 1
-                  ? {
-                      'hx-get': `/sales?page=${encodeURIComponent(page + 1)}`,
-                      'hx-trigger': 'revealed',
-                      'hx-select': '.sales-view tbody tr',
-                      'hx-include': '.sales-view form',
-                      'hx-swap': 'afterend',
-                    }
-                  : {}}
+                ...${
+                  i === l.length - 1
+                    ? {
+                        'hx-get': `/sales?page=${encodeURIComponent(page + 1)}`,
+                        'hx-trigger': 'revealed',
+                        'hx-select': '.sales-view tbody tr',
+                        'hx-include': '.sales-view form',
+                        'hx-swap': 'afterend',
+                      }
+                    : {}
+                }
               >
                 <td>
                   <a class="btn btn-light btn-sm" role="button" href="/sales/${sale.saleNumber}"
@@ -144,9 +146,11 @@ function SalesView({
                   <a href="/students/${sale.studentNumber}">${sale.studentName}</a>
                 </td>
                 <td>
-                  ${sale.finalSaleRevenue
-                    ? `₪${sale.finalSaleRevenue.toFixed(2)}${sale.isRefunded ? ' ' + t('list.refunded') : ''}`
-                    : '-'}
+                  ${
+                    sale.finalSaleRevenue
+                      ? `₪${sale.finalSaleRevenue.toFixed(2)}${sale.isRefunded ? ' ' + t('list.refunded') : ''}`
+                      : '-'
+                  }
                 </td>
                 <td>${sale.products.join(', ')}</td>
               </tr>

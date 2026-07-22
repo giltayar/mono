@@ -58,8 +58,10 @@ export function StudentCreateOrUpdateFormFields({
               </div>
             `,
           )}
-          ${operation === 'write' &&
-          html`<${AddButton} itemsName="names" humanName=${t('form.names')} l=${student.names} />`}
+          ${
+            operation === 'write' &&
+            html`<${AddButton} itemsName="names" humanName=${t('form.names')} l=${student.names} />`
+          }
         </fieldset>
 
         <fieldset aria-label=${t('form.emails')} class="mt-3">
@@ -86,12 +88,14 @@ export function StudentCreateOrUpdateFormFields({
               </div>
             `,
           )}
-          ${operation === 'write' &&
-          html`<${AddButton}
-            itemsName="emails"
-            humanName=${t('form.emails')}
-            l=${student.emails}
-          />`}
+          ${
+            operation === 'write' &&
+            html`<${AddButton}
+              itemsName="emails"
+              humanName=${t('form.emails')}
+              l=${student.emails}
+            />`
+          }
         </fieldset>
 
         <fieldset aria-label=${t('form.phones')} class="mt-3">
@@ -119,12 +123,14 @@ export function StudentCreateOrUpdateFormFields({
               </div>
             `,
           )}
-          ${operation === 'write' &&
-          html`<${AddButton}
-            itemsName="phones"
-            humanName=${t('form.phones')}
-            l=${student.phones}
-          />`}
+          ${
+            operation === 'write' &&
+            html`<${AddButton}
+              itemsName="phones"
+              humanName=${t('form.phones')}
+              l=${student.phones}
+            />`
+          }
         </fieldset>
 
         <fieldset aria-label=${t('form.facebookNames')} class="mt-3">
@@ -147,17 +153,21 @@ export function StudentCreateOrUpdateFormFields({
                   <label for="facebookName-${i}">${t('form.facebookName')}</label>
                 </div>
                 ${operation === 'write' && html`<${RemoveButton} />`}
-                ${operation === 'write' &&
-                html`<${AddButton} itemsName="facebookNames" i=${i} l=${l} />`}
+                ${
+                  operation === 'write' &&
+                  html`<${AddButton} itemsName="facebookNames" i=${i} l=${l} />`
+                }
               </div>
             `,
           )}
-          ${operation === 'write' &&
-          html`<${AddButton}
-            itemsName="facebookNames"
-            humanName=${t('form.facebookNames')}
-            l=${student.facebookNames}
-          />`}
+          ${
+            operation === 'write' &&
+            html`<${AddButton}
+              itemsName="facebookNames"
+              humanName=${t('form.facebookNames')}
+              l=${student.facebookNames}
+            />`
+          }
         </fieldset>
 
         <div class="mt-3 form-floating">
@@ -182,28 +192,29 @@ export function StudentCreateOrUpdateFormFields({
             style="height: 120px"
             readonly=${isReadOnly}
           >
-${student.notes ?? ''}</textarea
-          >
+${student.notes ?? ''}</textarea>
           <label for="notes">${t('form.notes')}</label>
         </div>
 
-        ${'cardcomCustomerIds' in student &&
-        student.cardcomCustomerIds &&
-        student.cardcomCustomerIds.length > 0
-          ? html`
-              <div class="mt-3 form-floating">
-                <input
-                  type="text"
-                  placeholder=" "
-                  class="form-control"
-                  id="cardcomCustomerIds"
-                  value=${student.cardcomCustomerIds.join(', ')}
-                  readonly
-                />
-                <label for="cardcomCustomerIds">${t('form.cardcomCustomerIds')}</label>
-              </div>
-            `
-          : ''}
+        ${
+          'cardcomCustomerIds' in student &&
+          student.cardcomCustomerIds &&
+          student.cardcomCustomerIds.length > 0
+            ? html`
+                <div class="mt-3 form-floating">
+                  <input
+                    type="text"
+                    placeholder=" "
+                    class="form-control"
+                    id="cardcomCustomerIds"
+                    value=${student.cardcomCustomerIds.join(', ')}
+                    readonly
+                  />
+                  <label for="cardcomCustomerIds">${t('form.cardcomCustomerIds')}</label>
+                </div>
+              `
+            : ''
+        }
       </div>
     </div>
   `

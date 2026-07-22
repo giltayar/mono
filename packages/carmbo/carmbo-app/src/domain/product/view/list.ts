@@ -80,15 +80,17 @@ function ProductsView({
           ${products.map(
             (product, i, l) => html`
               <tr
-                ...${i === l.length - 1
-                  ? {
-                      'hx-get': `/products?page=${encodeURIComponent(page + 1)}`,
-                      'hx-trigger': 'revealed',
-                      'hx-select': '.products-view tbody tr',
-                      'hx-include': '.products-view form',
-                      'hx-swap': 'afterend',
-                    }
-                  : {}}
+                ...${
+                  i === l.length - 1
+                    ? {
+                        'hx-get': `/products?page=${encodeURIComponent(page + 1)}`,
+                        'hx-trigger': 'revealed',
+                        'hx-select': '.products-view tbody tr',
+                        'hx-include': '.products-view form',
+                        'hx-swap': 'afterend',
+                      }
+                    : {}
+                }
               >
                 <td>
                   <a

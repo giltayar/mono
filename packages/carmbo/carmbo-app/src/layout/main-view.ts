@@ -39,14 +39,17 @@ export function MainLayout({
         <body>
           <div class="layouts-main-view">
             <header class="container">
-              ${activeNavItem !== 'no-nav-bar' &&
-              html`<${NavBar} activeNavItem=${activeNavItem} />`}
+              ${
+                activeNavItem !== 'no-nav-bar' && html`<${NavBar} activeNavItem=${activeNavItem} />`
+              }
             </header>
             <main class="container">${children}</main>
             <div id="banner-container">
-              ${banner
-                ? html`<${BannerComponent} banner=${banner}></${BannerComponent}>`
-                : undefined}
+              ${
+                banner
+                  ? html`<${BannerComponent} banner=${banner}></${BannerComponent}>`
+                  : undefined
+              }
             </div>
           </div>
         </body>

@@ -46,15 +46,17 @@ export function SalesFormFields({
             ></datalist>
           </div>
           <div class="col-auto link">
-            ${sale.salesEventNumber
-              ? html`<a href="/sales-events/${sale.salesEventNumber}" title="View sales event"
-                  ><object
-                    type="image/svg+xml"
-                    class="feather feather-small pe-none"
-                    data=${`/src/${version}/layout/style/link.svg`}
-                  ></object>
-                </a>`
-              : ''}
+            ${
+              sale.salesEventNumber
+                ? html`<a href="/sales-events/${sale.salesEventNumber}" title="View sales event"
+                    ><object
+                      type="image/svg+xml"
+                      class="feather feather-small pe-none"
+                      data=${`/src/${version}/layout/style/link.svg`}
+                    ></object>
+                  </a>`
+                : ''
+            }
           </div>
         </div>
         <div class="mb-3">
@@ -74,29 +76,33 @@ export function SalesFormFields({
               hx-get="/sales/query/student-list"
             ></datalist>
             <div class="col-auto link">
-              ${sale.studentNumber
-                ? html`<a href="/students/${sale.studentNumber}" title="View student"
-                    ><object
-                      type="image/svg+xml"
-                      class="feather feather-small pe-none"
-                      data=${`/src/${version}/layout/style/link.svg`}
-                    ></object>
-                  </a>`
-                : ''}
+              ${
+                sale.studentNumber
+                  ? html`<a href="/students/${sale.studentNumber}" title="View student"
+                      ><object
+                        type="image/svg+xml"
+                        class="feather feather-small pe-none"
+                        data=${`/src/${version}/layout/style/link.svg`}
+                      ></object>
+                    </a>`
+                  : ''
+              }
             </div>
-            ${!isReadOnly
-              ? html`<div class="col-auto">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary btn-sm"
-                    hx-get="/sales/student-search-dialog"
-                    hx-target="#student-search-dialog-container"
-                    hx-swap="innerHTML"
-                  >
-                    ${t('form.searchCreate')}
-                  </button>
-                </div>`
-              : ''}
+            ${
+              !isReadOnly
+                ? html`<div class="col-auto">
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary btn-sm"
+                      hx-get="/sales/student-search-dialog"
+                      hx-target="#student-search-dialog-container"
+                      hx-swap="innerHTML"
+                    >
+                      ${t('form.searchCreate')}
+                    </button>
+                  </div>`
+                : ''
+            }
           </div>
         </div>
         <div class="mb-3 row">
@@ -114,75 +120,81 @@ export function SalesFormFields({
               >${t('form.standingOrder')}${sale.isStandingOrder ? ':' : ''}
             </label>
           </div>
-          ${sale.isStandingOrder
-            ? html`<div class="col">
-                <input class="form-control" type="text" value=${sale.recurringOrderId} readonly />
-              </div>`
-            : undefined}
+          ${
+            sale.isStandingOrder
+              ? html`<div class="col">
+                  <input class="form-control" type="text" value=${sale.recurringOrderId} readonly />
+                </div>`
+              : undefined
+          }
         </div>
-        ${sale.products && sale.products.length > 0
-          ? html`
-              <fieldset class="mb-3">
-                <legend><h6>${t('form.products')}</h6></legend>
-                ${sale.products.map(
-                  (product, index) => html`
-                    <fieldset class="card mb-2">
-                      <div class="card-body">
-                        <legend class="mb-2">
-                          <h6>
-                            ${index + 1}: ${product.productName}
-                            <a href="/products/${product.productNumber}" title="View product"
-                              ><object
-                                type="image/svg+xml"
-                                class="feather feather-small pe-none"
-                                data=${`/src/${version}/layout/style/link.svg`}
-                              ></object>
-                            </a>
-                          </h6>
-                        </legend>
-                        <input
-                          type="hidden"
-                          name=${`products[${index}][productNumber]`}
-                          value=${[product.productNumber]}
-                        />
-                        <div class="products-view_item input-group">
-                          <div class="form-floating">
-                            <input
-                              name="products[${index}][unitPrice]"
-                              id="products[${index}][unitPrice]"
-                              type="number"
-                              value=${product.unitPrice ?? 1}
-                              placeholder=" "
-                              required
-                              class="form-control"
-                              readonly=${isReadOnly}
-                            />
-                            <label for="products[${index}][unitPrice]"
-                              >${t('form.unitPrice')}</label
-                            >
-                          </div>
+        ${
+          sale.products && sale.products.length > 0
+            ? html`
+                <fieldset class="mb-3">
+                  <legend><h6>${t('form.products')}</h6></legend>
+                  ${sale.products.map(
+                    (product, index) => html`
+                      <fieldset class="card mb-2">
+                        <div class="card-body">
+                          <legend class="mb-2">
+                            <h6>
+                              ${index + 1}: ${product.productName}
+                              <a href="/products/${product.productNumber}" title="View product"
+                                ><object
+                                  type="image/svg+xml"
+                                  class="feather feather-small pe-none"
+                                  data=${`/src/${version}/layout/style/link.svg`}
+                                ></object>
+                              </a>
+                            </h6>
+                          </legend>
+                          <input
+                            type="hidden"
+                            name=${`products[${index}][productNumber]`}
+                            value=${[product.productNumber]}
+                          />
+                          <div class="products-view_item input-group">
+                            <div class="form-floating">
+                              <input
+                                name="products[${index}][unitPrice]"
+                                id="products[${index}][unitPrice]"
+                                type="number"
+                                value=${product.unitPrice ?? 1}
+                                placeholder=" "
+                                required
+                                class="form-control"
+                                readonly=${isReadOnly}
+                              />
+                              <label for="products[${index}][unitPrice]"
+                                >${t('form.unitPrice')}</label
+                              >
+                            </div>
 
-                          <div class="form-floating">
-                            <input
-                              name="products[${index}][quantity]"
-                              id="products[${index}][quantity]"
-                              type="number"
-                              value=${product.quantity ?? 1}
-                              placeholder=" "
-                              required
-                              class="form-control"
-                              readonly=${isReadOnly}
-                            />
-                            <label for="products[${index}][quantity]">${t('form.quantity')}</label>
+                            <div class="form-floating">
+                              <input
+                                name="products[${index}][quantity]"
+                                id="products[${index}][quantity]"
+                                type="number"
+                                value=${product.quantity ?? 1}
+                                placeholder=" "
+                                required
+                                class="form-control"
+                                readonly=${isReadOnly}
+                              />
+                              <label for="products[${index}][quantity]"
+                                >${t('form.quantity')}</label
+                              >
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </fieldset>
-                  `,
-                )}
-              </fieldset>
-            `
-          : ''}
+                      </fieldset>
+                    `,
+                  )}
+                </fieldset>
+              `
+            : ''
+        }
         <div class="mb-3">
           <label for="cardcomInvoiceNumber" class="form-label"
             >${t('form.cardcomInvoiceNumber')}</label
@@ -196,23 +208,27 @@ export function SalesFormFields({
               value=${sale.cardcomInvoiceNumber}
               readonly=${isReadOnly}
             />
-            ${!isReadOnly
-              ? html`<button
-                  type="button"
-                  class="btn btn-outline-secondary create-student-from-invoice"
-                  hx-post="/sales/create-student-from-invoice"
-                  hx-target="closest .sales-view_form-fields"
-                  hx-swap="outerHTML"
-                  hx-include="closest form"
-                  hx-indicator=".operation-spinner"
-                >
-                  ${t('form.createStudentFromInvoice')}
-                </button>`
-              : ''}
+            ${
+              !isReadOnly
+                ? html`<button
+                    type="button"
+                    class="btn btn-outline-secondary create-student-from-invoice"
+                    hx-post="/sales/create-student-from-invoice"
+                    hx-target="closest .sales-view_form-fields"
+                    hx-swap="outerHTML"
+                    hx-include="closest form"
+                    hx-indicator=".operation-spinner"
+                  >
+                    ${t('form.createStudentFromInvoice')}
+                  </button>`
+                : ''
+            }
           </div>
-          ${sale.cardcomInvoiceDocumentUrl
-            ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
-            : undefined}
+          ${
+            sale.cardcomInvoiceDocumentUrl
+              ? html`<${InvoiceDocumentUrlLink} url=${sale.cardcomInvoiceDocumentUrl} />`
+              : undefined
+          }
         </div>
         <div
           class="mb-3"
@@ -256,8 +272,7 @@ export function SalesFormFields({
             style="height: 120px"
             readonly=${isNotesReadOnly}
           >
-${sale.notes ?? ''}</textarea
-          >
+${sale.notes ?? ''}</textarea>
           <label for="sale-notes">${t('form.notes')}</label>
         </div>
         <div class="mb-3">
@@ -386,8 +401,7 @@ ${sale.notes ?? ''}</textarea
                 rows="2"
                 readonly=${isReadOnly}
               >
-${sale.deliveryAddress?.notesToDeliveryPerson ?? ''}</textarea
-              >
+${sale.deliveryAddress?.notesToDeliveryPerson ?? ''}</textarea>
             </div>
           </div>
         </fieldset>

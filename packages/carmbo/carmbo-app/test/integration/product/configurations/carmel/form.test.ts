@@ -23,10 +23,10 @@ test('create product and update multiple fields', async ({page}) => {
   // Fill the form
   const newForm = newProductModel.form()
   await newForm.nameInput().locator.fill('Test Product')
-  await newForm.productTypeSelect().locator.selectOption('recorded')
+  await waitForHtmx(page, async () => newForm.productTypeSelect().locator.selectOption('recorded'))
 
   // Fill the academy courses
-  await newForm.academyCourses().addButton().locator.click()
+  await waitForHtmx(page, () => newForm.academyCourses().addButton().locator.click())
   await waitForHtmx(page, async () => {
     await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
     await newForm.academyCourses().academyCourseInput(0).locator.blur()

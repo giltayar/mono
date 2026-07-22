@@ -20,9 +20,11 @@ export function SaleUpdateView({
       <h2>
         ${!isReadOnlySale ? t('createUpdate.updateSale') : t('createUpdate.sale')}
         ${` ${sale.saleNumber}`}
-        ${sale.historyOperation === 'delete'
-          ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
-          : ''}
+        ${
+          sale.historyOperation === 'delete'
+            ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
+            : ''
+        }
         <div class="operation-spinner spinner-border mr-1" role="status"></div>
       </h2>
       <${SaleStatus} sale=${sale} />
@@ -37,69 +39,77 @@ export function SaleUpdateView({
       <input name="saleNumber" type="hidden" value=${sale.saleNumber} />
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          ${isReadOnlySale
-            ? sale.historyOperation !== 'delete'
-              ? html`<button
-                  class="btn btn-primary"
-                  type="button"
-                  hx-put="/sales/${sale.saleNumber}/notes"
-                  hx-include="#sale-notes"
-                  hx-indicator=".operation-spinner"
-                >
-                  ${t('createUpdate.update')}
-                </button>`
-              : undefined
-            : sale.historyOperation === 'delete'
-              ? html`
-                  <button
-                    class="btn btn-danger"
-                    type="Submit"
-                    hx-delete=""
-                    name="operation"
-                    value="restore"
+          ${
+            isReadOnlySale
+              ? sale.historyOperation !== 'delete'
+                ? html`<button
+                    class="btn btn-primary"
+                    type="button"
+                    hx-put="/sales/${sale.saleNumber}/notes"
+                    hx-include="#sale-notes"
+                    hx-indicator=".operation-spinner"
                   >
-                    ${t('createUpdate.restore')}
-                  </button>
-                `
-              : html`
-                  <button class="btn btn-secondary discard" type="Submit" value="discard">
-                    ${t('createUpdate.discard')}
-                  </button>
-                  <button
-                    class="btn btn-danger"
-                    type="Submit"
-                    hx-delete=""
-                    name="operation"
-                    value="delete"
-                  >
-                    ${t('createUpdate.archive')}
-                  </button>
-                  <button class="btn btn-primary" type="Submit" value="save">
                     ${t('createUpdate.update')}
-                  </button>
-                `}
+                  </button>`
+                : undefined
+              : sale.historyOperation === 'delete'
+                ? html`
+                    <button
+                      class="btn btn-danger"
+                      type="Submit"
+                      hx-delete=""
+                      name="operation"
+                      value="restore"
+                    >
+                      ${t('createUpdate.restore')}
+                    </button>
+                  `
+                : html`
+                    <button class="btn btn-secondary discard" type="Submit" value="discard">
+                      ${t('createUpdate.discard')}
+                    </button>
+                    <button
+                      class="btn btn-danger"
+                      type="Submit"
+                      hx-delete=""
+                      name="operation"
+                      value="delete"
+                    >
+                      ${t('createUpdate.archive')}
+                    </button>
+                    <button class="btn btn-primary" type="Submit" value="save">
+                      ${t('createUpdate.update')}
+                    </button>
+                  `
+          }
           <button class="button btn-primary" hx-post="/sales/${sale.saleNumber}/connect">
             ${!sale.isConnected ? t('createUpdate.connect') : t('createUpdate.reconnect')}
           </button>
-          ${sale.isActive &&
-          !sale.cardcomRefundTransactionId &&
-          (sale.finalSaleRevenue ?? 0) > 0 &&
-          !sale.isStandingOrder
-            ? html`<button
-                class="button"
-                hx-post="/sales/${sale.saleNumber}/refund"
-                hx-confirm=${sale.manualSaleType === 'manual'
-                  ? 'This sale is manual! You MUST process the refund in Cardcom. Are you sure you want to proceed?'
-                  : undefined}
-              >
-                ${t('createUpdate.refund')}
-              </button>`
-            : undefined}
-          ${sale.isConnected
-            ? html`<button class="button" hx-post="/sales/${sale.saleNumber}/disconnect">
-                ${t('createUpdate.disconnect')}
-              </button>`
-            : undefined}
+          ${
+            sale.isActive &&
+            !sale.cardcomRefundTransactionId &&
+            (sale.finalSaleRevenue ?? 0) > 0 &&
+            !sale.isStandingOrder
+              ? html`<button
+                  class="button"
+                  hx-post="/sales/${sale.saleNumber}/refund"
+                  hx-confirm=${
+                    sale.manualSaleType === 'manual'
+                      ? 'This sale is manual! You MUST process the refund in Cardcom. Are you sure you want to proceed?'
+                      : undefined
+                  }
+                >
+                  ${t('createUpdate.refund')}
+                </button>`
+              : undefined
+          }
+          ${
+            sale.isConnected
+              ? html`<button class="button" hx-post="/sales/${sale.saleNumber}/disconnect">
+                  ${t('createUpdate.disconnect')}
+                </button>`
+              : undefined
+          }
         </section>
       </div>
       <div class="mt-3">
@@ -122,15 +132,19 @@ function SaleStatus({sale}: {sale: Sale}) {
   const t = getFixedT(null, 'sale')
   return html`
     <div>
-      ${sale.isStandingOrder
-        ? html`${t('createUpdate.subscription')}${!sale.isActive
-            ? ' ' + t('createUpdate.unsubscribed')
-            : ''}`
-        : t('createUpdate.regularSale')}
+      ${
+        sale.isStandingOrder
+          ? html`${t('createUpdate.subscription')}${
+              !sale.isActive ? ' ' + t('createUpdate.unsubscribed') : ''
+            }`
+          : t('createUpdate.regularSale')
+      }
       ${sale.cardcomRefundTransactionId ? html` | ${t('createUpdate.refunded')}` : ''}
-      ${sale.isConnected
-        ? ' | ' + t('createUpdate.connectedToProviders')
-        : ' | ' + t('createUpdate.disconnectedFromProviders')}
+      ${
+        sale.isConnected
+          ? ' | ' + t('createUpdate.connectedToProviders')
+          : ' | ' + t('createUpdate.disconnectedFromProviders')
+      }
     </div>
   `
 }

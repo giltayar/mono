@@ -75,8 +75,7 @@ export async function showSalesEventCreate(
 export async function showSalesEventUpdate(
   salesEventNumber: number,
   salesEventWithError:
-    | {salesEvent: SalesEvent | undefined; error: any; operation: string}
-    | undefined,
+    {salesEvent: SalesEvent | undefined; error: any; operation: string} | undefined,
   sql: Sql,
   options: {appBaseUrl: string; apiSecret: string | undefined},
 ): Promise<ControllerResult> {

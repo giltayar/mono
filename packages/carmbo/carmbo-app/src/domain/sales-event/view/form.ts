@@ -84,12 +84,14 @@ export function SalesEventCreateOrUpdateFormFields({
                   <input
                     name="productsForSale[${i}]"
                     id="productsForSale-${i}"
-                    value=${productForSaleId
-                      ? generateItemTitle(
-                          productForSaleId,
-                          products.find((p) => p.id === productForSaleId)?.name,
-                        )
-                      : ''}
+                    value=${
+                      productForSaleId
+                        ? generateItemTitle(
+                            productForSaleId,
+                            products.find((p) => p.id === productForSaleId)?.name,
+                          )
+                        : ''
+                    }
                     list="products-list-${i}"
                     type="text"
                     placeholder=" "
@@ -110,29 +112,35 @@ export function SalesEventCreateOrUpdateFormFields({
                   hx-get="/products/query/datalist"
                 ></datalist>
                 ${operation === 'write' && html`<${RemoveButton} />`}
-                ${operation === 'write' &&
-                html`<${AddButton} itemsName="productsForSale" i=${i} l=${l} />`}
-                ${productForSaleId
-                  ? html`<a
-                      class="align-self-center ms-1"
-                      href="/products/${productForSaleId}"
-                      title="View product"
-                      ><object
-                        type="image/svg+xml"
-                        class="feather feather-small pe-none"
-                        data=${`/src/${version}/layout/style/link.svg`}
-                      ></object>
-                    </a>`
-                  : ''}
+                ${
+                  operation === 'write' &&
+                  html`<${AddButton} itemsName="productsForSale" i=${i} l=${l} />`
+                }
+                ${
+                  productForSaleId
+                    ? html`<a
+                        class="align-self-center ms-1"
+                        href="/products/${productForSaleId}"
+                        title="View product"
+                        ><object
+                          type="image/svg+xml"
+                          class="feather feather-small pe-none"
+                          data=${`/src/${version}/layout/style/link.svg`}
+                        ></object>
+                      </a>`
+                    : ''
+                }
               </div>
             `,
           )}
-          ${operation === 'write' &&
-          html`<${AddButton}
-            itemsName="productsForSale"
-            humanName=${t('form.productsForSale')}
-            l=${salesEvent.productsForSale}
-          />`}
+          ${
+            operation === 'write' &&
+            html`<${AddButton}
+              itemsName="productsForSale"
+              humanName=${t('form.productsForSale')}
+              l=${salesEvent.productsForSale}
+            />`
+          }
         </fieldset>
 
         <div class="mt-3 form-floating">
@@ -144,8 +152,7 @@ export function SalesEventCreateOrUpdateFormFields({
             style="height: 120px"
             readonly=${isReadOnly}
           >
-${salesEvent.notes ?? ''}</textarea
-          >
+${salesEvent.notes ?? ''}</textarea>
           <label for="notes">${t('form.notes')}</label>
         </div>
       </div>

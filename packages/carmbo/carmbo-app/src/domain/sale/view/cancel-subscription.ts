@@ -73,11 +73,15 @@ export function showErrorSubscriptionNotFound({
               <div class="card-body text-center">
                 <h3 class="card-title mb-4">${t('cancelSubscription.errorNotFoundTitle')}</h3>
                 <p>
-                  ${!studentName &&
-                  t('cancelSubscription.errorNotFoundSubscriptionNotFound', {email})}
-                  ${studentName &&
-                  !productName &&
-                  t('cancelSubscription.errorNotFoundSubscriptionNotFound', {email})}
+                  ${
+                    !studentName &&
+                    t('cancelSubscription.errorNotFoundSubscriptionNotFound', {email})
+                  }
+                  ${
+                    studentName &&
+                    !productName &&
+                    t('cancelSubscription.errorNotFoundSubscriptionNotFound', {email})
+                  }
                 </p>
               </div>
             </div>

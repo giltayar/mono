@@ -18,15 +18,20 @@ export function SaleHistoryList({
       ${history?.map((entry, i) => {
         const date = new Date(entry.timestamp)
         return html`<li class="list-group-item d-flex" style="text-transform: capitalize;">
-          ${entry.historyId === sale.id
-            ? html`<strong class="d-block">${saleHistoryOperationToText(entry.operation)}</strong>`
-            : html` <a
-                class="d-block"
-                href=${`/sales/${sale.saleNumber}` +
-                (i > 0 ? `/by-history/${entry.historyId}` : '')}
-              >
-                ${saleHistoryOperationToText(entry.operation)}</a
-              >`}
+          ${
+            entry.historyId === sale.id
+              ? html`<strong class="d-block"
+                  >${saleHistoryOperationToText(entry.operation)}</strong
+                >`
+              : html` <a
+                  class="d-block"
+                  href=${
+                    `/sales/${sale.saleNumber}` + (i > 0 ? `/by-history/${entry.historyId}` : '')
+                  }
+                >
+                  ${saleHistoryOperationToText(entry.operation)}</a
+                >`
+          }
           <span class="d-block ms-auto" title=${date.toLocaleTimeString('he-IL')}
             >${date.toLocaleDateString('he-IL')}</span
           >

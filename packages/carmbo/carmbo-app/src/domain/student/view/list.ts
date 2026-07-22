@@ -81,15 +81,17 @@ function StudentsView({
           ${students.map(
             (student, i, l) => html`
               <tr
-                ...${i === l.length - 1
-                  ? {
-                      'hx-get': `/students?page=${encodeURIComponent(page + 1)}`,
-                      'hx-trigger': 'revealed',
-                      'hx-select': '.students-view tbody tr',
-                      'hx-include': '.students-view form',
-                      'hx-swap': 'afterend',
-                    }
-                  : {}}
+                ...${
+                  i === l.length - 1
+                    ? {
+                        'hx-get': `/students?page=${encodeURIComponent(page + 1)}`,
+                        'hx-trigger': 'revealed',
+                        'hx-select': '.students-view tbody tr',
+                        'hx-include': '.students-view form',
+                        'hx-swap': 'afterend',
+                      }
+                    : {}
+                }
               >
                 <td>
                   <a

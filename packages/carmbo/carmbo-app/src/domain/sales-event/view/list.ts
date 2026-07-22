@@ -81,15 +81,17 @@ function SalesEventsView({
           ${salesEvents.map(
             (salesEvent, i, l) => html`
               <tr
-                ...${i === l.length - 1
-                  ? {
-                      'hx-get': `/sales-events?page=${encodeURIComponent(page + 1)}`,
-                      'hx-trigger': 'revealed',
-                      'hx-select': '.sales-events-view tbody tr',
-                      'hx-include': '.sales-events-view form',
-                      'hx-swap': 'afterend',
-                    }
-                  : {}}
+                ...${
+                  i === l.length - 1
+                    ? {
+                        'hx-get': `/sales-events?page=${encodeURIComponent(page + 1)}`,
+                        'hx-trigger': 'revealed',
+                        'hx-select': '.sales-events-view tbody tr',
+                        'hx-include': '.sales-events-view form',
+                        'hx-swap': 'afterend',
+                      }
+                    : {}
+                }
               >
                 <td>
                   <a

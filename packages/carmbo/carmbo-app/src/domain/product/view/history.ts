@@ -22,15 +22,19 @@ export function ProductHistoryList({
       ${history?.map((entry, i) => {
         const date = new Date(entry.timestamp)
         return html`<li class="list-group-item d-flex" style="text-transform: capitalize;">
-          ${entry.historyId === product.id
-            ? html`<strong class="d-block">${historyOperationToText(entry.operation)}</strong>`
-            : html` <a
-                class="d-block"
-                href=${`/products/${product.productNumber}` +
-                (i > 0 ? `/by-history/${entry.historyId}` : '')}
-              >
-                ${historyOperationToText(entry.operation)}</a
-              >`}
+          ${
+            entry.historyId === product.id
+              ? html`<strong class="d-block">${historyOperationToText(entry.operation)}</strong>`
+              : html` <a
+                  class="d-block"
+                  href=${
+                    `/products/${product.productNumber}` +
+                    (i > 0 ? `/by-history/${entry.historyId}` : '')
+                  }
+                >
+                  ${historyOperationToText(entry.operation)}</a
+                >`
+          }
           <span class="d-block ms-auto" title=${date.toLocaleTimeString('he-IL')}
             >${date.toLocaleDateString('he-IL')}</span
           >

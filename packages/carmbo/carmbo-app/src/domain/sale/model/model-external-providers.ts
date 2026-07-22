@@ -27,8 +27,7 @@ export type SaleWithProviders = {
     productName: string
     productType: string
     academyCourses:
-      | {courseId: string; accountSubdomain: string; name: string; isConnected: boolean}[]
-      | undefined
+      {courseId: string; accountSubdomain: string; name: string; isConnected: boolean}[] | undefined
     smooveLists:
       | {
           isListConnected: boolean

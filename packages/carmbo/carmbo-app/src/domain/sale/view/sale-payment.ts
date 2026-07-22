@@ -30,16 +30,18 @@ export function SalePaymentsView({sale}: {sale: SaleWithPayments}) {
               </td>
               <td>${payment.amount}</td>
               <td>
-                ${payment.resolution}${payment.cardcomStatus !== 'SUCCESSFUL'
-                  ? ` (${payment.cardcomStatus})`
-                  : ''}
+                ${payment.resolution}${
+                  payment.cardcomStatus !== 'SUCCESSFUL' ? ` (${payment.cardcomStatus})` : ''
+                }
               </td>
               <td>
-                ${payment.invoiceDocumentNumber
-                  ? html`<a href=${payment.invoiceDocumentUrl} target="_blank"
-                      >${payment.invoiceDocumentNumber}</a
-                    >`
-                  : t('payments.na')}
+                ${
+                  payment.invoiceDocumentNumber
+                    ? html`<a href=${payment.invoiceDocumentUrl} target="_blank"
+                        >${payment.invoiceDocumentNumber}</a
+                      >`
+                    : t('payments.na')
+                }
               </td>
             </tr>
           `,

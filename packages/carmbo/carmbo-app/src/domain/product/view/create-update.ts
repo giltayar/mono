@@ -81,9 +81,11 @@ export function ProductUpdateView({
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
       ${t('createUpdate.updateProduct')} ${product.productNumber}
-      ${product.historyOperation === 'delete'
-        ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
-        : ''}
+      ${
+        product.historyOperation === 'delete'
+          ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>`
+          : ''
+      }
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
     <form
@@ -100,35 +102,37 @@ export function ProductUpdateView({
       />
       <div class="ms-auto" style="width: fit-content">
         <section class="btn-group" aria-label="Form actions">
-          ${product.historyOperation === 'delete'
-            ? html`
-                <button
-                  class="btn btn-danger"
-                  type="Submit"
-                  value="delete"
-                  hx-delete=""
-                  hx-params="delete-operation"
-                >
-                  ${t('createUpdate.restore')}
-                </button>
-              `
-            : html`
-                <button class="btn btn-secondary discard" type="Submit" value="discard">
-                  ${t('createUpdate.discard')}
-                </button>
-                <button
-                  class="btn btn-danger"
-                  type="Submit"
-                  value="delete"
-                  hx-delete=""
-                  hx-params="delete-operation"
-                >
-                  ${t('createUpdate.archive')}
-                </button>
-                <button class="btn btn-primary" type="Submit" value="save">
-                  ${t('createUpdate.update')}
-                </button>
-              `}
+          ${
+            product.historyOperation === 'delete'
+              ? html`
+                  <button
+                    class="btn btn-danger"
+                    type="Submit"
+                    value="delete"
+                    hx-delete=""
+                    hx-params="delete-operation"
+                  >
+                    ${t('createUpdate.restore')}
+                  </button>
+                `
+              : html`
+                  <button class="btn btn-secondary discard" type="Submit" value="discard">
+                    ${t('createUpdate.discard')}
+                  </button>
+                  <button
+                    class="btn btn-danger"
+                    type="Submit"
+                    value="delete"
+                    hx-delete=""
+                    hx-params="delete-operation"
+                  >
+                    ${t('createUpdate.archive')}
+                  </button>
+                  <button class="btn btn-primary" type="Submit" value="save">
+                    ${t('createUpdate.update')}
+                  </button>
+                `
+          }
         </section>
       </div>
       <div class="mt-3">
