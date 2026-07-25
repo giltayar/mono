@@ -1,0 +1,52 @@
+{
+	"folders": [
+		{
+			"name": "console-tesktit",
+			"path": "packages/commons/console-tesktit"
+		},
+		{
+			"name": "dependencies-commons",
+			"path": "packages/commons/dependencies-commons"
+		},
+		{
+			"name": "docker-compose-testkit",
+			"path": "packages/commons/docker-compose-testkit"
+		},
+		{
+			"name": "functional-commons",
+			"path": "packages/commons/functional-commons"
+		},
+		{
+			"name": "service-commons",
+			"path": "packages/commons/service-commons"
+		},
+		{
+			"name": "http-commons",
+			"path": "packages/commons/http-commons"
+		},
+		{
+			"name": "node-test-commons",
+			"path": "packages/commons/node-test-commons"
+		},
+		{
+			"name": "pino-testkit",
+			"path": "packages/commons/pino-testkit"
+		},
+		{
+			"name": "promise-commons",
+			"path": "packages/commons/promise-commons"
+		},
+		{
+			"name": "scripting-commons",
+			"path": "packages/commons/scripting-commons"
+		},
+		{
+			"name": "url-commons",
+			"path": "packages/commons/url-commons"
+		},
+		{
+			"path": "packages/monnaie/monnaie-app"
+		}
+	],
+	"settings": {}
+}
