@@ -14,4 +14,9 @@ test('calculates an expression', async ({page}) => {
   await calculator.calculateButton().locator.click()
 
   await expect(calculator.result().locator).toHaveText('= 42')
+  await expect(calculator.history().items().locator).toHaveText([/12 \+ 30\s*= 42/])
+
+  await calculator.history().deleteButton().locator.click()
+
+  await expect(calculator.history().empty().locator).toBeVisible()
 })

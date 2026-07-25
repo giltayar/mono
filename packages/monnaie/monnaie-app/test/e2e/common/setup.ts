@@ -8,7 +8,7 @@ export function setup(): {url: () => URL} {
 
   test.beforeAll(async () => {
     const dockerCompose = await runDockerCompose(
-      new URL('../docker-compose.yml', import.meta.url),
+      new URL('../docker-compose.yaml', import.meta.url),
       {
         containerCleanup: true,
         forceRecreate: true,

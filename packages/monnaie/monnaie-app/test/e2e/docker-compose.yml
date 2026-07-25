@@ -1,8 +1,0 @@
-services:
-  monnaie-app:
-    image: giltayar/monnaie-app:${MONNAIE_APP_VERSION}
-    environment:
-      HOST: 0.0.0.0
-      PORT: 3000
-    ports:
-      - 3000

@@ -1,4 +1,8 @@
+import type {Sql} from 'postgres'
+
 export type CalculationResult = {value: string} | {error: string}
+
+export type Calculation = {id: number; expression: string; value: string}
 
 type Operator = '+' | '-' | '*' | '/'
 
@@ -43,4 +47,20 @@ function applyOperator(left: number, operator: Operator, right: number): number 
     case '/':
       return left / right
   }
+}
+
+export async function saveCalculation(sql: Sql, expression: string, value: string): Promise<void> {
+  await sql`INSERT INTO calculation ${sql({expression: expression.trim(), value})}`
+}
+
+export async function fetchCalculationHistory(sql: Sql): Promise<Calculation[]> {
+  const rows = await sql<
+    Calculation[]
+  >`SELECT id, expression, value FROM calculation ORDER BY id DESC`
+
+  return [...rows]
+}
+
+export async function deleteCalculationHistory(sql: Sql): Promise<void> {
+  await sql`DELETE FROM calculation`
 }

@@ -2,10 +2,14 @@ import fastify, {type FastifyInstance} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
+import postgres, {type Sql} from 'postgres'
 import calculatorRoutes from '../domain/calculator/route.ts'
 import {version} from '../commons/version.ts'
 
-export function makeApp(): FastifyInstance {
+export function makeApp({connectionString}: {connectionString: string}): {
+  app: FastifyInstance
+  sql: Sql
+} {
   const app = fastify({
     logger:
       process.env.NODE_ENV !== 'test'
@@ -22,6 +26,8 @@ export function makeApp(): FastifyInstance {
 
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
+
+  const sql = postgres(connectionString, {transform: {...postgres.camel}})
 
   app.register(formbody)
 
@@ -41,9 +47,9 @@ export function makeApp(): FastifyInstance {
     allowedPath: (pathName) => pathName.endsWith('.css') || pathName.endsWith('.js'),
   })
 
-  app.register(calculatorRoutes)
+  app.register(calculatorRoutes, {sql})
 
   app.get('/health', async () => ({status: 'ok', version}))
 
-  return app
+  return {app, sql}
 }
