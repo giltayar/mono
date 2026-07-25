@@ -2,13 +2,13 @@ import fastify, {type FastifyInstance} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
-import postgres, {type Sql} from 'postgres'
 import calculatorRoutes from '../domain/calculator/route.ts'
+import {createDb, type Db} from '../commons/db.ts'
 import {version} from '../commons/version.ts'
 
 export function makeApp({connectionString}: {connectionString: string}): {
   app: FastifyInstance
-  sql: Sql
+  db: Db
 } {
   const app = fastify({
     logger:
@@ -27,7 +27,7 @@ export function makeApp({connectionString}: {connectionString: string}): {
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 
-  const sql = postgres(connectionString, {transform: {...postgres.camel}})
+  const db = createDb(connectionString)
 
   app.register(formbody)
 
@@ -47,9 +47,9 @@ export function makeApp({connectionString}: {connectionString: string}): {
     allowedPath: (pathName) => pathName.endsWith('.css') || pathName.endsWith('.js'),
   })
 
-  app.register(calculatorRoutes, {sql})
+  app.register(calculatorRoutes, {db})
 
   app.get('/health', async () => ({status: 'ok', version}))
 
-  return {app, sql}
+  return {app, db}
 }

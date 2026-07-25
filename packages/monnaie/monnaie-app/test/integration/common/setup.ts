@@ -1,18 +1,19 @@
 import crypto from 'node:crypto'
 import {test} from '@playwright/test'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
-import postgres, {type Sql} from 'postgres'
+import {sql} from 'kysely'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
 import {makeApp} from '../../../src/app/monnaie-app.ts'
 import {prepareDatabase} from '../../../src/app/prepare-database.ts'
+import {createDb, type Db} from '../../../src/commons/db.ts'
 
-export function setup(testUrl: string): {url: () => URL; sql: () => Sql} {
+export function setup(testUrl: string): {url: () => URL; db: () => Db} {
   const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
 
   let app: FastifyInstance
-  let sql: Sql
-  let globalSql: Sql
+  let db: Db
+  let globalDb: Db
   let teardown: (() => Promise<void>) | undefined
   let url: URL
 
@@ -24,17 +25,13 @@ export function setup(testUrl: string): {url: () => URL; sql: () => Sql} {
       healthCheck: postgresHealthCheck,
     })
 
-    globalSql = postgres(connectionString(address, 'postgres'))
-    await globalSql`CREATE DATABASE ${globalSql(databaseName)}`.catch((error) => {
-      if (error.code === '42P04') {
-        // the database already exists, from a previous run
-        return
-      }
-      throw error
-    })
-    ;({app, sql} = makeApp({connectionString: connectionString(address, databaseName)}))
+    globalDb = createDb(connectionString(address, 'postgres'))
+    // start from a pristine database, so that the migrations always run from scratch
+    await sql`DROP DATABASE IF EXISTS ${sql.id(databaseName)}`.execute(globalDb)
+    await sql`CREATE DATABASE ${sql.id(databaseName)}`.execute(globalDb)
+    ;({app, db} = makeApp({connectionString: connectionString(address, databaseName)}))
 
-    await prepareDatabase(sql)
+    await prepareDatabase(db)
 
     await app.listen({port: 0, host: '127.0.0.1'})
 
@@ -43,17 +40,17 @@ export function setup(testUrl: string): {url: () => URL; sql: () => Sql} {
   })
 
   test.beforeEach(async () => {
-    await sql`TRUNCATE TABLE calculation RESTART IDENTITY CASCADE`
+    await sql`TRUNCATE TABLE calculation RESTART IDENTITY CASCADE`.execute(db)
   })
 
   test.afterAll(async () => {
     await app?.close()
-    await sql?.end()
-    await globalSql?.end()
+    await db?.destroy()
+    await globalDb?.destroy()
     await teardown?.()
   })
 
-  return {url: () => url, sql: () => sql}
+  return {url: () => url, db: () => db}
 }
 
 function connectionString(address: string, database: string) {
@@ -61,11 +58,11 @@ function connectionString(address: string, database: string) {
 }
 
 async function postgresHealthCheck(address: string) {
-  const sql = postgres(connectionString(address, 'monnaie'))
+  const db = createDb(connectionString(address, 'monnaie'))
 
   try {
-    await sql`SELECT 1`
+    await sql`SELECT 1`.execute(db)
   } finally {
-    await sql.end()
+    await db.destroy()
   }
 }

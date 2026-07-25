@@ -1,4 +1,4 @@
-import type {Sql} from 'postgres'
+import type {Db} from '../../commons/db.ts'
 import type {ControllerResult} from '../../commons/controller.ts'
 import {
   calculate,
@@ -12,29 +12,29 @@ import {
   renderCalculatorPage,
 } from './view/view.ts'
 
-export async function showCalculatorPage(sql: Sql): Promise<ControllerResult> {
-  return {html: renderCalculatorPage(await fetchCalculationHistory(sql))}
+export async function showCalculatorPage(db: Db): Promise<ControllerResult> {
+  return {html: renderCalculatorPage(await fetchCalculationHistory(db))}
 }
 
-export async function calculateExpression(sql: Sql, expression: string): Promise<ControllerResult> {
+export async function calculateExpression(db: Db, expression: string): Promise<ControllerResult> {
   const result = calculate(expression)
 
   if ('error' in result) {
     return {html: renderCalculationResult(result)}
   }
 
-  await saveCalculation(sql, expression, result.value)
+  await saveCalculation(db, expression, result.value)
 
   return {
     html:
       renderCalculationResult(result) +
-      renderCalculationHistory(await fetchCalculationHistory(sql), {outOfBand: true}),
+      renderCalculationHistory(await fetchCalculationHistory(db), {outOfBand: true}),
     headers: {'HX-Trigger': 'calculation-succeeded'},
   }
 }
 
-export async function deleteHistory(sql: Sql): Promise<ControllerResult> {
-  await deleteCalculationHistory(sql)
+export async function deleteHistory(db: Db): Promise<ControllerResult> {
+  await deleteCalculationHistory(db)
 
   return {html: renderCalculationHistory([])}
 }

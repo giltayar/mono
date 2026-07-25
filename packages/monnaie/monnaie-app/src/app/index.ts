@@ -11,8 +11,8 @@ const EnvironmentVariablesSchema = z.object({
 
 const env = EnvironmentVariablesSchema.parse(process.env)
 
-const {app, sql} = makeApp({connectionString: env.DB_CONNECTION_STRING})
+const {app, db} = makeApp({connectionString: env.DB_CONNECTION_STRING})
 
-await prepareDatabase(sql)
+await prepareDatabase(db)
 
 await app.listen({port: env.PORT, host: env.HOST})

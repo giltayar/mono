@@ -1,4 +1,4 @@
-import type {Sql} from 'postgres'
+import type {Db} from '../../commons/db.ts'
 
 export type CalculationResult = {value: string} | {error: string}
 
@@ -49,18 +49,18 @@ function applyOperator(left: number, operator: Operator, right: number): number 
   }
 }
 
-export async function saveCalculation(sql: Sql, expression: string, value: string): Promise<void> {
-  await sql`INSERT INTO calculation ${sql({expression: expression.trim(), value})}`
+export async function saveCalculation(db: Db, expression: string, value: string): Promise<void> {
+  await db.insertInto('calculation').values({expression: expression.trim(), value}).execute()
 }
 
-export async function fetchCalculationHistory(sql: Sql): Promise<Calculation[]> {
-  const rows = await sql<
-    Calculation[]
-  >`SELECT id, expression, value FROM calculation ORDER BY id DESC`
-
-  return [...rows]
+export async function fetchCalculationHistory(db: Db): Promise<Calculation[]> {
+  return await db
+    .selectFrom('calculation')
+    .select(['id', 'expression', 'value'])
+    .orderBy('id', 'desc')
+    .execute()
 }
 
-export async function deleteCalculationHistory(sql: Sql): Promise<void> {
-  await sql`DELETE FROM calculation`
+export async function deleteCalculationHistory(db: Db): Promise<void> {
+  await db.deleteFrom('calculation').execute()
 }
