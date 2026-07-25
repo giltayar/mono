@@ -17,10 +17,30 @@ test('calculates an expression', async ({page}) => {
   await page.goto(url().href)
   const calculator = createCalculatorPageModel(page)
 
+  await calculator.calculationInput().locator.fill('12 + 30')
+  await calculator.calculateButton().locator.click()
+
+  await expect(calculator.result().locator).toHaveText('= 42')
+})
+
+test('calculates a single number', async ({page}) => {
+  await page.goto(url().href)
+  const calculator = createCalculatorPageModel(page)
+
+  await calculator.calculationInput().locator.fill('42')
+  await calculator.calculateButton().locator.click()
+
+  await expect(calculator.result().locator).toHaveText('= 42')
+})
+
+test('shows an error for an expression with more than one operator', async ({page}) => {
+  await page.goto(url().href)
+  const calculator = createCalculatorPageModel(page)
+
   await calculator.calculationInput().locator.fill('1 + 2 * 3')
   await calculator.calculateButton().locator.click()
 
-  await expect(calculator.result().locator).toHaveText('= 7')
+  await expect(calculator.result().locator).toHaveText('Not a valid calculation')
 })
 
 test('shows an error for an invalid expression', async ({page}) => {

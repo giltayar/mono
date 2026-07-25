@@ -10,8 +10,8 @@ test('calculates an expression', async ({page}) => {
 
   await expect(calculator.heading().locator).toBeVisible()
 
-  await calculator.calculationInput().locator.fill('1 + 2 * 3')
+  await calculator.calculationInput().locator.fill('12 + 30')
   await calculator.calculateButton().locator.click()
 
-  await expect(calculator.result().locator).toHaveText('= 7')
+  await expect(calculator.result().locator).toHaveText('= 42')
 })
