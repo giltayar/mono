@@ -1,0 +1,48 @@
+#calculation-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+
+  & input,
+  & button {
+    /* 1rem or more avoids the iOS Safari zoom-on-focus behaviour */
+    font: inherit;
+    min-height: 2.75rem;
+    border-radius: var(--radius);
+    padding: 0 var(--spacing);
+  }
+
+  & input {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: inherit;
+    width: 100%;
+  }
+
+  & button {
+    border: none;
+    background: #0d6efd;
+    color: white;
+    cursor: pointer;
+  }
+
+  @media (min-width: 30rem) {
+    flex-direction: row;
+
+    & button {
+      flex: none;
+    }
+  }
+}
+
+#calculation-result {
+  display: block;
+  margin-top: var(--spacing);
+  font-size: 1.25rem;
+  min-height: 2rem;
+
+  & .error {
+    color: #dc3545;
+    font-size: 1rem;
+  }
+}

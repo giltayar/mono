@@ -1,0 +1,36 @@
+:root {
+  --spacing: 0.75rem;
+  --radius: 0.5rem;
+  --border-color: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Prevent mobile browsers from auto-inflating font sizes */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.main-view {
+  max-width: 32rem;
+  margin: 0 auto;
+  /* Respect notches and home indicators on mobile */
+  padding: calc(var(--spacing) + env(safe-area-inset-top)) var(--spacing)
+    calc(var(--spacing) + env(safe-area-inset-bottom));
+
+  & h1 {
+    font-size: 1.5rem;
+    margin: 0 0 var(--spacing);
+  }
+}
