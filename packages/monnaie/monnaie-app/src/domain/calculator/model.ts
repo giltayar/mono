@@ -1,6 +1,9 @@
 import type {Db} from '../../commons/db.ts'
 
-export type CalculationResult = {value: string} | {error: string}
+/** Translated by the view layer, so that the model has no display text in it */
+export type CalculationError = 'empty' | 'invalid'
+
+export type CalculationResult = {value: string} | {error: CalculationError}
 
 export type Calculation = {id: number; expression: string; value: string}
 
@@ -10,13 +13,13 @@ const CALCULATION_REGEX = /^\s*(-?\d+(?:\.\d+)?)\s*(?:([-+*/])\s*(-?\d+(?:\.\d+)
 
 export function calculate(expression: string): CalculationResult {
   if (expression.trim() === '') {
-    return {error: 'Please enter a calculation'}
+    return {error: 'empty'}
   }
 
   const match = CALCULATION_REGEX.exec(expression)
 
   if (match === null) {
-    return {error: 'Not a valid calculation'}
+    return {error: 'invalid'}
   }
 
   const [, leftOperand, operator, rightOperand] = match
@@ -24,13 +27,13 @@ export function calculate(expression: string): CalculationResult {
   const left = Number(leftOperand)
 
   if (operator === undefined) {
-    return Number.isFinite(left) ? {value: String(left)} : {error: 'Not a valid calculation'}
+    return Number.isFinite(left) ? {value: String(left)} : {error: 'invalid'}
   }
 
   const value = applyOperator(left, operator as Operator, Number(rightOperand))
 
   if (!Number.isFinite(value)) {
-    return {error: 'Not a valid calculation'}
+    return {error: 'invalid'}
   }
 
   return {value: String(value)}

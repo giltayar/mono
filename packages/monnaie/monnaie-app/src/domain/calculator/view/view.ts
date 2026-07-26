@@ -1,11 +1,14 @@
 import {html} from '../../../commons/html-templates.ts'
+import {translator} from '../../../commons/i18n.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import type {Calculation, CalculationResult} from '../model.ts'
 
 export function renderCalculatorPage(history: Calculation[]): string {
+  const t = translator('calculator')
+
   return html`
-    <${MainLayout} title="Monnaie" styleSheet="domain/calculator/view/style/style.css">
-      <h1>Monnaie</h1>
+    <${MainLayout} title=${t('page.title')} styleSheet="domain/calculator/view/style/style.css">
+      <h1>${t('page.title')}</h1>
       <form
         id="calculation-form"
         hx-post="/calculate"
@@ -16,13 +19,13 @@ export function renderCalculatorPage(history: Calculation[]): string {
         <input
           type="text"
           name="expression"
-          aria-label="Calculation"
-          placeholder="12 + 30"
+          aria-label=${t('form.expressionLabel')}
+          placeholder=${t('form.placeholder')}
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
         />
-        <button type="submit">Calculate</button>
+        <button type="submit">${t('form.calculate')}</button>
       </form>
       <output id="calculation-result" role="status" aria-live="polite"></output>
       ${renderCalculationHistory(history)}
@@ -31,9 +34,11 @@ export function renderCalculatorPage(history: Calculation[]): string {
 }
 
 export function renderCalculationResult(result: CalculationResult): string {
+  const t = translator('calculator')
+
   return (
     'error' in result
-      ? html`<span class="error">${result.error}</span>`
+      ? html`<span class="error">${t(`errors.${result.error}`)}</span>`
       : html`<span class="value">= ${result.value}</span>`
   ) as string
 }
@@ -42,12 +47,18 @@ export function renderCalculationHistory(
   history: Calculation[],
   {outOfBand = false}: {outOfBand?: boolean} = {},
 ): string {
+  const t = translator('calculator')
+
   return html`
-    <section id="calculation-history" aria-label="History" hx-swap-oob=${outOfBand || undefined}>
-      <h2>History</h2>
+    <section
+      id="calculation-history"
+      aria-label=${t('history.title')}
+      hx-swap-oob=${outOfBand || undefined}
+    >
+      <h2>${t('history.title')}</h2>
       ${
         history.length === 0
-          ? html`<p class="empty">No calculations yet</p>`
+          ? html`<p class="empty">${t('history.empty')}</p>`
           : html`
               <ul>
                 ${history.map(
@@ -65,7 +76,7 @@ export function renderCalculationHistory(
                 hx-target="#calculation-history"
                 hx-swap="outerHTML"
               >
-                Delete history
+                ${t('history.delete')}
               </button>
             `
       }

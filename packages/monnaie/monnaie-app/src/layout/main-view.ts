@@ -1,5 +1,7 @@
 import {html} from '../commons/html-templates.ts'
+import {currentDirection, currentLanguage} from '../commons/i18n.ts'
 import {version} from '../commons/version.ts'
+import {LanguageSwitcher} from './language-switcher.ts'
 
 export function MainLayout({
   title,
@@ -14,7 +16,7 @@ export function MainLayout({
   return (
     '<!DOCTYPE html>' +
     html`
-      <html lang="en">
+      <html lang=${currentLanguage()} dir=${currentDirection()}>
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,7 +27,10 @@ export function MainLayout({
           <title>${title}</title>
         </head>
         <body>
-          <main class="main-view">${children}</main>
+          <main class="main-view">
+            <${LanguageSwitcher} />
+            ${children}
+          </main>
         </body>
       </html>
     `

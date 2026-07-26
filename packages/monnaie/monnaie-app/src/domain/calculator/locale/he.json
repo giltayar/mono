@@ -1,0 +1,19 @@
+{
+  "page": {
+    "title": "Monnaie"
+  },
+  "form": {
+    "expressionLabel": "חישוב",
+    "placeholder": "12 + 30",
+    "calculate": "חשב"
+  },
+  "history": {
+    "title": "היסטוריה",
+    "empty": "אין חישובים עדיין",
+    "delete": "מחיקת היסטוריה"
+  },
+  "errors": {
+    "empty": "נא להזין חישוב",
+    "invalid": "החישוב אינו תקין"
+  }
+}

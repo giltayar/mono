@@ -29,27 +29,25 @@ describe('calculate', () => {
   })
 
   it('should return an error for an empty expression', () => {
-    assert.deepStrictEqual(calculate(''), {error: 'Please enter a calculation'})
-    assert.deepStrictEqual(calculate('   '), {error: 'Please enter a calculation'})
+    assert.deepStrictEqual(calculate(''), {error: 'empty'})
+    assert.deepStrictEqual(calculate('   '), {error: 'empty'})
   })
 
   it('should return an error for more than one operator', () => {
-    assert.deepStrictEqual(calculate('1 + 2 * 3'), {error: 'Not a valid calculation'})
-    assert.deepStrictEqual(calculate('1 +* 3'), {error: 'Not a valid calculation'})
+    assert.deepStrictEqual(calculate('1 + 2 * 3'), {error: 'invalid'})
+    assert.deepStrictEqual(calculate('1 +* 3'), {error: 'invalid'})
   })
 
   it('should return an error for a division by zero', () => {
-    assert.deepStrictEqual(calculate('1 / 0'), {error: 'Not a valid calculation'})
+    assert.deepStrictEqual(calculate('1 / 0'), {error: 'invalid'})
   })
 
   it('should return an error for anything that is not a plain calculation', () => {
-    assert.deepStrictEqual(calculate('(1 + 2)'), {error: 'Not a valid calculation'})
-    assert.deepStrictEqual(calculate('process.exit(1)'), {error: 'Not a valid calculation'})
-    assert.deepStrictEqual(calculate('1 + 2; console.log("hi")'), {
-      error: 'Not a valid calculation',
-    })
-    assert.deepStrictEqual(calculate('1e3'), {error: 'Not a valid calculation'})
-    assert.deepStrictEqual(calculate('12 %  30'), {error: 'Not a valid calculation'})
-    assert.deepStrictEqual(calculate('12 +'), {error: 'Not a valid calculation'})
+    assert.deepStrictEqual(calculate('(1 + 2)'), {error: 'invalid'})
+    assert.deepStrictEqual(calculate('process.exit(1)'), {error: 'invalid'})
+    assert.deepStrictEqual(calculate('1 + 2; console.log("hi")'), {error: 'invalid'})
+    assert.deepStrictEqual(calculate('1e3'), {error: 'invalid'})
+    assert.deepStrictEqual(calculate('12 %  30'), {error: 'invalid'})
+    assert.deepStrictEqual(calculate('12 +'), {error: 'invalid'})
   })
 })

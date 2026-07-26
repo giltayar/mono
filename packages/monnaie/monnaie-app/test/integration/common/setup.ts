@@ -5,7 +5,6 @@ import {sql} from 'kysely'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
 import {makeApp} from '../../../src/app/monnaie-app.ts'
-import {prepareDatabase} from '../../../src/app/prepare-database.ts'
 import {createDb, type Db} from '../../../src/commons/db.ts'
 
 export function setup(testUrl: string): {url: () => URL; db: () => Db} {
@@ -29,9 +28,10 @@ export function setup(testUrl: string): {url: () => URL; db: () => Db} {
     // start from a pristine database, so that the migrations always run from scratch
     await sql`DROP DATABASE IF EXISTS ${sql.id(databaseName)}`.execute(globalDb)
     await sql`CREATE DATABASE ${sql.id(databaseName)}`.execute(globalDb)
-    ;({app, db} = makeApp({connectionString: connectionString(address, databaseName)}))
-
-    await prepareDatabase(db)
+    ;({app, db} = await makeApp({
+      connectionString: connectionString(address, databaseName),
+      language: 'en',
+    }))
 
     await app.listen({port: 0, host: '127.0.0.1'})
 

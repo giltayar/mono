@@ -13,13 +13,16 @@ Layers, strictly in this order — a layer may only import from the ones below i
 2. `src/domain/<domain>/controller.ts` — the only layer that knows both the model and the views.
    Every controller returns `Promise<ControllerResult>` (`src/commons/controller.ts`):
    `{html, statusCode?, headers?}`, where `headers` carries HTMX headers such as `HX-Trigger`.
-3. `src/domain/<domain>/model.ts` — pure logic + data access (kysely queries). No HTML, no fastify.
+3. `src/domain/<domain>/model.ts` — pure logic + data access (kysely queries). No HTML, no fastify,
+   and **no display text**: return error *codes* (`{error: 'invalid'}`) and let the view translate
+   them.
 4. `src/domain/<domain>/view/view.ts` — htm + vhtml rendering, wrapped in `src/layout/main-view.ts`.
    Domain CSS lives in `src/domain/<domain>/view/style/style.css` and is served from source.
 
-`src/app/monnaie-app.ts` exports `makeApp({connectionString})` returning `{app, db}`; it is the only
-place that wires fastify, the zod type provider, static serving, and the routes.
-`src/app/index.ts` parses env vars with zod, runs migrations, and listens.
+`src/app/monnaie-app.ts` exports `async makeApp({connectionString, language})` returning
+`{app, db}`; it is the only place that wires fastify, the zod type provider, static serving, and the
+routes, and it is also what initializes i18next and runs the migrations (which is why it is async).
+`src/app/index.ts` only parses env vars with zod and listens.
 
 ## HTMX conventions
 
@@ -49,6 +52,47 @@ place that wires fastify, the zod type provider, static serving, and the routes.
   naming. Use scoped selectors (`#calculation-form input`) with **native CSS nesting**. Shared
   tokens (`--spacing`, `--radius`, `--border-color`) live in `src/layout/style/style.css`; anything
   domain-specific goes in that domain's `view/style/style.css`.
+- The app is bidirectional, so use **logical properties** only — `padding-inline`, `margin-block`,
+  `border-inline-start`, `text-align: start`, `inset-inline` — never `left`/`right`/`margin-top`.
+  Flexbox and grid already follow `dir`, so they need no special handling.
+
+## Localization
+
+English and Hebrew, with **i18next** + **i18next-fs-backend**, and the language chosen **per
+request**.
+
+- `src/commons/i18n.ts` is the whole of it: `initializeI18n`, `resolveLanguage`, `negotiateLanguage`,
+  `currentLanguage`, `currentDirection`, `translator`, `languageCookie`, and the `Language` type.
+- Translations are JSON, one file per namespace × language, colocated with what they translate:
+  `src/layout/locale/<lng>.json` for the `layout` namespace and
+  `src/domain/<domain>/locale/<lng>.json` for every other one — namespace name == domain folder name.
+  `backend.loadPath` resolves them relative to `import.meta.url`, so the app can be started from any
+  working directory.
+- Views call `const t = translator('<namespace>')` **inside** the render function and never at module
+  scope: `t` is bound to one language, and the language changes per request.
+- The language of the request lives in `@fastify/request-context` (AsyncLocalStorage), put there once
+  per request by `defaultStoreValues` in `makeApp`. Nothing threads a `language` argument through the
+  layers. Outside a request (unit tests, scripts) `currentLanguage()` falls back to the default.
+- ⚠️ **Never call `i18next.changeLanguage()`** — it is process-global and would race between
+  concurrent requests. `getFixedT(language, ns)` is the only correct way to translate here.
+- ⚠️ `@fastify/cookie` must be registered **before** `@fastify/request-context`: both use `onRequest`
+  hooks, fastify runs them in registration order, and `resolveLanguage` reads `request.cookies`.
+- Language resolution order: the `lang` cookie → the `Accept-Language` header → the `LANGUAGE`
+  environment variable (default `en`). The cookie is set by `POST /language`
+  (`src/domain/language/`), which redirects to the **fixed** path `/` — never to a URL taken from the
+  request, which would be an open redirect. The switcher (`src/layout/language-switcher.ts`) is a
+  plain form and deliberately not HTMX, because `lang`, `dir` and every string on the page change.
+- `<html lang dir>` comes from `currentLanguage()`/`currentDirection()` in `MainLayout`;
+  `currentDirection()` is just `i18next.dir()`.
+- `interpolation.escapeValue` is `false` because vhtml already escapes interpolated values — turning
+  it on would double-escape `&`, `<` and `'`.
+- Translation keys are type-checked: `src/@types/i18next.d.ts` augments `CustomTypeOptions` from the
+  **English** JSONs, so `t('form.calculat')` is a compilation error. Only English is checked that
+  way, which is why `test/unit/commons/locale-completeness.test.ts` asserts that the other languages
+  have exactly the same keys.
+- Adding a namespace means touching three places: create `src/domain/<x>/locale/{en,he}.json`, add
+  `'<x>'` to `NAMESPACES` in `src/commons/i18n.ts`, and add it to `resources` in
+  `src/@types/i18next.d.ts` (and to the list in the locale-completeness test).
 
 ## Database
 
@@ -60,8 +104,8 @@ place that wires fastify, the zod type provider, static serving, and the routes.
     `down(db: Kysely<any>)`. Always type the parameter as `Kysely<any>`, never as the app's
     `Database` type — migrations must stay frozen in time and must not import app code.
   - `src/app/prepare-database.ts` runs them with kysely's `Migrator` + `FileMigrationProvider`
-    (imported from `kysely/migration`) and throws on failure. It is called from `src/app/index.ts`
-    and from the integration test setup.
+    (imported from `kysely/migration`) and throws on failure. It is called by `makeApp`, so both the
+    app and the integration tests migrate on startup.
   - Bookkeeping lives in the `kysely_migration` table.
 - Local dev postgres runs via the root `docker-compose.yaml` (`pnpm start` starts it, `pnpm stop`
   stops it). Its data lives in `~/.monnaie-app/.db-data`; delete that folder to reset.
@@ -81,8 +125,8 @@ Three levels, each with its own script:
   (`makeApp` + `app.listen({port: 0})`) against a real postgres started by
   `@giltayar/docker-compose-testkit` from `test/integration/docker-compose.yaml`.
   `test/integration/common/setup.ts` gives each test *file* its own database (name = sha256 of
-  `import.meta.url`), drops and recreates it in `beforeAll`, runs the migrations, and truncates
-  tables in `beforeEach`.
+  `import.meta.url`), drops and recreates it in `beforeAll` (`makeApp` then runs the migrations), and
+  truncates tables in `beforeEach`.
 - `pnpm test:e2e` — `test/e2e`, running the **published docker image** plus postgres via
   `test/e2e/docker-compose.yaml`. Requires `pnpm build` first (the image is built by
   `postbuild:docker` and tagged with the `package.json` version, passed to compose as
@@ -96,6 +140,12 @@ Gotchas:
 - Locators belong in `test/page-model/**`, shared by integration and e2e tests. Each file exports a
   `create<Something>PageModel(page)` returning a nested object of functions whose leaves are
   `{locator}`; tests never call `page.getBy*` directly.
+- Every integration and e2e test runs in **English**, so the page models hardcode English strings.
+  The one exception is `test/integration/language/language.test.ts`, which is the only test file
+  that switches languages and therefore the only one allowed to use locators directly.
+- The playwright configs pin `locale: 'en-US'` so the locale of the machine running the tests cannot
+  leak into `Accept-Language` and flip the app to Hebrew. `language.test.ts` asks for Hebrew with
+  `test.use({locale: 'he-IL'})`.
 - The playwright configs use the `iPhone 15` device profile, since the app is mobile-first.
 - `pretest` runs `build:htmx` so `dist/htmx.min.js` exists; the full `pnpm build` is only needed for
   the docker image (and therefore for `test:e2e`).
@@ -107,7 +157,8 @@ Gotchas:
 
 `Dockerfile` runs the app **from `src/` via Node's native TypeScript support** (`CMD ["node",
 "./src/app/index.ts"]`), and only `dist` holds copied client assets (htmx). So anything needed at
-runtime — including the migration files — must live under `src/` and must not rely on a build step.
+runtime — including the migration files and the locale JSONs — must live under `src/` and must not
+rely on a build step.
 
 - `pnpm build` first runs `build:*` (which copies `htmx.min.js` into `dist`) and then
   `postbuild:docker`, which builds `giltayar/monnaie-app:$npm_package_version` for `linux/amd64`,

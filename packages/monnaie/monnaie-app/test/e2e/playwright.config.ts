@@ -10,6 +10,8 @@ export default defineConfig({
   workers: 1,
   use: {
     ...devices['iPhone 15'],
+    // the app reads `Accept-Language`, so the locale of the machine running the tests must not leak
+    locale: 'en-US',
     screenshot: 'only-on-failure',
   },
 })
