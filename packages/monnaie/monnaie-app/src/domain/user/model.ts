@@ -11,13 +11,12 @@ import {SUPPORTED_LANGUAGES} from '../../commons/i18n.ts'
 // the column is `jsonb`, so what comes back is whatever was written into it — possibly by an older
 // version of this app. `catch` makes a row we cannot understand read as "nothing chosen yet"
 // instead of failing the request that happened to load it.
-const UserSettingsSchema = z
-  .object({language: z.enum(SUPPORTED_LANGUAGES).optional()})
-  .catch({} as UserSettings)
+const UserSettingsSchema = z.object({language: z.enum(SUPPORTED_LANGUAGES).optional()}).catch({})
 
 /** The settings a stored value stands for, and no settings at all when it stands for nothing we know */
 export function parseUserSettings(settings: unknown): UserSettings {
-  return UserSettingsSchema.parse(settings)
+  // spelled out field by field, so that a key the schema left out is `undefined` rather than absent
+  return {language: UserSettingsSchema.parse(settings).language}
 }
 
 /**

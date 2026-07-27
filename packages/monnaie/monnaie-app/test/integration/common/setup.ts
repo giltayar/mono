@@ -11,7 +11,6 @@ import {ensureUser} from '../../../src/domain/user/model.ts'
 import {
   createFakeFirebaseAuth,
   FAKE_FIREBASE_CONFIG,
-  FIRST_USER,
   type FakeFirebaseAuth,
   type FakeUser,
 } from '../services/fake-firebase-auth.ts'
@@ -20,7 +19,7 @@ export function setup(testUrl: string): {
   url: () => URL
   db: () => Db
   auth: () => FakeFirebaseAuth
-  logIn: (page: Page, user?: FakeUser) => Promise<void>
+  logIn: (page: Page, user: FakeUser) => Promise<void>
 } {
   const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
 
@@ -77,7 +76,7 @@ export function setup(testUrl: string): {
     // Signing in through the login page is what `login/login.test.ts` is for. Every other test only
     // needs to *be* signed in, so it gets a session cookie handed to it: that keeps those tests off
     // the login form, and works whatever language the test happens to run in.
-    logIn: async (page, user = FIRST_USER) => {
+    logIn: async (page, user) => {
       const signIn = await auth.signInWithPassword(user.email, user.password)
 
       if ('error' in signIn) {
@@ -93,7 +92,7 @@ export function setup(testUrl: string): {
       // the row a real login would have made — deliberately with no language in it, since this is
       // not a request and there is no language to inherit. A test that wants a saved language sets
       // it through the app, as a user would.
-      await ensureUser(db, user.uid, {})
+      await ensureUser(db, user.uid, {language: undefined})
 
       await page
         .context()

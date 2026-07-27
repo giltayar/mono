@@ -28,7 +28,7 @@ export function renderCalculatorPage(history: Calculation[]): string {
         <button type="submit">${t('form.calculate')}</button>
       </form>
       <output id="calculation-result" role="status" aria-live="polite"></output>
-      ${renderCalculationHistory(history)}
+      ${renderCalculationHistory(history, {outOfBand: false})}
     </${MainLayout}>
   ` as string
 }
@@ -45,7 +45,7 @@ export function renderCalculationResult(result: CalculationResult): string {
 
 export function renderCalculationHistory(
   history: Calculation[],
-  {outOfBand = false}: {outOfBand?: boolean} = {},
+  {outOfBand}: {outOfBand: boolean},
 ): string {
   const t = translator('calculator')
 

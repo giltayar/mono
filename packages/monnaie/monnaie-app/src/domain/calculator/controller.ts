@@ -40,5 +40,5 @@ export async function calculateExpression(
 export async function deleteHistory(db: Db, userId: string): Promise<ControllerResult> {
   await deleteCalculationHistory(db, userId)
 
-  return {html: renderCalculationHistory([])}
+  return {html: renderCalculationHistory([], {outOfBand: false})}
 }

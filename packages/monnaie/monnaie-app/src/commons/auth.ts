@@ -43,7 +43,7 @@ export function authenticatedUser(): AuthenticatedUser {
  */
 export function resolveUser(
   auth: FirebaseAuth,
-  loadUserSettings: (userId: string) => Promise<{language?: Language}>,
+  loadUserSettings: (userId: string) => Promise<{language: Language | undefined}>,
 ): (request: FastifyRequest) => Promise<void> {
   return async (request) => {
     const cookie = request.cookies[SESSION_COOKIE_NAME]

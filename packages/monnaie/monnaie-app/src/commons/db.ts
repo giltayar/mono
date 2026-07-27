@@ -12,11 +12,11 @@ export type CalculationTable = {
 
 /**
  * Everything a user can choose about how the app behaves for them, held as a single `jsonb` column
- * so that a new setting is a change to this type and not a migration. Every field is optional: a
- * row that has never chosen anything is `{}`.
+ * so that a new setting is a change to this type and not a migration. Every field may be
+ * `undefined`: a row that has never chosen anything is `{}` in the database.
  */
 export type UserSettings = {
-  language?: Language
+  language: Language | undefined
 }
 
 /**

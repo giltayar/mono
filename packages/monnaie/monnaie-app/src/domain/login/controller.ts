@@ -13,7 +13,7 @@ export async function showLoginPage(config: PublicFirebaseConfig): Promise<Contr
     return {html: '', statusCode: 303, headers: {Location: HOME_PATH}}
   }
 
-  return {html: renderLoginPage(config)}
+  return {html: renderLoginPage(config, {error: undefined})}
 }
 
 export async function logIn(
@@ -54,7 +54,7 @@ export async function showRegistrationPage(): Promise<ControllerResult> {
     return {html: '', statusCode: 303, headers: {Location: HOME_PATH}}
   }
 
-  return {html: renderRegistrationPage()}
+  return {html: renderRegistrationPage({error: undefined, email: ''})}
 }
 
 export async function register(

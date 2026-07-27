@@ -9,9 +9,9 @@ export type FakeUser = {
   uid: string
   email: string
   password: string
-  displayName?: string
+  displayName: string | undefined
   /** Users made in the Firebase console start out unverified, just as they do here */
-  emailVerified?: boolean
+  emailVerified: boolean
 }
 
 export const FIRST_USER: FakeUser = {
@@ -26,6 +26,7 @@ export const SECOND_USER: FakeUser = {
   uid: 'second-user',
   email: 'second@example.com',
   password: 'second-password',
+  displayName: undefined,
   emailVerified: true,
 }
 
@@ -76,7 +77,13 @@ export function createFakeFirebaseAuth(initialUsers: FakeUser[] = FAKE_USERS): F
         return {error: 'email-already-in-use'}
       }
 
-      const user = {uid: `user-${crypto.randomUUID()}`, email, password, emailVerified: false}
+      const user = {
+        uid: `user-${crypto.randomUUID()}`,
+        email,
+        password,
+        displayName: undefined,
+        emailVerified: false,
+      }
 
       users.push(user)
 

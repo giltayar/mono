@@ -12,14 +12,15 @@ const registerUrl = () => new URL('/register', url()).href
 
 const NEW_EMAIL = 'newcomer@example.com'
 const NEW_PASSWORD = 'a-long-enough-password'
+const NEW_REGISTRATION = {
+  email: NEW_EMAIL,
+  password: NEW_PASSWORD,
+  confirmPassword: NEW_PASSWORD,
+}
 
 async function register(
   page: Page,
-  {
-    email = NEW_EMAIL,
-    password = NEW_PASSWORD,
-    confirmPassword = password,
-  }: {email?: string; password?: string; confirmPassword?: string} = {},
+  {email, password, confirmPassword}: {email: string; password: string; confirmPassword: string},
 ) {
   const registration = createRegistrationPageModel(page)
 
@@ -38,7 +39,7 @@ async function userRows() {
 test('registers an account, and says an email is on its way', async ({page}) => {
   const registration = createRegistrationPageModel(page)
 
-  await register(page)
+  await register(page, NEW_REGISTRATION)
 
   await expect(registration.verificationSent().locator).toBeVisible()
   await expect(page.getByText(NEW_EMAIL)).toBeVisible()
@@ -46,7 +47,7 @@ test('registers an account, and says an email is on its way', async ({page}) => 
 })
 
 test('gives the new account a row, remembering the language it registered in', async ({page}) => {
-  await register(page)
+  await register(page, NEW_REGISTRATION)
 
   expect(await userRows()).toMatchObject([{settings: {language: 'en'}}])
 })
@@ -54,7 +55,7 @@ test('gives the new account a row, remembering the language it registered in', a
 test('does not let the new account in until the email has been confirmed', async ({page}) => {
   const login = createLoginPageModel(page)
 
-  await register(page)
+  await register(page, NEW_REGISTRATION)
 
   await page.goto(loginUrl())
   await login.email().locator.fill(NEW_EMAIL)
@@ -76,7 +77,7 @@ test('lets the new account in once the email has been confirmed', async ({page})
   const login = createLoginPageModel(page)
   const calculator = createCalculatorPageModel(page)
 
-  await register(page)
+  await register(page, NEW_REGISTRATION)
 
   // stands in for the user clicking the link Firebase sent them
   auth().markVerified(NEW_EMAIL)
@@ -95,7 +96,7 @@ test('answers an email that already has an account exactly as it answers a new o
 }) => {
   const registration = createRegistrationPageModel(page)
 
-  await register(page, {email: FIRST_USER.email})
+  await register(page, {...NEW_REGISTRATION, email: FIRST_USER.email})
 
   await expect(registration.verificationSent().locator).toBeVisible()
   // ...but what is sent is a password reset, which is the only place the difference shows
@@ -107,7 +108,7 @@ test('answers an email that already has an account exactly as it answers a new o
 test('refuses two passwords that are not the same', async ({page}) => {
   const registration = createRegistrationPageModel(page)
 
-  await register(page, {confirmPassword: 'something-else-entirely'})
+  await register(page, {...NEW_REGISTRATION, confirmPassword: 'something-else-entirely'})
 
   await expect(registration.error().locator).toHaveText('The two passwords are not the same')
   expect(auth().sentEmails()).toEqual([])
@@ -117,7 +118,7 @@ test('refuses two passwords that are not the same', async ({page}) => {
 test('refuses a password that is too short, without even asking the server', async ({page}) => {
   const registration = createRegistrationPageModel(page)
 
-  await register(page, {password: 'short'})
+  await register(page, {...NEW_REGISTRATION, password: 'short'})
 
   // `minlength` on the input means the browser itself stops the submit, so we never leave the page
   await expect(page).toHaveURL(registerUrl())
@@ -140,7 +141,7 @@ test('refuses a password that is too short even when the browser is bypassed', a
 test('keeps the email that was typed when it complains about the password', async ({page}) => {
   const registration = createRegistrationPageModel(page)
 
-  await register(page, {confirmPassword: 'something-else-entirely'})
+  await register(page, {...NEW_REGISTRATION, confirmPassword: 'something-else-entirely'})
 
   await expect(registration.email().locator).toHaveValue(NEW_EMAIL)
   await expect(registration.password().locator).toHaveValue('')
@@ -151,7 +152,7 @@ test('sends someone who is already logged in from the registration page to the a
 }) => {
   const calculator = createCalculatorPageModel(page)
 
-  await logIn(page)
+  await logIn(page, FIRST_USER)
 
   await page.goto(registerUrl())
 
@@ -184,6 +185,7 @@ test('gives a user who was created straight in Firebase a row on their first log
     uid: 'by-hand',
     email: 'byhand@example.com',
     password: 'made-in-the-console',
+    displayName: undefined,
     emailVerified: true,
   })
 

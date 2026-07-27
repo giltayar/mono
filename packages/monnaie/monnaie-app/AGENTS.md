@@ -3,6 +3,21 @@
 These are package-specific instructions. The monorepo-wide rules (ESM, `tsgo`, prettier, package
 independence, etc.) live in the root `AGENTS.md` and also apply here.
 
+## Optionality
+
+⚠️ **No optional (`?`) properties or parameters in this package**, with the two exceptions below. A
+value that may be absent is declared `T | undefined` and is still passed — `{error: undefined}`,
+`{language: undefined}` — so that every call site says what it means and adding a field to a type
+breaks the call sites that have not thought about it. Defaults belong in library code, not here.
+
+The exceptions, both of which are utility-shaped enough that spelling out `undefined` at dozens of
+call sites would cost more than it says:
+
+- `ControllerResult` — `statusCode` and `headers` stay optional, since most controllers return
+  nothing but HTML.
+- **Props of html components** (`MainLayout`'s `styleSheet` and `script`), since they are written as
+  attributes in a template, where an omitted attribute already reads as "none".
+
 ## Architecture
 
 Layers, strictly in this order — a layer may only import from the ones below it:
@@ -55,7 +70,7 @@ the e2e Firebase credentials get in.
 - htm's types ship as CJS (`dist/htm.d.ts`) while ESM resolves to `dist/htm.mjs`, so TypeScript
   types the default import as the module namespace and `htm.bind` appears to be missing. That is why
   `html-templates.ts` carries a `//@ts-expect-error`; `esModuleInterop` does **not** fix it.
-- `MainLayout({title, styleSheet, children})` — `styleSheet` is a path **relative to `src`**
+- `MainLayout({title, styleSheet, script, children})` — `styleSheet` is a path **relative to `src`**
   (e.g. `domain/calculator/view/style/style.css`) and, when given, adds a second
   `<link rel="stylesheet">`. Domain views never build asset hrefs themselves.
 - Assets are served versioned and immutable: `/dist/<version>/...` for built client assets and
@@ -219,7 +234,7 @@ Three levels, each with its own script:
   `@giltayar/docker-compose-testkit` from `test/integration/docker-compose.yaml`.
   `test/integration/common/setup.ts` gives each test *file* its own database (name = sha256 of
   `import.meta.url`), drops and recreates it in `beforeAll` (`makeApp` then runs the migrations), and
-  truncates tables in `beforeEach`. It also returns a `logIn(page, user?)` that installs a session
+  truncates tables in `beforeEach`. It also returns a `logIn(page, user)` that installs a session
   cookie directly from the fake — signing in *through the form* is `login/login.test.ts`'s job, and
   every other test just needs to already be logged in (which also keeps `language.test.ts` working
   in Hebrew). ⚠️ It creates the `app_user` row with **empty** settings on purpose: seeding a language

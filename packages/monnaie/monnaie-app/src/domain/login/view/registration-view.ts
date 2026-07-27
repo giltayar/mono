@@ -5,8 +5,11 @@ import {PASSWORD_MIN_LENGTH, type RegistrationError} from '../model.ts'
 
 export function renderRegistrationPage({
   error,
-  email = '',
-}: {error?: RegistrationError; email?: string} = {}): string {
+  email,
+}: {
+  error: RegistrationError | undefined
+  email: string
+}): string {
   const t = translator('login')
 
   return html`

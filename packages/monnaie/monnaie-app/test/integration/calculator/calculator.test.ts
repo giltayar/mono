@@ -1,11 +1,12 @@
 import {expect, test} from '@playwright/test'
 import {setup} from '../common/setup.ts'
+import {FIRST_USER} from '../services/fake-firebase-auth.ts'
 import {createCalculatorPageModel} from '../../page-model/calculator/calculator-page.model.ts'
 
 const {url, logIn} = setup(import.meta.url)
 
 test.beforeEach(async ({page}) => {
-  await logIn(page)
+  await logIn(page, FIRST_USER)
 })
 
 test('shows the calculator page', async ({page}) => {

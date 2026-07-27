@@ -1,5 +1,6 @@
 import {expect, test} from '@playwright/test'
 import {setup} from '../common/setup.ts'
+import {FIRST_USER} from '../services/fake-firebase-auth.ts'
 
 const {url, logIn} = setup(import.meta.url)
 
@@ -8,7 +9,7 @@ const {url, logIn} = setup(import.meta.url)
 // and teaching them about languages would complicate every other test for the sake of this file.
 
 test.beforeEach(async ({page}) => {
-  await logIn(page)
+  await logIn(page, FIRST_USER)
 })
 
 test('shows the app in the default language when the browser asks for nothing we support', async ({
@@ -46,7 +47,7 @@ test('remembers the language on the account, not only in the browser', async ({p
 
   // a different browser, which has never seen the `lang` cookie, but the same account
   await page.context().clearCookies()
-  await logIn(page)
+  await logIn(page, FIRST_USER)
   await page.goto(url().href)
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'he')

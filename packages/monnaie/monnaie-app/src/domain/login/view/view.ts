@@ -5,7 +5,7 @@ import {MainLayout} from '../../../layout/main-view.ts'
 
 export function renderLoginPage(
   firebaseConfig: PublicFirebaseConfig,
-  {error}: {error?: AuthError} = {},
+  {error}: {error: AuthError | undefined},
 ): string {
   const t = translator('login')
 

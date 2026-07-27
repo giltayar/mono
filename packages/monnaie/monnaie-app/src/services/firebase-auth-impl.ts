@@ -66,7 +66,7 @@ export function createFirebaseAuth({
         return result
       }
 
-      const {idToken} = (await result.response.json()) as {idToken?: string}
+      const {idToken} = (await result.response.json()) as {idToken: string | undefined}
 
       return idToken === undefined ? {error: 'unavailable'} : {idToken}
     },
@@ -168,7 +168,7 @@ async function identityToolkitError(response: Response): Promise<AuthError> {
 
 async function identityToolkitErrorMessage(response: Response): Promise<string> {
   try {
-    const body = (await response.json()) as {error?: {message?: unknown}}
+    const body = (await response.json()) as {error: {message: unknown} | undefined}
 
     return typeof body.error?.message === 'string' ? body.error.message : ''
   } catch {

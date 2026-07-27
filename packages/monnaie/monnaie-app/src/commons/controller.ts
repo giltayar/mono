@@ -2,6 +2,7 @@ import type {FastifyReply} from 'fastify'
 
 export type ControllerResult = {
   html: string
+  /** Defaults to 200 */
   statusCode?: number
   /** Response headers, mostly used for HTMX headers such as `HX-Trigger` */
   headers?: Record<string, string>

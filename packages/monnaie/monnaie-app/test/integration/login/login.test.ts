@@ -84,7 +84,7 @@ test('refuses a forged session cookie', async ({page}) => {
 test('sends someone who is already logged in from the login page to the app', async ({page}) => {
   const calculator = createCalculatorPageModel(page)
 
-  await logIn(page)
+  await logIn(page, FIRST_USER)
 
   await page.goto(loginUrl())
 
@@ -96,7 +96,7 @@ test('logs out', async ({page}) => {
   const layout = createLayoutPageModel(page)
   const login = createLoginPageModel(page)
 
-  await logIn(page)
+  await logIn(page, FIRST_USER)
   await page.goto(url().href)
 
   await layout.userMenu().logOutButton().locator.click()
@@ -173,7 +173,7 @@ test('sends the browser to the login page when the session ends mid-visit', asyn
   const calculator = createCalculatorPageModel(page)
   const login = createLoginPageModel(page)
 
-  await logIn(page)
+  await logIn(page, FIRST_USER)
   await page.goto(url().href)
 
   // the session goes away while the page stays open, so the next HTMX request is unauthenticated

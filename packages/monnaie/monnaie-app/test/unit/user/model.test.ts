@@ -10,16 +10,16 @@ describe('parseUserSettings', () => {
   })
 
   it('should read the settings of a user who has chosen nothing', () => {
-    assert.deepEqual(parseUserSettings({}), {})
+    assert.deepEqual(parseUserSettings({}), {language: undefined})
   })
 
   it('should fall back to no settings for a language we no longer support', () => {
-    assert.deepEqual(parseUserSettings({language: 'fr'}), {})
+    assert.deepEqual(parseUserSettings({language: 'fr'}), {language: undefined})
   })
 
   it('should fall back to no settings for something that is not settings at all', () => {
     for (const settings of [null, 'nonsense', 42, []]) {
-      assert.deepEqual(parseUserSettings(settings), {})
+      assert.deepEqual(parseUserSettings(settings), {language: undefined})
     }
   })
 
