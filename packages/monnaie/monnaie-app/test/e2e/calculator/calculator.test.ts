@@ -13,7 +13,7 @@ test.describe(() => {
     'needs MONNAIE_FIREBASE_API_KEY, MONNAIE_FIREBASE_SERVICE_ACCOUNT, MONNAIE_FIREBASE_TEST_EMAIL, MONNAIE_FIREBASE_TEST_PASSWORD',
   )
 
-  const {url} = setup(() => credentials as NonNullable<typeof credentials>)
+  const {url} = setup(credentials!)
 
   test('logs in and calculates an expression', async ({page}) => {
     const login = createLoginPageModel(page)

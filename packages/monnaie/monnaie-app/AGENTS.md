@@ -230,12 +230,22 @@ Three levels, each with its own script:
   `MONNAIE_APP_VERSION`). Keep this to a single happy-path test. The container talks to the real
   Firebase, so it cannot be given the fake: the whole file skips itself unless
   `MONNAIE_FIREBASE_API_KEY`, `MONNAIE_FIREBASE_SERVICE_ACCOUNT`, `MONNAIE_FIREBASE_TEST_EMAIL` and
-  `MONNAIE_FIREBASE_TEST_PASSWORD` are set.
+  `MONNAIE_FIREBASE_TEST_PASSWORD` are set. ⚠️ Its compose file overrides the image's
+  `NODE_ENV=production` with `test`, because production adds `Secure` to the session cookie — see
+  the gotcha below.
 
 Gotchas:
 
+- ⚠️ The tests run on **WebKit** (that is what `devices['iPhone 15']` selects), and WebKit drops a
+  `Secure` cookie served over plain http — including on `127.0.0.1`, which Chromium alone treats as
+  trustworthy. So anything served to a test over http must not set `Secure`. The symptom is
+  maddening rather than obvious: the login succeeds, the `303` really does carry `Set-Cookie`, and
+  the very next request arrives with no cookie and is bounced back to the login page.
 - `docker compose port` reports `0.0.0.0:<port>`; Chromium refuses to navigate there, so the e2e
   setup rewrites it to `127.0.0.1`.
+- The integration `docker compose up` can lose a race when several playwright workers start at once
+  (`container name ... is already in use`). It is a flake of the first run on a clean machine only,
+  since the containers are deliberately left running afterwards; re-run.
 - The container must bind `MONNAIE_HOST=0.0.0.0` (the app defaults to `localhost`), which the compose file sets.
 - Locators belong in `test/page-model/**`, shared by integration and e2e tests. Each file exports a
   `create<Something>PageModel(page)` returning a nested object of functions whose leaves are

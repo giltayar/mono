@@ -123,8 +123,11 @@ export function createFirebaseAuth({
       try {
         const claims = await auth.verifySessionCookie(cookie)
 
-        // checked here too, and not only when the session is minted, so that a session handed out
-        // before the address was un-verified stops working immediately
+        // belt and braces: `createSession` already refuses to mint a cookie for an unverified
+        // address, so this can only catch one minted by an older version of this app. It cannot
+        // catch an address un-verified *after* the fact — the claim is a snapshot baked into the
+        // cookie, and nothing here reads the user record. That would need a `getUser` call on
+        // every request, which is not worth it for something only an admin can cause.
         if (!claims.email_verified) {
           return undefined
         }

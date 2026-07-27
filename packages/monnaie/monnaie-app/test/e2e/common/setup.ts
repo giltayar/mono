@@ -34,17 +34,17 @@ export function firebaseCredentials(): FirebaseCredentials | undefined {
   return {apiKey, serviceAccount, email, password}
 }
 
-export function setup(credentials: () => FirebaseCredentials): {url: () => URL} {
+export function setup(credentials: FirebaseCredentials): {url: () => URL} {
   let teardown: () => Promise<void>
   let url: URL
 
   test.beforeAll(async () => {
-    const {apiKey, serviceAccount} = credentials()
+    const {apiKey, serviceAccount} = credentials
 
     const dockerCompose = await runDockerCompose(
       new URL('../docker-compose.yaml', import.meta.url),
       {
-        containerCleanup: true,
+        containerCleanup: false,
         forceRecreate: true,
         env: {
           MONNAIE_APP_VERSION: version,

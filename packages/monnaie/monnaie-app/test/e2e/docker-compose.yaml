@@ -17,6 +17,11 @@ services:
   monnaie-app:
     image: giltayar/monnaie-app:${MONNAIE_APP_VERSION}
     environment:
+      # the image sets `NODE_ENV=production`, which makes the session cookie `Secure` — and WebKit,
+      # which is what the `iPhone 15` device profile runs, refuses a `Secure` cookie over plain
+      # http even on 127.0.0.1 (Chromium is the lenient one here). The test would then log in
+      # successfully and be bounced straight back to the login page, cookie-less.
+      NODE_ENV: test
       MONNAIE_HOST: 0.0.0.0
       MONNAIE_PORT: 3000
       MONNAIE_DB_CONNECTION_STRING: postgres://user:password@postgres:5432/monnaie
