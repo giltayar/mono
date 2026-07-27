@@ -2,6 +2,8 @@ import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import enLayout from '../../../src/layout/locale/en.json' with {type: 'json'}
 import heLayout from '../../../src/layout/locale/he.json' with {type: 'json'}
+import enAuthentication from '../../../src/domain/authentication/locale/en.json' with {type: 'json'}
+import heAuthentication from '../../../src/domain/authentication/locale/he.json' with {type: 'json'}
 import enCalculator from '../../../src/domain/calculator/locale/en.json' with {type: 'json'}
 import heCalculator from '../../../src/domain/calculator/locale/he.json' with {type: 'json'}
 
@@ -10,6 +12,7 @@ import heCalculator from '../../../src/domain/calculator/locale/he.json' with {t
 describe('locale completeness', () => {
   const namespaces = [
     {namespace: 'layout', en: enLayout, he: heLayout},
+    {namespace: 'authentication', en: enAuthentication, he: heAuthentication},
     {namespace: 'calculator', en: enCalculator, he: heCalculator},
   ]
 

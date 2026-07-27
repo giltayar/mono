@@ -20,6 +20,10 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
       DB_CONNECTION_STRING: postgres://user:password@postgres:5432/monnaie
+      MONNAIE_FIREBASE_SERVICE_ACCOUNT_JSON: ${MONNAIE_FIREBASE_SERVICE_ACCOUNT_JSON}
+      MONNAIE_FIREBASE_API_KEY: ${MONNAIE_FIREBASE_API_KEY}
+      # the tests reach the container over plain http, which a `Secure` cookie would never reach
+      SECURE_COOKIES: 'false'
     depends_on:
       postgres:
         condition: service_healthy

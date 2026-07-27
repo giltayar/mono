@@ -1,13 +1,21 @@
 import crypto from 'node:crypto'
-import {test} from '@playwright/test'
+import {test, type Page} from '@playwright/test'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import {sql} from 'kysely'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
 import {makeApp} from '../../../src/app/monnaie-app.ts'
 import {createDb, type Db} from '../../../src/commons/db.ts'
+import {createFakeAuth, fakeIdToken} from './fake-auth.ts'
 
-export function setup(testUrl: string): {url: () => URL; db: () => Db} {
+export function setup(
+  testUrl: string,
+  {signedInAs}: {signedInAs?: string} = {},
+): {
+  url: () => URL
+  db: () => Db
+  signIn: (page: Page, email: string) => Promise<void>
+} {
   const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
 
   let app: FastifyInstance
@@ -31,6 +39,9 @@ export function setup(testUrl: string): {url: () => URL; db: () => Db} {
     ;({app, db} = await makeApp({
       connectionString: connectionString(address, databaseName),
       language: 'en',
+      auth: createFakeAuth(),
+      // the tests are served over plain http, which a `Secure` cookie would never reach
+      secureCookies: false,
     }))
 
     await app.listen({port: 0, host: '127.0.0.1'})
@@ -43,6 +54,12 @@ export function setup(testUrl: string): {url: () => URL; db: () => Db} {
     await sql`TRUNCATE TABLE calculation RESTART IDENTITY CASCADE`.execute(db)
   })
 
+  if (signedInAs !== undefined) {
+    test.beforeEach(async ({page}) => {
+      await signIn(page, signedInAs)
+    })
+  }
+
   test.afterAll(async () => {
     await app?.close()
     await db?.destroy()
@@ -50,7 +67,22 @@ export function setup(testUrl: string): {url: () => URL; db: () => Db} {
     await teardown?.()
   })
 
-  return {url: () => url, db: () => db}
+  /**
+   * Signs in the way the login page does once firebase has done its part: by trading an ID token
+   * for a session cookie. `page.request` shares its cookie jar with the browser context, so the
+   * page itself ends up signed in.
+   */
+  async function signIn(page: Page, email: string): Promise<void> {
+    const response = await page.request.post(new URL('/session', url).href, {
+      data: {idToken: fakeIdToken(email)},
+    })
+
+    if (!response.ok()) {
+      throw new Error(`could not sign in as ${email}: ${response.status()}`)
+    }
+  }
+
+  return {url: () => url, db: () => db, signIn}
 }
 
 function connectionString(address: string, database: string) {

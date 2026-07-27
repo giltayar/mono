@@ -2,7 +2,7 @@ import {expect, test} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 import {createCalculatorPageModel} from '../../page-model/calculator/calculator-page.model.ts'
 
-const {url} = setup(import.meta.url)
+const {url} = setup(import.meta.url, {signedInAs: 'alice@example.com'})
 
 test('shows the calculator page', async ({page}) => {
   await page.goto(url().href)

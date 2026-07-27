@@ -1,4 +1,5 @@
 import type enLayout from '../layout/locale/en.json'
+import type enAuthentication from '../domain/authentication/locale/en.json'
 import type enCalculator from '../domain/calculator/locale/en.json'
 
 declare module 'i18next' {
@@ -8,6 +9,7 @@ declare module 'i18next' {
     // checks that the other languages have exactly the same keys
     resources: {
       layout: typeof enLayout
+      authentication: typeof enAuthentication
       calculator: typeof enCalculator
     }
   }

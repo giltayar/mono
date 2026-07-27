@@ -52,18 +52,27 @@ function applyOperator(left: number, operator: Operator, right: number): number 
   }
 }
 
-export async function saveCalculation(db: Db, expression: string, value: string): Promise<void> {
-  await db.insertInto('calculation').values({expression: expression.trim(), value}).execute()
+export async function saveCalculation(
+  db: Db,
+  userId: string,
+  expression: string,
+  value: string,
+): Promise<void> {
+  await db
+    .insertInto('calculation')
+    .values({user_id: userId, expression: expression.trim(), value})
+    .execute()
 }
 
-export async function fetchCalculationHistory(db: Db): Promise<Calculation[]> {
+export async function fetchCalculationHistory(db: Db, userId: string): Promise<Calculation[]> {
   return await db
     .selectFrom('calculation')
     .select(['id', 'expression', 'value'])
+    .where('user_id', '=', userId)
     .orderBy('id', 'desc')
     .execute()
 }
 
-export async function deleteCalculationHistory(db: Db): Promise<void> {
-  await db.deleteFrom('calculation').execute()
+export async function deleteCalculationHistory(db: Db, userId: string): Promise<void> {
+  await db.deleteFrom('calculation').where('user_id', '=', userId).execute()
 }

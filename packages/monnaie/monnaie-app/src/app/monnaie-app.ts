@@ -6,18 +6,25 @@ import {fastifyRequestContext} from '@fastify/request-context'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import calculatorRoutes from '../domain/calculator/route.ts'
 import languageRoutes from '../domain/language/route.ts'
+import authenticationRoutes from '../domain/authentication/route.ts'
 import {prepareDatabase} from './prepare-database.ts'
 import {createDb, type Db} from '../commons/db.ts'
 import {initializeI18n, resolveLanguage, type Language} from '../commons/i18n.ts'
+import {resolveUser, type Auth} from '../commons/auth.ts'
 import {version} from '../commons/version.ts'
 
 export async function makeApp({
   connectionString,
   language,
+  auth,
+  secureCookies = true,
 }: {
   connectionString: string
   /** The language to use when the request asks for no language we support */
   language: Language
+  auth: Auth
+  /** Turned off only when serving over plain http, which in practice means the e2e tests */
+  secureCookies?: boolean
 }): Promise<{
   app: FastifyInstance
   db: Db
@@ -49,8 +56,11 @@ export async function makeApp({
   // `onRequest` hook: same-level fastify hooks run in registration order
   app.register(cookie)
   app.register(fastifyRequestContext, {
-    defaultStoreValues: (request) => ({language: resolveLanguage(request)}),
+    defaultStoreValues: (request) => ({language: resolveLanguage(request), user: undefined}),
   })
+  // a `preHandler` hook, and not an `onRequest` one, so that it needs no ordering against the two
+  // plugins above: their own `onRequest` hooks have always run by the time `preHandler` does
+  app.addHook('preHandler', resolveUser(auth))
 
   app.register(fastifyStatic, {
     root: new URL('../../dist', import.meta.url),
@@ -70,6 +80,7 @@ export async function makeApp({
 
   app.register(calculatorRoutes, {db})
   app.register(languageRoutes)
+  app.register(authenticationRoutes, {auth, secureCookies})
 
   app.get('/health', async () => ({status: 'ok', version}))
 

@@ -1,0 +1,15 @@
+{
+  "page": {
+    "title": "Sign in"
+  },
+  "form": {
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in"
+  },
+  "errors": {
+    "invalidCredentials": "Wrong email or password",
+    "tooManyRequests": "Too many attempts, please try again later",
+    "unexpected": "Could not sign in, please try again"
+  }
+}

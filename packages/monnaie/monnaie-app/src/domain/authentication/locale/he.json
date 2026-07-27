@@ -1,0 +1,15 @@
+{
+  "page": {
+    "title": "כניסה"
+  },
+  "form": {
+    "email": "דוא\"ל",
+    "password": "סיסמה",
+    "signIn": "כניסה"
+  },
+  "errors": {
+    "invalidCredentials": "הדוא\"ל או הסיסמה שגויים",
+    "tooManyRequests": "יותר מדי ניסיונות, נסו שוב מאוחר יותר",
+    "unexpected": "הכניסה נכשלה, נסו שוב"
+  }
+}

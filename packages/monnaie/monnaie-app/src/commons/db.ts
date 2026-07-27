@@ -3,6 +3,7 @@ import pg from 'pg'
 
 export type CalculationTable = {
   id: Generated<number>
+  user_id: string
   expression: string
   value: string
   created_at: ColumnType<Date, string | undefined, never>

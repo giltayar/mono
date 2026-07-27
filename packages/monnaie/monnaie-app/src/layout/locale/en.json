@@ -4,5 +4,8 @@
     "en": "English",
     "he": "Hebrew",
     "switch": "Switch"
+  },
+  "user": {
+    "signOut": "Sign out"
   }
 }

@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 
-const {url} = setup(import.meta.url)
+const {url} = setup(import.meta.url, {signedInAs: 'alice@example.com'})
 
 // The only tests that run in a language other than English, and therefore the only ones that use
 // locators directly instead of `test/page-model/**`: the page models are English-only on purpose,
