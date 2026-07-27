@@ -90,9 +90,13 @@ request**.
   concurrent requests. `getFixedT(language, ns)` is the only correct way to translate here.
 - ⚠️ `@fastify/cookie` must be registered **before** `@fastify/request-context`: both use `onRequest`
   hooks, fastify runs them in registration order, and `resolveLanguage` reads `request.cookies`.
-- Language resolution order: the `lang` cookie → the `Accept-Language` header → the `LANGUAGE`
-  environment variable (default `en`). The cookie is set by `POST /language`
-  (`src/domain/language/`), which redirects to the **fixed** path `/` — never to a URL taken from the
+- Language resolution order: the **saved setting of the logged-in user** → the `lang` cookie → the
+  `Accept-Language` header → the `LANGUAGE` environment variable (default `en`). The first three
+  steps happen in two places: `resolveLanguage` (a root hook) does the last three, and `resolveUser`
+  overwrites `language` in the request context afterwards when the user has one saved — which is why
+  the setting survives moving to a browser that has never seen the cookie. `POST /language`
+  (`src/domain/language/`) sets the cookie *and*, when there is a user, saves it with
+  `updateUserSettings`, then redirects to the **fixed** path `/` — never to a URL taken from the
   request, which would be an open redirect. The switcher (`src/layout/language-switcher.ts`) is a
   plain form and deliberately not HTMX, because `lang`, `dir` and every string on the page change.
 - `<html lang dir>` comes from `currentLanguage()`/`currentDirection()` in `MainLayout`;
@@ -112,6 +116,18 @@ request**.
 - Postgres, accessed through **kysely** (`src/commons/db.ts` exports `Database`, `Db`, `createDb`).
   Do not add `postgres`/`postgres.js`; `pg` is only there as the kysely driver.
 - Connection string comes from `MONNAIE_DB_CONNECTION_STRING`.
+- The `app_user` table holds **settings, not identities** — Firebase owns the identities, and
+  `user_id` is the Firebase uid, with no foreign key to enforce it. It is called `app_user` because
+  `user` is a reserved SQL keyword. `settings` is a single `jsonb` column, so a new setting is not a
+  migration; it is a field in `UserSettings` in `src/commons/db.ts` and in `UserSettingsSchema` in
+  `src/domain/user/model.ts`.
+- `src/domain/user/` is a domain of **model only** — no route, controller or view — exporting
+  `ensureUser`, `userSettings`, `updateUserSettings` and `parseUserSettings`. `ensureUser` is an
+  upsert that does nothing on conflict, and is called on every login, so a user made by hand in the
+  Firebase console gets their row on their first visit.
+- Reading settings goes through `parseUserSettings`, whose schema ends in `.catch({})`: the column is
+  `jsonb`, so a row written by an older version of the app must degrade to "nothing chosen yet"
+  rather than fail the request that happened to load it.
 - Schema changes are **migrations only** — never edit an existing migration, add a new one.
   - Files: `src/app/migrations/000NN_kebab-case-name.ts`, exporting `up(db: Kysely<any>)` and
     `down(db: Kysely<any>)`. Always type the parameter as `Kysely<any>`, never as the app's
@@ -125,15 +141,16 @@ request**.
 
 ## Authentication
 
-Firebase Authentication, as a **server-minted session cookie**. Users are managed in the Firebase
-console; the app has no sign-up and no user table.
+Firebase Authentication, as a **server-minted session cookie**. There is no user table for
+*identities* — Firebase owns those — only an `app_user` table for settings (see below).
 
-- `src/services/firebase-auth.ts` declares `FirebaseAuth` — `signInWithPassword`, `createSession`,
-  `verifySession` — and **nothing else**: it is types only, so that `firebase-admin` is imported by
-  exactly one file, `src/services/firebase-auth-impl.ts`. That is what lets the integration tests
-  hand `makeApp` a fake (`test/integration/services/fake-firebase-auth.ts`, which mirrors the
-  `src/services` layout) and never touch Firebase or the network. `makeApp` therefore takes
-  `{auth, firebaseConfig}` alongside `{connectionString, language}`.
+- `src/services/firebase-auth.ts` declares `FirebaseAuth` — `signInWithPassword`, `createUser`,
+  `createSession`, `verifySession`, `sendVerificationEmail`, `sendPasswordResetEmail` — and
+  **nothing else**: it is types only, so that `firebase-admin` is imported by exactly one file,
+  `src/services/firebase-auth-impl.ts`. That is what lets the integration tests hand `makeApp` a fake
+  (`test/integration/services/fake-firebase-auth.ts`, which mirrors the `src/services` layout) and
+  never touch Firebase or the network. `makeApp` therefore takes `{auth, firebaseConfig}` alongside
+  `{connectionString, language}`.
 - Email/password sign-in happens **server-side**, through the Identity Toolkit REST API, so the
   login form is a plain form POST. Google sign-in is the one thing that must happen in the browser:
   `src/domain/login/view/client/google-sign-in.js` loads the Firebase Web SDK from Google's CDN
@@ -159,6 +176,31 @@ console; the app has no sign-up and no user table.
   the view, like every other model error. A wrong password and an unknown email deliberately produce
   the *same* message, so the login page cannot be used to discover which accounts exist.
 
+### Registration
+
+Registration lives in the **login domain** (`GET`/`POST /register`), not in one of its own: it is the
+same form, the same styles and the same error vocabulary as logging in.
+
+- ⚠️ **No email is composed by this app.** `createUser` makes the account through `firebase-admin`,
+  and the confirmation mail is asked for with the Identity Toolkit `accounts:sendOobCode` endpoint,
+  which makes Firebase send its own templated message. Do not add a mailer, an SMTP config or a
+  `/verify` route — the link in the mail is handled by Firebase's own
+  `<authDomain>/__/auth/action` page.
+- ⚠️ `POST /register` answers **identically** whether or not the email already has an account:
+  the same "check your email" page. An address that already exists is sent a *password reset*
+  instead of a verification, and no row is created. Anything that makes the two paths
+  distinguishable — a different message, a different status code, a redirect — turns the page into an
+  account-enumeration oracle.
+- `createSession` and `verifySession` refuse a user whose email is not verified, which is what makes
+  the confirmation mandatory rather than decorative. Logging in as an unverified user re-sends the
+  link using the ID token that `signInWithPassword` just returned, which is why there is no "resend"
+  button and nothing is stored to support one.
+- `validateRegistration` is pure and checked before Firebase is touched at all; `PASSWORD_MIN_LENGTH`
+  is exported so the view can put it in `minlength` and in the hint. The client-side `minlength` is
+  UX only — the server repeats every check.
+- ⚠️ Users created in the Firebase console start with `emailVerified === false` and therefore cannot
+  log in. Flip them to verified in the console.
+
 ## Security
 
 - **Never** use `eval`/`Function` for user input. `calculate()` accepts only `<number>` or
@@ -180,7 +222,8 @@ Three levels, each with its own script:
   truncates tables in `beforeEach`. It also returns a `logIn(page, user?)` that installs a session
   cookie directly from the fake — signing in *through the form* is `login/login.test.ts`'s job, and
   every other test just needs to already be logged in (which also keeps `language.test.ts` working
-  in Hebrew).
+  in Hebrew). ⚠️ It creates the `app_user` row with **empty** settings on purpose: seeding a language
+  there would pin every test to it and hide the cookie and `Accept-Language` steps.
 - `pnpm test:e2e` — `test/e2e`, running the **published docker image** plus postgres via
   `test/e2e/docker-compose.yaml`. Requires `pnpm build` first (the image is built by
   `postbuild:docker` and tagged with the `package.json` version, passed to compose as

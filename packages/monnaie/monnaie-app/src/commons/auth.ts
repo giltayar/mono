@@ -2,6 +2,7 @@ import process from 'node:process'
 import type {FastifyReply, FastifyRequest} from 'fastify'
 import {requestContext} from '@fastify/request-context'
 import type {AuthenticatedUser, FirebaseAuth, Session} from '../services/firebase-auth.ts'
+import type {Language} from './i18n.ts'
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -33,15 +34,36 @@ export function authenticatedUser(): AuthenticatedUser {
 }
 
 /**
- * Identifies the user of every request from its session cookie. Must be registered inside the
- * context of `@fastify/cookie` and `@fastify/request-context`, whose own `onRequest` hooks it
- * depends on.
+ * Identifies the user of every request from its session cookie, and lets what that user has chosen
+ * override what the request itself asked for. Must be registered inside the context of
+ * `@fastify/cookie` and `@fastify/request-context`, whose own `onRequest` hooks it depends on.
+ *
+ * `loadUserSettings` is a parameter, and not an import, so that this file — which every layer may
+ * use — does not depend on a domain. `src/app/monnaie-app.ts` is the one place that knows both.
  */
-export function resolveUser(auth: FirebaseAuth): (request: FastifyRequest) => Promise<void> {
+export function resolveUser(
+  auth: FirebaseAuth,
+  loadUserSettings: (userId: string) => Promise<{language?: Language}>,
+): (request: FastifyRequest) => Promise<void> {
   return async (request) => {
     const cookie = request.cookies[SESSION_COOKIE_NAME]
+    const user = cookie === undefined ? undefined : await auth.verifySession(cookie)
 
-    requestContext.set('user', cookie === undefined ? undefined : await auth.verifySession(cookie))
+    requestContext.set('user', user)
+
+    if (user === undefined) {
+      // no user, no settings to read: an anonymous request costs no query
+      return
+    }
+
+    const {language} = await loadUserSettings(user.uid)
+
+    // the language the user picked is an account preference, so it follows them to a browser that
+    // has never seen the `lang` cookie. `defaultStoreValues` already put the cookie's language
+    // there, and this overrides it.
+    if (language !== undefined) {
+      requestContext.set('language', language)
+    }
   }
 }
 

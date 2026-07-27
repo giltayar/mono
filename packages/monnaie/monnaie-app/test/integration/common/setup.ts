@@ -7,17 +7,19 @@ import type {AddressInfo} from 'node:net'
 import {makeApp} from '../../../src/app/monnaie-app.ts'
 import {createDb, type Db} from '../../../src/commons/db.ts'
 import {SESSION_COOKIE_NAME} from '../../../src/commons/auth.ts'
-import type {FirebaseAuth} from '../../../src/services/firebase-auth.ts'
+import {ensureUser} from '../../../src/domain/user/model.ts'
 import {
   createFakeFirebaseAuth,
   FAKE_FIREBASE_CONFIG,
   FIRST_USER,
+  type FakeFirebaseAuth,
   type FakeUser,
 } from '../services/fake-firebase-auth.ts'
 
 export function setup(testUrl: string): {
   url: () => URL
   db: () => Db
+  auth: () => FakeFirebaseAuth
   logIn: (page: Page, user?: FakeUser) => Promise<void>
 } {
   const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
@@ -25,7 +27,7 @@ export function setup(testUrl: string): {
   let app: FastifyInstance
   let db: Db
   let globalDb: Db
-  let auth: FirebaseAuth
+  let auth: FakeFirebaseAuth
   let teardown: (() => Promise<void>) | undefined
   let url: URL
 
@@ -57,7 +59,8 @@ export function setup(testUrl: string): {
   })
 
   test.beforeEach(async () => {
-    await sql`TRUNCATE TABLE calculation RESTART IDENTITY CASCADE`.execute(db)
+    await sql`TRUNCATE TABLE app_user, calculation RESTART IDENTITY CASCADE`.execute(db)
+    auth.reset()
   })
 
   test.afterAll(async () => {
@@ -70,6 +73,7 @@ export function setup(testUrl: string): {
   return {
     url: () => url,
     db: () => db,
+    auth: () => auth,
     // Signing in through the login page is what `login/login.test.ts` is for. Every other test only
     // needs to *be* signed in, so it gets a session cookie handed to it: that keeps those tests off
     // the login form, and works whatever language the test happens to run in.
@@ -85,6 +89,11 @@ export function setup(testUrl: string): {
       if ('error' in session) {
         throw new Error(`could not create a session for ${user.email}: ${session.error}`)
       }
+
+      // the row a real login would have made — deliberately with no language in it, since this is
+      // not a request and there is no language to inherit. A test that wants a saved language sets
+      // it through the app, as a user would.
+      await ensureUser(db, user.uid, {})
 
       await page
         .context()

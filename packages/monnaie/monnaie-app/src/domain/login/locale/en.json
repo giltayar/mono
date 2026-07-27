@@ -1,17 +1,30 @@
 {
   "page": {
-    "title": "Log in"
+    "title": "Log in",
+    "registrationTitle": "Create an account",
+    "verificationSentTitle": "Check your email",
+    "verificationSentBody": "If {{email}} can have an account here, a message is on its way to it. Follow the link in it, and then log in."
   },
   "form": {
     "email": "Email",
     "password": "Password",
+    "confirmPassword": "Confirm password",
+    "passwordHint": "At least {{count}} characters",
     "logIn": "Log in",
+    "register": "Create account",
+    "noAccount": "Create an account",
+    "haveAccount": "Log in instead",
     "or": "or",
     "google": "Continue with Google"
   },
   "errors": {
     "invalid-credentials": "Wrong email or password",
     "too-many-attempts": "Too many attempts, please try again later",
-    "unavailable": "Log in is unavailable right now, please try again later"
+    "unavailable": "Log in is unavailable right now, please try again later",
+    "invalid-email": "That does not look like an email address",
+    "weak-password": "The password is too short",
+    "passwords-do-not-match": "The two passwords are not the same",
+    "email-already-in-use": "That email already has an account",
+    "email-not-verified": "Your email has not been confirmed yet. We have sent you the link again."
   }
 }

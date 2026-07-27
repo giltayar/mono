@@ -9,6 +9,7 @@ export function createLoginPageModel(page: Page) {
     googleButton: (locator = page.getByRole('button', {name: 'Continue with Google'})) => ({
       locator,
     }),
+    registerLink: (locator = page.getByRole('link', {name: 'Create an account'})) => ({locator}),
     error: (locator = page.getByRole('alert')) => ({locator}),
   }
 }

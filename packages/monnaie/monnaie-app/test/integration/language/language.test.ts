@@ -36,6 +36,23 @@ test('switches the language, and remembers it for the next visit', async ({page}
   await expect(page.locator('html')).toHaveAttribute('lang', 'he')
 })
 
+test('remembers the language on the account, not only in the browser', async ({page}) => {
+  await page.goto(url().href)
+
+  await page.getByLabel('Language').selectOption('he')
+  await page.getByRole('button', {name: 'Switch'}).click()
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'he')
+
+  // a different browser, which has never seen the `lang` cookie, but the same account
+  await page.context().clearCookies()
+  await logIn(page)
+  await page.goto(url().href)
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'he')
+  await expect(page.getByRole('button', {name: 'חשב'})).toBeVisible()
+})
+
 test.describe('with a Hebrew browser', () => {
   test.use({locale: 'he-IL'})
 

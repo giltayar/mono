@@ -7,6 +7,7 @@ import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import calculatorRoutes from '../domain/calculator/route.ts'
 import languageRoutes from '../domain/language/route.ts'
 import loginRoutes from '../domain/login/route.ts'
+import {userSettings} from '../domain/user/model.ts'
 import {prepareDatabase} from './prepare-database.ts'
 import {createDb, type Db} from '../commons/db.ts'
 import {requireAuthentication, resolveUser} from '../commons/auth.ts'
@@ -82,10 +83,13 @@ export async function makeApp({
   // context, because an encapsulated hook is guaranteed to run *after* the `onRequest` hooks of
   // `@fastify/cookie` and `@fastify/request-context`, both of which it depends on.
   app.register(async (appWithUser) => {
-    appWithUser.addHook('onRequest', resolveUser(auth))
+    appWithUser.addHook(
+      'onRequest',
+      resolveUser(auth, (userId) => userSettings(db, userId)),
+    )
 
-    appWithUser.register(loginRoutes, {auth, firebaseConfig})
-    appWithUser.register(languageRoutes)
+    appWithUser.register(loginRoutes, {auth, firebaseConfig, db})
+    appWithUser.register(languageRoutes, {db})
 
     // ...and everything in here additionally requires that there *be* a user, which makes routes
     // private by construction: a new route is only reachable without a session if it is

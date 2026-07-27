@@ -30,8 +30,17 @@ the app reads is prefixed `MONNAIE_`:
 | `MONNAIE_LANGUAGE`                 | no       | The fallback language, `en` or `he`                       |
 | `MONNAIE_HOST`, `MONNAIE_PORT`     | no       | Default to `localhost:3000`                               |
 
-Users are expected to already exist in Firebase — the app has no sign-up. Both email/password and
-Google sign-in have to be enabled in the Firebase console.
+Users register themselves at `/register`, and Firebase sends them a confirmation email that they
+must follow before they can log in. Users created by hand in the Firebase console work too — but
+only once they are marked as verified, since the app refuses a session for an unconfirmed email.
+
+In the Firebase console this needs the **Email/Password** and **Google** sign-in providers enabled,
+the **Email address verification** template filled in, and the domain the app is served from listed
+under **Authorized domains** (that is where the link in the email lands).
+
+Each user gets a row in the `app_user` table — on registration, or on their first login if they were
+created by hand — holding their settings as JSON. So far the only setting is the language they
+picked, which is why it follows them from one browser to the next.
 
 For development, put these in a `.env.local` file in the package root, which is git-ignored and read
 on startup:

@@ -32,6 +32,7 @@ export function renderLoginPage(
         ${error && html`<p class="error" role="alert">${t(`errors.${error}`)}</p>`}
         <button type="submit">${t('form.logIn')}</button>
       </form>
+      <p class="alternative"><a href="/register">${t('form.noAccount')}</a></p>
       <div
         id="google-sign-in"
         data-api-key=${firebaseConfig.apiKey}

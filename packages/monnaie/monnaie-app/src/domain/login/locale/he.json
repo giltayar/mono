@@ -1,17 +1,30 @@
 {
   "page": {
-    "title": "כניסה"
+    "title": "כניסה",
+    "registrationTitle": "יצירת חשבון",
+    "verificationSentTitle": "נא לבדוק את הדוא\"ל",
+    "verificationSentBody": "אם {{email}} יכול לקבל כאן חשבון, הודעה כבר בדרך אליו. יש ללחוץ על הקישור שבה, ואז להיכנס."
   },
   "form": {
     "email": "דוא\"ל",
     "password": "סיסמה",
+    "confirmPassword": "אימות סיסמה",
+    "passwordHint": "לפחות {{count}} תווים",
     "logIn": "כניסה",
+    "register": "יצירת חשבון",
+    "noAccount": "יצירת חשבון",
+    "haveAccount": "כניסה לחשבון קיים",
     "or": "או",
     "google": "המשך עם Google"
   },
   "errors": {
     "invalid-credentials": "הדוא\"ל או הסיסמה שגויים",
     "too-many-attempts": "יותר מדי ניסיונות, נא לנסות שוב מאוחר יותר",
-    "unavailable": "הכניסה אינה זמינה כרגע, נא לנסות שוב מאוחר יותר"
+    "unavailable": "הכניסה אינה זמינה כרגע, נא לנסות שוב מאוחר יותר",
+    "invalid-email": "זו אינה כתובת דוא\"ל תקינה",
+    "weak-password": "הסיסמה קצרה מדי",
+    "passwords-do-not-match": "שתי הסיסמאות אינן זהות",
+    "email-already-in-use": "לדוא\"ל הזה כבר יש חשבון",
+    "email-not-verified": "הדוא\"ל שלך עדיין לא אושר. שלחנו לך את הקישור שוב."
   }
 }
