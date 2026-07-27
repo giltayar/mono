@@ -1,4 +1,8 @@
 import {defineConfig, devices} from '@playwright/test'
+import {loadEnvFile} from '../../src/app/env-file.ts'
+
+// the e2e tests need real Firebase credentials, which are most conveniently kept in `.env.local`
+loadEnvFile()
 
 export default defineConfig({
   testDir: '.',

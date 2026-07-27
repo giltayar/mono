@@ -4,6 +4,8 @@ import enLayout from '../../../src/layout/locale/en.json' with {type: 'json'}
 import heLayout from '../../../src/layout/locale/he.json' with {type: 'json'}
 import enCalculator from '../../../src/domain/calculator/locale/en.json' with {type: 'json'}
 import heCalculator from '../../../src/domain/calculator/locale/he.json' with {type: 'json'}
+import enLogin from '../../../src/domain/login/locale/en.json' with {type: 'json'}
+import heLogin from '../../../src/domain/login/locale/he.json' with {type: 'json'}
 
 // only English types the translation keys (see `src/@types/i18next.d.ts`), so a key missing from
 // another language is not a compilation error and would silently render the English fallback
@@ -11,6 +13,7 @@ describe('locale completeness', () => {
   const namespaces = [
     {namespace: 'layout', en: enLayout, he: heLayout},
     {namespace: 'calculator', en: enCalculator, he: heCalculator},
+    {namespace: 'login', en: enLogin, he: heLogin},
   ]
 
   for (const {namespace, en, he} of namespaces) {

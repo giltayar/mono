@@ -1,11 +1,15 @@
 import {expect, test} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 
-const {url} = setup(import.meta.url)
+const {url, logIn} = setup(import.meta.url)
 
 // The only tests that run in a language other than English, and therefore the only ones that use
 // locators directly instead of `test/page-model/**`: the page models are English-only on purpose,
 // and teaching them about languages would complicate every other test for the sake of this file.
+
+test.beforeEach(async ({page}) => {
+  await logIn(page)
+})
 
 test('shows the app in the default language when the browser asks for nothing we support', async ({
   page,

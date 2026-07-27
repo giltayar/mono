@@ -4,5 +4,9 @@
     "en": "English",
     "he": "Hebrew",
     "switch": "Switch"
+  },
+  "user": {
+    "unnamed": "Logged in",
+    "logOut": "Log out"
   }
 }

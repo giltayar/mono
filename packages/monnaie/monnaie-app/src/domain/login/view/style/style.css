@@ -1,0 +1,81 @@
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) / 2);
+
+  & label {
+    font-size: 0.875rem;
+    opacity: 0.7;
+  }
+
+  & input,
+  & button {
+    /* 1rem or more avoids the iOS Safari zoom-on-focus behaviour */
+    font: inherit;
+    min-height: 2.75rem;
+    border-radius: var(--radius);
+    padding-inline: var(--spacing);
+  }
+
+  & input {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: inherit;
+    width: 100%;
+  }
+
+  & input + label {
+    margin-block-start: calc(var(--spacing) / 2);
+  }
+
+  & button {
+    margin-block-start: var(--spacing);
+    border: none;
+    background: #0d6efd;
+    color: white;
+    cursor: pointer;
+  }
+}
+
+#google-sign-in {
+  margin-block-start: calc(var(--spacing) * 1.5);
+
+  & .separator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing);
+    margin-block: 0 var(--spacing);
+    font-size: 0.875rem;
+    opacity: 0.7;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      border-block-start: 1px solid var(--border-color);
+    }
+  }
+
+  & button {
+    font: inherit;
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding-inline: var(--spacing);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: progress;
+    }
+  }
+}
+
+.error {
+  margin-block: calc(var(--spacing) / 2) 0;
+  color: #dc3545;
+  font-size: 0.875rem;
+}

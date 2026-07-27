@@ -1,18 +1,31 @@
 import crypto from 'node:crypto'
-import {test} from '@playwright/test'
+import {test, type Page} from '@playwright/test'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import {sql} from 'kysely'
 import type {FastifyInstance} from 'fastify'
 import type {AddressInfo} from 'node:net'
 import {makeApp} from '../../../src/app/monnaie-app.ts'
 import {createDb, type Db} from '../../../src/commons/db.ts'
+import {SESSION_COOKIE_NAME} from '../../../src/commons/auth.ts'
+import type {FirebaseAuth} from '../../../src/services/firebase-auth.ts'
+import {
+  createFakeFirebaseAuth,
+  FAKE_FIREBASE_CONFIG,
+  FIRST_USER,
+  type FakeUser,
+} from '../services/fake-firebase-auth.ts'
 
-export function setup(testUrl: string): {url: () => URL; db: () => Db} {
+export function setup(testUrl: string): {
+  url: () => URL
+  db: () => Db
+  logIn: (page: Page, user?: FakeUser) => Promise<void>
+} {
   const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
 
   let app: FastifyInstance
   let db: Db
   let globalDb: Db
+  let auth: FirebaseAuth
   let teardown: (() => Promise<void>) | undefined
   let url: URL
 
@@ -28,9 +41,13 @@ export function setup(testUrl: string): {url: () => URL; db: () => Db} {
     // start from a pristine database, so that the migrations always run from scratch
     await sql`DROP DATABASE IF EXISTS ${sql.id(databaseName)}`.execute(globalDb)
     await sql`CREATE DATABASE ${sql.id(databaseName)}`.execute(globalDb)
+
+    auth = createFakeFirebaseAuth()
     ;({app, db} = await makeApp({
       connectionString: connectionString(address, databaseName),
       language: 'en',
+      auth,
+      firebaseConfig: FAKE_FIREBASE_CONFIG,
     }))
 
     await app.listen({port: 0, host: '127.0.0.1'})
@@ -50,7 +67,30 @@ export function setup(testUrl: string): {url: () => URL; db: () => Db} {
     await teardown?.()
   })
 
-  return {url: () => url, db: () => db}
+  return {
+    url: () => url,
+    db: () => db,
+    // Signing in through the login page is what `login/login.test.ts` is for. Every other test only
+    // needs to *be* signed in, so it gets a session cookie handed to it: that keeps those tests off
+    // the login form, and works whatever language the test happens to run in.
+    logIn: async (page, user = FIRST_USER) => {
+      const signIn = await auth.signInWithPassword(user.email, user.password)
+
+      if ('error' in signIn) {
+        throw new Error(`could not sign ${user.email} in: ${signIn.error}`)
+      }
+
+      const session = await auth.createSession(signIn.idToken)
+
+      if ('error' in session) {
+        throw new Error(`could not create a session for ${user.email}: ${session.error}`)
+      }
+
+      await page
+        .context()
+        .addCookies([{name: SESSION_COOKIE_NAME, value: session.cookie, url: url.href}])
+    },
+  }
 }
 
 function connectionString(address: string, database: string) {

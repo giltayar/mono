@@ -19,10 +19,23 @@ Layers, strictly in this order — a layer may only import from the ones below i
 4. `src/domain/<domain>/view/view.ts` — htm + vhtml rendering, wrapped in `src/layout/main-view.ts`.
    Domain CSS lives in `src/domain/<domain>/view/style/style.css` and is served from source.
 
-`src/app/monnaie-app.ts` exports `async makeApp({connectionString, language})` returning
-`{app, db}`; it is the only place that wires fastify, the zod type provider, static serving, and the
-routes, and it is also what initializes i18next and runs the migrations (which is why it is async).
-`src/app/index.ts` only parses env vars with zod and listens.
+`src/services/` sits beside `src/commons/` and holds the app's ports to the outside world. Each
+service is two files: `<service>.ts` with the **types only**, and `<service>-impl.ts` with the code
+and the SDK dependency. Nothing but `src/app/index.ts` imports an `-impl`, so every other layer —
+and every test — can be given a fake instead.
+
+`src/app/monnaie-app.ts` exports `async makeApp({connectionString, language, auth, firebaseConfig})`
+returning `{app, db}`; it is the only place that wires fastify, the zod type provider, static
+serving, and the routes, and it is also what initializes i18next and runs the migrations (which is
+why it is async). `src/app/index.ts` only parses env vars with zod, constructs the service
+implementations, and listens. Every environment variable it reads is prefixed `MONNAIE_`.
+
+`src/app/env-file.ts` loads the git-ignored `.env.local` in the package root, using node's own
+`process.loadEnvFile` — no `dotenv`. It is resolved relative to `import.meta.url` (so the working
+directory does not matter), it is a no-op when the file is missing (which is the case in the docker
+image, since `.dockerignore` is deny-by-default), and node lets a real environment variable win over
+the file. It is called by `src/app/index.ts` and by `test/e2e/playwright.config.ts`, which is how
+the e2e Firebase credentials get in.
 
 ## HTMX conventions
 
@@ -98,7 +111,7 @@ request**.
 
 - Postgres, accessed through **kysely** (`src/commons/db.ts` exports `Database`, `Db`, `createDb`).
   Do not add `postgres`/`postgres.js`; `pg` is only there as the kysely driver.
-- Connection string comes from `DB_CONNECTION_STRING`.
+- Connection string comes from `MONNAIE_DB_CONNECTION_STRING`.
 - Schema changes are **migrations only** — never edit an existing migration, add a new one.
   - Files: `src/app/migrations/000NN_kebab-case-name.ts`, exporting `up(db: Kysely<any>)` and
     `down(db: Kysely<any>)`. Always type the parameter as `Kysely<any>`, never as the app's
@@ -110,11 +123,49 @@ request**.
 - Local dev postgres runs via the root `docker-compose.yaml` (`pnpm start` starts it, `pnpm stop`
   stops it). Its data lives in `~/.monnaie-app/.db-data`; delete that folder to reset.
 
+## Authentication
+
+Firebase Authentication, as a **server-minted session cookie**. Users are managed in the Firebase
+console; the app has no sign-up and no user table.
+
+- `src/services/firebase-auth.ts` declares `FirebaseAuth` — `signInWithPassword`, `createSession`,
+  `verifySession` — and **nothing else**: it is types only, so that `firebase-admin` is imported by
+  exactly one file, `src/services/firebase-auth-impl.ts`. That is what lets the integration tests
+  hand `makeApp` a fake (`test/integration/services/fake-firebase-auth.ts`, which mirrors the
+  `src/services` layout) and never touch Firebase or the network. `makeApp` therefore takes
+  `{auth, firebaseConfig}` alongside `{connectionString, language}`.
+- Email/password sign-in happens **server-side**, through the Identity Toolkit REST API, so the
+  login form is a plain form POST. Google sign-in is the one thing that must happen in the browser:
+  `src/domain/login/view/client/google-sign-in.js` loads the Firebase Web SDK from Google's CDN
+  (there is no bundler — the file is served from source by the existing `/src/<version>/` route),
+  and POSTs the resulting ID token to `/login/session`.
+- The ID token is never kept in the browser. The server verifies it, checks that the sign-in is less
+  than five minutes old, and answers with an `HttpOnly` session cookie. `SameSite=Lax` on that
+  cookie is the CSRF defence for every form in the app, and `Secure` is added when
+  `NODE_ENV=production`.
+- ⚠️ Routes are **private by construction**. `makeApp` nests two anonymous plugins: the outer one
+  adds `resolveUser` (which puts the user in `@fastify/request-context`), the inner one adds
+  `requireAuthentication`. A new route is only reachable without a session if it is deliberately
+  registered *outside* those plugins, as `/health` and the static routes are.
+- ⚠️ Those hooks are added inside plugins rather than on the root instance on purpose: an
+  encapsulated `onRequest` hook is guaranteed to run **after** the root hooks of `@fastify/cookie`
+  and `@fastify/request-context`, whereas `app.addHook` at the root would run *before* them.
+- Unauthenticated HTMX requests get `401` + `HX-Redirect`, not a `303`: HTMX follows a redirect
+  inside its own request, which would swap a whole login page into a fragment.
+- `currentUser()` may be `undefined`; `authenticatedUser()` throws. Views (the user menu) use the
+  first, routes behind `requireAuthentication` use the second and pass `userId` down explicitly —
+  authorization is never left to ambient state, so every `calculation` query is scoped by `user_id`.
+- Login errors are codes (`invalid-credentials`, `too-many-attempts`, `unavailable`) translated by
+  the view, like every other model error. A wrong password and an unknown email deliberately produce
+  the *same* message, so the login page cannot be used to discover which accounts exist.
+
 ## Security
 
 - **Never** use `eval`/`Function` for user input. `calculate()` accepts only `<number>` or
   `<number> <op> <number>` with `op` in `+ - * /`, validated by a single regex, and rejects
   non-finite results. Keep it that way.
+- Never trust an ID token that Firebase has not verified, and never put one (or the session cookie)
+  anywhere a script can read it.
 
 ## Tests
 
@@ -126,17 +177,23 @@ Three levels, each with its own script:
   `@giltayar/docker-compose-testkit` from `test/integration/docker-compose.yaml`.
   `test/integration/common/setup.ts` gives each test *file* its own database (name = sha256 of
   `import.meta.url`), drops and recreates it in `beforeAll` (`makeApp` then runs the migrations), and
-  truncates tables in `beforeEach`.
+  truncates tables in `beforeEach`. It also returns a `logIn(page, user?)` that installs a session
+  cookie directly from the fake — signing in *through the form* is `login/login.test.ts`'s job, and
+  every other test just needs to already be logged in (which also keeps `language.test.ts` working
+  in Hebrew).
 - `pnpm test:e2e` — `test/e2e`, running the **published docker image** plus postgres via
   `test/e2e/docker-compose.yaml`. Requires `pnpm build` first (the image is built by
   `postbuild:docker` and tagged with the `package.json` version, passed to compose as
-  `MONNAIE_APP_VERSION`). Keep this to a single happy-path test.
+  `MONNAIE_APP_VERSION`). Keep this to a single happy-path test. The container talks to the real
+  Firebase, so it cannot be given the fake: the whole file skips itself unless
+  `MONNAIE_FIREBASE_API_KEY`, `MONNAIE_FIREBASE_SERVICE_ACCOUNT`, `MONNAIE_FIREBASE_TEST_EMAIL` and
+  `MONNAIE_FIREBASE_TEST_PASSWORD` are set.
 
 Gotchas:
 
 - `docker compose port` reports `0.0.0.0:<port>`; Chromium refuses to navigate there, so the e2e
   setup rewrites it to `127.0.0.1`.
-- The container must bind `HOST=0.0.0.0` (the app defaults to `localhost`), which the compose file sets.
+- The container must bind `MONNAIE_HOST=0.0.0.0` (the app defaults to `localhost`), which the compose file sets.
 - Locators belong in `test/page-model/**`, shared by integration and e2e tests. Each file exports a
   `create<Something>PageModel(page)` returning a nested object of functions whose leaves are
   `{locator}`; tests never call `page.getBy*` directly.

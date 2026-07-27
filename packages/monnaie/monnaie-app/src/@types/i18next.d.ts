@@ -1,5 +1,6 @@
 import type enLayout from '../layout/locale/en.json'
 import type enCalculator from '../domain/calculator/locale/en.json'
+import type enLogin from '../domain/login/locale/en.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -9,6 +10,7 @@ declare module 'i18next' {
     resources: {
       layout: typeof enLayout
       calculator: typeof enCalculator
+      login: typeof enLogin
     }
   }
 }

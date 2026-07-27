@@ -17,9 +17,11 @@ services:
   monnaie-app:
     image: giltayar/monnaie-app:${MONNAIE_APP_VERSION}
     environment:
-      HOST: 0.0.0.0
-      PORT: 3000
-      DB_CONNECTION_STRING: postgres://user:password@postgres:5432/monnaie
+      MONNAIE_HOST: 0.0.0.0
+      MONNAIE_PORT: 3000
+      MONNAIE_DB_CONNECTION_STRING: postgres://user:password@postgres:5432/monnaie
+      MONNAIE_FIREBASE_API_KEY: ${MONNAIE_FIREBASE_API_KEY}
+      MONNAIE_FIREBASE_SERVICE_ACCOUNT: ${MONNAIE_FIREBASE_SERVICE_ACCOUNT}
     depends_on:
       postgres:
         condition: service_healthy

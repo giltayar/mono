@@ -36,13 +36,23 @@ body {
   }
 }
 
-.language-switcher {
+.main-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) / 2);
+  margin-block-end: var(--spacing);
+}
+
+.language-switcher,
+.user-menu {
   display: flex;
   align-items: center;
   gap: calc(var(--spacing) / 2);
-  margin-block-end: var(--spacing);
 
-  & label {
+  & label,
+  & .user-menu-user {
     font-size: 0.875rem;
     opacity: 0.7;
   }

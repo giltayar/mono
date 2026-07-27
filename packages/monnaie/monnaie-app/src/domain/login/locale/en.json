@@ -1,0 +1,17 @@
+{
+  "page": {
+    "title": "Log in"
+  },
+  "form": {
+    "email": "Email",
+    "password": "Password",
+    "logIn": "Log in",
+    "or": "or",
+    "google": "Continue with Google"
+  },
+  "errors": {
+    "invalid-credentials": "Wrong email or password",
+    "too-many-attempts": "Too many attempts, please try again later",
+    "unavailable": "Log in is unavailable right now, please try again later"
+  }
+}
