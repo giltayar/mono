@@ -11,6 +11,10 @@ export type RegistrationError =
 
 export type RegistrationResult = {registered: true} | {error: RegistrationError}
 
+export type PasswordResetError = 'invalid-email' | 'too-many-attempts' | 'unavailable'
+
+export type PasswordResetResult = {sent: true} | {error: PasswordResetError}
+
 export const PASSWORD_MIN_LENGTH = 8
 
 // deliberately undemanding: length is the password rule that reliably helps, while rules about
@@ -135,4 +139,31 @@ export async function registerUser(
   return (await auth.sendVerificationEmail(signIn.idToken)) === undefined
     ? {registered: true}
     : {error: 'unavailable'}
+}
+
+/**
+ * Has Firebase send its own "set a new password" message. Nothing here is stored: the link in the
+ * mail is handled by Firebase's action page, exactly as the verification link is.
+ *
+ * An address with no account is answered exactly like one that has an account — Firebase rejects it
+ * with the same code it uses for a wrong password, and that is deliberately swallowed — so that
+ * this page cannot be used to find out who has an account here.
+ */
+export async function requestPasswordReset(
+  auth: FirebaseAuth,
+  email: string,
+): Promise<PasswordResetResult> {
+  const trimmedEmail = email.trim()
+
+  if (!EMAIL_REGEXP.test(trimmedEmail)) {
+    return {error: 'invalid-email'}
+  }
+
+  const result = await auth.sendPasswordResetEmail(trimmedEmail)
+
+  if (result !== undefined && result.error !== 'invalid-credentials') {
+    return {error: result.error === 'too-many-attempts' ? 'too-many-attempts' : 'unavailable'}
+  }
+
+  return {sent: true}
 }

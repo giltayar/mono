@@ -9,6 +9,8 @@ import {
   logInWithGoogle,
   logOut,
   register,
+  resetPassword,
+  showForgotPasswordPage,
   showLoginPage,
   showRegistrationPage,
 } from './controller.ts'
@@ -54,6 +56,19 @@ export default function loginRoutes(
     },
     async (request, reply) =>
       replyWithControllerResult(reply, await register(auth, db, request.body)),
+  )
+
+  appWithTypes.get('/forgot-password', async (_request, reply) =>
+    replyWithControllerResult(reply, await showForgotPasswordPage()),
+  )
+
+  appWithTypes.post(
+    '/forgot-password',
+    // loose for the same reason as `/login`: a badly-formed email is something to say on the page,
+    // in the user's language, and not a fastify validation error
+    {schema: {body: z.object({email: z.string()})}},
+    async (request, reply) =>
+      replyWithControllerResult(reply, await resetPassword(auth, request.body)),
   )
 
   appWithTypes.post('/logout', async (_request, reply) =>

@@ -3,7 +3,11 @@
     "title": "כניסה",
     "registrationTitle": "יצירת חשבון",
     "verificationSentTitle": "נא לבדוק את הדוא\"ל",
-    "verificationSentBody": "אם {{email}} יכול לקבל כאן חשבון, הודעה כבר בדרך אליו. יש ללחוץ על הקישור שבה, ואז להיכנס."
+    "verificationSentBody": "אם {{email}} יכול לקבל כאן חשבון, הודעה כבר בדרך אליו. יש ללחוץ על הקישור שבה, ואז להיכנס.",
+    "forgotPasswordTitle": "איפוס סיסמה",
+    "forgotPasswordBody": "יש להקליד את כתובת הדוא\"ל שאיתה נכנסים, ונשלח קישור לבחירת סיסמה חדשה.",
+    "resetSentTitle": "נא לבדוק את הדוא\"ל",
+    "resetSentBody": "אם ל־{{email}} יש כאן חשבון, קישור לבחירת סיסמה חדשה כבר בדרך אליו."
   },
   "form": {
     "email": "דוא\"ל",
@@ -14,6 +18,8 @@
     "register": "יצירת חשבון",
     "noAccount": "יצירת חשבון",
     "haveAccount": "כניסה לחשבון קיים",
+    "forgotPassword": "שכחת את הסיסמה?",
+    "sendResetLink": "שליחת הקישור",
     "or": "או",
     "google": "המשך עם Google"
   },

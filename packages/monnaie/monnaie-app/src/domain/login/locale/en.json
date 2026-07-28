@@ -3,7 +3,11 @@
     "title": "Log in",
     "registrationTitle": "Create an account",
     "verificationSentTitle": "Check your email",
-    "verificationSentBody": "If {{email}} can have an account here, a message is on its way to it. Follow the link in it, and then log in."
+    "verificationSentBody": "If {{email}} can have an account here, a message is on its way to it. Follow the link in it, and then log in.",
+    "forgotPasswordTitle": "Reset your password",
+    "forgotPasswordBody": "Type the email you log in with, and we will send you a link for choosing a new password.",
+    "resetSentTitle": "Check your email",
+    "resetSentBody": "If {{email}} has an account here, a link for choosing a new password is on its way to it."
   },
   "form": {
     "email": "Email",
@@ -14,6 +18,8 @@
     "register": "Create account",
     "noAccount": "Create an account",
     "haveAccount": "Log in instead",
+    "forgotPassword": "Forgot your password?",
+    "sendResetLink": "Send the link",
     "or": "or",
     "google": "Continue with Google"
   },

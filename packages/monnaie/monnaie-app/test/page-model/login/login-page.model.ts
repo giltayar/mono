@@ -10,6 +10,9 @@ export function createLoginPageModel(page: Page) {
       locator,
     }),
     registerLink: (locator = page.getByRole('link', {name: 'Create an account'})) => ({locator}),
+    forgotPasswordLink: (locator = page.getByRole('link', {name: 'Forgot your password?'})) => ({
+      locator,
+    }),
     error: (locator = page.getByRole('alert')) => ({locator}),
   }
 }

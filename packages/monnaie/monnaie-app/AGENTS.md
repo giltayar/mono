@@ -216,6 +216,21 @@ same form, the same styles and the same error vocabulary as logging in.
 - ⚠️ Users created in the Firebase console start with `emailVerified === false` and therefore cannot
   log in. Flip them to verified in the console.
 
+### Forgotten passwords
+
+`GET`/`POST /forgot-password`, also in the login domain, and also composing no mail of its own:
+`sendPasswordResetEmail` asks Identity Toolkit for a `PASSWORD_RESET` oob code and Firebase sends
+its own templated message, whose link is handled by Firebase's action page. There is no `/reset`
+route in this app, and no token of any kind is stored.
+
+- ⚠️ Like registration, the answer is **identical** for an address that has an account and one that
+  does not: the same "check your email" page. Firebase rejects an unknown address with the same code
+  it uses for a wrong password (`invalid-credentials`), and `requestPasswordReset` swallows exactly
+  that one, reporting only failures that say nothing about the address (`too-many-attempts`,
+  `unavailable`).
+- The email is validated with the same regex registration uses before Firebase is touched, so a
+  typo is answered on the page rather than by a pointless round-trip.
+
 ## Security
 
 - **Never** use `eval`/`Function` for user input. `calculate()` accepts only `<number>` or

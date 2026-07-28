@@ -2,9 +2,10 @@ import {clearedSessionCookie, currentUser, LOGIN_PATH, sessionCookie} from '../.
 import type {ControllerResult} from '../../commons/controller.ts'
 import type {Db} from '../../commons/db.ts'
 import type {FirebaseAuth, PublicFirebaseConfig, Session} from '../../services/firebase-auth.ts'
-import {logInWithIdToken, logInWithPassword, registerUser} from './model.ts'
+import {logInWithIdToken, logInWithPassword, registerUser, requestPasswordReset} from './model.ts'
 import {renderLoginPage} from './view/view.ts'
 import {renderRegistrationPage, renderVerificationSentPage} from './view/registration-view.ts'
+import {renderForgotPasswordPage, renderPasswordResetSentPage} from './view/forgot-password-view.ts'
 
 const HOME_PATH = '/'
 
@@ -71,6 +72,27 @@ export async function register(
   }
 
   return {html: renderVerificationSentPage(body.email.trim())}
+}
+
+export async function showForgotPasswordPage(): Promise<ControllerResult> {
+  if (currentUser() !== undefined) {
+    return {html: '', statusCode: 303, headers: {Location: HOME_PATH}}
+  }
+
+  return {html: renderForgotPasswordPage({error: undefined, email: ''})}
+}
+
+export async function resetPassword(
+  auth: FirebaseAuth,
+  {email}: {email: string},
+): Promise<ControllerResult> {
+  const result = await requestPasswordReset(auth, email)
+
+  if ('error' in result) {
+    return {html: renderForgotPasswordPage({error: result.error, email}), statusCode: 400}
+  }
+
+  return {html: renderPasswordResetSentPage(email.trim())}
 }
 
 export async function logOut(): Promise<ControllerResult> {
