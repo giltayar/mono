@@ -47,6 +47,8 @@ export function setup(testUrl: string): {
     ;({app, db} = await makeApp({
       connectionString: connectionString(address, databaseName),
       language: 'en',
+      // UTC, so that a test seeding a `created_at` can reason about periods without a local offset
+      timeZone: 'UTC',
       auth,
       firebaseConfig: FAKE_FIREBASE_CONFIG,
     }))
@@ -58,7 +60,7 @@ export function setup(testUrl: string): {
   })
 
   test.beforeEach(async () => {
-    await sql`TRUNCATE TABLE app_user, calculation RESTART IDENTITY CASCADE`.execute(db)
+    await sql`TRUNCATE TABLE app_user, expense RESTART IDENTITY CASCADE`.execute(db)
     auth.reset()
   })
 

@@ -4,7 +4,7 @@ import fastifyStatic from '@fastify/static'
 import cookie from '@fastify/cookie'
 import {fastifyRequestContext} from '@fastify/request-context'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
-import calculatorRoutes from '../domain/calculator/route.ts'
+import expensesRoutes from '../domain/expenses/route.ts'
 import languageRoutes from '../domain/language/route.ts'
 import loginRoutes from '../domain/login/route.ts'
 import {userSettings} from '../domain/user/model.ts'
@@ -18,12 +18,15 @@ import {version} from '../commons/version.ts'
 export async function makeApp({
   connectionString,
   language,
+  timeZone,
   auth,
   firebaseConfig,
 }: {
   connectionString: string
   /** The language to use when the request asks for no language we support */
   language: Language
+  /** The IANA timezone the calendar periods of the summary are calculated in */
+  timeZone: string
   auth: FirebaseAuth
   /** The public half of the Firebase configuration, which the login page sends to the browser */
   firebaseConfig: PublicFirebaseConfig
@@ -78,7 +81,6 @@ export async function makeApp({
   })
 
   app.get('/health', async () => ({status: 'ok', version}))
-
   // Everything below knows who the user is. It is a plugin, rather than a hook on the root
   // context, because an encapsulated hook is guaranteed to run *after* the `onRequest` hooks of
   // `@fastify/cookie` and `@fastify/request-context`, both of which it depends on.
@@ -97,7 +99,7 @@ export async function makeApp({
     appWithUser.register(async (privateApp) => {
       privateApp.addHook('onRequest', requireAuthentication)
 
-      privateApp.register(calculatorRoutes, {db})
+      privateApp.register(expensesRoutes, {db, timeZone})
     })
   })
 

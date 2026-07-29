@@ -3,7 +3,7 @@ import {setup} from '../common/setup.ts'
 import {FIRST_USER} from '../services/fake-firebase-auth.ts'
 import {createLoginPageModel} from '../../page-model/login/login-page.model.ts'
 import {createForgotPasswordPageModel} from '../../page-model/login/forgot-password-page.model.ts'
-import {createCalculatorPageModel} from '../../page-model/calculator/calculator-page.model.ts'
+import {createExpensesPageModel} from '../../page-model/expenses/expenses-page.model.ts'
 
 const {url, auth, logIn} = setup(import.meta.url)
 
@@ -66,12 +66,12 @@ test('keeps the email that was typed when it complains about it', async ({page})
 })
 
 test('sends someone who is already logged in to the app', async ({page}) => {
-  const calculator = createCalculatorPageModel(page)
+  const expenses = createExpensesPageModel(page)
 
   await logIn(page, FIRST_USER)
 
   await page.goto(forgotPasswordUrl())
 
   await expect(page).toHaveURL(url().href)
-  await expect(calculator.heading().locator).toBeVisible()
+  await expect(expenses.heading().locator).toBeVisible()
 })

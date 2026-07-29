@@ -54,8 +54,12 @@ the e2e Firebase credentials get in.
 
 ## HTMX conventions
 
-- Server responses are HTML fragments; out-of-band swaps (`hx-swap-oob`) update the history section
-  when a calculation succeeds.
+- Server responses are HTML fragments; out-of-band swaps (`hx-swap-oob`) update the summary when an
+  expense is deleted.
+- ⚠️ A form that fails validation is answered with `400` **and** with the form re-rendered, and htmx
+  refuses to swap a `4xx` by default. `MainLayout` therefore sets `htmx.config.responseHandling`
+  through a `<meta name="htmx-config">`, adding a `400 → swap` entry *before* the `[45]..` one. The
+  rest of that list is htmx's own default, repeated because the setting replaces it wholesale.
 - Client-side side effects (like clearing the input) are driven by an `HX-Trigger` response header
   plus `hx-on:<event>` on the element — *not* by returning a new `<input>`. This keeps the response
   about data and lets the browser own transient UI state (focus, selection).
@@ -71,13 +75,13 @@ the e2e Firebase credentials get in.
   types the default import as the module namespace and `htm.bind` appears to be missing. That is why
   `html-templates.ts` carries a `//@ts-expect-error`; `esModuleInterop` does **not** fix it.
 - `MainLayout({title, styleSheet, script, children})` — `styleSheet` is a path **relative to `src`**
-  (e.g. `domain/calculator/view/style/style.css`) and, when given, adds a second
+  (e.g. `domain/expenses/view/style/style.css`) and, when given, adds a second
   `<link rel="stylesheet">`. Domain views never build asset hrefs themselves.
 - Assets are served versioned and immutable: `/dist/<version>/...` for built client assets and
   `/src/<version>/...` for source `.css`/`.js` only. `version` comes from `package.json`, so bumping
   the version busts the cache.
 - CSS is hand-written and **mobile-first** — no bootstrap or other CSS framework, and no BEM class
-  naming. Use scoped selectors (`#calculation-form input`) with **native CSS nesting**. Shared
+  naming. Use scoped selectors (`#expense-form input`) with **native CSS nesting**. Shared
   tokens (`--spacing`, `--radius`, `--border-color`) live in `src/layout/style/style.css`; anything
   domain-specific goes in that domain's `view/style/style.css`.
 - The app is bidirectional, so use **logical properties** only — `padding-inline`, `margin-block`,
@@ -119,12 +123,40 @@ request**.
 - `interpolation.escapeValue` is `false` because vhtml already escapes interpolated values — turning
   it on would double-escape `&`, `<` and `'`.
 - Translation keys are type-checked: `src/@types/i18next.d.ts` augments `CustomTypeOptions` from the
-  **English** JSONs, so `t('form.calculat')` is a compilation error. Only English is checked that
+  **English** JSONs, so `t('form.amout')` is a compilation error. Only English is checked that
   way, which is why `test/unit/commons/locale-completeness.test.ts` asserts that the other languages
   have exactly the same keys.
 - Adding a namespace means touching three places: create `src/domain/<x>/locale/{en,he}.json`, add
   `'<x>'` to `NAMESPACES` in `src/commons/i18n.ts`, and add it to `resources` in
   `src/@types/i18next.d.ts` (and to the list in the locale-completeness test).
+
+## Expenses
+
+The whole app, apart from logging in and switching languages, is `src/domain/expenses/`: a summary
+page (`GET /`) with the totals of the current and previous day, week, month and year plus this
+month's expenses, and a form (`GET /expenses/new`, `GET /expenses/:id/edit`) that adds, edits and
+deletes them.
+
+- ⚠️ **All date arithmetic happens in `src/domain/expenses/periods.ts`, with `Temporal`, and never in
+  SQL.** `periodRanges(now, timeZone)` returns a half-open `{from, to}` for each of the eight
+  periods, and the model does nothing but `>= from` and `< to`. No `date_trunc`, no `interval`, no
+  `AT TIME ZONE` — postgres does not know which timezone the user lives in, and a `date_trunc` day
+  is not the same as a day that is 23 or 25 hours long.
+- `periods.ts` is pure and is the only file in the app that mentions `Temporal`. A week starts on
+  **Sunday** (`day.subtract({days: zoned.dayOfWeek % 7})`, since `dayOfWeek` is 1..7 with Monday as
+  1).
+- The timezone the periods are calculated in is `MONNAIE_TIMEZONE` (an IANA name, checked against
+  `Intl.supportedValuesOf('timeZone')`, default `UTC`), threaded from `makeApp` into the routes as
+  `timeZone` — it is *not* per-user yet.
+- The summary and the list are answered from a **single** `periodRanges(new Date(), ...)`, so the
+  totals and the list can never disagree about where the month starts. The eight totals are one
+  query, with eight `sum(amount) filter (where ...)` expressions.
+- Categories are the hardcoded `EXPENSE_CATEGORIES` in `src/domain/expenses/categories.ts`, and the
+  `expense` row refers to one by **number**, not by name — the table is already shaped for
+  categories that a user will eventually edit. The names are English-only and deliberately not in
+  the locale files yet, since they will become data.
+- `amount` is `numeric(12, 2)`, and kysely types it as `ColumnType<string, number, number>`: postgres
+  hands back a string, which the model turns into a number in one place (`toExpense`/`toAmount`).
 
 ## Database
 
@@ -186,7 +218,7 @@ Firebase Authentication, as a **server-minted session cookie**. There is no user
   inside its own request, which would swap a whole login page into a fragment.
 - `currentUser()` may be `undefined`; `authenticatedUser()` throws. Views (the user menu) use the
   first, routes behind `requireAuthentication` use the second and pass `userId` down explicitly —
-  authorization is never left to ambient state, so every `calculation` query is scoped by `user_id`.
+  authorization is never left to ambient state, so every `expense` query is scoped by `user_id`.
 - Login errors are codes (`invalid-credentials`, `too-many-attempts`, `unavailable`) translated by
   the view, like every other model error. A wrong password and an unknown email deliberately produce
   the *same* message, so the login page cannot be used to discover which accounts exist.
@@ -233,9 +265,11 @@ route in this app, and no token of any kind is stored.
 
 ## Security
 
-- **Never** use `eval`/`Function` for user input. `calculate()` accepts only `<number>` or
-  `<number> <op> <number>` with `op` in `+ - * /`, validated by a single regex, and rejects
-  non-finite results. Keep it that way.
+- Amounts and category ids are validated by `validateExpense` before they reach SQL — an amount has
+  to match `/^\d+(?:\.\d{1,2})?$/` and be within range, and a category id has to be an integer that
+  `isKnownCategoryId` recognizes. Nothing is passed on to kysely on trust.
+- Every `expense` query is scoped by `user_id`, so knowing an id is not enough to read, edit or
+  delete somebody else's expense; `test/integration/login/login.test.ts` guards that.
 - Never trust an ID token that Firebase has not verified, and never put one (or the session cookie)
   anywhere a script can read it.
 
@@ -243,7 +277,8 @@ route in this app, and no token of any kind is stored.
 
 Three levels, each with its own script:
 
-- `pnpm test:node` — `node:test` unit tests in `test/unit/**` (pure logic, e.g. `calculate`).
+- `pnpm test:node` — `node:test` unit tests in `test/unit/**` (pure logic, e.g. `validateExpense`
+  and `periodRanges`).
 - `pnpm test:playwright` — integration tests in `test/integration`, running the app **in-process**
   (`makeApp` + `app.listen({port: 0})`) against a real postgres started by
   `@giltayar/docker-compose-testkit` from `test/integration/docker-compose.yaml`.

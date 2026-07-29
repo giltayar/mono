@@ -1,0 +1,41 @@
+{
+  "page": {
+    "title": "Monnaie"
+  },
+  "summary": {
+    "title": "סיכום",
+    "current": "נוכחי",
+    "previous": "קודם",
+    "day": "יום",
+    "week": "שבוע",
+    "month": "חודש",
+    "year": "שנה"
+  },
+  "list": {
+    "title": "החודש",
+    "empty": "אין הוצאות החודש"
+  },
+  "form": {
+    "addTitle": "הוספת הוצאה",
+    "editTitle": "עריכת ההוצאה",
+    "description": "על מה",
+    "amount": "סכום",
+    "category": "קטגוריה",
+    "add": "הוספה",
+    "save": "שמירה",
+    "cancel": "ביטול"
+  },
+  "actions": {
+    "add": "הוספת הוצאה",
+    "edit": "עריכה",
+    "delete": "מחיקה",
+    "confirmDelete": "למחוק את ההוצאה הזאת?"
+  },
+  "errors": {
+    "empty-description": "נא לציין על מה ההוצאה",
+    "description-too-long": "התיאור ארוך מדי",
+    "invalid-amount": "נא להזין סכום, למשל 12.50",
+    "invalid-category": "נא לבחור קטגוריה",
+    "not-found": "ההוצאה הזאת כבר לא קיימת"
+  }
+}

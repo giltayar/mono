@@ -1,0 +1,41 @@
+{
+  "page": {
+    "title": "Monnaie"
+  },
+  "summary": {
+    "title": "Summary",
+    "current": "Current",
+    "previous": "Previous",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year"
+  },
+  "list": {
+    "title": "This month",
+    "empty": "No expenses this month"
+  },
+  "form": {
+    "addTitle": "Add an expense",
+    "editTitle": "Edit the expense",
+    "description": "What was it",
+    "amount": "Amount",
+    "category": "Category",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "actions": {
+    "add": "Add an expense",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete this expense?"
+  },
+  "errors": {
+    "empty-description": "Please say what the expense was",
+    "description-too-long": "That description is too long",
+    "invalid-amount": "Please enter an amount, like 12.50",
+    "invalid-category": "Please choose a category",
+    "not-found": "That expense no longer exists"
+  }
+}

@@ -2,8 +2,8 @@ import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import enLayout from '../../../src/layout/locale/en.json' with {type: 'json'}
 import heLayout from '../../../src/layout/locale/he.json' with {type: 'json'}
-import enCalculator from '../../../src/domain/calculator/locale/en.json' with {type: 'json'}
-import heCalculator from '../../../src/domain/calculator/locale/he.json' with {type: 'json'}
+import enExpenses from '../../../src/domain/expenses/locale/en.json' with {type: 'json'}
+import heExpenses from '../../../src/domain/expenses/locale/he.json' with {type: 'json'}
 import enLogin from '../../../src/domain/login/locale/en.json' with {type: 'json'}
 import heLogin from '../../../src/domain/login/locale/he.json' with {type: 'json'}
 
@@ -12,7 +12,7 @@ import heLogin from '../../../src/domain/login/locale/he.json' with {type: 'json
 describe('locale completeness', () => {
   const namespaces = [
     {namespace: 'layout', en: enLayout, he: heLayout},
-    {namespace: 'calculator', en: enCalculator, he: heCalculator},
+    {namespace: 'expenses', en: enExpenses, he: heExpenses},
     {namespace: 'login', en: enLogin, he: heLogin},
   ]
 

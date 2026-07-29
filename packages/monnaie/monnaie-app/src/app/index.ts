@@ -21,6 +21,8 @@ const EnvironmentVariablesSchema = z.object({
     .default('postgres://user:password@localhost:5432/monnaie'),
   /** The language to use when the request asks for no language we support */
   MONNAIE_LANGUAGE: z.enum(SUPPORTED_LANGUAGES).default('en'),
+  /** The IANA timezone the calendar periods of the summary are calculated in */
+  MONNAIE_TIMEZONE: z.string().refine(isKnownTimeZone, 'must be an IANA timezone').default('UTC'),
   /** The Firebase web API key. Public by design — the browser needs it to sign in with Google */
   MONNAIE_FIREBASE_API_KEY: z.string(),
   /** Defaults to the `<project-id>.firebaseapp.com` that Firebase provisions */
@@ -39,6 +41,7 @@ const serviceAccount = env.MONNAIE_FIREBASE_SERVICE_ACCOUNT
 const {app} = await makeApp({
   connectionString: env.MONNAIE_DB_CONNECTION_STRING,
   language: env.MONNAIE_LANGUAGE,
+  timeZone: env.MONNAIE_TIMEZONE,
   auth: createFirebaseAuth({serviceAccount, apiKey: env.MONNAIE_FIREBASE_API_KEY}),
   firebaseConfig: {
     apiKey: env.MONNAIE_FIREBASE_API_KEY,
@@ -48,6 +51,11 @@ const {app} = await makeApp({
 })
 
 await app.listen({port: env.MONNAIE_PORT, host: env.MONNAIE_HOST})
+
+// an unknown timezone would otherwise only be discovered by the first request that needs a summary
+function isKnownTimeZone(timeZone: string) {
+  return Intl.supportedValuesOf('timeZone').includes(timeZone) || timeZone === 'UTC'
+}
 
 function parseServiceAccount(value: string, ctx: z.RefinementCtx) {
   let json: unknown

@@ -2,11 +2,18 @@ import {Kysely, PostgresDialect, type ColumnType, type Generated, type JSONColum
 import pg from 'pg'
 import type {Language} from './i18n.ts'
 
-export type CalculationTable = {
+/**
+ * A single expense of a single user. `category_id` deliberately refers to a number and not to a
+ * name, so that categories can become per-user rows without touching the expenses pointing at them.
+ * `amount` is `numeric` in the database, which `pg` hands back as a string to keep it exact — the
+ * model is what turns it into a number.
+ */
+export type ExpenseTable = {
   id: Generated<number>
   user_id: string
-  expression: string
-  value: string
+  description: string
+  amount: ColumnType<string, number, number>
+  category_id: number
   created_at: ColumnType<Date, string | undefined, never>
 }
 
@@ -32,7 +39,7 @@ export type AppUserTable = {
 }
 
 export type Database = {
-  calculation: CalculationTable
+  expense: ExpenseTable
   app_user: AppUserTable
 }
 

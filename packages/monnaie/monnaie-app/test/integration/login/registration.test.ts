@@ -3,7 +3,7 @@ import {setup} from '../common/setup.ts'
 import {FIRST_USER} from '../services/fake-firebase-auth.ts'
 import {createLoginPageModel} from '../../page-model/login/login-page.model.ts'
 import {createRegistrationPageModel} from '../../page-model/login/registration-page.model.ts'
-import {createCalculatorPageModel} from '../../page-model/calculator/calculator-page.model.ts'
+import {createExpensesPageModel} from '../../page-model/expenses/expenses-page.model.ts'
 
 const {url, db, auth, logIn} = setup(import.meta.url)
 
@@ -75,7 +75,7 @@ test('does not let the new account in until the email has been confirmed', async
 
 test('lets the new account in once the email has been confirmed', async ({page}) => {
   const login = createLoginPageModel(page)
-  const calculator = createCalculatorPageModel(page)
+  const expenses = createExpensesPageModel(page)
 
   await register(page, NEW_REGISTRATION)
 
@@ -88,7 +88,7 @@ test('lets the new account in once the email has been confirmed', async ({page})
   await login.logInButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
-  await expect(calculator.heading().locator).toBeVisible()
+  await expect(expenses.heading().locator).toBeVisible()
 })
 
 test('answers an email that already has an account exactly as it answers a new one', async ({
@@ -150,14 +150,14 @@ test('keeps the email that was typed when it complains about the password', asyn
 test('sends someone who is already logged in from the registration page to the app', async ({
   page,
 }) => {
-  const calculator = createCalculatorPageModel(page)
+  const expenses = createExpensesPageModel(page)
 
   await logIn(page, FIRST_USER)
 
   await page.goto(registerUrl())
 
   await expect(page).toHaveURL(url().href)
-  await expect(calculator.heading().locator).toBeVisible()
+  await expect(expenses.heading().locator).toBeVisible()
 })
 
 test('gets to the registration page from the login page, and back', async ({page}) => {
@@ -178,7 +178,7 @@ test('gives a user who was created straight in Firebase a row on their first log
   page,
 }) => {
   const login = createLoginPageModel(page)
-  const calculator = createCalculatorPageModel(page)
+  const expenses = createExpensesPageModel(page)
 
   // as if somebody had added them by hand in the Firebase console, and confirmed their address
   auth().addUser({
@@ -194,6 +194,6 @@ test('gives a user who was created straight in Firebase a row on their first log
   await login.password().locator.fill('made-in-the-console')
   await login.logInButton().locator.click()
 
-  await expect(calculator.heading().locator).toBeVisible()
+  await expect(expenses.heading().locator).toBeVisible()
   expect(await userRows()).toMatchObject([{user_id: 'by-hand'}])
 })

@@ -17,7 +17,7 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number]
 export const LANGUAGE_COOKIE_NAME = 'lang'
 
 const LAYOUT_NAMESPACE = 'layout'
-const NAMESPACES = [LAYOUT_NAMESPACE, 'calculator', 'login']
+const NAMESPACES = [LAYOUT_NAMESPACE, 'expenses', 'login']
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 let defaultLanguage: Language = 'en'
