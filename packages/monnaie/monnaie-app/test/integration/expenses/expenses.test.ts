@@ -34,7 +34,7 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
 
   await form.description().locator.fill('Coffee')
   await form.amount().locator.fill('12.50')
-  await form.category('Food').locator.check()
+  await form.category('אוכל').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
@@ -42,7 +42,7 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   const item = expenses.list().item('Coffee')
 
   await expect(item.locator).toContainText('Coffee')
-  await expect(item.locator).toContainText('Food')
+  await expect(item.locator).toContainText('אוכל')
   await expect(item.locator).toContainText('12.50')
 
   for (const period of ['Day', 'Week', 'Month', 'Year']) {
@@ -51,8 +51,8 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
 })
 
 test('adds up several expenses', async ({page}) => {
-  await addExpense(page, 'Coffee', '12.50', 'Food')
-  await addExpense(page, 'Bus ticket', '6.00', 'Transport')
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+  await addExpense(page, 'Bus ticket', '6.00', 'תחבורה')
 
   const expenses = createExpensesPageModel(page)
 
@@ -61,8 +61,8 @@ test('adds up several expenses', async ({page}) => {
 })
 
 test('shows the most recent expense first', async ({page}) => {
-  await addExpense(page, 'Coffee', '12.50', 'Food')
-  await addExpense(page, 'Bus ticket', '6.00', 'Transport')
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+  await addExpense(page, 'Bus ticket', '6.00', 'תחבורה')
 
   const expenses = createExpensesPageModel(page)
 
@@ -78,12 +78,12 @@ test('refuses an expense with no description, and keeps what was typed', async (
 
   await form.description().locator.fill('   ')
   await form.amount().locator.fill('12.50')
-  await form.category('Food').locator.check()
+  await form.category('אוכל').locator.check()
   await form.submitButton().locator.click()
 
   await expect(form.error().locator).toHaveText('Please say what the expense was')
   await expect(form.amount().locator).toHaveValue('12.50')
-  await expect(form.category('Food').locator).toBeChecked()
+  await expect(form.category('אוכל').locator).toBeChecked()
 })
 
 test('refuses an expense with no category even when the browser is bypassed', async ({page}) => {
@@ -132,7 +132,7 @@ test('goes back to the expenses without adding anything when cancelled', async (
 })
 
 test('edits an expense', async ({page}) => {
-  await addExpense(page, 'Coffee', '12.50', 'Food')
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
 
   const expenses = createExpensesPageModel(page)
   const form = createExpenseFormPageModel(page)
@@ -142,11 +142,11 @@ test('edits an expense', async ({page}) => {
   await expect(form.editHeading().locator).toBeVisible()
   await expect(form.description().locator).toHaveValue('Coffee')
   await expect(form.amount().locator).toHaveValue('12.50')
-  await expect(form.category('Food').locator).toBeChecked()
+  await expect(form.category('אוכל').locator).toBeChecked()
 
   await form.description().locator.fill('Espresso')
   await form.amount().locator.fill('8.00')
-  await form.category('Entertainment').locator.check()
+  await form.category('בידור').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
@@ -154,14 +154,14 @@ test('edits an expense', async ({page}) => {
 
   const item = expenses.list().item('Espresso')
 
-  await expect(item.locator).toContainText('Entertainment')
+  await expect(item.locator).toContainText('בידור')
   await expect(item.locator).toContainText('8.00')
   await expect(expenses.summary().period('Day').current().locator).toHaveText('8.00')
 })
 
 test('deletes an expense, and takes it out of the totals', async ({page}) => {
-  await addExpense(page, 'Coffee', '12.50', 'Food')
-  await addExpense(page, 'Bus ticket', '6.00', 'Transport')
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+  await addExpense(page, 'Bus ticket', '6.00', 'תחבורה')
 
   const expenses = createExpensesPageModel(page)
 
@@ -178,7 +178,7 @@ test('deletes an expense, and takes it out of the totals', async ({page}) => {
 })
 
 test('counts an expense from yesterday in the previous day and not in today', async ({page}) => {
-  await addExpense(page, 'Today', '1.00', 'Food')
+  await addExpense(page, 'Today', '1.00', 'אוכל')
 
   // seeded directly, because the app always timestamps an expense with the moment it was added
   await seedExpense('Yesterday', 2, noonYesterdayUtc())
@@ -192,7 +192,7 @@ test('counts an expense from yesterday in the previous day and not in today', as
 })
 
 test('leaves an expense from last month out of this month', async ({page}) => {
-  await addExpense(page, 'Today', '1.00', 'Food')
+  await addExpense(page, 'Today', '1.00', 'אוכל')
 
   await seedExpense('Last month', 20, noonOnTheFirstOfLastMonthUtc())
 

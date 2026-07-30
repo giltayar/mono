@@ -32,7 +32,7 @@ test.describe('the published image', () => {
     await expenses.addButton().locator.click()
     await form.description().locator.fill(description)
     await form.amount().locator.fill('12.50')
-    await form.category('Food').locator.check()
+    await form.category('אוכל').locator.check()
     await form.submitButton().locator.click()
 
     const item = expenses.list().item(description)

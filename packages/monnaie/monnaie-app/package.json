@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/monnaie-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A mobile-first web app that tracks expenses",
   "type": "module",
   "exports": {
@@ -34,8 +34,8 @@
     "test:typescript": "tsgo",
     "test:node": "node --test 'test/unit/**/*.test.ts'",
     "test:playwright": "NODE_ENV=test playwright test --config=test/integration",
-    "playwright:install": "playwright install --with-deps",
     "test:e2e": "playwright test --config=test/e2e",
+    "playwright:install": "playwright install --with-deps",
     "postpublish": "docker push giltayar/monnaie-app:$npm_package_version"
   },
   "keywords": [

@@ -177,7 +177,7 @@ test('sends the browser to the login page when the session ends mid-visit', asyn
 
   await form.description().locator.fill('Coffee')
   await form.amount().locator.fill('12.50')
-  await form.category('Food').locator.check()
+  await form.category('אוכל').locator.check()
 
   // the session goes away while the page stays open, so the next HTMX request is unauthenticated
   await page.context().clearCookies({name: 'session'})
@@ -197,7 +197,7 @@ async function addExpense(page: Page, description: string, amount: string) {
 
   await form.description().locator.fill(description)
   await form.amount().locator.fill(amount)
-  await form.category('Food').locator.check()
+  await form.category('אוכל').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
