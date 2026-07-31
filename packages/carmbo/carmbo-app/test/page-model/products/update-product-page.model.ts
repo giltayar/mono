@@ -21,6 +21,9 @@ export function createUpdateProductPageModel(page: Page) {
       restoreButton: (btnLocator = page.getByRole('button', {name: 'Restore'})) => ({
         locator: btnLocator,
       }),
+      cancelSubscriptionPageUrlInput: (
+        inputLocator = page.getByLabel('Cancel subscription page URL'),
+      ) => ({locator: inputLocator}),
 
       ...productFormPageModel(page),
     }),

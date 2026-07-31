@@ -61,6 +61,7 @@ export function renderProductUpdatePage(
     academyCoursesBySubdomain,
     withSmooveIntegration,
     withSkoolIntegration,
+    appBaseUrl,
   }: {
     banner: Banner | undefined
     withAcademyIntegration: boolean
@@ -68,12 +69,13 @@ export function renderProductUpdatePage(
     academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
     withSmooveIntegration: boolean
     withSkoolIntegration: boolean
+    appBaseUrl: string
   },
 ) {
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
-        <${ProductUpdateView} product=${product} history=${history} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} />
+        <${ProductUpdateView} product=${product} history=${history} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} appBaseUrl=${appBaseUrl} />
       </${Layout}>
     </${MainLayout}>
   `

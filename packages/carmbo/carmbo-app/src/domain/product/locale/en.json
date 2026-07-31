@@ -38,7 +38,8 @@
     "restore": "Restore",
     "archive": "Archive",
     "update": "Update",
-    "create": "Create"
+    "create": "Create",
+    "cancelSubscriptionPageUrl": "Cancel subscription page URL"
   },
   "history": {
     "history": "History",

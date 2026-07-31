@@ -187,7 +187,7 @@ export function makeApp({
     }
 
     app.register(studentRoutes, {prefix: '/students', sql})
-    app.register(productRoutes, {prefix: '/products', sql})
+    app.register(productRoutes, {prefix: '/products', sql, appBaseUrl})
     app.register(salesEvents, {
       prefix: '/sales-events',
       sql,

@@ -71,6 +71,9 @@ test('create product then update it', async ({page}) => {
   const productNumber = new URL(await page.url()).pathname.split('/').at(-1)
 
   await expect(updateProductModel.pageTitle().locator).toHaveText(`Update Product ${productNumber}`)
+  await expect(updateProductModel.form().cancelSubscriptionPageUrlInput().locator).toHaveValue(
+    `http://localhost/sales/cancel-subscription/product/${productNumber}`,
+  )
 
   const updateForm = updateProductModel.form()
   await expect(updateForm.nameInput().locator).toHaveValue('Test Product')

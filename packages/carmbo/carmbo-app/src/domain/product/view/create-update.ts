@@ -69,6 +69,7 @@ export function ProductUpdateView({
   academyCoursesBySubdomain,
   withSmooveIntegration,
   withSkoolIntegration,
+  appBaseUrl,
 }: {
   product: ProductWithHistoryInfo
   history: ProductHistory[]
@@ -77,6 +78,7 @@ export function ProductUpdateView({
   academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
   withSkoolIntegration: boolean
+  appBaseUrl: string
 }) {
   return html`
     <h2 class="border-bottom col-md-6 mt-3">
@@ -147,6 +149,19 @@ export function ProductUpdateView({
         />
       </div>
     </form>
+    <div class="form-group col-md-6 mt-3">
+      <label style="width: 100%">
+        ${t('createUpdate.cancelSubscriptionPageUrl')}
+        <input
+          class="form-control"
+          type="url"
+          value=${
+            new URL(`/sales/cancel-subscription/product/${product.productNumber}`, appBaseUrl).href
+          }
+          readonly
+        />
+      </label>
+    </div>
     <div
       id="smoove-list-create-dialog-container"
       hx-on::after-swap="this.querySelector('dialog')?.showModal()"

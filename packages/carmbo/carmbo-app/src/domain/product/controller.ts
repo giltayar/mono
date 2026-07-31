@@ -128,6 +128,7 @@ export async function showProductUpdate(
   productNumber: number,
   productWithError: {product: Product | undefined; error: any; operation: string} | undefined,
   sql: Sql,
+  appBaseUrl: string,
 ): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
   const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
@@ -172,6 +173,7 @@ export async function showProductUpdate(
       academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
+      appBaseUrl,
     }),
   )
 }
@@ -295,7 +297,11 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
   }
 }
 
-export async function updateProduct(product: Product, sql: Sql): Promise<ControllerResult> {
+export async function updateProduct(
+  product: Product,
+  sql: Sql,
+  appBaseUrl: string,
+): Promise<ControllerResult> {
   try {
     const nowService = requestContext.get('nowService')!
     const whatsappIntegration = requestContext.get('whatsappIntegration')!
@@ -351,7 +357,12 @@ export async function updateProduct(product: Product, sql: Sql): Promise<Control
   } catch (error) {
     const logger = requestContext.get('logger')!
     logger.error({err: error}, 'update-product')
-    return showProductUpdate(product.productNumber, {product, error, operation: 'Updating'}, sql)
+    return showProductUpdate(
+      product.productNumber,
+      {product, error, operation: 'Updating'},
+      sql,
+      appBaseUrl,
+    )
   }
 }
 
@@ -359,6 +370,7 @@ export async function deleteProduct(
   productNumber: number,
   deleteOperation: 'delete' | 'restore',
   sql: Sql,
+  appBaseUrl: string,
 ): Promise<ControllerResult> {
   try {
     const nowService = requestContext.get('nowService')!
@@ -380,7 +392,12 @@ export async function deleteProduct(
     logger.error({err: error}, `${deleteOperation}-product`)
     const operation = deleteOperation === 'delete' ? 'Archiving' : 'Restoring'
     return retarget(
-      await showProductUpdate(productNumber, {product: undefined, error, operation}, sql),
+      await showProductUpdate(
+        productNumber,
+        {product: undefined, error, operation},
+        sql,
+        appBaseUrl,
+      ),
       'body',
     )
   }

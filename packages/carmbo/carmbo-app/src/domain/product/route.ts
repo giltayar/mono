@@ -18,7 +18,7 @@ import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import {dealWithControllerResult} from '../../commons/routes-commons.ts'
 import {z} from 'zod'
 
-export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
+export default function (app: FastifyInstance, {sql, appBaseUrl}: {sql: Sql; appBaseUrl: string}) {
   // List products
   app.withTypeProvider<ZodTypeProvider>().get(
     '/',
@@ -90,7 +90,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
       async (request, reply) => {
         return dealWithControllerResult(
           reply,
-          await showProductUpdate(request.params.number, undefined, sql),
+          await showProductUpdate(request.params.number, undefined, sql, appBaseUrl),
         )
       },
     )
@@ -123,7 +123,7 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
           'product number in URL must match ID in body',
         )
 
-        return dealWithControllerResult(reply, await updateProduct(request.body, sql))
+        return dealWithControllerResult(reply, await updateProduct(request.body, sql, appBaseUrl))
       },
     )
 
@@ -155,7 +155,12 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
     async (request, reply) =>
       dealWithControllerResult(
         reply,
-        await deleteProduct(request.params.number, request.query['delete-operation'], sql),
+        await deleteProduct(
+          request.params.number,
+          request.query['delete-operation'],
+          sql,
+          appBaseUrl,
+        ),
       ),
   )
 }

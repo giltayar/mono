@@ -38,7 +38,8 @@
     "restore": "שחזור",
     "archive": "העברה לארכיון",
     "update": "עדכון",
-    "create": "יצירה"
+    "create": "יצירה",
+    "cancelSubscriptionPageUrl": "כתובת עמוד ביטול הרשמה"
   },
   "history": {
     "history": "היסטוריה",
