@@ -15,7 +15,8 @@ export const EXPENSE_CATEGORIES = [
   {id: 8, name: 'חינוך'},
   {id: 9, name: 'מתנה'},
   {id: 10, name: 'חופשה'},
-  {id: 11, name: 'אחר'},
+  {id: 11, name: 'ביגוד'},
+  {id: 12, name: 'אחר'},
 ] as const
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
