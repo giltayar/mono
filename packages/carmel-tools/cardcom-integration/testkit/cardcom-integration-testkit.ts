@@ -24,6 +24,7 @@ type CardcomIntegrationServiceData = {
         isRecurring: boolean
         invoiceInformation: TaxInvoiceInformation
         refundTransactionId: string | undefined
+        refundPartialSum: number | undefined
       }
     >
   }
@@ -103,6 +104,9 @@ export function createFakeCardcomIntegrationService(context: {
     _test_getPaymentInfo: sBind(_test_getPaymentInfo),
     _test_isPaymentRefunded: (invoiceNumber: number) => {
       return _test_getPaymentInfo({state}, invoiceNumber).refundTransactionId !== undefined
+    },
+    _test_getPaymentRefundPartialSum: (invoiceNumber: number) => {
+      return _test_getPaymentInfo({state}, invoiceNumber).refundPartialSum
     },
     _test_getTransactionId: (invoiceNumber: number): string | undefined => {
       const entry = Object.entries(state.payments).find(
@@ -224,6 +228,7 @@ async function createTaxInvoiceDocument(
     isRecurring: false,
     invoiceInformation: invoiceToStore,
     refundTransactionId: undefined,
+    refundPartialSum: undefined,
   }
 
   return {
@@ -409,7 +414,11 @@ export async function _test_simulateCardcomStandingOrderPayment(
   }
 }
 
-async function refundTransaction(service: CardcomIntegrationServiceData, transactionId: string) {
+async function refundTransaction(
+  service: CardcomIntegrationServiceData,
+  transactionId: string,
+  partialSum: number | 'full-refund',
+) {
   const paymentRecord = service.state.payments[transactionId]
   if (!paymentRecord) {
     throw new Error(`Transaction ${transactionId} not found`)
@@ -422,6 +431,7 @@ async function refundTransaction(service: CardcomIntegrationServiceData, transac
   const refundTransactionId = `refund-${transactionId}`
 
   paymentRecord.refundTransactionId = refundTransactionId
+  paymentRecord.refundPartialSum = partialSum === 'full-refund' ? undefined : partialSum
 
   return {
     refundTransactionId,

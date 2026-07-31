@@ -531,7 +531,7 @@ describe('Cardcom Integration Testkit', () => {
       assert.strictEqual(service._test_isPaymentRefunded(created.cardcomInvoiceNumber), false)
 
       // Refund the transaction
-      const result = await service.refundTransaction(transactionId)
+      const result = await service.refundTransaction(transactionId, 'full-refund')
 
       // Verify result
       assert.ok(result.refundTransactionId)
@@ -539,6 +539,49 @@ describe('Cardcom Integration Testkit', () => {
 
       // Verify refund status changed
       assert.strictEqual(service._test_isPaymentRefunded(created.cardcomInvoiceNumber), true)
+      assert.strictEqual(
+        service._test_getPaymentRefundPartialSum(created.cardcomInvoiceNumber),
+        undefined,
+      )
+    })
+
+    it('should partially refund a transaction successfully', async () => {
+      const service = createTestService()
+      const created = await service.createTaxInvoiceDocument(
+        {
+          customerName: 'Test User',
+          customerEmail: 'test@example.com',
+          customerPhone: undefined,
+          cardcomCustomerId: 88888,
+          productsSold: [
+            {
+              productId: 'prod-test',
+              productName: 'Test Product',
+              quantity: 1,
+              unitPriceInCents: 5000,
+            },
+          ],
+          transactionDate: new Date('2024-09-01'),
+          transactionDescription: 'Test',
+          transactionRevenueInCents: 5000,
+        },
+        {sendInvoiceByMail: true},
+      )
+      const transactionId = service._test_getTransactionId(created.cardcomInvoiceNumber)
+      assert.ok(transactionId)
+
+      const result = await service.refundTransaction(transactionId, 12.34)
+
+      assert.strictEqual(result.refundTransactionId, `refund-${transactionId}`)
+      assert.strictEqual(service._test_isPaymentRefunded(created.cardcomInvoiceNumber), true)
+      assert.strictEqual(
+        service._test_getPaymentRefundPartialSum(created.cardcomInvoiceNumber),
+        12.34,
+      )
+      await assert.rejects(
+        () => service.refundTransaction(transactionId, 1),
+        /Transaction .* has already been refunded/,
+      )
     })
 
     it('should throw error when refunding non-existent transaction', async () => {
@@ -546,7 +589,7 @@ describe('Cardcom Integration Testkit', () => {
       const nonExistentTransactionId = 'non-existent-transaction-id'
 
       await assert.rejects(
-        () => service.refundTransaction(nonExistentTransactionId),
+        () => service.refundTransaction(nonExistentTransactionId, 'full-refund'),
         /Transaction .* not found/,
       )
     })
@@ -582,11 +625,11 @@ describe('Cardcom Integration Testkit', () => {
       assert.ok(transactionId)
 
       // Refund the transaction once
-      await service.refundTransaction(transactionId)
+      await service.refundTransaction(transactionId, 'full-refund')
 
       // Try to refund again - should throw error
       await assert.rejects(
-        () => service.refundTransaction(transactionId),
+        () => service.refundTransaction(transactionId, 'full-refund'),
         /Transaction .* has already been refunded/,
       )
     })

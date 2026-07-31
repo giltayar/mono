@@ -281,6 +281,7 @@ async function fetchAccountInformation(
 async function refundTransaction(
   service: CardcomIntegrationServiceData,
   transactionId: string,
+  partialSum: number | 'full-refund',
 ): Promise<{refundTransactionId: string}> {
   const url = new URL('https://secure.cardcom.solutions/api/v11/Transactions/RefundByTransactionId')
 
@@ -288,6 +289,7 @@ async function refundTransaction(
     ApiName: service.context.apiKey,
     ApiPassword: service.context.apiKeyPassword,
     TransactionId: transactionId,
+    ...(partialSum === 'full-refund' ? {} : {PartialSum: partialSum}),
   })) as {
     ResponseCode: number
     Description: string
