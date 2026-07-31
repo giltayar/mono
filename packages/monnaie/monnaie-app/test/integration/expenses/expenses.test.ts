@@ -48,6 +48,15 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   for (const period of ['Day', 'Week', 'Month', 'Year']) {
     await expect(expenses.summary().period(period).current().locator).toHaveText('12.50')
   }
+
+  for (const period of ['Week', 'Month', 'Year']) {
+    await expect(expenses.summary().period(period).current().dailyAverage().locator).toContainText(
+      'per day',
+    )
+    await expect(expenses.summary().period(period).previous().dailyAverage().locator).toContainText(
+      'per day',
+    )
+  }
 })
 
 test('adds up several expenses', async ({page}) => {

@@ -9,7 +9,8 @@
     "day": "Day",
     "week": "Week",
     "month": "Month",
-    "year": "Year"
+    "year": "Year",
+    "perDay": "per day"
   },
   "list": {
     "title": "This month",

@@ -9,11 +9,19 @@ export function createExpensesPageModel(page: Page) {
       // a row of the table, whose two cells are the current and the previous total
       period: (name: string) => {
         const row = locator.getByRole('row', {name})
+        const current = row.getByRole('cell').nth(0)
+        const previous = row.getByRole('cell').nth(1)
 
         return {
           locator: row,
-          current: () => ({locator: row.getByRole('cell').nth(0)}),
-          previous: () => ({locator: row.getByRole('cell').nth(1)}),
+          current: () => ({
+            locator: current.locator('.total'),
+            dailyAverage: () => ({locator: current.locator('.daily-average')}),
+          }),
+          previous: () => ({
+            locator: previous.locator('.total'),
+            dailyAverage: () => ({locator: previous.locator('.daily-average')}),
+          }),
         }
       },
     }),

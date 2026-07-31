@@ -36,6 +36,19 @@
   & .previous {
     opacity: 0.6;
   }
+
+  & td {
+    & .total,
+    & .daily-average {
+      display: block;
+    }
+
+    & .daily-average {
+      font-size: 0.625rem;
+      font-weight: normal;
+      opacity: 0.65;
+    }
+  }
 }
 
 .add-expense {

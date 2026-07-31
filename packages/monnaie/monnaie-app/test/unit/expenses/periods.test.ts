@@ -1,6 +1,33 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
-import {periodRanges, previousPeriodName} from '../../../src/domain/expenses/periods.ts'
+import {
+  periodDayCounts,
+  periodRanges,
+  previousPeriodName,
+} from '../../../src/domain/expenses/periods.ts'
+
+describe('periodDayCounts', () => {
+  it('should count elapsed days in current periods and all days in previous periods', () => {
+    const counts = periodDayCounts(new Date('2026-07-29T12:00:00Z'), 'UTC')
+
+    assert.deepStrictEqual(counts, {
+      day: 1,
+      week: 4,
+      month: 29,
+      year: 210,
+      previousDay: 1,
+      previousWeek: 7,
+      previousMonth: 30,
+      previousYear: 365,
+    })
+  })
+
+  it('should count the extra day in a previous leap year', () => {
+    const counts = periodDayCounts(new Date('2025-01-01T12:00:00Z'), 'UTC')
+
+    assert.strictEqual(counts.previousYear, 366)
+  })
+})
 
 describe('periodRanges', () => {
   it('should use local midnight, not UTC midnight', () => {

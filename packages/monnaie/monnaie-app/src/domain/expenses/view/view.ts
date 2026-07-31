@@ -3,12 +3,18 @@ import {currentLanguage, translator} from '../../../commons/i18n.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {categoryById} from '../categories.ts'
 import type {Expense, PeriodTotals} from '../model.ts'
-import {BASE_PERIOD_NAMES, previousPeriodName} from '../periods.ts'
+import {
+  BASE_PERIOD_NAMES,
+  previousPeriodName,
+  type BasePeriodName,
+  type PeriodDayCounts,
+} from '../periods.ts'
 
 const STYLE_SHEET = 'domain/expenses/view/style/style.css'
 
 export function renderExpensesPage(
   totals: PeriodTotals,
+  dayCounts: PeriodDayCounts,
   expenses: Expense[],
   timeZone: string,
 ): string {
@@ -17,7 +23,7 @@ export function renderExpensesPage(
   return html`
     <${MainLayout} title=${t('page.title')} styleSheet=${STYLE_SHEET}>
       <h1>${t('page.title')}</h1>
-      ${renderExpenseSummary(totals, {outOfBand: false})}
+      ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
       <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
       ${renderExpenseList(expenses, {outOfBand: false, timeZone})}
     </${MainLayout}>
@@ -26,6 +32,7 @@ export function renderExpensesPage(
 
 export function renderExpenseSummary(
   totals: PeriodTotals,
+  dayCounts: PeriodDayCounts,
   {outOfBand}: {outOfBand: boolean},
 ): string {
   const t = translator('expenses')
@@ -50,14 +57,35 @@ export function renderExpenseSummary(
             (period) => html`
               <tr>
                 <th scope="row">${t(`summary.${period}`)}</th>
-                <td>${formatAmount(totals[period])}</td>
-                <td class="previous">${formatAmount(totals[previousPeriodName(period)])}</td>
+                <td>${renderPeriodTotal(period, totals[period], dayCounts[period])}</td>
+                <td class="previous">
+                  ${renderPeriodTotal(
+                    period,
+                    totals[previousPeriodName(period)],
+                    dayCounts[previousPeriodName(period)],
+                  )}
+                </td>
               </tr>
             `,
           )}
         </tbody>
       </table>
     </section>
+  ` as string
+}
+
+function renderPeriodTotal(period: BasePeriodName, total: number, dayCount: number): string {
+  const t = translator('expenses')
+
+  return html`
+    <span class="total">${formatAmount(total)}</span>
+    ${
+      period === 'day'
+        ? undefined
+        : html`<small class="daily-average"
+            >${formatAmount(total / dayCount)} ${t('summary.perDay')}</small
+          >`
+    }
   ` as string
 }
 

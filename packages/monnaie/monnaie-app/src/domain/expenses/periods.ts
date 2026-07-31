@@ -30,6 +30,8 @@ export type PeriodRange = {from: Date; to: Date}
 
 export type PeriodRanges = Record<PeriodName, PeriodRange>
 
+export type PeriodDayCounts = Record<PeriodName, number>
+
 /**
  * The eight ranges the summary is made of, as of `now` and as seen from `timeZone`. Periods are
  * calendar periods — "today", "this month" — and the week starts on Sunday.
@@ -52,6 +54,27 @@ export function periodRanges(now: Date, timeZone: string): PeriodRanges {
     previousWeek: rangeEndingAt(week, {weeks: 1}),
     previousMonth: rangeEndingAt(month, {months: 1}),
     previousYear: rangeEndingAt(year, {years: 1}),
+  }
+}
+
+/** Calendar days represented by each total; current periods include today. */
+export function periodDayCounts(now: Date, timeZone: string): PeriodDayCounts {
+  const day = Temporal.Instant.fromEpochMilliseconds(now.getTime())
+    .toZonedDateTimeISO(timeZone)
+    .toPlainDate()
+  const week = day.subtract({days: day.dayOfWeek % 7})
+  const previousMonth = day.with({day: 1}).subtract({months: 1})
+  const previousYear = day.with({month: 1, day: 1}).subtract({years: 1})
+
+  return {
+    day: 1,
+    week: day.since(week).days + 1,
+    month: day.day,
+    year: day.dayOfYear,
+    previousDay: 1,
+    previousWeek: 7,
+    previousMonth: previousMonth.daysInMonth,
+    previousYear: previousYear.daysInYear,
   }
 }
 

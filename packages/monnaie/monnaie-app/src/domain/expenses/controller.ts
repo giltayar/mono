@@ -10,7 +10,7 @@ import {
   validateExpense,
   type ExpenseInput,
 } from './model.ts'
-import {periodRanges} from './periods.ts'
+import {periodDayCounts, periodRanges} from './periods.ts'
 import {renderExpenseList, renderExpenseSummary, renderExpensesPage} from './view/view.ts'
 import {
   EMPTY_EXPENSE_FORM_VALUES,
@@ -26,14 +26,15 @@ export async function showExpensesPage(
 ): Promise<ControllerResult> {
   // one set of ranges for both queries, so the totals and the list can never disagree about where
   // the month starts
-  const ranges = periodRanges(new Date(), timeZone)
+  const now = new Date()
+  const ranges = periodRanges(now, timeZone)
 
   const [totals, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges),
     fetchPeriodExpenses(db, userId, ranges.month),
   ])
 
-  return {html: renderExpensesPage(totals, expenses, timeZone)}
+  return {html: renderExpensesPage(totals, periodDayCounts(now, timeZone), expenses, timeZone)}
 }
 
 export function showNewExpensePage(): ControllerResult {
@@ -124,7 +125,8 @@ export async function removeExpense(
 ): Promise<ControllerResult> {
   await deleteExpense(db, userId, id)
 
-  const ranges = periodRanges(new Date(), timeZone)
+  const now = new Date()
+  const ranges = periodRanges(now, timeZone)
 
   const [totals, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges),
@@ -134,7 +136,7 @@ export async function removeExpense(
   return {
     html:
       renderExpenseList(expenses, {outOfBand: false, timeZone}) +
-      renderExpenseSummary(totals, {outOfBand: true}),
+      renderExpenseSummary(totals, periodDayCounts(now, timeZone), {outOfBand: true}),
   }
 }
 
