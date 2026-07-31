@@ -1022,7 +1022,7 @@ export async function findSaleAndStudentByProduct(email: string, productNumber: 
 
     LEFT JOIN sale_data sd ON sd.student_number = s.student_number
     LEFT JOIN sale_history slh ON slh.data_id = sd.data_id
-    LEFT JOIN sale sl ON sl.sale_number = slh.sale_number
+    JOIN sale sl ON sl.last_history_id = slh.id
 
     LEFT JOIN sale_data_product sdp ON sdp.data_product_id = slh.data_product_id
 

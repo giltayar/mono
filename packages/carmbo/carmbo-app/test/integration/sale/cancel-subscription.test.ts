@@ -13,6 +13,7 @@ import {createSaleProvidersPageModel} from '../../page-model/sales/sale-provider
 import {fetchAsBuffer} from '@giltayar/http-commons'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
+import {updateSaleNotes} from '../../../src/domain/sale/model/model.ts'
 
 const {
   url,
@@ -759,6 +760,92 @@ test('cancelling a subscription by product fails when multiple sales exist for t
   await expect(sale2Model.saleStatus().locator).toHaveText(
     'Subscription | Connected to External Providers',
   )
+})
+
+test('cancelling a subscription by product succeeds when the sale has more than one history item', async ({
+  page,
+}) => {
+  // Regression test for https://github.com/giltayar/mono/issues/82: a sale that
+  // already has multiple history entries (e.g. its notes were updated) must still
+  // be found as a single sale, not reported as "multiple sales found".
+  const academyCourseId = 1
+  const smooveListId = 2
+  const smooveCancelledListId = 6
+
+  const product1Number = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+      academyCourses: [{courseId: academyCourseId, accountSubdomain: 'carmel'}],
+      smooveListId,
+      smooveCancelledListId,
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [product1Number],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const customerEmail = 'test-customer@example.com'
+  const customerName = 'John Doe'
+  const customerPhone = '0501234567'
+
+  // Create a standing order sale
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
+    {
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+      ],
+      customerEmail,
+      customerName,
+      customerPhone,
+      cardcomCustomerId: 1776,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+  )
+
+  // Update the sale notes so the sale has a second history entry before it's ever cancelled.
+  await updateSaleNotes(1, 'Called to confirm the order', new Date(), sql())
+  const saleDetailModel = createUpdateSalePageModel(page)
+  const saleHistory = saleDetailModel.history()
+
+  await expect(async () => {
+    await page.goto(new URL('/sales/1', url()).href)
+    await expect(saleHistory.items().locator).toHaveCount(2)
+  }).toPass()
+
+  // Cancel the subscription via the product-based flow — this used to throw
+  // "Multiple sales found" because the query matched every history row instead of
+  // just the sale's current data.
+  await cancelSubscription(page, url(), product1Number, customerEmail)
+
+  const cancelSubscriptionPage = createCancelSubscriptionPageModel(page)
+  await expect(cancelSubscriptionPage.errorMessage().locator).not.toContainText(
+    'Multiple subscriptions',
+  )
+  await expect(cancelSubscriptionPage.errorMessage().locator).toContainText('has been cancelled')
 })
 
 test('cancel subscription shows error when email is not found', async ({page}) => {
