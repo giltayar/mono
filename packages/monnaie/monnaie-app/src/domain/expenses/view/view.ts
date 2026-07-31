@@ -118,12 +118,14 @@ function renderExpenseItem(expense: Expense, timeZone: string): string {
     <li>
       <div class="expense-what">
         <span class="expense-description">${expense.description}</span>
-        <span class="expense-category">${categoryById(expense.categoryId)?.name}</span>
       </div>
       <span class="expense-amount">${formatAmount(expense.amount)}</span>
-      <time class="expense-date" datetime=${expense.createdAt.toISOString()}>
-        ${formatDate(expense.createdAt, timeZone)}
-      </time>
+      <div class="expense-meta">
+        <span class="expense-category">${categoryById(expense.categoryId)?.name}</span>
+        <time class="expense-date" datetime=${expense.createdAt.toISOString()}>
+          ${formatDate(expense.createdAt, timeZone)}
+        </time>
+      </div>
       <div class="expense-actions">
         <a
           href=${`/expenses/${expense.id}/edit`}

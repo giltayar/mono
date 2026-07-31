@@ -95,6 +95,13 @@
     flex-direction: column;
   }
 
+  & .expense-meta {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    gap: calc(var(--spacing) / 2);
+  }
+
   & .expense-category,
   & .expense-date {
     font-size: 0.75rem;
@@ -104,11 +111,6 @@
   & .expense-amount {
     font-variant-numeric: tabular-nums;
     font-weight: 600;
-  }
-
-  & .expense-date {
-    grid-column: 2;
-    text-align: end;
   }
 
   & .expense-actions {
