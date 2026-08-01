@@ -22,6 +22,11 @@ export type Expense = {
 
 export type PeriodTotals = Record<PeriodName, number>
 
+export type PeriodSummary = {
+  totals: PeriodTotals
+  firstExpenseDate: Date
+}
+
 export const DESCRIPTION_MAX_LENGTH = 100
 
 /** What `numeric(12, 2)` can hold */
@@ -150,8 +155,8 @@ export async function fetchPeriodTotals(
   db: Db,
   userId: string,
   ranges: PeriodRanges,
-): Promise<PeriodTotals> {
-  const totals = await db
+): Promise<PeriodSummary> {
+  const summary = await db
     .selectFrom('expense')
     .where('user_id', '=', userId)
     .select((eb) => [
@@ -163,18 +168,22 @@ export async function fetchPeriodTotals(
       totalIn(eb, ranges.previousWeek).as('previousWeek'),
       totalIn(eb, ranges.previousMonth).as('previousMonth'),
       totalIn(eb, ranges.previousYear).as('previousYear'),
+      eb.fn.min<Date | null>('created_at').as('firstExpenseDate'),
     ])
     .executeTakeFirstOrThrow()
 
   return {
-    day: toAmount(totals.day),
-    week: toAmount(totals.week),
-    month: toAmount(totals.month),
-    year: toAmount(totals.year),
-    previousDay: toAmount(totals.previousDay),
-    previousWeek: toAmount(totals.previousWeek),
-    previousMonth: toAmount(totals.previousMonth),
-    previousYear: toAmount(totals.previousYear),
+    totals: {
+      day: toAmount(summary.day),
+      week: toAmount(summary.week),
+      month: toAmount(summary.month),
+      year: toAmount(summary.year),
+      previousDay: toAmount(summary.previousDay),
+      previousWeek: toAmount(summary.previousWeek),
+      previousMonth: toAmount(summary.previousMonth),
+      previousYear: toAmount(summary.previousYear),
+    },
+    firstExpenseDate: summary.firstExpenseDate ?? new Date(0),
   }
 }
 

@@ -50,8 +50,8 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   }
 
   for (const period of ['Week', 'Month', 'Year']) {
-    await expect(expenses.summary().period(period).current().dailyAverage().locator).toContainText(
-      'per day',
+    await expect(expenses.summary().period(period).current().dailyAverage().locator).toHaveText(
+      '12.50 per day',
     )
     await expect(expenses.summary().period(period).previous().dailyAverage().locator).toContainText(
       'per day',
@@ -67,6 +67,18 @@ test('adds up several expenses', async ({page}) => {
 
   await expect(expenses.list().items().locator).toHaveCount(2)
   await expect(expenses.summary().period('Day').current().locator).toHaveText('18.50')
+})
+
+test('does not restart a period average after a gap in expenses', async ({page}) => {
+  await seedExpense('Earlier expense', 1, noonOnTheFirstOfLastMonthUtc())
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+
+  const expenses = createExpensesPageModel(page)
+  const elapsedDaysInMonth = new Date().getUTCDate()
+
+  await expect(expenses.summary().period('Month').current().dailyAverage().locator).toHaveText(
+    `${(12.5 / elapsedDaysInMonth).toFixed(2)} per day`,
+  )
 })
 
 test('shows the most recent expense first', async ({page}) => {

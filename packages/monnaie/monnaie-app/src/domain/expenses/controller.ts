@@ -29,12 +29,19 @@ export async function showExpensesPage(
   const now = new Date()
   const ranges = periodRanges(now, timeZone)
 
-  const [totals, expenses] = await Promise.all([
+  const [summary, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges),
     fetchPeriodExpenses(db, userId, ranges.month),
   ])
 
-  return {html: renderExpensesPage(totals, periodDayCounts(now, timeZone), expenses, timeZone)}
+  return {
+    html: renderExpensesPage(
+      summary.totals,
+      periodDayCounts(now, timeZone, summary.firstExpenseDate),
+      expenses,
+      timeZone,
+    ),
+  }
 }
 
 export function showNewExpensePage(): ControllerResult {
@@ -128,7 +135,7 @@ export async function removeExpense(
   const now = new Date()
   const ranges = periodRanges(now, timeZone)
 
-  const [totals, expenses] = await Promise.all([
+  const [summary, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges),
     fetchPeriodExpenses(db, userId, ranges.month),
   ])
@@ -136,7 +143,11 @@ export async function removeExpense(
   return {
     html:
       renderExpenseList(expenses, {outOfBand: false, timeZone}) +
-      renderExpenseSummary(totals, periodDayCounts(now, timeZone), {outOfBand: true}),
+      renderExpenseSummary(
+        summary.totals,
+        periodDayCounts(now, timeZone, summary.firstExpenseDate),
+        {outOfBand: true},
+      ),
   }
 }
 

@@ -8,7 +8,7 @@ import {
 
 describe('periodDayCounts', () => {
   it('should count elapsed days in current periods and all days in previous periods', () => {
-    const counts = periodDayCounts(new Date('2026-07-29T12:00:00Z'), 'UTC')
+    const counts = periodDayCounts(new Date('2026-07-29T12:00:00Z'), 'UTC', new Date(0))
 
     assert.deepStrictEqual(counts, {
       day: 1,
@@ -23,9 +23,32 @@ describe('periodDayCounts', () => {
   })
 
   it('should count the extra day in a previous leap year', () => {
-    const counts = periodDayCounts(new Date('2025-01-01T12:00:00Z'), 'UTC')
+    const counts = periodDayCounts(new Date('2025-01-01T12:00:00Z'), 'UTC', new Date(0))
 
     assert.strictEqual(counts.previousYear, 366)
+  })
+
+  it('should count each period from the first expense or its calendar boundary', () => {
+    const counts = periodDayCounts(
+      new Date('2026-07-29T12:00:00Z'),
+      'UTC',
+      new Date('2026-06-20T18:00:00Z'),
+    )
+
+    assert.strictEqual(counts.week, 4)
+    assert.strictEqual(counts.month, 29)
+    assert.strictEqual(counts.year, 40)
+    assert.strictEqual(counts.previousMonth, 11)
+  })
+
+  it('should interpret the first expense date in the configured time zone', () => {
+    const counts = periodDayCounts(
+      new Date('2026-07-29T12:00:00Z'),
+      'Asia/Jerusalem',
+      new Date('2026-07-19T22:00:00Z'),
+    )
+
+    assert.strictEqual(counts.month, 10)
   })
 })
 

@@ -58,15 +58,29 @@ export function periodRanges(now: Date, timeZone: string): PeriodRanges {
 }
 
 /** Calendar days represented by each total; current periods include today. */
-export function periodDayCounts(now: Date, timeZone: string): PeriodDayCounts {
+export function periodDayCounts(
+  now: Date,
+  timeZone: string,
+  firstExpenseDate: Date,
+): PeriodDayCounts {
   const day = Temporal.Instant.fromEpochMilliseconds(now.getTime())
     .toZonedDateTimeISO(timeZone)
     .toPlainDate()
   const week = day.subtract({days: day.dayOfWeek % 7})
   const previousMonth = day.with({day: 1}).subtract({months: 1})
   const previousYear = day.with({month: 1, day: 1}).subtract({years: 1})
+  const periodEndDates: Record<PeriodName, Temporal.PlainDate> = {
+    day,
+    week: day,
+    month: day,
+    year: day,
+    previousDay: day.subtract({days: 1}),
+    previousWeek: week.subtract({days: 1}),
+    previousMonth: previousMonth.with({day: previousMonth.daysInMonth}),
+    previousYear: previousYear.with({month: 12, day: 31}),
+  }
 
-  return {
+  const calendarCounts: PeriodDayCounts = {
     day: 1,
     week: day.since(week).days + 1,
     month: day.day,
@@ -76,6 +90,29 @@ export function periodDayCounts(now: Date, timeZone: string): PeriodDayCounts {
     previousMonth: previousMonth.daysInMonth,
     previousYear: previousYear.daysInYear,
   }
+
+  return Object.fromEntries(
+    Object.entries(calendarCounts).map(([name, calendarCount]) => {
+      const periodName = name as PeriodName
+
+      return [
+        periodName,
+        Math.max(
+          1,
+          Math.min(
+            calendarCount,
+            periodEndDates[periodName].since(toPlainDate(firstExpenseDate, timeZone)).days + 1,
+          ),
+        ),
+      ]
+    }),
+  ) as PeriodDayCounts
+}
+
+function toPlainDate(date: Date, timeZone: string): Temporal.PlainDate {
+  return Temporal.Instant.fromEpochMilliseconds(date.getTime())
+    .toZonedDateTimeISO(timeZone)
+    .toPlainDate()
 }
 
 function rangeStartingAt(from: Temporal.ZonedDateTime, length: Temporal.DurationLike): PeriodRange {
