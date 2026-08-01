@@ -220,7 +220,7 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   await expect(product2x.unitPrice().locator).toHaveValue('0')
 })
 
-test('cardcom sale with no invoiceNumber creates a no-invoice sale', async ({page}) => {
+test('cardcom sale with no invoice number retains its Cardcom data', async ({page}) => {
   const product1Number = await createProduct(
     {
       name: 'Product One',
@@ -321,7 +321,7 @@ test('cardcom sale with no invoiceNumber creates a no-invoice sale', async ({pag
 
   await expect(saleDetailModel.pageTitle().locator).toHaveText('Sale 1')
 
-  // Verify this is a no-invoice sale: no invoice number, no view invoice link
+  // No invoice was created, but the Cardcom sale data is retained.
   await expect(saleDetailModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
   await expect(saleDetailModel.form().viewInvoiceLink().locator).not.toBeVisible()
 
@@ -330,5 +330,9 @@ test('cardcom sale with no invoiceNumber creates a no-invoice sale', async ({pag
     `${salesEventNumber}: Test Sales Event`,
   )
   await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: Jane Smith')
-  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('0')
+  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('100')
+
+  const products = saleDetailModel.form().products()
+  await expect(products.product(0).unitPrice().locator).toHaveValue('50')
+  await expect(products.product(1).unitPrice().locator).toHaveValue('50')
 })

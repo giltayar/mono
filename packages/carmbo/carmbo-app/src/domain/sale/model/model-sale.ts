@@ -16,13 +16,15 @@ export type StandingOrderPaymentResolution = 'payed' | 'failure-but-retrying' | 
 
 export async function addCardcomSale(
   salesEventNumber: number,
-  cardcomSaleWebhookJson: CardcomSaleWebhookJson & {invoicenumber: string},
+  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
   smooveIntegration: SmooveIntegrationService | undefined,
   cardcomIntegration: CardcomIntegrationService,
   sql: Sql,
   loggerParent: FastifyBaseLogger,
 ) {
+  const invoiceNumber = cardcomSaleWebhookJson.invoicenumber?.trim()
+  const finalInvoiceNumber = invoiceNumber && invoiceNumber !== '0' ? invoiceNumber : undefined
   const logger = loggerParent.child({
     salesEventNumber,
     jobId: crypto.randomUUID(),
@@ -31,12 +33,14 @@ export async function addCardcomSale(
   logger.info('handle-cardcom-sale-started')
   await sql.begin(async (sql) => {
     const [hasSaleWithInvoiceNumber_, hasSalesEvent] = await Promise.all([
-      hasSaleWithInvoiceNumber(cardcomSaleWebhookJson.invoicenumber, sql, logger),
+      finalInvoiceNumber
+        ? hasSaleWithInvoiceNumber(finalInvoiceNumber, sql, logger)
+        : Promise.resolve(false),
       doesSalesEventExist(salesEventNumber, sql, logger),
     ])
 
     if (hasSaleWithInvoiceNumber_) {
-      logger.info({invoiceNumber: cardcomSaleWebhookJson.invoicenumber}, 'sale-already-exists')
+      logger.info({invoiceNumber: finalInvoiceNumber}, 'sale-already-exists')
       return
     }
     if (!hasSalesEvent) {
@@ -60,15 +64,16 @@ export async function addCardcomSale(
       ))
     logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
 
-    const {url} = await cardcomIntegration.createTaxInvoiceDocumentUrl(
-      cardcomSaleWebhookJson.invoicenumber,
-    )
+    const url = finalInvoiceNumber
+      ? (await cardcomIntegration.createTaxInvoiceDocumentUrl(finalInvoiceNumber)).url
+      : undefined
     logger.info({url}, 'tax-invoice-document-url-created')
 
     const saleNumber = await createSaleFromCardcomData(
       finalStudent.studentNumber,
       salesEventNumber,
       cardcomSaleWebhookJson,
+      finalInvoiceNumber,
       url,
       now,
       sql,
@@ -96,7 +101,7 @@ interface StudentInfoForASale {
   cellPhone: string | undefined
 }
 
-export async function addNoInvoiceSale(
+export async function addFreeSale(
   salesEventNumber: number,
   studentInfo: StudentInfoForASale,
   now: Date,
@@ -300,7 +305,8 @@ async function createSaleFromCardcomData(
   studentNumber: number,
   salesEventNumber: number,
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
-  invoiceDocumentUrl: string,
+  invoiceNumber: string | undefined,
+  invoiceDocumentUrl: string | undefined,
   now: Date,
   sql: Sql,
   logger: FastifyBaseLogger,
@@ -397,11 +403,11 @@ async function createSaleFromCardcomData(
       INSERT INTO sale_data_cardcom ${sql({
         dataCardcomId,
         responseJson: JSON.stringify(cardcomSaleWebhookJson),
-        invoiceNumber: cardcomSaleWebhookJson.invoicenumber,
+        invoiceNumber: invoiceNumber ?? null,
         coupon: cardcomSaleWebhookJson.CouponNumber ?? null,
         internalDealNumber: cardcomSaleWebhookJson.internaldealnumber,
         customerId: cardcomSaleWebhookJson.RecurringAccountID ?? null,
-        invoiceDocumentUrl: invoiceDocumentUrl,
+        invoiceDocumentUrl: invoiceDocumentUrl ?? null,
         cardcomSaleRevenue: finalSaleRevenue,
         recurringOrderId: cardcomSaleWebhookJson.RecurringOrderID ?? null,
       })}
@@ -589,7 +595,7 @@ export async function createNoInvoiceSale(
   return saleNumber
 }
 
-export function generateStudentInfoFromCardcomSale(
+function generateStudentInfoFromCardcomSale(
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
 ): StudentInfoForASale {
   const cardcomSaleName = cardcomSaleWebhookJson.intTo || cardcomSaleWebhookJson.CardOwnerName
