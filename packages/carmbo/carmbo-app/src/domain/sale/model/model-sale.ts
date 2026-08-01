@@ -67,7 +67,9 @@ export async function addCardcomSale(
     const url = finalInvoiceNumber
       ? (await cardcomIntegration.createTaxInvoiceDocumentUrl(finalInvoiceNumber)).url
       : undefined
-    logger.info({url}, 'tax-invoice-document-url-created')
+    if (url) {
+      logger.info({url}, 'tax-invoice-document-url-created')
+    }
 
     const saleNumber = await createSaleFromCardcomData(
       finalStudent.studentNumber,
@@ -461,7 +463,7 @@ async function createSaleFromCardcomData(
       sql`INSERT INTO sale_standing_order_cardcom_recurring_payment ${sql({
         saleStandingOrderPaymentId: standOrderPaymentId,
         status: 'SUCCESSFUL',
-        invoiceDocumentNumber: cardcomSaleWebhookJson.invoicenumber,
+        invoiceDocumentNumber: cardcomSaleWebhookJson.invoicenumber ?? null,
         internalDealNumber: cardcomSaleWebhookJson.internaldealnumber,
       })}`,
     )

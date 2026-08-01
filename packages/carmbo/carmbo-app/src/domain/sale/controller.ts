@@ -254,7 +254,7 @@ export async function dealWithCardcomOneTimeSale(
     logger,
     {
       isTrivial: false,
-      description: `Processing Cardcom sale for sales event ${salesEventNumber}, invoice ${cardcomSaleWebhookJson.invoicenumber}, email ${cardcomSaleWebhookJson.UserEmail}`,
+      description: `Processing Cardcom sale for sales event ${salesEventNumber}, invoice ${cardcomSaleWebhookJson.invoicenumber ?? '<none>'}, email ${cardcomSaleWebhookJson.UserEmail}`,
     },
   )
 

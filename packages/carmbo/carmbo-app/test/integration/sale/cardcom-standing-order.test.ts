@@ -299,6 +299,87 @@ test('cardcom standing order creates student, sale with two payments', async ({p
   await expect(secondPayment.resolutionCell().locator).toContainText('payed')
 })
 
+test('cardcom standing order with no invoice number creates its initial payment', async ({
+  page,
+}) => {
+  const productNumber = await createProduct(
+    {
+      name: 'Product One',
+      productType: 'recorded',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Test Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/test-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  await cardcomIntegration()._test_simulateCardcomStandingOrder(
+    {
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 100 * 100,
+          productName: 'Product One',
+        },
+      ],
+      customerEmail: 'no-invoice-subscription@example.com',
+      customerName: 'Jane Smith',
+      customerPhone: '0509876543',
+      cardcomCustomerId: 1776,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 100 * 100,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+    cardcomRecurringPaymentWebhookUrl(url(), 'secret'),
+    {shouldStandingOrderHaveInvoiceNumber: false},
+  )
+
+  await page.goto(new URL('/sales/1', url()).href)
+
+  const saleDetailModel = createUpdateSalePageModel(page)
+  await expect(saleDetailModel.pageTitle().locator).toHaveText('Sale 1')
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Subscription | Connected to External Providers',
+  )
+  await expect(saleDetailModel.form().salesEventInput().locator).toHaveValue(
+    `${salesEventNumber}: Test Sales Event`,
+  )
+  await expect(saleDetailModel.form().studentInput().locator).toHaveValue('1: Jane Smith')
+  await expect(saleDetailModel.form().finalSaleRevenueInput().locator).toHaveValue('100')
+  await expect(saleDetailModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
+  await expect(saleDetailModel.form().viewInvoiceLink().locator).not.toBeVisible()
+
+  const products = saleDetailModel.form().products()
+  await expect(products.locator).toHaveCount(1)
+  await expect(products.product(0).unitPrice().locator).toHaveValue('100')
+
+  await page.goto(new URL('/sales/1/payments', url()).href)
+
+  const paymentsPageModel = createSalePaymentsPageModel(page)
+  const paymentRows = paymentsPageModel.paymentsTable().rows()
+  await expect(paymentRows.locator).toHaveCount(1)
+
+  const firstPayment = paymentRows.row(0)
+  await expect(firstPayment.amountCell().locator).toContainText('100')
+  await expect(firstPayment.resolutionCell().locator).toContainText('payed')
+  await expect(firstPayment.invoiceNumberCell().locator).toHaveText('N/A')
+})
+
 test('cardcom standing order with no product id shows error in jobs page', async ({page}) => {
   const product1Number = await createProduct(
     {
