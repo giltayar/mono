@@ -38,6 +38,10 @@ export const SaleSchema = z.object({
   cardcomInvoiceNumber: z.string().optional(),
   cardcomInvoiceDocumentUrl: z.url().optional(),
   cardcomRefundTransactionId: z.string().optional(),
+  cardcomRefundPartialSum: z.preprocess(
+    (s) => (typeof s === 'string' ? parseFloat(s) : s),
+    z.number().optional(),
+  ),
   transactionDescription: z.string().optional(),
   notes: z.string().optional(),
   manualSaleType: z.enum(['manual']).optional(),
@@ -98,6 +102,14 @@ export const NewSaleSchema = z.object({
     })
     .optional(),
 })
+
+export const RefundSaleSchema = z.discriminatedUnion('refundType', [
+  z.object({refundType: z.literal('full')}),
+  z.object({
+    refundType: z.literal('partial'),
+    partialSum: z.coerce.number().positive().multipleOf(0.01),
+  }),
+])
 
 export const SaleHistoryOperationSchema = z.enum([
   'create',
@@ -492,6 +504,7 @@ export function saleSelect(saleNumber: number, sql: Sql) {
       COALESCE(sale_data_cardcom.invoice_number, sale_data_cardcom_manual.cardcom_invoice_number) AS cardcom_invoice_number,
       COALESCE(sale_data_cardcom.invoice_document_url, sale_data_cardcom_manual.invoice_document_url) AS cardcom_invoice_document_url,
       COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS cardcom_refund_transaction_id,
+      sale_data_cardcom.refund_partial_sum::float8 AS cardcom_refund_partial_sum,
       sale_data_cardcom_manual.transaction_description AS transaction_description,
       sale_data.notes AS notes,
       COALESCE(sale_data_active.is_active, false) AS is_active,

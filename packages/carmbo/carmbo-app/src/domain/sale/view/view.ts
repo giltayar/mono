@@ -19,6 +19,11 @@ import {
   renderStudentSearchDialog as renderStudentSearchDialogView,
   renderStudentSearchResults as renderStudentSearchResultsView,
 } from './student-search-dialog.ts'
+import {RefundDialog} from './refund-dialog.ts'
+
+export function renderRefundDialog(sale: SaleWithHistoryInfo) {
+  return RefundDialog({sale})
+}
 
 export function renderStudentSearchDialog() {
   return renderStudentSearchDialogView()

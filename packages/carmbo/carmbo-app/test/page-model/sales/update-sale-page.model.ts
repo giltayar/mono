@@ -28,14 +28,31 @@ export function createUpdateSalePageModel(page: Page) {
       reconnectButton: (btnLocator = page.getByRole('button', {name: 'Reconnect'})) => ({
         locator: btnLocator,
       }),
-      refundButton: (btnLocator = page.getByRole('button', {name: 'Refund'})) => ({
-        locator: btnLocator,
-      }),
+      refundButton: (
+        btnLocator = page.locator('form.col-md-6').getByRole('button', {name: 'Refund'}),
+      ) => ({locator: btnLocator}),
       disconnectButton: (btnLocator = page.getByRole('button', {name: 'Disconnect'})) => ({
         locator: btnLocator,
       }),
 
       ...saleFormPageModel(page),
+    }),
+    refundDialog: (dialogLocator = page.locator('#refund-dialog')) => ({
+      locator: dialogLocator,
+      fullRefundRadio: (locator = dialogLocator.getByRole('radio', {name: 'Refund all'})) => ({
+        locator,
+      }),
+      partialRefundRadio: (
+        locator = dialogLocator.getByRole('radio', {name: 'Refund partial'}),
+      ) => ({locator}),
+      amountInput: (locator = dialogLocator.getByRole('spinbutton', {name: 'Refund amount'})) => ({
+        locator,
+      }),
+      refundButton: (
+        locator = dialogLocator.getByRole('button', {name: 'Refund', exact: true}),
+      ) => ({locator}),
+      cancelButton: (locator = dialogLocator.getByRole('button', {name: 'Cancel'})) => ({locator}),
+      warning: (locator = dialogLocator.getByRole('alert')) => ({locator}),
     }),
     history: () => createSaleHistoryPageModel(page),
   }

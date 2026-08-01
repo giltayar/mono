@@ -40,6 +40,7 @@ import {
   renderSaleFormFields,
   renderSalePaymentsPage,
   renderSaleProvidersPage,
+  renderRefundDialog,
   renderSaleViewPage,
   renderStudentSearchDialog,
   renderStudentSearchResults,
@@ -131,6 +132,14 @@ export async function createStudentFromInvoice(sale: NewSale): Promise<Controlle
 
 export async function showStudentSearchDialog(): Promise<ControllerResult> {
   return finalHtml(renderStudentSearchDialog())
+}
+
+export async function showRefundDialog(saleNumber: number, sql: Sql): Promise<ControllerResult> {
+  const saleWithHistory = await querySaleByNumber(saleNumber, sql)
+
+  if (!saleWithHistory) return {status: 404, body: 'Sale not found'}
+
+  return finalHtml(renderRefundDialog(saleWithHistory.sale))
 }
 
 export async function showStudentSearchResults(q: string | undefined): Promise<ControllerResult> {
@@ -555,7 +564,10 @@ export async function connectSale(saleNumber: number, sale: Sale): Promise<Contr
   }
 }
 
-export async function refundSale(saleNumber: number): Promise<ControllerResult> {
+export async function refundSale(
+  saleNumber: number,
+  partialSum: number | 'full-refund',
+): Promise<ControllerResult> {
   try {
     const sql = requestContext.get('sql')!
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
@@ -563,7 +575,7 @@ export async function refundSale(saleNumber: number): Promise<ControllerResult> 
     const logger = requestContext.get('logger')!
     const now = nowService()
 
-    await model_refundSale(saleNumber, now, sql, cardcomIntegration, logger)
+    await model_refundSale(saleNumber, partialSum, now, sql, cardcomIntegration, logger)
 
     return {htmxRedirect: `/sales/${saleNumber}`}
   } catch (err) {

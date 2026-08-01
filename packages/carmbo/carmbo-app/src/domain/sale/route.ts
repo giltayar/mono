@@ -16,6 +16,7 @@ import {
   showStudentList,
   showProductList,
   showStudentSearchDialog,
+  showRefundDialog,
   showStudentSearchResults,
   quickCreateStudent,
   createSale,
@@ -36,7 +37,7 @@ import {
   dealWithControllerResult,
   dealWithControllerResultAsync,
 } from '../../commons/routes-commons.ts'
-import {NewSaleSchema, SaleSchema} from './model/model.ts'
+import {NewSaleSchema, RefundSaleSchema, SaleSchema} from './model/model.ts'
 import assert from 'node:assert'
 import {
   CardcomRecurringOrderWebHookJsonSchema,
@@ -321,6 +322,13 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   appWithTypes.get(
+    '/:number/refund-dialog',
+    {schema: {params: z.object({number: z.coerce.number().int().positive()})}},
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showRefundDialog(request.params.number, sql)),
+  )
+
+  appWithTypes.get(
     '/query/student-search',
     {schema: {querystring: z.object({q: z.string().optional()})}},
     async (request, reply) =>
@@ -421,11 +429,18 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
   appWithTypes.post(
     '/:number/refund',
-    {schema: {params: z.object({number: z.coerce.number()})}},
+    {
+      schema: {
+        params: z.object({number: z.coerce.number()}),
+        body: RefundSaleSchema,
+      },
+    },
     async (request, reply) => {
       const saleNumber = request.params.number
+      const partialSum =
+        request.body.refundType === 'full' ? 'full-refund' : request.body.partialSum
 
-      return dealWithControllerResultAsync(reply, () => refundSale(saleNumber))
+      return dealWithControllerResultAsync(reply, () => refundSale(saleNumber, partialSum))
     },
   )
 

@@ -42,8 +42,19 @@
     "unsubscribed": "(unsubscribed)",
     "regularSale": "Regular Sale",
     "refunded": "Refunded",
+    "partiallyRefunded": "Partially refunded ₪{{amount}}",
     "connectedToProviders": "Connected to External Providers",
     "disconnectedFromProviders": "Disconnected from External Providers"
+  },
+  "refundDialog": {
+    "title": "Refund sale",
+    "refundType": "Refund type",
+    "fullRefund": "Refund all",
+    "partialRefund": "Refund partial",
+    "amount": "Refund amount",
+    "manualWarning": "This sale is manual. You must process the refund in Cardcom before recording it here.",
+    "refund": "Refund",
+    "cancel": "Cancel"
   },
   "history": {
     "history": "History",

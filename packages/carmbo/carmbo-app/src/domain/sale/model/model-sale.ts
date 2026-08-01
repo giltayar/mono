@@ -648,6 +648,7 @@ export async function findOrCreateStudentFromInvoice(
 
 export async function refundSale(
   saleNumber: number,
+  partialSum: number | 'full-refund',
   now: Date,
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
@@ -672,15 +673,30 @@ export async function refundSale(
         `Sale ${saleNumber} is already refunded or was never active: ${sale.isActive}`,
       )
 
+    if (sale.refundTransactionId) throw new Error(`Sale ${saleNumber} has already been refunded`)
+
+    if (partialSum !== 'full-refund') {
+      if (sale.dataManualId)
+        throw new Error(`Sale ${saleNumber} is manual and cannot be partially refunded`)
+
+      if (!Number.isFinite(partialSum) || partialSum <= 0)
+        throw new Error(`Partial refund amount must be positive`)
+
+      if (sale.finalSaleRevenue === null || partialSum >= sale.finalSaleRevenue)
+        throw new Error(`Partial refund amount must be less than the sale revenue`)
+    }
+
     if (sale.dataCardcomId) {
       // Can only refund cardcom sales that are not manual because I cannot get the transaction id from  manual sales
       const {refundTransactionId} = await cardcomIntegration.refundTransaction(
         sale.internalDealNumber,
+        partialSum,
       )
       logger.info({refundTransactionId}, 'cardcom-transaction-refunded')
       const result = await sql`
         UPDATE sale_data_cardcom SET
-          refund_transaction_id = ${refundTransactionId}
+          refund_transaction_id = ${refundTransactionId},
+          refund_partial_sum = ${partialSum === 'full-refund' ? null : partialSum}
         WHERE data_cardcom_id = ${sale.dataCardcomId}
       `
 
@@ -724,7 +740,7 @@ export async function refundSale(
         sale_history.sale_number,
         ${now},
         'refund-sale',
-        'manual refund of sale'
+        ${partialSum === 'full-refund' ? 'full refund of sale' : `partial refund of ${partialSum}`}
       FROM sale_history
       INNER JOIN sale ON sale.sale_number = ${saleNumber}
       WHERE id = sale.last_history_id
@@ -786,7 +802,9 @@ async function querySaleForRefund(saleNumber: number, sql: Sql) {
       sale_data_active.is_active AS is_active,
       sale_data_cardcom.internal_deal_number AS internal_deal_number,
       sale.data_cardcom_id AS data_cardcom_id,
-      sale_data_cardcom_manual.data_manual_id AS data_manual_id
+      sale_data_cardcom_manual.data_manual_id AS data_manual_id,
+      COALESCE(sale_data_cardcom.cardcom_sale_revenue, sale_data_cardcom_manual.cardcom_sale_revenue)::float8 AS final_sale_revenue,
+      COALESCE(sale_data_cardcom.refund_transaction_id, sale_data_cardcom_manual.refund_transaction_id) AS refund_transaction_id
     FROM
       sale
     JOIN sale_history ON sale_history.id = sale.last_history_id
@@ -800,6 +818,8 @@ async function querySaleForRefund(saleNumber: number, sql: Sql) {
     internalDealNumber: string
     dataCardcomId: string | null
     dataManualId: string | null
+    finalSaleRevenue: number | null
+    refundTransactionId: string | null
   }[]
 
   if (result.length === 0) return undefined

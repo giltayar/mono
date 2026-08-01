@@ -92,12 +92,9 @@ export function SaleUpdateView({
             !sale.isStandingOrder
               ? html`<button
                   class="button"
-                  hx-post="/sales/${sale.saleNumber}/refund"
-                  hx-confirm=${
-                    sale.manualSaleType === 'manual'
-                      ? 'This sale is manual! You MUST process the refund in Cardcom. Are you sure you want to proceed?'
-                      : undefined
-                  }
+                  type="button"
+                  hx-get="/sales/${sale.saleNumber}/refund-dialog"
+                  hx-target="#refund-dialog-container"
                 >
                   ${t('createUpdate.refund')}
                 </button>`
@@ -124,6 +121,10 @@ export function SaleUpdateView({
       id="student-search-dialog-container"
       hx-on::after-swap="this.querySelector('dialog')?.showModal()"
     ></div>
+    <div
+      id="refund-dialog-container"
+      hx-on::after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
     <${SaleHistoryList} sale=${sale} history=${history} />
   `
 }
@@ -139,7 +140,16 @@ function SaleStatus({sale}: {sale: Sale}) {
             }`
           : t('createUpdate.regularSale')
       }
-      ${sale.cardcomRefundTransactionId ? html` | ${t('createUpdate.refunded')}` : ''}
+      ${
+        sale.cardcomRefundTransactionId
+          ? ' | ' +
+            (typeof sale.cardcomRefundPartialSum === 'number'
+              ? t('createUpdate.partiallyRefunded', {
+                  amount: sale.cardcomRefundPartialSum.toFixed(2),
+                })
+              : t('createUpdate.refunded'))
+          : ''
+      }
       ${
         sale.isConnected
           ? ' | ' + t('createUpdate.connectedToProviders')

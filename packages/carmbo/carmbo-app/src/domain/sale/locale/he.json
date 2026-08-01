@@ -42,8 +42,19 @@
     "unsubscribed": "(בוטל)",
     "regularSale": "מכירה רגילה",
     "refunded": "הוחזר",
+    "partiallyRefunded": "הוחזר חלקית ₪{{amount}}",
     "connectedToProviders": "מחובר לספקים חיצוניים",
     "disconnectedFromProviders": "מנותק מספקים חיצוניים"
+  },
+  "refundDialog": {
+    "title": "החזר כספי למכירה",
+    "refundType": "סוג ההחזר",
+    "fullRefund": "החזר מלא",
+    "partialRefund": "החזר חלקי",
+    "amount": "סכום ההחזר",
+    "manualWarning": "מכירה זו הוזנה ידנית. יש לבצע את ההחזר בקארדקום לפני תיעודו כאן.",
+    "refund": "החזר כספי",
+    "cancel": "ביטול"
   },
   "history": {
     "history": "היסטוריה",

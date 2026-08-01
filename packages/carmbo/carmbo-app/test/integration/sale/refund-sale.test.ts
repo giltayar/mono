@@ -72,6 +72,7 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
 
   // Verify the refund button is visible
   await expect(saleDetailModel.form().refundButton().locator).toBeVisible()
+  await expect(saleDetailModel.refundDialog().locator).toHaveCount(0)
 
   // Get the cardcom invoice number (transaction ID)
   const cardcomInvoiceNumber = await saleDetailModel
@@ -86,6 +87,20 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
 
   // Click the refund button
   await saleDetailModel.form().refundButton().locator.click()
+
+  const refundDialog = saleDetailModel.refundDialog()
+  await expect(refundDialog.locator).toBeVisible()
+  await expect(refundDialog.fullRefundRadio().locator).toBeChecked()
+  await expect(refundDialog.amountInput().locator).toBeDisabled()
+
+  await refundDialog.cancelButton().locator.click()
+  await expect(refundDialog.locator).not.toBeVisible()
+  expect(await cardcomIntegration()._test_isPaymentRefunded(parseInt(cardcomInvoiceNumber))).toBe(
+    false,
+  )
+
+  await saleDetailModel.form().refundButton().locator.click()
+  await refundDialog.refundButton().locator.click()
 
   // Wait for the refund to be processed (the button should disappear)
   await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
@@ -114,7 +129,89 @@ test('refund cardcom sale removes refund button and refunds in cardcom', async (
   await expect(firstRow.revenueCell().locator).toContainText('(refunded)')
 })
 
-test('refund manual sale shows confirmation and only adds history row', async ({page}) => {
+test('partially refund cardcom sale validates and records the amount', async ({page}) => {
+  const productNumber = await createProduct(
+    {name: 'Partial Refund Product', productType: 'recorded'},
+    undefined,
+    new Date(),
+    sql(),
+  )
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'Partial Refund Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/partial-refund-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+  await cardcomIntegration()._test_simulateCardcomSale(
+    {
+      productsSold: [
+        {
+          productId: productNumber.toString(),
+          quantity: 1,
+          unitPriceInCents: 10000,
+          productName: 'Partial Refund Product',
+        },
+      ],
+      customerEmail: 'partial-refund@example.com',
+      customerName: 'Partial Refund Customer',
+      customerPhone: '0502222222',
+      cardcomCustomerId: 5556,
+      transactionDate: new Date(),
+      transactionDescription: undefined,
+      transactionRevenueInCents: 10000,
+    },
+    undefined,
+    cardcomWebhookUrl(salesEventNumber, url(), 'secret'),
+  )
+
+  await page.goto(new URL('/sales/1', url()).href)
+  const saleDetailModel = createUpdateSalePageModel(page)
+  const cardcomInvoiceNumber = await saleDetailModel
+    .form()
+    .cardcomInvoiceNumberInput()
+    .locator.inputValue()
+
+  await saleDetailModel.form().refundButton().locator.click()
+  const refundDialog = saleDetailModel.refundDialog()
+  await refundDialog.partialRefundRadio().locator.check()
+  await expect(refundDialog.amountInput().locator).toBeEnabled()
+  await refundDialog.amountInput().locator.fill('100')
+  await refundDialog.refundButton().locator.click()
+
+  await expect(saleDetailModel.header().errorBanner().locator).toContainText(
+    'Partial refund amount must be less than the sale revenue',
+  )
+  expect(await cardcomIntegration()._test_isPaymentRefunded(parseInt(cardcomInvoiceNumber))).toBe(
+    false,
+  )
+
+  await refundDialog.amountInput().locator.fill('25.50')
+  await refundDialog.refundButton().locator.click()
+
+  await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
+  await expect(saleDetailModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Partially refunded ₪25.50 | Connected to External Providers',
+  )
+  expect(
+    cardcomIntegration()._test_getPaymentRefundPartialSum(parseInt(cardcomInvoiceNumber)),
+  ).toBe(25.5)
+
+  const [refund] = (await sql()`
+    SELECT refund_partial_sum::float8 AS refund_partial_sum
+    FROM sale_data_cardcom
+    JOIN sale USING (data_cardcom_id)
+    WHERE sale_number = 1
+  `) as {refundPartialSum: number}[]
+  expect(refund.refundPartialSum).toBe(25.5)
+})
+
+test('refund manual sale allows full refund only', async ({page}) => {
   const studentNumber = await createStudent(
     {
       names: [{firstName: 'Manual', lastName: 'Customer'}],
@@ -193,33 +290,28 @@ test('refund manual sale shows confirmation and only adds history row', async ({
 
   // Verify the refund button is visible
   await expect(saleDetailModel.form().refundButton().locator).toBeVisible()
-
-  // Set up dialog handler to accept the confirmation
-  let dialogShown = false
-  let dialogMessage = ''
-  page.on('dialog', async (dialog) => {
-    dialogShown = true
-    dialogMessage = dialog.message()
-    await dialog.accept()
-  })
+  const historyList = saleDetailModel.history()
+  const historyCountBeforeRefund = await historyList.items().locator.count()
 
   // Click the refund button
   await saleDetailModel.form().refundButton().locator.click()
 
-  // Verify that the confirmation dialog was shown with the correct message
-  expect(dialogShown).toBe(true)
-  expect(dialogMessage).toContain('This sale is manual!')
-  expect(dialogMessage).toContain('You MUST process the refund in Cardcom')
+  const refundDialog = saleDetailModel.refundDialog()
+  await expect(refundDialog.locator).toBeVisible()
+  await expect(refundDialog.warning().locator).toContainText(
+    'You must process the refund in Cardcom',
+  )
+  await expect(refundDialog.fullRefundRadio().locator).toBeChecked()
+  await expect(refundDialog.partialRefundRadio().locator).toBeDisabled()
+  await refundDialog.refundButton().locator.click()
 
   // Wait for the page to reload after the refund
   await page.waitForLoadState('networkidle')
 
-  // The refund button should still be visible (refund didn't actually happen)
-  await expect(saleDetailModel.form().refundButton().locator).toBeVisible()
+  await expect(saleDetailModel.form().refundButton().locator).not.toBeVisible()
 
   // Verify that a refund history row was added
-  const historyList = saleDetailModel.history()
-  await expect(historyList.items().locator).toHaveCount(3) // create + connect-sale + refund-sale
+  await expect(historyList.items().locator).toHaveCount(historyCountBeforeRefund + 1)
   await expect(historyList.items().item(0).locator).toContainText('refunded sale')
 
   // Verify sale status shows refunded
