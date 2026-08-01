@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmel-tools-cardcom-integration",
-  "version": "9.0.1",
+  "version": "9.0.2",
   "type": "module",
   "exports": {
     "./service": {

@@ -18,7 +18,7 @@ export const CardcomSaleWebhookJsonSchema = z.looseObject({
   DealDate: z.string(),
   DealTime: z.string(),
   internaldealnumber: z.string(),
-  invoicenumber: z.string().optional,
+  invoicenumber: z.string().optional(),
   terminalnumber: z.string(),
   responsecode: z.string(),
   UserEmail: z.string(),
