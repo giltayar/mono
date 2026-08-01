@@ -1,6 +1,7 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
+import Fastify from 'fastify'
 
 describe('Cardcom Integration Testkit', () => {
   const testAccountId = 'test-account-123'
@@ -682,6 +683,51 @@ describe('Cardcom Integration Testkit', () => {
   })
 
   describe('test helper methods', () => {
+    describe('_test_simulateCardcomStandingOrder', () => {
+      it('should optionally omit the invoice number', async (t) => {
+        const webhookServer = await createListeningWebhookServer()
+        t.after(webhookServer.close)
+
+        const sale = {
+          customerName: 'Jane Smith',
+          customerEmail: 'jane@example.com',
+          customerPhone: '050-1234567',
+          cardcomCustomerId: 12345,
+          productsSold: [
+            {
+              productId: 'product-1',
+              productName: 'Product One',
+              quantity: 1,
+              unitPriceInCents: 10000,
+            },
+          ],
+          transactionDate: new Date('2025-01-01'),
+          transactionDescription: undefined,
+          transactionRevenueInCents: 10000,
+        }
+        const service = createTestService()
+
+        const withInvoice = await service._test_simulateCardcomStandingOrder(
+          sale,
+          undefined,
+          webhookServer.webhookUrl,
+          webhookServer.webhookUrl,
+        )
+        const withoutInvoice = await service._test_simulateCardcomStandingOrder(
+          sale,
+          undefined,
+          webhookServer.webhookUrl,
+          webhookServer.webhookUrl,
+          {shouldStandingOrderHaveInvoiceNumber: false},
+        )
+
+        assert.strictEqual(withInvoice.cardcomInvoiceNumber, 1)
+        assert.strictEqual(webhookServer.webhookRequests[0].invoicenumber, '1')
+        assert.strictEqual(withoutInvoice.cardcomInvoiceNumber, undefined)
+        assert.strictEqual('invoicenumber' in webhookServer.webhookRequests[2], false)
+      })
+    })
+
     describe('_test_getRecurringPaymentStatus', () => {
       it('should return the status of an existing recurring payment', async () => {
         const service = createTestService()
@@ -715,3 +761,22 @@ describe('Cardcom Integration Testkit', () => {
     })
   })
 })
+
+async function createListeningWebhookServer() {
+  const webhookRequests: Record<string, unknown>[] = []
+  const app = Fastify()
+
+  app.post('/', async (request) => {
+    assert(request.body && typeof request.body === 'object' && !Array.isArray(request.body))
+    webhookRequests.push(request.body as Record<string, unknown>)
+    return 'ok'
+  })
+
+  const webhookUrl = new URL(await app.listen({port: 0, host: '127.0.0.1'}))
+
+  return {
+    webhookRequests,
+    webhookUrl,
+    close: () => app.close(),
+  }
+}

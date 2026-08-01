@@ -14,7 +14,7 @@ export async function simulateCardcomSale(
   webhook: URL,
   invoiceInformation: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
-  invoiceNumber: string,
+  invoiceNumber: string | undefined,
   paymentTransactionId: string,
   standingOrderNumber: string | undefined,
 ): Promise<void> {
@@ -57,7 +57,7 @@ export async function simulateDetailRecurring(
 function generateCardcomWebhookData(
   invoiceInfo: TaxInvoiceInformation,
   delivery: DeliveryInformation | undefined,
-  invoiceNumber: string,
+  invoiceNumber: string | undefined,
   paymentTransactionId: string,
   standingOrderNumber: string | undefined,
 ): CardcomSaleWebhookJson {

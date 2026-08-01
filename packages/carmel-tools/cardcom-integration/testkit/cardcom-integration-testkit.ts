@@ -334,12 +334,15 @@ export async function _test_simulateCardcomStandingOrder(
   recurringPaymentWebhook: URL | undefined,
   options: {
     cardcomInvoiceNumberToSend?: number
+    shouldStandingOrderHaveInvoiceNumber?: boolean
   } = {},
 ) {
-  let cardcomInvoiceNumber: number
+  let cardcomInvoiceNumber: number | undefined
   let cardcomCustomerId = 'stam'
+  const shouldStandingOrderHaveInvoiceNumber =
+    options.shouldStandingOrderHaveInvoiceNumber ?? true
 
-  if (!options.cardcomInvoiceNumberToSend) {
+  if (shouldStandingOrderHaveInvoiceNumber && !options.cardcomInvoiceNumberToSend) {
     const result = await createTaxInvoiceDocument(s, sale, {
       sendInvoiceByMail: false,
     })
@@ -350,14 +353,16 @@ export async function _test_simulateCardcomStandingOrder(
     const r = Object.values(s.state.payments).find((p) => p.invoiceNumber === cardcomInvoiceNumber)
 
     r!.isRecurring = true
-  } else {
+  } else if (shouldStandingOrderHaveInvoiceNumber) {
     cardcomInvoiceNumber = options.cardcomInvoiceNumberToSend
   }
 
   const recurringOrderId = String((Math.random() * 1_000_000) | 0)
-  const paymentTransactionId = Object.entries(s.state.payments).find(
-    ([, p]) => p.invoiceNumber === cardcomInvoiceNumber,
-  )?.[0]
+  const paymentTransactionId = cardcomInvoiceNumber
+    ? Object.entries(s.state.payments).find(
+        ([, payment]) => payment.invoiceNumber === cardcomInvoiceNumber,
+      )?.[0]
+    : String((Math.random() * 100_000_000) | 0)
 
   assert(paymentTransactionId, 'payment transaction ID should be found')
 
@@ -366,7 +371,7 @@ export async function _test_simulateCardcomStandingOrder(
       saleWebhook,
       sale,
       delivery,
-      cardcomInvoiceNumber.toString(),
+      cardcomInvoiceNumber?.toString(),
       paymentTransactionId,
       recurringOrderId,
     )
