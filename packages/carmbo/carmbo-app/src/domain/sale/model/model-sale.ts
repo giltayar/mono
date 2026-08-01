@@ -16,7 +16,7 @@ export type StandingOrderPaymentResolution = 'payed' | 'failure-but-retrying' | 
 
 export async function addCardcomSale(
   salesEventNumber: number,
-  cardcomSaleWebhookJson: CardcomSaleWebhookJson,
+  cardcomSaleWebhookJson: CardcomSaleWebhookJson & {invoicenumber: string},
   now: Date,
   smooveIntegration: SmooveIntegrationService | undefined,
   cardcomIntegration: CardcomIntegrationService,

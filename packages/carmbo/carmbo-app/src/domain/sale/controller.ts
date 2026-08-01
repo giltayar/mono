@@ -245,7 +245,7 @@ export async function dealWithCardcomOneTimeSale(
       invoiceNumber && invoiceNumber !== '0'
         ? addCardcomSale(
             salesEventNumber,
-            cardcomSaleWebhookJson,
+            {...cardcomSaleWebhookJson, invoicenumber: invoiceNumber},
             now,
             smooveIntegration,
             cardcomIntegration,
