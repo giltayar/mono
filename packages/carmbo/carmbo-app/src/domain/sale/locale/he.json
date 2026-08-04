@@ -56,6 +56,14 @@
     "refund": "החזר כספי",
     "cancel": "ביטול"
   },
+  "connectDialog": {
+    "title": "חיבור מכירה",
+    "invoiceQuestion": "האם ליצור חשבונית בקארדקום?",
+    "createInvoice": "יצירת חשבונית",
+    "doNotCreateInvoice": "ללא יצירת חשבונית",
+    "connect": "חיבור",
+    "cancel": "ביטול"
+  },
   "history": {
     "history": "היסטוריה",
     "created": "נוצרה",

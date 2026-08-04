@@ -104,6 +104,8 @@ test('create student from invoice and connect', async ({page}) => {
 
   // Connect the sale
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
@@ -280,6 +282,8 @@ test('find existing student from invoice and connect', async ({page}) => {
 
   // Connect the sale
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)

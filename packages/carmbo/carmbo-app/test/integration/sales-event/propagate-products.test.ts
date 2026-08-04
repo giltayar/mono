@@ -94,6 +94,8 @@ test('adding product to sales event enrolls students from connected sales', asyn
 
   // Connect the sale via UI (this enrolls student in Course 1)
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -229,6 +231,8 @@ test('removing product from sales event does NOT unenroll students (they already
 
   // Connect the sale via UI (this enrolls student in both courses)
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )

@@ -95,6 +95,8 @@ test('updating product to add academy course enrolls students from connected sal
 
   // Connect the sale via UI (this enrolls student in Course 1)
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   await expect(updateSaleModel.history().items().locator).toHaveCount(3)
 
@@ -234,6 +236,8 @@ test('updating product to remove academy course unenrolls students from connecte
 
   // Connect the sale via UI (this enrolls student in both courses)
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -365,6 +369,8 @@ test('removing course from product does NOT unenroll if another product in same 
 
   // Connect the sale via UI
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -597,6 +603,8 @@ test('removing course from non-club product does NOT unenroll students', async (
 
   // Connect the sale via UI (this enrolls student in both courses)
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -736,6 +744,8 @@ test('removing course from club product does NOT unenroll if another sale has th
   await page.waitForURL(updateSaleModel.urlRegex)
 
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -762,6 +772,8 @@ test('removing course from club product does NOT unenroll if another sale has th
   await page.waitForURL(updateSaleModel.urlRegex)
 
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )
@@ -875,6 +887,8 @@ test('disconnected (previously connected) sales are not affected by product acad
 
   // Connect the sale (enrolls student in Course 1)
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
   )

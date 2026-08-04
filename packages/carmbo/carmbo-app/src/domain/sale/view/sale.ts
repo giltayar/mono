@@ -31,6 +31,7 @@ export function SaleUpdateView({
     </div>
     <${Tabs} saleNumber=${sale.saleNumber} activeTab="details" />
     <form
+      id="sale-form"
       hx-put="/sales/${sale.saleNumber}"
       hx-target="form"
       class="col-md-6 mt-3"
@@ -82,7 +83,12 @@ export function SaleUpdateView({
                     </button>
                   `
           }
-          <button class="button btn-primary" hx-post="/sales/${sale.saleNumber}/connect">
+          <button
+            class="button btn-primary"
+            type="button"
+            hx-get="/sales/${sale.saleNumber}/connect-dialog"
+            hx-target="#connect-dialog-container"
+          >
             ${!sale.isConnected ? t('createUpdate.connect') : t('createUpdate.reconnect')}
           </button>
           ${
@@ -123,6 +129,10 @@ export function SaleUpdateView({
     ></div>
     <div
       id="refund-dialog-container"
+      hx-on::after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
+    <div
+      id="connect-dialog-container"
       hx-on::after-swap="this.querySelector('dialog')?.showModal()"
     ></div>
     <${SaleHistoryList} sale=${sale} history=${history} />

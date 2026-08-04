@@ -40,6 +40,7 @@ import {
   renderSalePaymentsPage,
   renderSaleProvidersPage,
   renderRefundDialog,
+  renderConnectDialog,
   renderSaleViewPage,
   renderStudentSearchDialog,
   renderStudentSearchResults,
@@ -139,6 +140,14 @@ export async function showRefundDialog(saleNumber: number, sql: Sql): Promise<Co
   if (!saleWithHistory) return {status: 404, body: 'Sale not found'}
 
   return finalHtml(renderRefundDialog(saleWithHistory.sale))
+}
+
+export async function showConnectDialog(saleNumber: number, sql: Sql): Promise<ControllerResult> {
+  const saleWithHistory = await querySaleByNumber(saleNumber, sql)
+
+  if (!saleWithHistory) return {status: 404, body: 'Sale not found'}
+
+  return finalHtml(renderConnectDialog(saleWithHistory.sale))
 }
 
 export async function showStudentSearchResults(q: string | undefined): Promise<ControllerResult> {
@@ -518,30 +527,32 @@ export async function deleteSale(
   }
 }
 
-export async function connectSale(saleNumber: number, sale: Sale): Promise<ControllerResult> {
+export async function connectSale(
+  saleNumber: number,
+  sale: Sale,
+  {createInvoice}: {createInvoice: boolean},
+): Promise<ControllerResult> {
   try {
     const sql = requestContext.get('sql')!
     const cardcomIntegration = requestContext.get('cardcomIntegration')!
-    const whatsappIntegration = requestContext.get('whatsappIntegration')!
-    const smooveIntegration = requestContext.get('smooveIntegration')
-    const academyIntegration = requestContext.get('academyIntegration')
-    const skoolIntegration = requestContext.get('skoolIntegration')
     const nowService = requestContext.get('nowService')!
     const logger = requestContext.get('logger')!
     const now = nowService()
 
     await model_updateSale(sale, undefined, now, sql)
 
-    await model_connectSale(
-      saleNumber,
-      now,
+    await executeDirectJob(
+      async () =>
+        void (await model_connectSale(saleNumber, now, sql, cardcomIntegration, logger, {
+          createInvoice,
+        })),
+      nowService,
       sql,
-      cardcomIntegration,
-      whatsappIntegration,
-      smooveIntegration,
-      academyIntegration,
-      skoolIntegration,
       logger,
+      {
+        isTrivial: false,
+        description: `Connecting sale ${saleNumber}`,
+      },
     )
 
     return {htmxRedirect: `/sales/${saleNumber}`}

@@ -188,6 +188,8 @@ test('no invoice sale creates student, sale, and integrations', async ({page}) =
   await page.waitForURL(/\/sales\/1$/)
 
   await saleDetailModel.form().reconnectButton().locator.click()
+  await saleDetailModel.connectDialog().createInvoiceRadio().locator.check()
+  await saleDetailModel.connectDialog().connectButton().locator.click()
 
   await expect(saleDetailModel.history().items().locator).toHaveCount(3)
 

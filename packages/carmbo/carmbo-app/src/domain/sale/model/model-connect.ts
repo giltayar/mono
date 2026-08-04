@@ -81,11 +81,8 @@ export async function connectSale(
   now: Date,
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
-  wthatsappIntegration: WhatsAppIntegrationService,
-  smooveIntegration: SmooveIntegrationService | undefined,
-  academyIntegration: AcademyIntegrationService | undefined,
-  skoolIntegration: SkoolIntegrationService | undefined,
   loggerParent: FastifyBaseLogger,
+  {createInvoice}: {createInvoice: boolean},
 ) {
   const logger = loggerParent.child({
     saleNumber,
@@ -104,31 +101,15 @@ export async function connectSale(
 
     logger.info({invoiceUrl: sale.cardcomInvoiceDocumentUrl}, 'connect-sale-succeeded')
 
-    await connectSaleToExternalProviders(
-      {studentNumber: parseInt(sale.studentNumber), saleNumber},
-      academyIntegration,
-      smooveIntegration,
-      sql,
-      logger,
-    )
+    await submitConnectionJob?.({studentNumber: parseInt(sale.studentNumber), saleNumber}, {})
+    await submitPersonalMessageJob({studentNumber: parseInt(sale.studentNumber), saleNumber}, {})
+    if (submitSkoolInvitationJob) {
+      await submitSkoolInvitationJob({studentNumber: parseInt(sale.studentNumber), saleNumber}, {})
+    }
 
-    await sendPersonalMessagesWhenJoining(
-      {studentNumber: parseInt(sale.studentNumber), saleNumber},
-      wthatsappIntegration,
-      sql,
-      logger,
-    )
-
-    await when(skoolIntegration, (skoolIntegration) =>
-      sendSkoolInvitations(
-        {studentNumber: parseInt(sale.studentNumber), saleNumber},
-        skoolIntegration,
-        sql,
-        logger,
-      ),
-    )
-
-    await connectSaleToCardcom(sale, logger, cardcomIntegration, now, sql, dataManualId)
+    await connectSaleToCardcom(sale, logger, cardcomIntegration, now, sql, dataManualId, {
+      createInvoice,
+    })
 
     await sql`INSERT INTO sale_data_active ${sql({dataActiveId, isActive: true})}`
     await sql`INSERT INTO sale_data_connected ${sql({dataConnectedId, isConnected: true})}`
@@ -324,8 +305,11 @@ async function connectSaleToCardcom(
   now: Date,
   sql: Sql,
   dataManualId: string,
+  {createInvoice}: {createInvoice: boolean},
 ) {
-  if (!sale.cardcomInvoiceNumber) {
+  if (!sale.cardcomInvoiceNumber && !createInvoice) {
+    logger.info('not-creating-cardcom-invoice-document-per-user-request')
+  } else if (!sale.cardcomInvoiceNumber) {
     logger.info('creating-cardcom-invoice-document')
     const transactionRevenueInCents = parseFloat(sale.finalSaleRevenue ?? '0') * 100
     const {cardcomCustomerId, cardcomDocumentLink, cardcomInvoiceNumber} =

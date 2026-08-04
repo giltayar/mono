@@ -301,6 +301,8 @@ test('cardcom sale creates student, sale, and integrations', async ({page}) => {
   ).toBe(false)
 
   await saleDetailModel.form().reconnectButton().locator.click()
+  await saleDetailModel.connectDialog().createInvoiceRadio().locator.check()
+  await saleDetailModel.connectDialog().connectButton().locator.click()
 
   await expect(saleDetailModel.history().items().locator).toHaveCount(3)
 

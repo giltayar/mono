@@ -20,9 +20,14 @@ import {
   renderStudentSearchResults as renderStudentSearchResultsView,
 } from './student-search-dialog.ts'
 import {RefundDialog} from './refund-dialog.ts'
+import {ConnectDialog} from './connect-dialog.ts'
 
 export function renderRefundDialog(sale: SaleWithHistoryInfo) {
   return RefundDialog({sale})
+}
+
+export function renderConnectDialog(sale: SaleWithHistoryInfo) {
+  return ConnectDialog({sale})
 }
 
 export function renderStudentSearchDialog() {

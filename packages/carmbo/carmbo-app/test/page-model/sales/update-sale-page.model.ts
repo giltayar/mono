@@ -22,10 +22,14 @@ export function createUpdateSalePageModel(page: Page) {
       restoreButton: (btnLocator = page.getByRole('button', {name: 'Restore'})) => ({
         locator: btnLocator,
       }),
-      connectButton: (btnLocator = page.getByRole('button', {name: 'Connect', exact: true})) => ({
+      connectButton: (
+        btnLocator = page.locator('#sale-form').getByRole('button', {name: 'Connect', exact: true}),
+      ) => ({
         locator: btnLocator,
       }),
-      reconnectButton: (btnLocator = page.getByRole('button', {name: 'Reconnect'})) => ({
+      reconnectButton: (
+        btnLocator = page.locator('#sale-form').getByRole('button', {name: 'Reconnect'}),
+      ) => ({
         locator: btnLocator,
       }),
       refundButton: (
@@ -53,6 +57,19 @@ export function createUpdateSalePageModel(page: Page) {
       ) => ({locator}),
       cancelButton: (locator = dialogLocator.getByRole('button', {name: 'Cancel'})) => ({locator}),
       warning: (locator = dialogLocator.getByRole('alert')) => ({locator}),
+    }),
+    connectDialog: (dialogLocator = page.locator('#connect-dialog')) => ({
+      locator: dialogLocator,
+      createInvoiceRadio: (
+        locator = dialogLocator.getByRole('radio', {name: 'Create invoice', exact: true}),
+      ) => ({locator}),
+      doNotCreateInvoiceRadio: (
+        locator = dialogLocator.getByRole('radio', {name: 'Do not create invoice', exact: true}),
+      ) => ({locator}),
+      connectButton: (
+        locator = dialogLocator.getByRole('button', {name: 'Connect', exact: true}),
+      ) => ({locator}),
+      cancelButton: (locator = dialogLocator.getByRole('button', {name: 'Cancel'})) => ({locator}),
     }),
     history: () => createSaleHistoryPageModel(page),
   }

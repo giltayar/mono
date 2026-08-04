@@ -56,6 +56,14 @@
     "refund": "Refund",
     "cancel": "Cancel"
   },
+  "connectDialog": {
+    "title": "Connect sale",
+    "invoiceQuestion": "Create an invoice in Cardcom?",
+    "createInvoice": "Create invoice",
+    "doNotCreateInvoice": "Do not create invoice",
+    "connect": "Connect",
+    "cancel": "Cancel"
+  },
   "history": {
     "history": "History",
     "created": "created",

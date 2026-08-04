@@ -231,6 +231,8 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
 
   // Connect the sale to make it active
   await saleDetailModel.form().connectButton().locator.click()
+  await saleDetailModel.connectDialog().createInvoiceRadio().locator.check()
+  await saleDetailModel.connectDialog().connectButton().locator.click()
 
   // Wait for the page to reload after connect
   await page.waitForLoadState('networkidle')
@@ -317,6 +319,8 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
   await expect(saleDetailModel.form().connectButton().locator).toBeVisible()
 
   await saleDetailModel.form().connectButton().locator.click()
+  await saleDetailModel.connectDialog().createInvoiceRadio().locator.check()
+  await saleDetailModel.connectDialog().connectButton().locator.click()
 
   // Wait for the connect to be processed
   await page.waitForLoadState('networkidle')

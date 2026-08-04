@@ -150,6 +150,8 @@ test('create sale then connect it', async ({page}) => {
   )
 
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
   await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
@@ -397,6 +399,8 @@ test('create sale with existing cardcom invoice id, then connect it', async ({pa
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
 
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
   await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
@@ -591,6 +595,8 @@ test('connect sale then reconnect it', async ({page}) => {
   await expect(updateSaleModel.history().items().locator).toHaveCount(1)
 
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   await expect(updateSaleModel.history().items().locator).toHaveCount(3)
 
@@ -619,6 +625,8 @@ test('connect sale then reconnect it', async ({page}) => {
   ).toBe(false)
 
   await updateSaleModel.form().reconnectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
   await expect(updateSaleModel.history().items().locator).toHaveCount(5)
   await expect(updateSaleModel.saleStatus().locator).toHaveText(
     'Regular Sale | Connected to External Providers',
@@ -777,6 +785,8 @@ test('create sale with transaction description then connect it', async ({page}) 
 
   // Connect the sale
   await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
 
   // Verify sale is now connected and in view mode
   await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
@@ -806,4 +816,108 @@ test('create sale with transaction description then connect it', async ({page}) 
   await expect(async () => {
     expect(skoolIntegration()._test_isInviteSentForEmail('jane.doe@example.com')).toBe(true)
   }).toPass()
+})
+
+test('create sale then connect it without creating an invoice', async ({page}) => {
+  const studentNumber = await createStudent(
+    {
+      names: [{firstName: 'Nancy', lastName: 'NoInvoice'}],
+      emails: ['nancy.noinvoice@example.com'],
+      phones: ['0502222222'],
+      facebookNames: [],
+    },
+    undefined,
+    smooveIntegration(),
+    new Date(),
+    sql(),
+  )
+
+  const productNumber = await createProduct(
+    {
+      name: 'No Invoice Product',
+      productType: 'recorded',
+      smooveListId: 7,
+      academyCourses: [{courseId: 55, accountSubdomain: 'carmel'}],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const salesEventNumber = await createSalesEvent(
+    {
+      name: 'No Invoice Sales Event',
+      fromDate: new Date('2025-01-01'),
+      toDate: new Date('2025-12-31'),
+      landingPageUrl: 'https://example.com/no-invoice-sale',
+      productsForSale: [productNumber],
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+
+  const newSaleModel = createNewSalePageModel(page)
+  const updateSaleModel = createUpdateSalePageModel(page)
+
+  await page.goto(new URL('/sales/new', url()).href)
+
+  const newForm = newSaleModel.form()
+  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+  await newForm.salesEventInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+  await newForm.studentInput().locator.fill(`${studentNumber}`)
+  await newForm.studentInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+
+  await newForm.products().product(0).quantity().locator.fill('1')
+  await newForm.products().product(0).quantity().locator.blur()
+  await page.waitForLoadState('networkidle')
+  await newForm.products().product(0).unitPrice().locator.fill('80')
+  await newForm.products().product(0).unitPrice().locator.blur()
+  await page.waitForLoadState('networkidle')
+
+  await newForm.finalSaleRevenueInput().locator.fill('80')
+  await newForm.finalSaleRevenueInput().locator.blur()
+  await page.waitForLoadState('networkidle')
+
+  await newForm.createButton().locator.click()
+
+  await page.waitForURL(updateSaleModel.urlRegex)
+
+  const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
+
+  // Cancelling the dialog does not connect the sale
+  await updateSaleModel.form().connectButton().locator.click()
+  await expect(updateSaleModel.connectDialog().locator).toBeVisible()
+  await updateSaleModel.connectDialog().cancelButton().locator.click()
+  await expect(updateSaleModel.connectDialog().locator).not.toBeVisible()
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Disconnected from External Providers',
+  )
+
+  await updateSaleModel.form().connectButton().locator.click()
+  await updateSaleModel.connectDialog().doNotCreateInvoiceRadio().locator.check()
+  await updateSaleModel.connectDialog().connectButton().locator.click()
+
+  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
+  await expect(updateSaleModel.saleStatus().locator).toHaveText(
+    'Regular Sale | Connected to External Providers',
+  )
+
+  // No invoice was created in Cardcom
+  await expect(updateSaleModel.form().viewInvoiceLink().locator).not.toBeVisible()
+  await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
+
+  await expect(cardcomIntegration().fetchInvoiceInformation(1)).rejects.toThrow()
+
+  // But the student was still connected to the external providers
+  expect(
+    await academyIntegration().isStudentEnrolledInCourse('nancy.noinvoice@example.com', 55, {
+      accountSubdomain: 'carmel',
+    }),
+  ).toBe(true)
+  expect(
+    (await smooveIntegration().fetchContactsOfList(7)).map((contact) => contact.email),
+  ).toEqual(['nancy.noinvoice@example.com'])
 })

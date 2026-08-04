@@ -17,6 +17,7 @@ import {
   showProductList,
   showStudentSearchDialog,
   showRefundDialog,
+  showConnectDialog,
   showStudentSearchResults,
   quickCreateStudent,
   createSale,
@@ -329,6 +330,13 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   )
 
   appWithTypes.get(
+    '/:number/connect-dialog',
+    {schema: {params: z.object({number: z.coerce.number().int().positive()})}},
+    async (request, reply) =>
+      dealWithControllerResult(reply, await showConnectDialog(request.params.number, sql)),
+  )
+
+  appWithTypes.get(
     '/query/student-search',
     {schema: {querystring: z.object({q: z.string().optional()})}},
     async (request, reply) =>
@@ -420,11 +428,19 @@ export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
 
   appWithTypes.post(
     '/:number/connect',
-    {schema: {body: SaleSchema, params: z.object({number: z.coerce.number()})}},
+    {
+      schema: {
+        body: SaleSchema.extend({createInvoice: z.stringbool()}),
+        params: z.object({number: z.coerce.number()}),
+      },
+    },
     async (request, reply) => {
       const saleNumber = request.params.number
+      const {createInvoice, ...sale} = request.body
 
-      return dealWithControllerResultAsync(reply, () => connectSale(saleNumber, request.body))
+      return dealWithControllerResultAsync(reply, () =>
+        connectSale(saleNumber, sale, {createInvoice}),
+      )
     },
   )
   appWithTypes.post(

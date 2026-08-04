@@ -284,6 +284,8 @@ test('refund manual sale allows full refund only', async ({page}) => {
 
   // Connect the sale to make it active
   await saleDetailModel.form().connectButton().locator.click()
+  await saleDetailModel.connectDialog().createInvoiceRadio().locator.check()
+  await saleDetailModel.connectDialog().connectButton().locator.click()
 
   // Wait for the page to reload after connect
   await page.waitForLoadState('networkidle')
