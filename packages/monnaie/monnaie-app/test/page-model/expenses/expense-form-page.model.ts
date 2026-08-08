@@ -6,6 +6,7 @@ export function createExpenseFormPageModel(page: Page) {
     editHeading: (locator = page.getByRole('heading', {name: 'Edit the expense'})) => ({locator}),
     description: (locator = page.getByRole('textbox', {name: 'What was it'})) => ({locator}),
     amount: (locator = page.getByRole('spinbutton', {name: 'Amount'})) => ({locator}),
+    date: (locator = page.getByLabel('Date')) => ({locator}),
     // the radios are visually hidden and styled through their label, but they are still radios
     category: (name: string) => ({locator: page.getByRole('radio', {name})}),
     submitButton: (locator = page.getByRole('button', {name: /^(Add|Save)$/})) => ({locator}),

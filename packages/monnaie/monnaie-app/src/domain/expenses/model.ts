@@ -5,12 +5,27 @@ import type {PeriodName, PeriodRange, PeriodRanges} from './periods.ts'
 
 /** Translated by the view layer, so that the model has no display text in it */
 export type ExpenseError =
-  'empty-description' | 'description-too-long' | 'invalid-amount' | 'invalid-category' | 'not-found'
+  | 'empty-description'
+  | 'description-too-long'
+  | 'invalid-amount'
+  | 'invalid-category'
+  | 'invalid-date'
+  | 'not-found'
 
 /** An expense as the form sends it: every field is still a string, and none of it is trusted */
-export type ExpenseInput = {description: string; amount: string; categoryId: string}
+export type ExpenseInput = {
+  description: string
+  amount: string
+  categoryId: string
+  date: string | undefined
+}
 
-export type ValidExpense = {description: string; amount: number; categoryId: number}
+export type ValidExpense = {
+  description: string
+  amount: number
+  categoryId: number
+  date: string | undefined
+}
 
 export type Expense = {
   id: number
@@ -35,10 +50,13 @@ const AMOUNT_MAX = 9_999_999_999.99
 /** Digits, and at most two of them after a single decimal point */
 const AMOUNT_REGEX = /^\d+(?:\.\d{1,2})?$/
 
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
+
 export function validateExpense({
   description,
   amount,
   categoryId,
+  date,
 }: ExpenseInput): {expense: ValidExpense} | {error: ExpenseError} {
   const trimmedDescription = description.trim()
 
@@ -68,11 +86,18 @@ export function validateExpense({
     return {error: 'invalid-category'}
   }
 
+  if (date !== undefined) {
+    if (!DATE_REGEX.test(date) || !isValidDate(date)) {
+      return {error: 'invalid-date'}
+    }
+  }
+
   return {
     expense: {
       description: trimmedDescription,
       amount: amountAsNumber,
       categoryId: categoryIdAsNumber,
+      date,
     },
   }
 }
@@ -95,6 +120,7 @@ export async function updateExpense(
   userId: string,
   id: number,
   expense: ValidExpense,
+  createdAt: Date,
 ): Promise<boolean> {
   const result = await db
     .updateTable('expense')
@@ -102,6 +128,7 @@ export async function updateExpense(
       description: expense.description,
       amount: expense.amount,
       category_id: expense.categoryId,
+      created_at: createdAt.toISOString(),
     })
     .where('id', '=', id)
     .where('user_id', '=', userId)
@@ -213,4 +240,10 @@ function toExpense(row: {
     categoryId: row.category_id,
     createdAt: row.created_at,
   }
+}
+
+function isValidDate(dateString: string): boolean {
+  const [year, month, day] = dateString.split('-').map(Number)
+  const date = new Date(year!, month! - 1, day)
+  return date.getFullYear() === year && date.getMonth() === month! - 1 && date.getDate() === day
 }

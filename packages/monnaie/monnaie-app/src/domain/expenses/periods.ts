@@ -135,3 +135,18 @@ function startOfDay(zoned: Temporal.ZonedDateTime): Temporal.ZonedDateTime {
 function toDate(zoned: Temporal.ZonedDateTime): Date {
   return new Date(zoned.toInstant().epochMilliseconds)
 }
+
+/** Converts a Date to a `YYYY-MM-DD` string as seen in `timeZone` */
+export function timestampToDateString(date: Date, timeZone: string): string {
+  return Temporal.Instant.fromEpochMilliseconds(date.getTime())
+    .toZonedDateTimeISO(timeZone)
+    .toPlainDate()
+    .toString()
+}
+
+/** Converts a `YYYY-MM-DD` string to a Date at the start of that day in `timeZone` */
+export function dateStringToTimestamp(dateString: string, timeZone: string): Date {
+  const plain = Temporal.PlainDate.from(dateString)
+  const zoned = plain.toZonedDateTime(timeZone)
+  return toDate(zoned)
+}

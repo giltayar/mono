@@ -20,6 +20,13 @@ const ExpenseBodySchema = z.object({
   categoryId: z.string(),
 })
 
+const EditExpenseBodySchema = z.object({
+  description: z.string(),
+  amount: z.string(),
+  categoryId: z.string(),
+  date: z.string(),
+})
+
 const ExpenseParamsSchema = z.object({id: z.coerce.number().int()})
 
 export default function expensesRoutes(
@@ -37,7 +44,10 @@ export default function expensesRoutes(
   )
 
   appWithTypes.post('/expenses', {schema: {body: ExpenseBodySchema}}, async (request, reply) =>
-    replyWithControllerResult(reply, await addExpense(db, authenticatedUser().uid, request.body)),
+    replyWithControllerResult(
+      reply,
+      await addExpense(db, authenticatedUser().uid, {...request.body, date: undefined}),
+    ),
   )
 
   appWithTypes.get(
@@ -46,17 +56,23 @@ export default function expensesRoutes(
     async (request, reply) =>
       replyWithControllerResult(
         reply,
-        await showEditExpensePage(db, authenticatedUser().uid, request.params.id),
+        await showEditExpensePage(db, authenticatedUser().uid, request.params.id, timeZone),
       ),
   )
 
   appWithTypes.post(
     '/expenses/:id',
-    {schema: {params: ExpenseParamsSchema, body: ExpenseBodySchema}},
+    {schema: {params: ExpenseParamsSchema, body: EditExpenseBodySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
-        await saveExpenseEdit(db, authenticatedUser().uid, request.params.id, request.body),
+        await saveExpenseEdit(
+          db,
+          authenticatedUser().uid,
+          request.params.id,
+          request.body,
+          timeZone,
+        ),
       ),
   )
 

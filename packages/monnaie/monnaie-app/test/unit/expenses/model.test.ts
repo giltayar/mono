@@ -7,17 +7,22 @@ import {
 } from '../../../src/domain/expenses/model.ts'
 
 describe('validateExpense', () => {
-  const valid: ExpenseInput = {description: 'Coffee', amount: '12.50', categoryId: '1'}
+  const valid: ExpenseInput = {
+    description: 'Coffee',
+    amount: '12.50',
+    categoryId: '1',
+    date: undefined,
+  }
 
   it('should accept an expense and trim its description', () => {
     assert.deepStrictEqual(validateExpense({...valid, description: '  Coffee  '}), {
-      expense: {description: 'Coffee', amount: 12.5, categoryId: 1},
+      expense: {description: 'Coffee', amount: 12.5, categoryId: 1, date: undefined},
     })
   })
 
   it('should accept an amount with no decimals', () => {
     assert.deepStrictEqual(validateExpense({...valid, amount: '6'}), {
-      expense: {description: 'Coffee', amount: 6, categoryId: 1},
+      expense: {description: 'Coffee', amount: 6, categoryId: 1, date: undefined},
     })
   })
 
@@ -59,8 +64,23 @@ describe('validateExpense', () => {
   }
 
   it('should complain about the description before the amount', () => {
-    assert.deepStrictEqual(validateExpense({description: '', amount: 'nope', categoryId: '99'}), {
-      error: 'empty-description',
+    assert.deepStrictEqual(
+      validateExpense({description: '', amount: 'nope', categoryId: '99', date: undefined}),
+      {
+        error: 'empty-description',
+      },
+    )
+  })
+
+  it('should accept a valid date string', () => {
+    assert.deepStrictEqual(validateExpense({...valid, date: '2024-03-15'}), {
+      expense: {description: 'Coffee', amount: 12.5, categoryId: 1, date: '2024-03-15'},
     })
   })
+
+  for (const date of ['', 'yesterday', '2024-13-01', '2024-02-30', '15-03-2024']) {
+    it(`should refuse the date ${JSON.stringify(date)}`, () => {
+      assert.deepStrictEqual(validateExpense({...valid, date}), {error: 'invalid-date'})
+    })
+  }
 })

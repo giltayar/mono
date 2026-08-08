@@ -16,6 +16,7 @@ export const EMPTY_EXPENSE_FORM_VALUES: ExpenseInput = {
   description: '',
   amount: '',
   categoryId: '',
+  date: undefined,
 }
 
 export function renderExpenseFormPage(props: ExpenseFormProps): string {
@@ -66,6 +67,14 @@ export function renderExpenseForm({mode, values, error}: ExpenseFormProps): stri
         autocomplete="off"
         required
       />
+      ${
+        mode.kind === 'edit'
+          ? html`
+              <label for="date">${t('form.date')}</label>
+              <input id="date" type="date" name="date" value=${values.date} required />
+            `
+          : undefined
+      }
       <fieldset class="category-options">
         <legend>${t('form.category')}</legend>
         ${EXPENSE_CATEGORIES.map(

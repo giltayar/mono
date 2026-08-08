@@ -21,6 +21,7 @@
     "editTitle": "Edit the expense",
     "description": "What was it",
     "amount": "Amount",
+    "date": "Date",
     "category": "Category",
     "add": "Add",
     "save": "Save",
@@ -37,6 +38,7 @@
     "description-too-long": "That description is too long",
     "invalid-amount": "Please enter an amount, like 12.50",
     "invalid-category": "Please choose a category",
+    "invalid-date": "Please enter a valid date",
     "not-found": "That expense no longer exists"
   }
 }

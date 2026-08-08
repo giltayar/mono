@@ -164,10 +164,11 @@ test('edits an expense', async ({page}) => {
   await expect(form.description().locator).toHaveValue('Coffee')
   await expect(form.amount().locator).toHaveValue('12.50')
   await expect(form.category('אוכל').locator).toBeChecked()
+  await expect(form.date().locator).toBeVisible()
 
   await form.description().locator.fill('Espresso')
   await form.amount().locator.fill('8.00')
-  await form.category('בידור').locator.check()
+  await form.category('בילוי').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
@@ -175,9 +176,40 @@ test('edits an expense', async ({page}) => {
 
   const item = expenses.list().item('Espresso')
 
-  await expect(item.locator).toContainText('בידור')
+  await expect(item.locator).toContainText('בילוי')
   await expect(item.locator).toContainText('8.00')
   await expect(expenses.summary().period('Day').current().locator).toHaveText('8.00')
+})
+
+test('changes the date of an expense when editing', async ({page}) => {
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+
+  const expenses = createExpensesPageModel(page)
+  const form = createExpenseFormPageModel(page)
+
+  await expenses.list().item('Coffee').editLink().locator.click()
+
+  const yesterday = noonYesterdayUtc()
+  const yesterdayString = yesterday.toISOString().slice(0, 10)
+
+  await form.date().locator.fill(yesterdayString)
+  await form.submitButton().locator.click()
+
+  await expect(page).toHaveURL(url().href)
+  // moved to yesterday, so it no longer counts in today's total
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('0.00')
+  await expect(expenses.summary().period('Day').previous().locator).toHaveText('12.50')
+})
+
+test('does not show the date field when adding an expense', async ({page}) => {
+  const expenses = createExpensesPageModel(page)
+  const form = createExpenseFormPageModel(page)
+
+  await page.goto(url().href)
+  await expenses.addButton().locator.click()
+
+  await expect(form.addHeading().locator).toBeVisible()
+  await expect(form.date().locator).toBeHidden()
 })
 
 test('deletes an expense, and takes it out of the totals', async ({page}) => {

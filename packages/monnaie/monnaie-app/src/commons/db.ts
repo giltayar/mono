@@ -14,7 +14,7 @@ export type ExpenseTable = {
   description: string
   amount: ColumnType<string, number, number>
   category_id: number
-  created_at: ColumnType<Date, string | undefined, never>
+  created_at: ColumnType<Date, string | undefined, string>
 }
 
 /**

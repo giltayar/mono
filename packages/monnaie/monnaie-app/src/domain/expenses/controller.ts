@@ -10,7 +10,12 @@ import {
   validateExpense,
   type ExpenseInput,
 } from './model.ts'
-import {periodDayCounts, periodRanges} from './periods.ts'
+import {
+  dateStringToTimestamp,
+  periodDayCounts,
+  periodRanges,
+  timestampToDateString,
+} from './periods.ts'
 import {renderExpenseList, renderExpenseSummary, renderExpensesPage} from './view/view.ts'
 import {
   EMPTY_EXPENSE_FORM_VALUES,
@@ -77,6 +82,7 @@ export async function showEditExpensePage(
   db: Db,
   userId: string,
   id: number,
+  timeZone: string,
 ): Promise<ControllerResult> {
   const expense = await fetchExpense(db, userId, id)
 
@@ -98,6 +104,7 @@ export async function showEditExpensePage(
         description: expense.description,
         amount: expense.amount.toFixed(2),
         categoryId: String(expense.categoryId),
+        date: timestampToDateString(expense.createdAt, timeZone),
       },
       error: undefined,
     }),
@@ -109,6 +116,7 @@ export async function saveExpenseEdit(
   userId: string,
   id: number,
   input: ExpenseInput,
+  timeZone: string,
 ): Promise<ControllerResult> {
   const mode: ExpenseFormMode = {kind: 'edit', id}
   const result = validateExpense(input)
@@ -117,7 +125,9 @@ export async function saveExpenseEdit(
     return {html: renderExpenseForm({mode, values: input, error: result.error}), statusCode: 400}
   }
 
-  if (!(await updateExpense(db, userId, id, result.expense))) {
+  const createdAt = dateStringToTimestamp(result.expense.date!, timeZone)
+
+  if (!(await updateExpense(db, userId, id, result.expense, createdAt))) {
     return {html: renderExpenseForm({mode, values: input, error: 'not-found'}), statusCode: 404}
   }
 

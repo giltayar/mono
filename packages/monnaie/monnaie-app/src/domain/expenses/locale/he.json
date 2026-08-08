@@ -21,6 +21,7 @@
     "editTitle": "עריכת ההוצאה",
     "description": "על מה",
     "amount": "סכום",
+    "date": "תאריך",
     "category": "קטגוריה",
     "add": "הוספה",
     "save": "שמירה",
@@ -37,6 +38,7 @@
     "description-too-long": "התיאור ארוך מדי",
     "invalid-amount": "נא להזין סכום, למשל 12.50",
     "invalid-category": "נא לבחור קטגוריה",
+    "invalid-date": "נא להזין תאריך תקין",
     "not-found": "ההוצאה הזאת כבר לא קיימת"
   }
 }
