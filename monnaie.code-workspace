@@ -1,6 +1,10 @@
 {
 	"folders": [
 		{
+			"name": "monnaie-app",
+			"path": "packages/monnaie/monnaie-app"
+		},
+		{
 			"name": "console-tesktit",
 			"path": "packages/commons/console-tesktit"
 		},
@@ -43,9 +47,6 @@
 		{
 			"name": "url-commons",
 			"path": "packages/commons/url-commons"
-		},
-		{
-			"path": "packages/monnaie/monnaie-app"
 		}
 	],
 	"settings": {}
