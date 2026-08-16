@@ -1,8 +1,8 @@
-minimumReleaseAge: 10080 # 1 week
 minimumReleaseAgeExclude:
   - "@giltayar/*"
   - "@typescript/*"
   - "@types/*"
   - "eslint*"
   - "@eslint/*"
-
+patchedDependencies:
+  thread-stream: patches/thread-stream.patch
