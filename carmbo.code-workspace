@@ -53,6 +53,10 @@
 			"path": "packages/carmel-tools/cardcom-integration"
 		},
 		{
+			"name": "ravmesser-integration",
+			"path": "packages/carmel-tools/ravmesser-integration"
+		},
+		{
 			"name": "smoove-integration",
 			"path": "packages/carmel-tools/smoove-integration"
 		},
