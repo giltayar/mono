@@ -8,6 +8,7 @@ import {
   fetchAsBufferWithJsonBody,
   fetchAsJson,
   fetchAsJsonWithJsonBody,
+  fetchAsJsonWithUrlEncodedForm,
   fetchAsText,
   fetchAsTextWithJsonBody,
 } from '@giltayar/http-commons'
@@ -103,6 +104,40 @@ describe('http-commons', function () {
     )
   })
 
+  it('should send a url-encoded form and return json', async () => {
+    assert.deepStrictEqual(
+      await fetchAsJsonWithUrlEncodedForm(`${baseUrl!}/json-echo`, {
+        hello: 'world',
+        count: 42,
+        when: new Date('2020-01-02T03:04:05.000Z'),
+        nested: {a: [1, 2]},
+      }),
+      {
+        method: 'POST',
+        hello: 'world',
+        count: '42',
+        when: '2020-01-02T03:04:05.000Z',
+        nested: '{"a":[1,2]}',
+      },
+    )
+
+    assert.deepStrictEqual(
+      await fetchAsJsonWithUrlEncodedForm(
+        `${baseUrl!}/json-echo`,
+        {hello: 'world'},
+        {method: 'PUT'},
+      ),
+      {method: 'PUT', hello: 'world'},
+    )
+  })
+
+  it('should send a url-encoded form with the correct content type', async () => {
+    assert.partialDeepStrictEqual(
+      await fetchAsJsonWithUrlEncodedForm(new URL('/headers-echo', baseUrl!), {hello: 'world'}),
+      {'content-type': 'application/x-www-form-urlencoded', accept: 'application/json'},
+    )
+  })
+
   it('should send deal with a real url', async () => {
     assert.match(await fetchAsText('http://www.google.com'), /Gmail/)
     assert.match(await fetchAsText('http://www.google.com'), /Gmail/)
@@ -139,6 +174,13 @@ describe('http-commons', function () {
 
 function createApp() {
   const app = fastify()
+
+  app.addContentTypeParser(
+    'application/x-www-form-urlencoded',
+    {parseAs: 'string'},
+    (_req, body, done) =>
+      done(null, Object.fromEntries(new URLSearchParams(body as string).entries())),
+  )
 
   app.all('/buffer', (req) => Promise.resolve(Buffer.from(req.method)))
   app.all('/text', (req) => Promise.resolve(req.method))

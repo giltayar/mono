@@ -110,6 +110,31 @@ export async function fetchAsJsonWithJsonBody(
   return await response.json()
 }
 
+export async function fetchAsJsonWithUrlEncodedForm(
+  url: string | URL,
+  form: Record<string, number | Date | string | object>,
+  init?: RequestInitWithRequestId,
+) {
+  const response = await fetch(
+    url,
+    merge(
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+        },
+        body: urlEncodeForm(form).toString(),
+      },
+      init || {},
+    ),
+  )
+
+  if (!response.ok) await throwErrorFromBadStatus(url, response)
+
+  return await response.json()
+}
+
 export async function fetch(url: string | URL, init?: RequestInitWithRequestId) {
   return await globalThis
     .fetch(url, {
@@ -168,6 +193,24 @@ export async function retryFetch<T>(
   }
   // @ts-expect-error unreachable
   return undefined
+}
+
+function urlEncodeForm(form: Record<string, number | Date | string | object>): URLSearchParams {
+  const params = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(form)) {
+    if (typeof value === 'string') {
+      params.append(key, value)
+    } else if (typeof value === 'number') {
+      params.append(key, String(value))
+    } else if (value instanceof Date) {
+      params.append(key, value.toISOString())
+    } else {
+      params.append(key, JSON.stringify(value))
+    }
+  }
+
+  return params
 }
 
 const HTTP_FETCH_SOCKET_TIMEOUT = parseInt(
