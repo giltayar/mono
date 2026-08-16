@@ -1,0 +1,74 @@
+{
+  "name": "@giltayar/carmel-tools-ravmesser-integration",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./service": {
+      "types": "./dist/src/ravmesser-integration.d.ts",
+      "import": "./dist/src/ravmesser-integration.js"
+    },
+    "./types": {
+      "types": "./dist/src/types.d.ts",
+      "import": "./dist/src/types.js"
+    },
+    "./testkit": {
+      "types": "./dist/testkit/ravmesser-integration-testkit.d.ts",
+      "import": "./dist/testkit/ravmesser-integration-testkit.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=24.3.0"
+  },
+  "files": [
+    "src",
+    "testkit",
+    "dist"
+  ],
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsc --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsc",
+    "test:node": "node --env-file-if-exists=.env.local --test"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "ravmesser",
+    "responder"
+  ],
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/giltayar/mono/tree/master/packages/carmel-tools/ravmesser-integration",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmel-tools/ravmesser-integration",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.2.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^10.2.0",
+    "eslint-plugin-n": "^18.3.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.4.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.8.1",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.57.2"
+  },
+  "dependencies": {
+    "@giltayar/functional-commons": "^2.1.0",
+    "@giltayar/http-commons": "^3.3.0",
+    "@giltayar/service-commons": "^1.1.3"
+  },
+  "packageManager": "pnpm@11.21.0"
+}
