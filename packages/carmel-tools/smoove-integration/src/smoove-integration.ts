@@ -15,7 +15,7 @@ import type {
   SmooveFetchContactOptions,
   SmooveList,
   SmooveContactWithIdAndLists,
-} from './types.js'
+} from './types.ts'
 
 // Re-export types for external consumption
 export type {
@@ -24,7 +24,7 @@ export type {
   SmooveContactChangeListsOptions,
   SmooveFetchContactOptions,
   SmooveList,
-} from './types.js'
+} from './types.ts'
 
 export interface SmooveIntegrationServiceContext {
   apiKey: string
