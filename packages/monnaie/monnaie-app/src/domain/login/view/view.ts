@@ -41,8 +41,11 @@ export function renderLoginPage(
         data-project-id=${firebaseConfig.projectId}
       >
         <p class="separator">${t('form.or')}</p>
-        <button type="button" id="google-sign-in-button">${t('form.google')}</button>
+        <button type="button" id="google-sign-in-button" disabled>${t('form.google')}</button>
         <p class="error" id="google-sign-in-error" role="alert" hidden>${t('errors.unavailable')}</p>
+        <p class="error" id="google-sign-in-popup-blocked-error" role="alert" hidden>
+          ${t('errors.popup-blocked')}
+        </p>
       </div>
     </${MainLayout}>
   ` as string

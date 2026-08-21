@@ -27,6 +27,7 @@
     "invalid-credentials": "Wrong email or password",
     "too-many-attempts": "Too many attempts, please try again later",
     "unavailable": "Log in is unavailable right now, please try again later",
+    "popup-blocked": "Your browser blocked the Google sign-in window. Allow popups for this site and try again.",
     "invalid-email": "That does not look like an email address",
     "weak-password": "The password is too short",
     "passwords-do-not-match": "The two passwords are not the same",

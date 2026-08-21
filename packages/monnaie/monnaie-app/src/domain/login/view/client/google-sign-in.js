@@ -1,23 +1,23 @@
 // Google sign-in has to happen in the browser, so this is the one page with client-side code. The
-// Firebase Web SDK is loaded as an ES module straight from Google's CDN, and only once the user
-// actually asks for it, so the login page itself stays small and the app stays free of a bundler.
+// Firebase Web SDK is loaded as an ES module straight from Google's CDN without requiring a bundler.
 const FIREBASE_VERSION = '12.16.0'
 
 const container = document.querySelector('#google-sign-in')
 const button = document.querySelector('#google-sign-in-button')
 const errorElement = document.querySelector('#google-sign-in-error')
+const popupBlockedErrorElement = document.querySelector('#google-sign-in-popup-blocked-error')
 
 if (
   container instanceof HTMLElement &&
   button instanceof HTMLButtonElement &&
-  errorElement instanceof HTMLElement
+  errorElement instanceof HTMLElement &&
+  popupBlockedErrorElement instanceof HTMLElement
 ) {
-  const signInContainer = container
-  const signInButton = button
-  const signInError = errorElement
-
-  signInButton.addEventListener('click', () =>
-    signInWithGoogle(signInContainer, signInButton, signInError),
+  initializeGoogleSignIn(container, button, errorElement, popupBlockedErrorElement).catch(
+    (error) => {
+      console.error(error)
+      errorElement.hidden = false
+    },
   )
 }
 
@@ -25,25 +25,49 @@ if (
  * @param {HTMLElement} container
  * @param {HTMLButtonElement} button
  * @param {HTMLElement} errorElement
+ * @param {HTMLElement} popupBlockedErrorElement
  * @returns {Promise<void>}
  */
-async function signInWithGoogle(container, button, errorElement) {
+async function initializeGoogleSignIn(container, button, errorElement, popupBlockedErrorElement) {
+  const [{initializeApp}, {getAuth, GoogleAuthProvider, signInWithPopup}] = await Promise.all([
+    import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`),
+    import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-auth.js`),
+  ])
+
+  const app = initializeApp({
+    apiKey: container.dataset.apiKey,
+    authDomain: container.dataset.authDomain,
+    projectId: container.dataset.projectId,
+  })
+  const auth = getAuth(app)
+  const provider = new GoogleAuthProvider()
+
+  button.disabled = false
+  button.addEventListener('click', () => {
+    const credentialPromise = signInWithPopup(auth, provider)
+    void completeGoogleSignIn(credentialPromise, button, errorElement, popupBlockedErrorElement)
+  })
+}
+
+/**
+ * @param {Promise<{user: {getIdToken(): Promise<string>}}>} credentialPromise
+ * @param {HTMLButtonElement} button
+ * @param {HTMLElement} errorElement
+ * @param {HTMLElement} popupBlockedErrorElement
+ * @returns {Promise<void>}
+ */
+async function completeGoogleSignIn(
+  credentialPromise,
+  button,
+  errorElement,
+  popupBlockedErrorElement,
+) {
   button.disabled = true
   errorElement.hidden = true
+  popupBlockedErrorElement.hidden = true
 
   try {
-    const [{initializeApp}, {getAuth, GoogleAuthProvider, signInWithPopup}] = await Promise.all([
-      import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`),
-      import(`https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-auth.js`),
-    ])
-
-    const app = initializeApp({
-      apiKey: container.dataset.apiKey,
-      authDomain: container.dataset.authDomain,
-      projectId: container.dataset.projectId,
-    })
-
-    const credential = await signInWithPopup(getAuth(app), new GoogleAuthProvider())
+    const credential = await credentialPromise
     const idToken = await credential.user.getIdToken()
 
     // the ID token is handed to the server rather than kept here: the server verifies it and
@@ -68,7 +92,11 @@ async function signInWithGoogle(container, button, errorElement) {
     }
 
     console.error(error)
-    errorElement.hidden = false
+    if (errorCode(error) === 'auth/popup-blocked') {
+      popupBlockedErrorElement.hidden = false
+    } else {
+      errorElement.hidden = false
+    }
   }
 }
 
@@ -77,8 +105,15 @@ async function signInWithGoogle(container, button, errorElement) {
  * @returns {boolean}
  */
 function isPopupCancellation(error) {
-  const code =
-    typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : ''
+  const code = errorCode(error)
 
   return code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request'
+}
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorCode(error) {
+  return typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : ''
 }
