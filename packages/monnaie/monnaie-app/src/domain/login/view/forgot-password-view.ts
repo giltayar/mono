@@ -15,9 +15,9 @@ export function renderForgotPasswordPage({
   return html`
     <${MainLayout}
       title=${t('page.forgotPasswordTitle')}
+      heading=${t('page.forgotPasswordTitle')}
       styleSheet="domain/login/view/style/style.css"
     >
-      <h1>${t('page.forgotPasswordTitle')}</h1>
       <p>${t('page.forgotPasswordBody')}</p>
       <form id="forgot-password-form" method="post" action="/forgot-password">
         <label for="email">${t('form.email')}</label>
@@ -49,9 +49,9 @@ export function renderPasswordResetSentPage(email: string): string {
   return html`
     <${MainLayout}
       title=${t('page.resetSentTitle')}
+      heading=${t('page.resetSentTitle')}
       styleSheet="domain/login/view/style/style.css"
     >
-      <h1>${t('page.resetSentTitle')}</h1>
       <p>${t('page.resetSentBody', {email})}</p>
       <p class="alternative"><a href="/login">${t('form.logIn')}</a></p>
     </${MainLayout}>

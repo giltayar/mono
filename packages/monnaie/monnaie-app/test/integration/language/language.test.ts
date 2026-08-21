@@ -26,10 +26,10 @@ test('switches the language, and remembers it for the next visit', async ({page}
   await page.goto(url().href)
 
   await page.getByLabel('Language').selectOption('he')
-  await page.getByRole('button', {name: 'Switch'}).click()
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'he')
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+  await expect(page.getByRole('heading', {name: 'מוניי'})).toBeVisible()
   await expect(page.getByRole('link', {name: 'הוספת הוצאה'})).toBeVisible()
 
   await page.goto(url().href)
@@ -41,7 +41,6 @@ test('remembers the language on the account, not only in the browser', async ({p
   await page.goto(url().href)
 
   await page.getByLabel('Language').selectOption('he')
-  await page.getByRole('button', {name: 'Switch'}).click()
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'he')
 
@@ -82,7 +81,6 @@ test.describe('with a Hebrew browser', () => {
     await page.goto(url().href)
 
     await page.getByLabel('שפה').selectOption('en')
-    await page.getByRole('button', {name: 'החלפה'}).click()
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')

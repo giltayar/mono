@@ -1,7 +1,6 @@
 import {html} from '../commons/html-templates.ts'
 import {currentDirection, currentLanguage} from '../commons/i18n.ts'
 import {version} from '../commons/version.ts'
-import {LanguageSwitcher} from './language-switcher.ts'
 import {UserMenu} from './user-menu.ts'
 
 /**
@@ -21,11 +20,13 @@ const HTMX_CONFIG = JSON.stringify({
 
 export function MainLayout({
   title,
+  heading,
   styleSheet,
   script,
   children,
 }: {
   title: string
+  heading: string
   /** Path of an additional stylesheet, relative to `src` */
   styleSheet?: string
   /** Path of a client-side ES module, relative to `src` */
@@ -50,7 +51,7 @@ export function MainLayout({
         <body>
           <main class="main-view">
             <header class="main-header">
-              <${LanguageSwitcher} />
+              <h1>${heading}</h1>
               <${UserMenu} />
             </header>
             ${children}

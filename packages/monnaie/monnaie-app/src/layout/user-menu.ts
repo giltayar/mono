@@ -1,24 +1,28 @@
 import {currentUser} from '../commons/auth.ts'
 import {html} from '../commons/html-templates.ts'
 import {translator} from '../commons/i18n.ts'
+import {LanguageSwitcher} from './language-switcher.ts'
 
 /**
- * Deliberately a plain form and not HTMX, for the same reason as the language switcher: logging out
- * replaces the whole page, so a full navigation is both simpler and more correct than a swap.
+ * Logging out and switching languages are deliberately plain forms: both replace the whole page,
+ * so full navigations are simpler and more correct than swaps.
  */
 export function UserMenu(): string {
   const user = currentUser()
 
   if (user === undefined) {
-    return ''
+    return LanguageSwitcher()
   }
 
   const t = translator('layout')
 
   return html`
-    <form class="user-menu" method="post" action="/logout">
+    <div class="user-menu">
+      <${LanguageSwitcher} />
       <span class="user-menu-user">${user.displayName ?? user.email ?? t('user.unnamed')}</span>
-      <button type="submit">${t('user.logOut')}</button>
-    </form>
+      <form method="post" action="/logout">
+        <button type="submit">${t('user.logOut')}</button>
+      </form>
+    </div>
   ` as string
 }

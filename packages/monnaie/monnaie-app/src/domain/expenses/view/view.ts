@@ -21,8 +21,7 @@ export function renderExpensesPage(
   const t = translator('expenses')
 
   return html`
-    <${MainLayout} title=${t('page.title')} styleSheet=${STYLE_SHEET}>
-      <h1>${t('page.title')}</h1>
+    <${MainLayout} title=${t('page.title')} heading=${t('page.title')} styleSheet=${STYLE_SHEET}>
       ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
       <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
       ${renderExpenseList(expenses, {outOfBand: false, timeZone})}

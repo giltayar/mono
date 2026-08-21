@@ -21,10 +21,14 @@ export const EMPTY_EXPENSE_FORM_VALUES: ExpenseInput = {
 
 export function renderExpenseFormPage(props: ExpenseFormProps): string {
   const t = translator('expenses')
+  const heading = props.mode.kind === 'add' ? t('form.addTitle') : t('form.editTitle')
 
   return html`
-    <${MainLayout} title=${t('page.title')} styleSheet="domain/expenses/view/style/style.css">
-      <h1>${props.mode.kind === 'add' ? t('form.addTitle') : t('form.editTitle')}</h1>
+    <${MainLayout}
+      title=${t('page.title')}
+      heading=${heading}
+      styleSheet="domain/expenses/view/style/style.css"
+    >
       ${renderExpenseForm(props)}
     </${MainLayout}>
   ` as string

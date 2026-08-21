@@ -12,10 +12,10 @@ export function renderLoginPage(
   return html`
     <${MainLayout}
       title=${t('page.title')}
+      heading=${t('page.title')}
       styleSheet="domain/login/view/style/style.css"
       script="domain/login/view/client/google-sign-in.js"
     >
-      <h1>${t('page.title')}</h1>
       <form id="login-form" method="post" action="/login">
         <label for="email">${t('form.email')}</label>
         <input

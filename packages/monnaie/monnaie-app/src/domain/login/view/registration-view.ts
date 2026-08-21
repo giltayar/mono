@@ -15,9 +15,9 @@ export function renderRegistrationPage({
   return html`
     <${MainLayout}
       title=${t('page.registrationTitle')}
+      heading=${t('page.registrationTitle')}
       styleSheet="domain/login/view/style/style.css"
     >
-      <h1>${t('page.registrationTitle')}</h1>
       <form id="registration-form" method="post" action="/register">
         <label for="email">${t('form.email')}</label>
         <input
@@ -66,9 +66,9 @@ export function renderVerificationSentPage(email: string): string {
   return html`
     <${MainLayout}
       title=${t('page.verificationSentTitle')}
+      heading=${t('page.verificationSentTitle')}
       styleSheet="domain/login/view/style/style.css"
     >
-      <h1>${t('page.verificationSentTitle')}</h1>
       <p>${t('page.verificationSentBody', {email})}</p>
       <p class="alternative"><a href="/login">${t('form.logIn')}</a></p>
     </${MainLayout}>

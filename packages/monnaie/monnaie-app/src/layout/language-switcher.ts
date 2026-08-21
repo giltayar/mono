@@ -7,24 +7,23 @@ import {currentLanguage, SUPPORTED_LANGUAGES, translator} from '../commons/i18n.
  */
 export function LanguageSwitcher(): string {
   const t = translator('layout')
-  const language = currentLanguage()
+  const current = currentLanguage()
 
   return html`
     <form class="language-switcher" method="post" action="/language">
-      <label for="language">${t('language.label')}</label>
-      <select id="language" name="language">
+      <select
+        name="language"
+        aria-label=${t('language.label')}
+        onchange="this.form.requestSubmit()"
+      >
         ${SUPPORTED_LANGUAGES.map(
-          (supportedLanguage) => html`
-            <option
-              value=${supportedLanguage}
-              selected=${supportedLanguage === language || undefined}
-            >
-              ${t(`language.${supportedLanguage}`)}
+          (language) => html`
+            <option value=${language} selected=${language === current || undefined}>
+              ${language === 'he' ? '🇮🇱' : '🇺🇸'}
             </option>
           `,
         )}
       </select>
-      <button type="submit">${t('language.switch')}</button>
     </form>
   ` as string
 }
