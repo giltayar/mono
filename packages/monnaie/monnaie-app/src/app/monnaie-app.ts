@@ -64,19 +64,22 @@ export async function makeApp({
     defaultStoreValues: (request) => ({language: resolveLanguage(request), user: undefined}),
   })
 
+  const staticCache =
+    process.env.NODE_ENV === 'production'
+      ? {immutable: true, maxAge: '1y'}
+      : {immutable: false, maxAge: 0}
+
   app.register(fastifyStatic, {
     root: new URL('../../dist', import.meta.url),
     prefix: `/dist/${version}/`,
     decorateReply: false,
-    immutable: true,
-    maxAge: '1y',
+    ...staticCache,
   })
   app.register(fastifyStatic, {
     root: new URL('../../src', import.meta.url),
     prefix: `/src/${version}/`,
     decorateReply: false,
-    immutable: true,
-    maxAge: '1y',
+    ...staticCache,
     allowedPath: (pathName) => pathName.endsWith('.css') || pathName.endsWith('.js'),
   })
 

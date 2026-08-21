@@ -10,6 +10,7 @@ import {
   saveExpenseEdit,
   showEditExpensePage,
   showExpensesPage,
+  showGraphsPage,
   showNewExpensePage,
 } from './controller.ts'
 
@@ -35,8 +36,28 @@ export default function expensesRoutes(
 ): void {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  appWithTypes.get('/', async (_request, reply) =>
-    replyWithControllerResult(reply, await showExpensesPage(db, authenticatedUser().uid, timeZone)),
+  appWithTypes.get('/', async (request, reply) =>
+    replyWithControllerResult(
+      reply,
+      await showExpensesPage(
+        db,
+        authenticatedUser().uid,
+        timeZone,
+        request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
+      ),
+    ),
+  )
+
+  appWithTypes.get('/expenses/graphs', async (request, reply) =>
+    replyWithControllerResult(
+      reply,
+      await showGraphsPage(
+        db,
+        authenticatedUser().uid,
+        timeZone,
+        request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
+      ),
+    ),
   )
 
   appWithTypes.get('/expenses/new', async (_request, reply) =>

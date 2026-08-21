@@ -2,6 +2,7 @@ import type {ControllerResult} from '../../commons/controller.ts'
 import type {Db} from '../../commons/db.ts'
 import {
   deleteExpense,
+  fetchCategoryTotals,
   fetchExpense,
   fetchPeriodExpenses,
   fetchPeriodTotals,
@@ -16,7 +17,14 @@ import {
   periodRanges,
   timestampToDateString,
 } from './periods.ts'
-import {renderExpenseList, renderExpenseSummary, renderExpensesPage} from './view/view.ts'
+import {
+  renderExpenseList,
+  renderExpenseSummary,
+  renderExpensesMonth,
+  renderExpensesPage,
+  renderGraphsMonth,
+  renderGraphsPage,
+} from './view/view.ts'
 import {
   EMPTY_EXPENSE_FORM_VALUES,
   renderExpenseForm,
@@ -28,11 +36,16 @@ export async function showExpensesPage(
   db: Db,
   userId: string,
   timeZone: string,
+  renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
-  // one set of ranges for both queries, so the totals and the list can never disagree about where
-  // the month starts
   const now = new Date()
   const ranges = periodRanges(now, timeZone)
+
+  if (renderTarget === 'expense-month') {
+    const expenses = await fetchPeriodExpenses(db, userId, ranges.month)
+
+    return {html: renderExpensesMonth(expenses, timeZone)}
+  }
 
   const [summary, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges),
@@ -45,6 +58,35 @@ export async function showExpensesPage(
       periodDayCounts(now, timeZone, summary.firstExpenseDate),
       expenses,
       timeZone,
+    ),
+  }
+}
+
+export async function showGraphsPage(
+  db: Db,
+  userId: string,
+  timeZone: string,
+  renderTarget: 'page' | 'expense-month',
+): Promise<ControllerResult> {
+  const now = new Date()
+  const ranges = periodRanges(now, timeZone)
+
+  if (renderTarget === 'expense-month') {
+    const categoryTotals = await fetchCategoryTotals(db, userId, ranges.month)
+
+    return {html: renderGraphsMonth(categoryTotals)}
+  }
+
+  const [summary, categoryTotals] = await Promise.all([
+    fetchPeriodTotals(db, userId, ranges),
+    fetchCategoryTotals(db, userId, ranges.month),
+  ])
+
+  return {
+    html: renderGraphsPage(
+      summary.totals,
+      periodDayCounts(now, timeZone, summary.firstExpenseDate),
+      categoryTotals,
     ),
   }
 }

@@ -42,6 +42,11 @@ export type PeriodSummary = {
   firstExpenseDate: Date
 }
 
+export type CategoryTotal = {
+  categoryId: number
+  total: number
+}
+
 export const DESCRIPTION_MAX_LENGTH = 100
 
 /** What `numeric(12, 2)` can hold */
@@ -172,6 +177,25 @@ export async function fetchPeriodExpenses(
     .execute()
 
   return rows.map(toExpense)
+}
+
+export async function fetchCategoryTotals(
+  db: Db,
+  userId: string,
+  range: PeriodRange,
+): Promise<CategoryTotal[]> {
+  const rows = await db
+    .selectFrom('expense')
+    .select(['category_id', (eb) => eb.fn.sum<string>('amount').as('total')])
+    .where('user_id', '=', userId)
+    .where('created_at', '>=', range.from)
+    .where('created_at', '<', range.to)
+    .groupBy('category_id')
+    .execute()
+
+  return rows
+    .map(({category_id, total}) => ({categoryId: category_id, total: Number(total)}))
+    .sort((left, right) => right.total - left.total || left.categoryId - right.categoryId)
 }
 
 /**

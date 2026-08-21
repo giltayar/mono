@@ -1,8 +1,10 @@
 import {html} from '../../../commons/html-templates.ts'
+import type {ChartConfiguration} from 'chart.js'
 import {currentLanguage, translator} from '../../../commons/i18n.ts'
+import {version} from '../../../commons/version.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {categoryById} from '../categories.ts'
-import type {Expense, PeriodTotals} from '../model.ts'
+import type {CategoryTotal, Expense, PeriodTotals} from '../model.ts'
 import {
   BASE_PERIOD_NAMES,
   previousPeriodName,
@@ -11,6 +13,25 @@ import {
 } from '../periods.ts'
 
 const STYLE_SHEET = 'domain/expenses/view/style/style.css'
+const SCRIPT = 'domain/expenses/view/client/render-charts.js'
+const CHART_COLORS = [
+  '#d1495b',
+  '#00798c',
+  '#edae49',
+  '#30638e',
+  '#6a994e',
+  '#9c6644',
+  '#7251b5',
+  '#e76f51',
+  '#2a9d8f',
+  '#577590',
+  '#f4a261',
+  '#bc4749',
+  '#4d908e',
+  '#f9844a',
+  '#7f4f24',
+  '#277da1',
+]
 
 export function renderExpensesPage(
   totals: PeriodTotals,
@@ -21,11 +42,78 @@ export function renderExpensesPage(
   const t = translator('expenses')
 
   return html`
-    <${MainLayout} title=${t('page.title')} heading=${t('page.title')} styleSheet=${STYLE_SHEET}>
+    <${MainLayout}
+      title=${t('page.title')}
+      heading=${t('page.title')}
+      styleSheet=${STYLE_SHEET}
+      script=${SCRIPT}
+    >
       ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
       <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-      ${renderExpenseList(expenses, {outOfBand: false, timeZone})}
+      ${renderExpensesMonth(expenses, timeZone)}
     </${MainLayout}>
+  ` as string
+}
+
+export function renderGraphsPage(
+  totals: PeriodTotals,
+  dayCounts: PeriodDayCounts,
+  categoryTotals: CategoryTotal[],
+): string {
+  const t = translator('expenses')
+
+  return html`
+    <${MainLayout}
+      title=${t('page.title')}
+      heading=${t('page.title')}
+      styleSheet=${STYLE_SHEET}
+      script=${SCRIPT}
+    >
+      ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
+      <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
+      ${renderGraphsMonth(categoryTotals)}
+    </${MainLayout}>
+  ` as string
+}
+
+export function renderExpensesMonth(expenses: Expense[], timeZone: string): string {
+  return renderMonthlyPanel('expenses', renderExpenseList(expenses, {outOfBand: false, timeZone}))
+}
+
+export function renderGraphsMonth(categoryTotals: CategoryTotal[]): string {
+  return renderMonthlyPanel('graphs', renderCategoryGraph(categoryTotals))
+}
+
+function renderMonthlyPanel(activeTab: 'expenses' | 'graphs', content: string): string {
+  const t = translator('expenses')
+
+  return html`
+    <section id="expense-month" aria-label=${t('list.title')}>
+      <div class="month-header">
+        <h2>${t('list.title')}</h2>
+        <nav aria-label=${t('tabs.label')}>
+          ${renderTab(t('tabs.expenses'), '/', activeTab === 'expenses')}
+          ${renderTab(t('tabs.graphs'), '/expenses/graphs', activeTab === 'graphs')}
+        </nav>
+      </div>
+      ${content}
+    </section>
+  ` as string
+}
+
+function renderTab(label: string, href: string, active: boolean): string {
+  return html`
+    <a
+      href=${href}
+      aria-current=${active ? 'page' : undefined}
+      hx-get=${href}
+      hx-target="#expense-month"
+      hx-select="#expense-month"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+    >
+      ${label}
+    </a>
   ` as string
 }
 
@@ -95,8 +183,7 @@ export function renderExpenseList(
   const t = translator('expenses')
 
   return html`
-    <section id="expense-list" aria-label=${t('list.title')} hx-swap-oob=${outOfBand || undefined}>
-      <h2>${t('list.title')}</h2>
+    <div id="expense-list" hx-swap-oob=${outOfBand || undefined}>
       ${
         expenses.length === 0
           ? html`<p class="empty">${t('list.empty')}</p>`
@@ -106,7 +193,69 @@ export function renderExpenseList(
               </ul>
             `
       }
-    </section>
+    </div>
+  ` as string
+}
+
+function renderCategoryGraph(categoryTotals: CategoryTotal[]): string {
+  const t = translator('expenses')
+  const categories = categoryTotals.flatMap(({categoryId, total}, index) => {
+    const category = categoryById(categoryId)
+
+    return category === undefined
+      ? []
+      : [{name: category.name, total, color: CHART_COLORS[index % CHART_COLORS.length]}]
+  })
+
+  if (categories.length === 0) {
+    return html`<div id="expense-graph"><p class="empty">${t('graph.empty')}</p></div>` as string
+  }
+
+  const total = categories.reduce((sum, category) => sum + category.total, 0)
+  const chartConfiguration: ChartConfiguration<'pie'> = {
+    type: 'pie',
+    data: {
+      labels: categories.map(({name}) => name),
+      datasets: [
+        {
+          data: categories.map(({total: categoryTotal}) => categoryTotal),
+          backgroundColor: categories.map(({color}) => color),
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend: {display: false}},
+    },
+  }
+
+  return html`
+    <div id="expense-graph">
+      <div class="chart-container">
+        <canvas
+          role="img"
+          aria-label=${t('graph.chartLabel')}
+          data-chart-configuration=${JSON.stringify(chartConfiguration)}
+          data-chart-source=${`/dist/${version}/chart.js`}
+          width="320"
+          height="320"
+        ></canvas>
+      </div>
+      <ul class="chart-legend">
+        ${categories.map(
+          ({name, total: categoryTotal, color}) => html`
+            <li>
+              <span class="chart-swatch" style=${`--chart-color: ${color}`}></span>
+              <span class="chart-category">${name}</span>
+              <span class="chart-total">${formatAmount(categoryTotal)}</span>
+              <span class="chart-percentage">${formatPercentage(categoryTotal / total)}</span>
+            </li>
+          `,
+        )}
+      </ul>
+    </div>
   ` as string
 }
 
@@ -152,6 +301,13 @@ function formatAmount(amount: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount)
+}
+
+function formatPercentage(value: number): string {
+  return new Intl.NumberFormat(currentLanguage(), {
+    style: 'percent',
+    maximumFractionDigits: 1,
+  }).format(value)
 }
 
 function formatDate(date: Date, timeZone: string): string {

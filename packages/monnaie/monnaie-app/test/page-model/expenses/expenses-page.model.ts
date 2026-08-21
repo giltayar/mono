@@ -4,6 +4,11 @@ export function createExpensesPageModel(page: Page) {
   return {
     heading: (locator = page.getByRole('heading', {name: 'Monnaie'})) => ({locator}),
     addButton: (locator = page.getByRole('link', {name: 'Add an expense'})) => ({locator}),
+    tabs: (locator = page.getByRole('navigation', {name: 'Monthly views'})) => ({
+      locator,
+      expenses: () => ({locator: locator.getByRole('link', {name: 'Expenses'})}),
+      graphs: () => ({locator: locator.getByRole('link', {name: 'Graphs'})}),
+    }),
     summary: (locator = page.getByRole('region', {name: 'Summary'})) => ({
       locator,
       // a row of the table, whose two cells are the current and the previous total
@@ -40,6 +45,17 @@ export function createExpensesPageModel(page: Page) {
           }),
         }
       },
+    }),
+    graph: (locator = page.locator('#expense-graph')) => ({
+      locator,
+      canvas: () => ({
+        locator: locator.getByRole('img', {name: 'Expenses by category this month'}),
+      }),
+      empty: () => ({locator: locator.getByText('No expenses to graph this month')}),
+      entries: () => ({locator: locator.locator('.chart-legend li')}),
+      entry: (category: string) => ({
+        locator: locator.locator('.chart-legend li').filter({hasText: category}),
+      }),
     }),
   }
 }

@@ -2,6 +2,7 @@ allowBuilds:
   # transitive dependencies of firebase-admin. Their install scripts are not needed for the
   # authentication APIs this app uses, so they are not allowed to run
   '@firebase/util': false
+  esbuild: true
   protobufjs: false
 minimumReleaseAge: 1440 # 1 day
 minimumReleaseAgeExclude:

@@ -16,6 +16,15 @@
     "title": "This month",
     "empty": "No expenses this month"
   },
+  "tabs": {
+    "label": "Monthly views",
+    "expenses": "Expenses",
+    "graphs": "Graphs"
+  },
+  "graph": {
+    "empty": "No expenses to graph this month",
+    "chartLabel": "Expenses by category this month"
+  },
   "form": {
     "addTitle": "Add an expense",
     "editTitle": "Edit the expense",
