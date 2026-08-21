@@ -19,8 +19,8 @@ export const EXPENSE_CATEGORIES = [
   {id: 13, name: 'דמי כיס'},
   {id: 14, name: 'עסק'},
   {id: 15, name: 'טיפוח'},
-  {id: 12, name: 'אחר'},
   {id: 16, name: 'תרבות'},
+  {id: 12, name: 'אחר'},
 ] as const
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
