@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/monnaie-app",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A mobile-first web app that tracks expenses",
   "type": "module",
   "exports": {
@@ -32,7 +32,7 @@
     "pretest": "run-p 'build:*'",
     "test": "FORCE_COLOR=1 run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
-    "test:typescript": "tsgo",
+    "test:typescript": "tsc",
     "test:node": "node --test 'test/unit/**/*.test.ts'",
     "test:playwright": "NODE_ENV=test playwright test --config=test/integration",
     "test:e2e": "playwright test --config=test/e2e",
@@ -75,14 +75,15 @@
     "@types/node": "^26.3.0",
     "@types/pg": "^8.23.1",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "esbuild": "0.28.2",
-    "eslint": "^10.9.1",
+    "eslint": "^10.8.1",
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-prettier": "^5.5.6",
     "globals": "^17.11.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.9.6",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.68.0"
   }
 }

@@ -1,7 +1,22 @@
 # monnaie-app — agent instructions
 
-These are package-specific instructions. The monorepo-wide rules (ESM, `tsgo`, prettier, package
+These are package-specific instructions. The monorepo-wide rules (ESM, prettier, package
 independence, etc.) live in the root `AGENTS.md` and also apply here.
+
+## TypeScript 6 and 7 side by side
+
+The package is type-checked by **TypeScript 7** (the native compiler) but linted by
+**typescript-eslint**, which still needs TypeScript 6. Both are installed, under aliases:
+
+- `"@typescript/native": "npm:typescript@^7.0.2"` — the real TS 7, and the only thing that provides
+  the **`tsc`** binary. `pnpm test:typescript` runs it.
+- `"typescript": "npm:@typescript/typescript6@^6.0.2"` — TS 6 under the name every tool resolves by
+  `require('typescript')`, which is how typescript-eslint gets a compiler it understands. Its binary
+  is called **`tsc6`**, so it never collides with the one above.
+
+⚠️ Do not "tidy" either alias away, and do not add a plain `typescript` dependency — the names are
+swapped on purpose. There is no `tsgo` any more; `@typescript/native-preview` has been removed.
+`minimumReleaseAge` in `pnpm-workspace.yaml` excludes `@typescript/*` so these can be installed.
 
 ## Optionality
 
@@ -309,7 +324,7 @@ route in this app, and no token of any kind is stored.
 
 ## Tests
 
-Type-check with `pnpm test:typescript` — never invoke `tsgo` (or `tsc`) directly, so that the
+Type-check with `pnpm test:typescript` — never invoke `tsc` (or `tsc6`) directly, so that the
 compiler version and the project flags always come from the package's own script.
 
 Three levels, each with its own script:
