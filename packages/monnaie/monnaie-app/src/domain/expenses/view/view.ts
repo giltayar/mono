@@ -3,7 +3,7 @@ import type {ChartConfiguration} from 'chart.js'
 import {currentLanguage, translator} from '../../../commons/i18n.ts'
 import {version} from '../../../commons/version.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
-import {categoryById} from '../categories.ts'
+import {categoryById, EXPENSE_CATEGORIES} from '../categories.ts'
 import type {CategoryTotal, Expense, PeriodTotals} from '../model.ts'
 import {
   BASE_PERIOD_NAMES,
@@ -38,6 +38,7 @@ export function renderExpensesPage(
   dayCounts: PeriodDayCounts,
   expenses: Expense[],
   timeZone: string,
+  categoryIds: number[],
 ): string {
   const t = translator('expenses')
 
@@ -48,9 +49,12 @@ export function renderExpensesPage(
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
-      <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-      ${renderExpensesMonth(expenses, timeZone)}
+      ${renderCategoryFilter('/', categoryIds)}
+      <div id="expense-content">
+        ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
+        <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
+        ${renderExpensesMonth(expenses, timeZone, categoryIds)}
+      </div>
     </${MainLayout}>
   ` as string
 }
@@ -59,6 +63,7 @@ export function renderGraphsPage(
   totals: PeriodTotals,
   dayCounts: PeriodDayCounts,
   categoryTotals: CategoryTotal[],
+  categoryIds: number[],
 ): string {
   const t = translator('expenses')
 
@@ -69,31 +74,101 @@ export function renderGraphsPage(
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
-      <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-      ${renderGraphsMonth(categoryTotals)}
+      ${renderCategoryFilter('/expenses/graphs', categoryIds)}
+      <div id="expense-content">
+        ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
+        <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
+        ${renderGraphsMonth(categoryTotals, categoryIds)}
+      </div>
     </${MainLayout}>
   ` as string
 }
 
-export function renderExpensesMonth(expenses: Expense[], timeZone: string): string {
-  return renderMonthlyPanel('expenses', renderExpenseList(expenses, {outOfBand: false, timeZone}))
-}
-
-export function renderGraphsMonth(categoryTotals: CategoryTotal[]): string {
-  return renderMonthlyPanel('graphs', renderCategoryGraph(categoryTotals))
-}
-
-function renderMonthlyPanel(activeTab: 'expenses' | 'graphs', content: string): string {
+/**
+ * Deliberately outside `#expense-content`, which is what it swaps: nothing ever re-renders it, so
+ * which pills are ticked and whether the disclosure is open stay the browser's between requests.
+ * The price is that `hx-get` is frozen at the tab this page loaded on, so the path is taken from
+ * the address bar at request time instead — the tabs push it, and the filter follows.
+ */
+function renderCategoryFilter(path: string, categoryIds: number[]): string {
   const t = translator('expenses')
+
+  return html`
+    <form
+      id="category-filter"
+      method="get"
+      action=${path}
+      hx-get=${path}
+      hx-on:htmx:config-request="event.detail.path = location.pathname"
+      hx-trigger="change"
+      hx-target="#expense-content"
+      hx-select="#expense-content"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+    >
+      <details open=${categoryIds.length > 0 || undefined}>
+        <summary>${t('filter.label')}</summary>
+        <fieldset class="category-options" aria-label=${t('filter.categories')}>
+          ${EXPENSE_CATEGORIES.map(
+            (category) => html`
+              <label>
+                <input
+                  type="checkbox"
+                  name="category"
+                  value=${category.id}
+                  checked=${categoryIds.includes(category.id) || undefined}
+                />
+                <span>${category.name}</span>
+              </label>
+            `,
+          )}
+        </fieldset>
+        <noscript><button type="submit">${t('filter.apply')}</button></noscript>
+      </details>
+    </form>
+  ` as string
+}
+
+/** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
+function categoryFilterQuery(categoryIds: number[]): string {
+  if (categoryIds.length === 0) {
+    return ''
+  }
+
+  return `?${new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))}`
+}
+
+export function renderExpensesMonth(
+  expenses: Expense[],
+  timeZone: string,
+  categoryIds: number[],
+): string {
+  return renderMonthlyPanel(
+    'expenses',
+    renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds}),
+    categoryIds,
+  )
+}
+
+export function renderGraphsMonth(categoryTotals: CategoryTotal[], categoryIds: number[]): string {
+  return renderMonthlyPanel('graphs', renderCategoryGraph(categoryTotals), categoryIds)
+}
+
+function renderMonthlyPanel(
+  activeTab: 'expenses' | 'graphs',
+  content: string,
+  categoryIds: number[],
+): string {
+  const t = translator('expenses')
+  const filter = categoryFilterQuery(categoryIds)
 
   return html`
     <section id="expense-month" aria-label=${t('list.title')}>
       <div class="month-header">
         <h2>${t('list.title')}</h2>
         <nav aria-label=${t('tabs.label')}>
-          ${renderTab(t('tabs.expenses'), '/', activeTab === 'expenses')}
-          ${renderTab(t('tabs.graphs'), '/expenses/graphs', activeTab === 'graphs')}
+          ${renderTab(t('tabs.expenses'), `/${filter}`, activeTab === 'expenses')}
+          ${renderTab(t('tabs.graphs'), `/expenses/graphs${filter}`, activeTab === 'graphs')}
         </nav>
       </div>
       ${content}
@@ -178,7 +253,7 @@ function renderPeriodTotal(period: BasePeriodName, total: number, dayCount: numb
 
 export function renderExpenseList(
   expenses: Expense[],
-  {outOfBand, timeZone}: {outOfBand: boolean; timeZone: string},
+  {outOfBand, timeZone, categoryIds}: {outOfBand: boolean; timeZone: string; categoryIds: number[]},
 ): string {
   const t = translator('expenses')
 
@@ -189,7 +264,7 @@ export function renderExpenseList(
           ? html`<p class="empty">${t('list.empty')}</p>`
           : html`
               <ul>
-                ${expenses.map((expense) => renderExpenseItem(expense, timeZone))}
+                ${expenses.map((expense) => renderExpenseItem(expense, timeZone, categoryIds))}
               </ul>
             `
       }
@@ -259,7 +334,7 @@ function renderCategoryGraph(categoryTotals: CategoryTotal[]): string {
   ` as string
 }
 
-function renderExpenseItem(expense: Expense, timeZone: string): string {
+function renderExpenseItem(expense: Expense, timeZone: string, categoryIds: number[]): string {
   const t = translator('expenses')
 
   return html`
@@ -284,7 +359,7 @@ function renderExpenseItem(expense: Expense, timeZone: string): string {
         <button
           type="button"
           aria-label=${`${t('actions.delete')} ${expense.description}`}
-          hx-delete=${`/expenses/${expense.id}`}
+          hx-delete=${`/expenses/${expense.id}${categoryFilterQuery(categoryIds)}`}
           hx-target="#expense-list"
           hx-swap="outerHTML"
           hx-confirm=${t('actions.confirmDelete')}

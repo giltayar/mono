@@ -36,20 +36,21 @@ export async function showExpensesPage(
   db: Db,
   userId: string,
   timeZone: string,
+  categoryIds: number[],
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
   const now = new Date()
   const ranges = periodRanges(now, timeZone)
 
   if (renderTarget === 'expense-month') {
-    const expenses = await fetchPeriodExpenses(db, userId, ranges.month)
+    const expenses = await fetchPeriodExpenses(db, userId, ranges.month, categoryIds)
 
-    return {html: renderExpensesMonth(expenses, timeZone)}
+    return {html: renderExpensesMonth(expenses, timeZone, categoryIds)}
   }
 
   const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges),
-    fetchPeriodExpenses(db, userId, ranges.month),
+    fetchPeriodTotals(db, userId, ranges, categoryIds),
+    fetchPeriodExpenses(db, userId, ranges.month, categoryIds),
   ])
 
   return {
@@ -58,6 +59,7 @@ export async function showExpensesPage(
       periodDayCounts(now, timeZone, summary.firstExpenseDate),
       expenses,
       timeZone,
+      categoryIds,
     ),
   }
 }
@@ -66,20 +68,21 @@ export async function showGraphsPage(
   db: Db,
   userId: string,
   timeZone: string,
+  categoryIds: number[],
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
   const now = new Date()
   const ranges = periodRanges(now, timeZone)
 
   if (renderTarget === 'expense-month') {
-    const categoryTotals = await fetchCategoryTotals(db, userId, ranges.month)
+    const categoryTotals = await fetchCategoryTotals(db, userId, ranges.month, categoryIds)
 
-    return {html: renderGraphsMonth(categoryTotals)}
+    return {html: renderGraphsMonth(categoryTotals, categoryIds)}
   }
 
   const [summary, categoryTotals] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges),
-    fetchCategoryTotals(db, userId, ranges.month),
+    fetchPeriodTotals(db, userId, ranges, categoryIds),
+    fetchCategoryTotals(db, userId, ranges.month, categoryIds),
   ])
 
   return {
@@ -87,6 +90,7 @@ export async function showGraphsPage(
       summary.totals,
       periodDayCounts(now, timeZone, summary.firstExpenseDate),
       categoryTotals,
+      categoryIds,
     ),
   }
 }
@@ -181,6 +185,7 @@ export async function removeExpense(
   userId: string,
   id: number,
   timeZone: string,
+  categoryIds: number[],
 ): Promise<ControllerResult> {
   await deleteExpense(db, userId, id)
 
@@ -188,13 +193,13 @@ export async function removeExpense(
   const ranges = periodRanges(now, timeZone)
 
   const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges),
-    fetchPeriodExpenses(db, userId, ranges.month),
+    fetchPeriodTotals(db, userId, ranges, categoryIds),
+    fetchPeriodExpenses(db, userId, ranges.month, categoryIds),
   ])
 
   return {
     html:
-      renderExpenseList(expenses, {outOfBand: false, timeZone}) +
+      renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds}) +
       renderExpenseSummary(
         summary.totals,
         periodDayCounts(now, timeZone, summary.firstExpenseDate),

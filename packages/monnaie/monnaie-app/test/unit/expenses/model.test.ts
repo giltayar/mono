@@ -2,6 +2,7 @@ import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import {
   DESCRIPTION_MAX_LENGTH,
+  parseCategoryFilter,
   validateExpense,
   type ExpenseInput,
 } from '../../../src/domain/expenses/model.ts'
@@ -81,6 +82,31 @@ describe('validateExpense', () => {
   for (const date of ['', 'yesterday', '2024-13-01', '2024-02-30', '15-03-2024']) {
     it(`should refuse the date ${JSON.stringify(date)}`, () => {
       assert.deepStrictEqual(validateExpense({...valid, date}), {error: 'invalid-date'})
+    })
+  }
+})
+
+describe('parseCategoryFilter', () => {
+  it('should have no filter when nothing is asked for', () => {
+    assert.deepStrictEqual(parseCategoryFilter([]), [])
+  })
+
+  it('should keep the ids that are categories', () => {
+    assert.deepStrictEqual(parseCategoryFilter(['1', '3']), [1, 3])
+  })
+
+  it('should return the ids in category order, however the url ordered them', () => {
+    assert.deepStrictEqual(parseCategoryFilter(['3', '1']), parseCategoryFilter(['1', '3']))
+  })
+
+  it('should count a repeated id once', () => {
+    assert.deepStrictEqual(parseCategoryFilter(['2', '2']), [2])
+  })
+
+  // a bookmark may name a category that no longer exists, and should still show something
+  for (const id of ['99', 'food', '', '1.5', '-1']) {
+    it(`should drop the id ${JSON.stringify(id)}`, () => {
+      assert.deepStrictEqual(parseCategoryFilter([id]), [])
     })
   }
 })

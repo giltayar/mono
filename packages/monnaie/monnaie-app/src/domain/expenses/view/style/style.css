@@ -1,3 +1,30 @@
+#category-filter {
+  margin-block-end: var(--spacing);
+
+  & summary {
+    /* the disclosure is a small link, not a button, so it does not compete with "Add an expense" */
+    display: inline-block;
+    list-style: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    text-decoration: underline;
+    opacity: 0.65;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 0.2rem;
+    }
+  }
+
+  & .category-options {
+    margin-block-end: var(--spacing);
+  }
+}
+
 #expense-summary {
   margin-block-end: var(--spacing);
 

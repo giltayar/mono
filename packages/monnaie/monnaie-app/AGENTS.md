@@ -29,7 +29,7 @@ Layers, strictly in this order — a layer may only import from the ones below i
    Every controller returns `Promise<ControllerResult>` (`src/commons/controller.ts`):
    `{html, statusCode?, headers?}`, where `headers` carries HTMX headers such as `HX-Trigger`.
 3. `src/domain/<domain>/model.ts` — pure logic + data access (kysely queries). No HTML, no fastify,
-   and **no display text**: return error *codes* (`{error: 'invalid'}`) and let the view translate
+   and **no display text**: return error _codes_ (`{error: 'invalid'}`) and let the view translate
    them.
 4. `src/domain/<domain>/view/view.ts` — htm + vhtml rendering, wrapped in `src/layout/main-view.ts`.
    Domain CSS lives in `src/domain/<domain>/view/style/style.css` and is served from source.
@@ -58,17 +58,17 @@ the e2e Firebase credentials get in.
   expense is deleted.
 - ⚠️ A form that fails validation is answered with `400` **and** with the form re-rendered, and htmx
   refuses to swap a `4xx` by default. `MainLayout` therefore sets `htmx.config.responseHandling`
-  through a `<meta name="htmx-config">`, adding a `400 → swap` entry *before* the `[45]..` one. The
+  through a `<meta name="htmx-config">`, adding a `400 → swap` entry _before_ the `[45]..` one. The
   rest of that list is htmx's own default, repeated because the setting replaces it wholesale.
 - Client-side side effects (like clearing the input) are driven by an `HX-Trigger` response header
-  plus `hx-on:<event>` on the element — *not* by returning a new `<input>`. This keeps the response
+  plus `hx-on:<event>` on the element — _not_ by returning a new `<input>`. This keeps the response
   about data and lets the browser own transient UI state (focus, selection).
 
 ## Views and CSS
 
 - HTML is rendered server-side with **htm + vhtml**, through `html` from
   `src/commons/html-templates.ts`. vhtml marks the strings it returns as sanitized, so nested
-  components compose without double-escaping while interpolated *values* are still escaped.
+  components compose without double-escaping while interpolated _values_ are still escaped.
 - `html` returns `string | string[]` (an array when a template has several roots), so view functions
   that declare `: string` end their template with `` ` as string``.
 - htm's types ship as CJS (`dist/htm.d.ts`) while ESM resolves to `dist/htm.mjs`, so TypeScript
@@ -114,7 +114,7 @@ request**.
   steps happen in two places: `resolveLanguage` (a root hook) does the last three, and `resolveUser`
   overwrites `language` in the request context afterwards when the user has one saved — which is why
   the setting survives moving to a browser that has never seen the cookie. `POST /language`
-  (`src/domain/language/`) sets the cookie *and*, when there is a user, saves it with
+  (`src/domain/language/`) sets the cookie _and_, when there is a user, saves it with
   `updateUserSettings`, then redirects to the **fixed** path `/` — never to a URL taken from the
   request, which would be an open redirect. The switcher (`src/layout/language-switcher.ts`) is a
   plain form and deliberately not HTMX, because `lang`, `dir` and every string on the page change.
@@ -147,7 +147,7 @@ deletes them.
   1).
 - The timezone the periods are calculated in is `MONNAIE_TIMEZONE` (an IANA name, checked against
   `Intl.supportedValuesOf('timeZone')`, default `UTC`), threaded from `makeApp` into the routes as
-  `timeZone` — it is *not* per-user yet.
+  `timeZone` — it is _not_ per-user yet.
 - The summary and the list are answered from a **single** `periodRanges(new Date(), ...)`, so the
   totals and the list can never disagree about where the month starts. The eight totals are one
   query, with eight `sum(amount) filter (where ...)` expressions.
@@ -157,6 +157,40 @@ deletes them.
   the locale files yet, since they will become data.
 - `amount` is `numeric(12, 2)`, and kysely types it as `ColumnType<string, number, number>`: postgres
   hands back a string, which the model turns into a number in one place (`toExpense`/`toAmount`).
+
+### The category filter
+
+A `<details>` under the `Monnaie` heading holds the same pills as the add-expense form, but as
+**checkboxes**, and narrows the eight totals, the list and the pie to the ticked categories. None
+ticked means no filter.
+
+- The selection lives in the URL as repeated **`?category=<id>`** params — `/?category=1&category=5`,
+  `/expenses/graphs?category=1` — so it is bookmarkable and works with back/forward. The ids are the
+  `EXPENSE_CATEGORIES` ids and never the names: an id is permanent, whereas a name will change the
+  moment categories become user-editable rows, and the Hebrew names would percent-encode into
+  unreadable URLs. `categoryFilterQuery` in `view/view.ts` is the only place that builds the query,
+  and `parseCategoryFilter` in `model.ts` the only place that reads it — it drops ids that are not
+  categories rather than answering `400`, since a stale bookmark should still render.
+- ⚠️ The form swaps **`#expense-content`** (summary + add link + monthly section) and is itself
+  rendered _outside_ it, so nothing ever re-renders the form. Which pills are ticked and whether the
+  disclosure is open are therefore the browser's business, exactly as with the HTMX conventions
+  above. Do not move the form inside `#expense-content` "for consistency" — a swap would reset it
+  mid-interaction.
+- It is a plain `<form method="get">` with `hx-trigger="change"`, so htmx serializes the ticked boxes
+  into the query string itself; there is no per-pill link and nothing to keep in sync.
+- ⚠️ Because the form is never re-swapped, its `hx-get` is frozen at the tab the page _loaded_ on,
+  which sent a pill ticked on the Graphs tab back to the expenses list. The path therefore comes
+  from the address bar at request time —
+  `hx-on:htmx:config-request="event.detail.path = location.pathname"` — which the tabs keep current
+  through `hx-push-url`. The rendered `action`/`hx-get` still matter without htmx, where every tab
+  click is a full navigation and re-renders the form anyway.
+- ⚠️ Anything that re-renders the totals or the list has to be told the filter, or it will silently
+  answer with unfiltered data: the tab links carry it in their `href`, and so does each row's
+  `hx-delete`, whose response contains the out-of-band summary.
+- ⚠️ `min(created_at)` in `fetchPeriodTotals` is deliberately **not** filtered while the eight
+  `sum`s are — which is why the filter is applied with `filterWhere` on each aggregate rather than
+  with one `where` over the query. The daily averages are capped by when this user started tracking
+  at all, and ticking a category must not appear to move that date.
 
 ## Database
 
@@ -189,7 +223,7 @@ deletes them.
 ## Authentication
 
 Firebase Authentication, as a **server-minted session cookie**. There is no user table for
-*identities* — Firebase owns those — only an `app_user` table for settings (see below).
+_identities_ — Firebase owns those — only an `app_user` table for settings (see below).
 
 - `src/services/firebase-auth.ts` declares `FirebaseAuth` — `signInWithPassword`, `createUser`,
   `createSession`, `verifySession`, `sendVerificationEmail`, `sendPasswordResetEmail` — and
@@ -210,10 +244,10 @@ Firebase Authentication, as a **server-minted session cookie**. There is no user
 - ⚠️ Routes are **private by construction**. `makeApp` nests two anonymous plugins: the outer one
   adds `resolveUser` (which puts the user in `@fastify/request-context`), the inner one adds
   `requireAuthentication`. A new route is only reachable without a session if it is deliberately
-  registered *outside* those plugins, as `/health` and the static routes are.
+  registered _outside_ those plugins, as `/health` and the static routes are.
 - ⚠️ Those hooks are added inside plugins rather than on the root instance on purpose: an
   encapsulated `onRequest` hook is guaranteed to run **after** the root hooks of `@fastify/cookie`
-  and `@fastify/request-context`, whereas `app.addHook` at the root would run *before* them.
+  and `@fastify/request-context`, whereas `app.addHook` at the root would run _before_ them.
 - Unauthenticated HTMX requests get `401` + `HX-Redirect`, not a `303`: HTMX follows a redirect
   inside its own request, which would swap a whole login page into a fragment.
 - `currentUser()` may be `undefined`; `authenticatedUser()` throws. Views (the user menu) use the
@@ -221,7 +255,7 @@ Firebase Authentication, as a **server-minted session cookie**. There is no user
   authorization is never left to ambient state, so every `expense` query is scoped by `user_id`.
 - Login errors are codes (`invalid-credentials`, `too-many-attempts`, `unavailable`) translated by
   the view, like every other model error. A wrong password and an unknown email deliberately produce
-  the *same* message, so the login page cannot be used to discover which accounts exist.
+  the _same_ message, so the login page cannot be used to discover which accounts exist.
 
 ### Registration
 
@@ -234,7 +268,7 @@ same form, the same styles and the same error vocabulary as logging in.
   `/verify` route — the link in the mail is handled by Firebase's own
   `<authDomain>/__/auth/action` page.
 - ⚠️ `POST /register` answers **identically** whether or not the email already has an account:
-  the same "check your email" page. An address that already exists is sent a *password reset*
+  the same "check your email" page. An address that already exists is sent a _password reset_
   instead of a verification, and no row is created. Anything that makes the two paths
   distinguishable — a different message, a different status code, a redirect — turns the page into an
   account-enumeration oracle.
@@ -275,6 +309,9 @@ route in this app, and no token of any kind is stored.
 
 ## Tests
 
+Type-check with `pnpm test:typescript` — never invoke `tsgo` (or `tsc`) directly, so that the
+compiler version and the project flags always come from the package's own script.
+
 Three levels, each with its own script:
 
 - `pnpm test:node` — `node:test` unit tests in `test/unit/**` (pure logic, e.g. `validateExpense`
@@ -282,10 +319,10 @@ Three levels, each with its own script:
 - `pnpm test:playwright` — integration tests in `test/integration`, running the app **in-process**
   (`makeApp` + `app.listen({port: 0})`) against a real postgres started by
   `@giltayar/docker-compose-testkit` from `test/integration/docker-compose.yaml`.
-  `test/integration/common/setup.ts` gives each test *file* its own database (name = sha256 of
+  `test/integration/common/setup.ts` gives each test _file_ its own database (name = sha256 of
   `import.meta.url`), drops and recreates it in `beforeAll` (`makeApp` then runs the migrations), and
   truncates tables in `beforeEach`. It also returns a `logIn(page, user)` that installs a session
-  cookie directly from the fake — signing in *through the form* is `login/login.test.ts`'s job, and
+  cookie directly from the fake — signing in _through the form_ is `login/login.test.ts`'s job, and
   every other test just needs to already be logged in (which also keeps `language.test.ts` working
   in Hebrew). ⚠️ It creates the `app_user` row with **empty** settings on purpose: seeding a language
   there would pin every test to it and hide the cookie and `Accept-Language` steps.

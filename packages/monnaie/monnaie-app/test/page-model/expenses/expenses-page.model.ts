@@ -4,6 +4,12 @@ export function createExpensesPageModel(page: Page) {
   return {
     heading: (locator = page.getByRole('heading', {name: 'Monnaie'})) => ({locator}),
     addButton: (locator = page.getByRole('link', {name: 'Add an expense'})) => ({locator}),
+    filter: (locator = page.locator('#category-filter')) => ({
+      locator,
+      // the `<summary>`, which is what opens and closes the pills
+      toggle: () => ({locator: locator.getByText('Filter', {exact: true})}),
+      category: (name: string) => ({locator: locator.getByRole('checkbox', {name})}),
+    }),
     tabs: (locator = page.getByRole('navigation', {name: 'Monthly views'})) => ({
       locator,
       expenses: () => ({locator: locator.getByRole('link', {name: 'Expenses'})}),

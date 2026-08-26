@@ -13,12 +13,22 @@ import {
   showGraphsPage,
   showNewExpensePage,
 } from './controller.ts'
+import {parseCategoryFilter} from './model.ts'
 
 // the model is what validates these, so that the same rules apply however they arrive
 const ExpenseBodySchema = z.object({
   description: z.string(),
   amount: z.string(),
   categoryId: z.string(),
+})
+
+// a single `?category=3` arrives as a string and repeated ones as an array; the ids themselves are
+// the model's to judge, since a bookmarked URL may name a category that no longer exists
+const CategoryFilterQuerySchema = z.object({
+  category: z
+    .union([z.string(), z.array(z.string())])
+    .default([])
+    .transform((category) => (Array.isArray(category) ? category : [category])),
 })
 
 const EditExpenseBodySchema = z.object({
@@ -36,28 +46,36 @@ export default function expensesRoutes(
 ): void {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  appWithTypes.get('/', async (request, reply) =>
-    replyWithControllerResult(
-      reply,
-      await showExpensesPage(
-        db,
-        authenticatedUser().uid,
-        timeZone,
-        request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
+  appWithTypes.get(
+    '/',
+    {schema: {querystring: CategoryFilterQuerySchema}},
+    async (request, reply) =>
+      replyWithControllerResult(
+        reply,
+        await showExpensesPage(
+          db,
+          authenticatedUser().uid,
+          timeZone,
+          parseCategoryFilter(request.query.category),
+          request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
+        ),
       ),
-    ),
   )
 
-  appWithTypes.get('/expenses/graphs', async (request, reply) =>
-    replyWithControllerResult(
-      reply,
-      await showGraphsPage(
-        db,
-        authenticatedUser().uid,
-        timeZone,
-        request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
+  appWithTypes.get(
+    '/expenses/graphs',
+    {schema: {querystring: CategoryFilterQuerySchema}},
+    async (request, reply) =>
+      replyWithControllerResult(
+        reply,
+        await showGraphsPage(
+          db,
+          authenticatedUser().uid,
+          timeZone,
+          parseCategoryFilter(request.query.category),
+          request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
+        ),
       ),
-    ),
   )
 
   appWithTypes.get('/expenses/new', async (_request, reply) =>
@@ -99,11 +117,17 @@ export default function expensesRoutes(
 
   appWithTypes.delete(
     '/expenses/:id',
-    {schema: {params: ExpenseParamsSchema}},
+    {schema: {params: ExpenseParamsSchema, querystring: CategoryFilterQuerySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
-        await removeExpense(db, authenticatedUser().uid, request.params.id, timeZone),
+        await removeExpense(
+          db,
+          authenticatedUser().uid,
+          request.params.id,
+          timeZone,
+          parseCategoryFilter(request.query.category),
+        ),
       ),
   )
 }

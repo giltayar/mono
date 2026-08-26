@@ -1,6 +1,6 @@
 import type {ExpressionBuilder} from 'kysely'
 import type {Database, Db} from '../../commons/db.ts'
-import {isKnownCategoryId} from './categories.ts'
+import {EXPENSE_CATEGORIES, isKnownCategoryId} from './categories.ts'
 import type {PeriodName, PeriodRange, PeriodRanges} from './periods.ts'
 
 /** Translated by the view layer, so that the model has no display text in it */
@@ -56,6 +56,19 @@ const AMOUNT_MAX = 9_999_999_999.99
 const AMOUNT_REGEX = /^\d+(?:\.\d{1,2})?$/
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * The category ids from the query string, which is a bookmark and therefore may say anything. An
+ * unknown or malformed id is dropped rather than refused, and the result is in category order, so
+ * that the same set of categories always produces the same array however the URL spelled it.
+ */
+export function parseCategoryFilter(input: string[]): number[] {
+  const ids = new Set(
+    input.map(Number).filter((id) => Number.isInteger(id) && isKnownCategoryId(id)),
+  )
+
+  return EXPENSE_CATEGORIES.map(({id}) => id).filter((id) => ids.has(id))
+}
 
 export function validateExpense({
   description,
@@ -165,8 +178,9 @@ export async function fetchPeriodExpenses(
   db: Db,
   userId: string,
   range: PeriodRange,
+  categoryIds: number[],
 ): Promise<Expense[]> {
-  const rows = await db
+  let query = db
     .selectFrom('expense')
     .select(['id', 'description', 'amount', 'category_id', 'created_at'])
     .where('user_id', '=', userId)
@@ -174,7 +188,12 @@ export async function fetchPeriodExpenses(
     .where('created_at', '<', range.to)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'desc')
-    .execute()
+
+  if (categoryIds.length > 0) {
+    query = query.where('category_id', 'in', categoryIds)
+  }
+
+  const rows = await query.execute()
 
   return rows.map(toExpense)
 }
@@ -183,15 +202,21 @@ export async function fetchCategoryTotals(
   db: Db,
   userId: string,
   range: PeriodRange,
+  categoryIds: number[],
 ): Promise<CategoryTotal[]> {
-  const rows = await db
+  let query = db
     .selectFrom('expense')
     .select(['category_id', (eb) => eb.fn.sum<string>('amount').as('total')])
     .where('user_id', '=', userId)
     .where('created_at', '>=', range.from)
     .where('created_at', '<', range.to)
     .groupBy('category_id')
-    .execute()
+
+  if (categoryIds.length > 0) {
+    query = query.where('category_id', 'in', categoryIds)
+  }
+
+  const rows = await query.execute()
 
   return rows
     .map(({category_id, total}) => ({categoryId: category_id, total: Number(total)}))
@@ -206,19 +231,22 @@ export async function fetchPeriodTotals(
   db: Db,
   userId: string,
   ranges: PeriodRanges,
+  categoryIds: number[],
 ): Promise<PeriodSummary> {
   const summary = await db
     .selectFrom('expense')
     .where('user_id', '=', userId)
     .select((eb) => [
-      totalIn(eb, ranges.day).as('day'),
-      totalIn(eb, ranges.week).as('week'),
-      totalIn(eb, ranges.month).as('month'),
-      totalIn(eb, ranges.year).as('year'),
-      totalIn(eb, ranges.previousDay).as('previousDay'),
-      totalIn(eb, ranges.previousWeek).as('previousWeek'),
-      totalIn(eb, ranges.previousMonth).as('previousMonth'),
-      totalIn(eb, ranges.previousYear).as('previousYear'),
+      totalIn(eb, ranges.day, categoryIds).as('day'),
+      totalIn(eb, ranges.week, categoryIds).as('week'),
+      totalIn(eb, ranges.month, categoryIds).as('month'),
+      totalIn(eb, ranges.year, categoryIds).as('year'),
+      totalIn(eb, ranges.previousDay, categoryIds).as('previousDay'),
+      totalIn(eb, ranges.previousWeek, categoryIds).as('previousWeek'),
+      totalIn(eb, ranges.previousMonth, categoryIds).as('previousMonth'),
+      totalIn(eb, ranges.previousYear, categoryIds).as('previousYear'),
+      // deliberately not filtered by category: the daily averages are capped by when this user
+      // started tracking at all, which a category filter must not appear to move
       eb.fn.min<Date | null>('created_at').as('firstExpenseDate'),
     ])
     .executeTakeFirstOrThrow()
@@ -238,11 +266,17 @@ export async function fetchPeriodTotals(
   }
 }
 
-function totalIn(eb: ExpressionBuilder<Database, 'expense'>, range: PeriodRange) {
-  return eb.fn
+function totalIn(
+  eb: ExpressionBuilder<Database, 'expense'>,
+  range: PeriodRange,
+  categoryIds: number[],
+) {
+  const total = eb.fn
     .sum<string | null>('amount')
     .filterWhere('created_at', '>=', range.from)
     .filterWhere('created_at', '<', range.to)
+
+  return categoryIds.length === 0 ? total : total.filterWhere('category_id', 'in', categoryIds)
 }
 
 /** `sum` is `null` over no rows at all, and a string otherwise, since `numeric` stays exact */

@@ -16,6 +16,11 @@
     "title": "This month",
     "empty": "No expenses this month"
   },
+  "filter": {
+    "label": "Filter",
+    "categories": "Filter by category",
+    "apply": "Apply"
+  },
   "tabs": {
     "label": "Monthly views",
     "expenses": "Expenses",
