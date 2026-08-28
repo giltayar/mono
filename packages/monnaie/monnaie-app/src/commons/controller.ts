@@ -12,5 +12,10 @@ export function replyWithControllerResult(
   reply: FastifyReply,
   {html, statusCode = 200, headers = {}}: ControllerResult,
 ): FastifyReply {
-  return reply.code(statusCode).headers(headers).type('text/html').send(html)
+  return reply
+    .code(statusCode)
+    .header('Cache-Control', 'private, no-store')
+    .headers(headers)
+    .type('text/html')
+    .send(html)
 }

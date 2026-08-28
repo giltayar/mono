@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import {cert, initializeApp} from 'firebase-admin/app'
 import {getAuth} from 'firebase-admin/auth'
 import type {AuthError, FirebaseAuth} from './firebase-auth.ts'
+import {SessionRevocationCache} from './session-revocation-cache.ts'
 
 /** The private half of the Firebase configuration — never sent to the browser */
 export type FirebaseServiceAccount = {
@@ -13,6 +14,8 @@ export type FirebaseServiceAccount = {
 /** Firebase caps session cookies at 14 days */
 const SESSION_MAX_AGE_IN_SECONDS = 5 * 24 * 60 * 60
 const MAX_SIGN_IN_AGE_IN_SECONDS = 5 * 60
+const REVOCATION_CHECK_MAX_AGE_MS = 60 * 60 * 1000
+const REVOCATION_CACHE_MAX_ENTRIES = 10_000
 const SIGN_IN_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword'
 const SEND_OOB_CODE_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode'
 
@@ -26,6 +29,11 @@ export function createFirebaseAuth({
   // named uniquely, so that creating two apps in the same process (as the tests do) does not throw
   const auth = getAuth(
     initializeApp({credential: cert(serviceAccount)}, `monnaie-${crypto.randomUUID()}`),
+  )
+  const revocationChecks = new SessionRevocationCache(
+    REVOCATION_CHECK_MAX_AGE_MS,
+    REVOCATION_CACHE_MAX_ENTRIES,
+    Date.now,
   )
 
   /** A call to the Identity Toolkit REST API, which is the half of Firebase the admin SDK does not do */
@@ -121,7 +129,8 @@ export function createFirebaseAuth({
 
     async verifySession(cookie) {
       try {
-        const claims = await auth.verifySessionCookie(cookie)
+        const recentlyChecked = revocationChecks.has(cookie)
+        const claims = await auth.verifySessionCookie(cookie, !recentlyChecked)
 
         // belt and braces: `createSession` already refuses to mint a cookie for an unverified
         // address, so this can only catch one minted by an older version of this app. It cannot
@@ -130,6 +139,10 @@ export function createFirebaseAuth({
         // every request, which is not worth it for something only an admin can cause.
         if (!claims.email_verified) {
           return undefined
+        }
+
+        if (!recentlyChecked) {
+          revocationChecks.add(cookie)
         }
 
         return {uid: claims.uid, email: claims.email, displayName: claims.name}

@@ -20,6 +20,14 @@ test('sends someone who is not logged in to the login page', async ({page}) => {
   await expect(login.googleButton().locator).toBeVisible()
 })
 
+test('does not cache a user expense page', async ({page}) => {
+  await logIn(page, FIRST_USER)
+
+  const response = await page.goto(url().href)
+
+  expect(response?.headers()['cache-control']).toBe('private, no-store')
+})
+
 test('logs in with an email and a password', async ({page}) => {
   const login = createLoginPageModel(page)
   const expenses = createExpensesPageModel(page)
