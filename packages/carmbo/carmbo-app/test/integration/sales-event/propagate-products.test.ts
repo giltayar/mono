@@ -8,7 +8,9 @@ import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
 
-const {url, sql, smooveIntegration, academyIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, academyIntegration} = setup(
+  import.meta.url,
+)
 
 test('adding product to sales event enrolls students from connected sales', async ({page}) => {
   const newSaleModel = createNewSalePageModel(page)
@@ -25,6 +27,7 @@ test('adding product to sales event enrolls students from connected sales', asyn
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -163,6 +166,7 @@ test('removing product from sales event does NOT unenroll students (they already
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -296,6 +300,7 @@ test('disconnected sales are not affected by sales event product updates', async
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

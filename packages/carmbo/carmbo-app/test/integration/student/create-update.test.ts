@@ -4,7 +4,10 @@ import {createNewStudentPageModel} from '../../page-model/students/new-student-p
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {setup} from '../common/setup.ts'
 
-const {url, smooveIntegration, academyIntegration, TEST_hooks} = setup(import.meta.url)
+const {url, smooveIntegration, ravmesserIntegration, academyIntegration, TEST_hooks} = setup(
+  import.meta.url,
+  {withRavmesserIntegration: true},
+)
 
 test.use({viewport: {width: 1280, height: 1200}})
 
@@ -38,6 +41,19 @@ test('create student then update her', async ({page}) => {
 
   expect(
     await smooveIntegration().fetchSmooveContact('john.already-enrolled@example.com', {
+      by: 'email',
+    }),
+  ).toMatchObject({
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.already-enrolled@example.com',
+    telephone: '0546344457',
+    birthday: new Date('2000-01-01'),
+  })
+
+  // The student is mirrored into both mailing list providers regardless of any product
+  expect(
+    await ravmesserIntegration().fetchRavmesserContact('john.already-enrolled@example.com', {
       by: 'email',
     }),
   ).toMatchObject({
@@ -83,6 +99,18 @@ test('create student then update her', async ({page}) => {
 
   expect(
     await smooveIntegration().fetchSmooveContact('jane.smith@example.com', {
+      by: 'email',
+    }),
+  ).toMatchObject({
+    firstName: 'Jane',
+    lastName: 'Smith',
+    email: 'jane.smith@example.com',
+    telephone: '0546344456',
+    birthday: new Date('2001-02-02'),
+  })
+
+  expect(
+    await ravmesserIntegration().fetchRavmesserContact('jane.smith@example.com', {
       by: 'email',
     }),
   ).toMatchObject({

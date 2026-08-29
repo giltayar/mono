@@ -12,6 +12,7 @@ export function ProductCreateView({
   academyAccountSubdomains,
   academyCoursesBySubdomain,
   withSmooveIntegration,
+  withRavmesserIntegration,
   withSkoolIntegration,
 }: {
   product: Product
@@ -19,6 +20,7 @@ export function ProductCreateView({
   academyAccountSubdomains: string[]
   academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
+  withRavmesserIntegration: boolean
   withSkoolIntegration: boolean
 }) {
   return html`
@@ -50,12 +52,13 @@ export function ProductCreateView({
           academyAccountSubdomains=${academyAccountSubdomains}
           academyCoursesBySubdomain=${academyCoursesBySubdomain}
           withSmooveIntegration=${withSmooveIntegration}
+          withRavmesserIntegration=${withRavmesserIntegration}
           withSkoolIntegration=${withSkoolIntegration}
         />
       </div>
     </form>
     <div
-      id="smoove-list-create-dialog-container"
+      id="list-create-dialog-container"
       hx-on::after-swap="this.querySelector('dialog')?.showModal()"
     ></div>
   `
@@ -68,6 +71,7 @@ export function ProductUpdateView({
   academyAccountSubdomains,
   academyCoursesBySubdomain,
   withSmooveIntegration,
+  withRavmesserIntegration,
   withSkoolIntegration,
   appBaseUrl,
 }: {
@@ -77,6 +81,7 @@ export function ProductUpdateView({
   academyAccountSubdomains: string[]
   academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
+  withRavmesserIntegration: boolean
   withSkoolIntegration: boolean
   appBaseUrl: string
 }) {
@@ -145,6 +150,7 @@ export function ProductUpdateView({
           academyAccountSubdomains=${academyAccountSubdomains}
           academyCoursesBySubdomain=${academyCoursesBySubdomain}
           withSmooveIntegration=${withSmooveIntegration}
+          withRavmesserIntegration=${withRavmesserIntegration}
           withSkoolIntegration=${withSkoolIntegration}
         />
       </div>
@@ -163,7 +169,7 @@ export function ProductUpdateView({
       </label>
     </div>
     <div
-      id="smoove-list-create-dialog-container"
+      id="list-create-dialog-container"
       hx-on::after-swap="this.querySelector('dialog')?.showModal()"
     ></div>
     <${ProductHistoryList} product=${product} history=${history} />
@@ -177,6 +183,7 @@ export function ProductHistoryView({
   academyAccountSubdomains,
   academyCoursesBySubdomain,
   withSmooveIntegration,
+  withRavmesserIntegration,
   withSkoolIntegration,
 }: {
   product: ProductWithHistoryInfo
@@ -185,6 +192,7 @@ export function ProductHistoryView({
   academyAccountSubdomains: string[]
   academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
+  withRavmesserIntegration: boolean
   withSkoolIntegration: boolean
 }) {
   const currentHistory = history.find((h) => h.historyId === product.id)
@@ -207,6 +215,7 @@ export function ProductHistoryView({
           academyAccountSubdomains=${academyAccountSubdomains}
           academyCoursesBySubdomain=${academyCoursesBySubdomain}
           withSmooveIntegration=${withSmooveIntegration}
+          withRavmesserIntegration=${withRavmesserIntegration}
           withSkoolIntegration=${withSkoolIntegration}
         />
       </div>

@@ -23,6 +23,7 @@ import {requestContext} from '@fastify/request-context'
 import {exceptionToBanner} from '../../layout/banner.ts'
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {listRavmesserLists} from '../../commons/external-provider/ravmesser-lists.ts'
 import {submitPropagateAcademyCourseChangesJob} from '../sale/model/model-external-providers.ts'
 import {searchProducts} from '../sale/model/model.ts'
 import {when} from '@giltayar/functional-commons'
@@ -94,13 +95,17 @@ export async function showProductCreate(
   const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [whatsappGroups, smooveLists] = await Promise.all([
+  const [whatsappGroups, smooveLists, ravmesserLists] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
+    when(ravmesserIntegration, (ravmesserIntegration) =>
+      listRavmesserLists(ravmesserIntegration, now),
+    ),
   ])
   const academyCoursesBySubdomain = await listCoursesForSubdomains(
     academyIntegration,
@@ -109,6 +114,7 @@ export async function showProductCreate(
   )
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
+  requestContext.set('ravmesserLists', ravmesserLists)
 
   const banner = when(error, (error) => exceptionToBanner('Creating product error: ', error))
 
@@ -119,6 +125,7 @@ export async function showProductCreate(
       academyAccountSubdomains: academyAccountSubdomains ?? [],
       academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
+      withRavmesserIntegration: Boolean(ravmesserIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
@@ -134,17 +141,22 @@ export async function showProductUpdate(
   const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [whatsappGroups, smooveLists, productWithHistory] = await Promise.all([
+  const [whatsappGroups, smooveLists, ravmesserLists, productWithHistory] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
+    when(ravmesserIntegration, (ravmesserIntegration) =>
+      listRavmesserLists(ravmesserIntegration, now),
+    ),
     queryProductByNumber(productNumber, sql),
   ])
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
+  requestContext.set('ravmesserLists', ravmesserLists)
 
   if (!productWithHistory) {
     return {status: 404, body: 'Product not found'}
@@ -172,6 +184,7 @@ export async function showProductUpdate(
       academyAccountSubdomains: academyAccountSubdomains ?? [],
       academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
+      withRavmesserIntegration: Boolean(ravmesserIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
       appBaseUrl,
     }),
@@ -186,13 +199,17 @@ export async function showOngoingProduct(
   const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [whatsappGroups, smooveLists] = await Promise.all([
+  const [whatsappGroups, smooveLists, ravmesserLists] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
+    when(ravmesserIntegration, (ravmesserIntegration) =>
+      listRavmesserLists(ravmesserIntegration, now),
+    ),
   ])
   const academyCoursesBySubdomain = await listCoursesForSubdomains(
     academyIntegration,
@@ -201,6 +218,7 @@ export async function showOngoingProduct(
   )
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
+  requestContext.set('ravmesserLists', ravmesserLists)
 
   return finalHtml(
     renderProductFormFields(product, manipulations, 'write', {
@@ -208,6 +226,7 @@ export async function showOngoingProduct(
       academyAccountSubdomains: academyAccountSubdomains ?? [],
       academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
+      withRavmesserIntegration: Boolean(ravmesserIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
@@ -222,17 +241,22 @@ export async function showProductInHistory(
   const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const skoolIntegration = requestContext.get('skoolIntegration')
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [whatsappGroups, smooveLists, product] = await Promise.all([
+  const [whatsappGroups, smooveLists, ravmesserLists, product] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
+    when(ravmesserIntegration, (ravmesserIntegration) =>
+      listRavmesserLists(ravmesserIntegration, now),
+    ),
     queryProductByHistoryId(productNumber, operationId, sql),
   ])
   requestContext.set('whatsappGroups', whatsappGroups)
   requestContext.set('smooveLists', smooveLists)
+  requestContext.set('ravmesserLists', ravmesserLists)
 
   if (!product) {
     return {status: 404, body: 'Product not found'}
@@ -250,6 +274,7 @@ export async function showProductInHistory(
       academyAccountSubdomains: academyAccountSubdomains ?? [],
       academyCoursesBySubdomain,
       withSmooveIntegration: Boolean(smooveIntegration),
+      withRavmesserIntegration: Boolean(ravmesserIntegration),
       withSkoolIntegration: Boolean(skoolIntegration),
     }),
   )
@@ -260,11 +285,15 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
     const nowService = requestContext.get('nowService')!
     const whatsappIntegration = requestContext.get('whatsappIntegration')!
     const smooveIntegration = requestContext.get('smooveIntegration')
+    const ravmesserIntegration = requestContext.get('ravmesserIntegration')
     const academyIntegration = requestContext.get('academyIntegration')
 
-    const [smooveLists, whatsappGroups] = await Promise.all([
+    const [smooveLists, ravmesserLists, whatsappGroups] = await Promise.all([
       when(smooveIntegration, (smooveIntegration) =>
         listSmooveLists(smooveIntegration, nowService()),
+      ),
+      when(ravmesserIntegration, (ravmesserIntegration) =>
+        listRavmesserLists(ravmesserIntegration, nowService()),
       ),
       listWhatsAppGroups(whatsappIntegration, nowService()),
     ])
@@ -280,6 +309,7 @@ export async function createProduct(product: NewProduct, sql: Sql): Promise<Cont
     if (
       !isValidProduct(product, {
         smooveLists,
+        ravmesserLists,
         whatsappGroups,
         academyCoursesBySubdomain,
       })
@@ -306,11 +336,15 @@ export async function updateProduct(
     const nowService = requestContext.get('nowService')!
     const whatsappIntegration = requestContext.get('whatsappIntegration')!
     const smooveIntegration = requestContext.get('smooveIntegration')
+    const ravmesserIntegration = requestContext.get('ravmesserIntegration')
     const academyIntegration = requestContext.get('academyIntegration')
 
-    const [smooveLists, whatsappGroups] = await Promise.all([
+    const [smooveLists, ravmesserLists, whatsappGroups] = await Promise.all([
       when(smooveIntegration, (smooveIntegration) =>
         listSmooveLists(smooveIntegration, nowService()),
+      ),
+      when(ravmesserIntegration, (ravmesserIntegration) =>
+        listRavmesserLists(ravmesserIntegration, nowService()),
       ),
       listWhatsAppGroups(whatsappIntegration, nowService()),
     ])
@@ -326,6 +360,7 @@ export async function updateProduct(
     if (
       !isValidProduct(product, {
         smooveLists,
+        ravmesserLists,
         whatsappGroups,
         academyCoursesBySubdomain,
       })

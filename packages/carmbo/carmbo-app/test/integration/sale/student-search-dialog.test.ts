@@ -8,7 +8,7 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
-const {url, sql, smooveIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)
 
 test.use({viewport: {width: 1024, height: 1024}})
 
@@ -22,6 +22,7 @@ test('search for student and choose', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -163,6 +164,7 @@ test('cancel dialog leaves form unchanged', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -272,6 +274,7 @@ test('search and choose on update sale page', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -285,6 +288,7 @@ test('search and choose on update sale page', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

@@ -60,6 +60,7 @@
     "@fastify/static": "^10.1.2",
     "@giltayar/carmel-tools-academy-integration": "^6.0.0",
     "@giltayar/carmel-tools-cardcom-integration": "^9.1.0",
+    "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
     "@giltayar/carmel-tools-skool-integration": "^1.1.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.3.0",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",

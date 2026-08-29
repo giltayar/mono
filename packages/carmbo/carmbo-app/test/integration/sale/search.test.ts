@@ -9,7 +9,9 @@ import {createSale} from '../../../src/domain/sale/model/model.ts'
 import {cardcomWebhookUrl, cardcomRecurringPaymentWebhookUrl} from './common/cardcom-webhook.ts'
 import {cancelSubscription} from '../common/cancel-subscription.ts'
 
-const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, cardcomIntegration} = setup(
+  import.meta.url,
+)
 
 test.use({viewport: {width: 1024, height: 1024}})
 
@@ -24,6 +26,7 @@ test('searching sales', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -37,6 +40,7 @@ test('searching sales', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

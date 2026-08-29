@@ -15,6 +15,7 @@ import salesRoutes, {
 import authRoutes, {useFirebaseAuth} from '../domain/auth/route.ts'
 import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import smooveRoutes from '../domain/smoove/route.ts'
+import ravmesserRoutes from '../domain/ravmesser/route.ts'
 import whatsappRoutes from '../domain/whatsapp/route.ts'
 import academyRoutes from '../domain/academy/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
@@ -28,6 +29,10 @@ import type {
   SmooveList,
   SmooveIntegrationService,
 } from '@giltayar/carmel-tools-smoove-integration/service'
+import type {
+  RavmesserList,
+  RavmesserIntegrationService,
+} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
@@ -42,12 +47,14 @@ declare module '@fastify/request-context' {
     academyIntegration: AcademyIntegrationService | undefined
     academyAccountSubdomains: string[] | undefined
     smooveIntegration: SmooveIntegrationService | undefined
+    ravmesserIntegration: RavmesserIntegrationService | undefined
     skoolIntegration: SkoolIntegrationService | undefined
     nowService: () => Date
     logger: FastifyBaseLogger
     sql: Sql
     whatsappGroups: WhatsAppGroup[] | undefined
     smooveLists: SmooveList[] | undefined
+    ravmesserLists: RavmesserList[] | undefined
     products: {id: number; name: string}[] | undefined
     TEST_hooks: Record<string, TEST_HookFunction> | undefined
   }
@@ -60,6 +67,7 @@ export function makeApp({
     academyAccountSubdomains,
     whatsappIntegration,
     smooveIntegration,
+    ravmesserIntegration,
     cardcomIntegration,
     skoolIntegration,
     nowService,
@@ -84,6 +92,7 @@ export function makeApp({
     academyIntegration: AcademyIntegrationService | undefined
     academyAccountSubdomains: string[] | undefined
     smooveIntegration: SmooveIntegrationService | undefined
+    ravmesserIntegration: RavmesserIntegrationService | undefined
     skoolIntegration: SkoolIntegrationService | undefined
     nowService: () => Date
   }
@@ -140,12 +149,14 @@ export function makeApp({
       academyAccountSubdomains,
       whatsappIntegration,
       smooveIntegration,
+      ravmesserIntegration,
       skoolIntegration,
       cardcomIntegration,
       nowService,
       logger: request.log,
       whatsappGroups: undefined,
       smooveLists: undefined,
+      ravmesserLists: undefined,
       products: undefined,
       TEST_hooks,
     }),
@@ -192,6 +203,7 @@ export function makeApp({
       prefix: '/sales-events',
       sql,
       smooveIntegration,
+      ravmesserIntegration,
       academyIntegration,
       whatsappIntegration,
       appBaseUrl,
@@ -201,6 +213,7 @@ export function makeApp({
     app.register(salesRoutes, {prefix: '/sales', sql})
     app.register(jobsRoute, {prefix: '/jobs', sql})
     app.register(smooveRoutes, {prefix: '/smoove'})
+    app.register(ravmesserRoutes, {prefix: '/ravmesser'})
     app.register(whatsappRoutes, {prefix: '/whatsapp'})
     app.register(academyRoutes, {prefix: '/academy'})
   })
@@ -211,6 +224,7 @@ export function makeApp({
     sql,
     academyIntegration,
     smooveIntegration,
+    ravmesserIntegration,
     whatsappIntegration,
     skoolIntegration,
     nowService,

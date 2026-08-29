@@ -4,6 +4,7 @@ import * as z from 'zod'
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import {createRavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
@@ -37,6 +38,10 @@ export const EnvironmentVariablesSchema = z.object({
   GREEN_API_INSTANCE: z.coerce.number(),
   SMOOVE_API_KEY: z.string().optional(),
   SMOOVE_API_URL: z.url().optional().default('https://rest.smoove.io/v1/'),
+  RAVMESSER_CLIENT_ID: z.string().optional(),
+  RAVMESSER_CLIENT_SECRET: z.string().optional(),
+  RAVMESSER_USER_TOKEN: z.string().optional(),
+  RAVMESSER_BIRTHDAY_PERSONAL_FIELD_ID: z.coerce.number().int().positive().optional(),
   FORCE_NO_AUTH: z.string().optional(),
   CARMBO_FIREBASE_API_KEY: z.string(),
   CARMBO_FIREBASE_SERVICE_ACCOUNT_JSON: z.string(),
@@ -91,6 +96,18 @@ const {app, sql} = await makeApp({
         apiUrl: env.SMOOVE_API_URL,
       }),
     ),
+    ravmesserIntegration:
+      env.RAVMESSER_CLIENT_ID &&
+      env.RAVMESSER_CLIENT_SECRET &&
+      env.RAVMESSER_USER_TOKEN &&
+      env.RAVMESSER_BIRTHDAY_PERSONAL_FIELD_ID
+        ? createRavmesserIntegrationService({
+            clientId: env.RAVMESSER_CLIENT_ID,
+            clientSecret: env.RAVMESSER_CLIENT_SECRET,
+            userToken: env.RAVMESSER_USER_TOKEN,
+            birthdayPersonalFieldId: env.RAVMESSER_BIRTHDAY_PERSONAL_FIELD_ID,
+          })
+        : undefined,
     cardcomIntegration: createCardcomIntegrationService({
       apiKey: env.CARDCOM_API_KEY,
       apiKeyPassword: env.CARDCOM_API_KEY_PASSWORD,

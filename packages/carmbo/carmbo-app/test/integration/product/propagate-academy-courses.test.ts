@@ -14,7 +14,8 @@ import {
 import {cancelSubscription} from '../common/cancel-subscription.ts'
 import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, academyIntegration, cardcomIntegration} =
+  setup(import.meta.url)
 
 test.use({viewport: {width: 1280, height: 1400}})
 
@@ -35,6 +36,7 @@ test('updating product to add academy course enrolls students from connected sal
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -179,6 +181,7 @@ test('updating product to remove academy course unenrolls students from connecte
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -301,6 +304,7 @@ test('removing course from product does NOT unenroll if another product in same 
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -433,6 +437,7 @@ test('disconnected sales are not affected by product academy course updates', as
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -547,6 +552,7 @@ test('removing course from non-club product does NOT unenroll students', async (
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -664,6 +670,7 @@ test('removing course from club product does NOT unenroll if another sale has th
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -834,6 +841,7 @@ test('disconnected (previously connected) sales are not affected by product acad
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

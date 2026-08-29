@@ -8,698 +8,710 @@ import {createStudent} from '../../../src/domain/student/model.ts'
 import type {TaxInvoiceInformation} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
+import {
+  mailingListFixtures,
+  mailingListProductFields,
+  mailingListProviders,
+  mailingListTestkit,
+} from '../common/mailing-list-provider.ts'
 
 const {
   url,
   sql,
   smooveIntegration,
+  ravmesserIntegration,
   academyIntegration,
   cardcomIntegration,
   whatsappIntegration,
   skoolIntegration,
-} = setup(import.meta.url)
+} = setup(import.meta.url, {withRavmesserIntegration: true})
 
-test('create sale then connect it', async ({page}) => {
-  // Setup: Create a student, sales event, and products
-  const studentNumber = await createStudent(
-    {
-      names: [{firstName: 'John', lastName: 'Doe'}],
-      emails: ['john.doe@example.com'],
-      phones: ['1234567890'],
-      facebookNames: [],
-    },
-    undefined,
-    smooveIntegration(),
-    new Date(),
-    sql(),
-  )
-
-  const product1Number = await createProduct(
-    {
-      name: 'Product One',
-      productType: 'recorded',
-      smooveListId: 2,
-      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
-      personalMessageWhenJoining: 'Welcome to Product One!',
-      sendSkoolInvitation: true,
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
-
-  const product2Number = await createProduct(
-    {
-      name: 'Product Two',
-      productType: 'challenge',
-      smooveListId: 10,
-      academyCourses: [
-        {courseId: 33, accountSubdomain: 'carmel'},
-        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
-      ],
-      personalMessageWhenJoining: 'Welcome to Product Two!',
-      sendSkoolInvitation: true,
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
-
-  const product3Number = await createProduct(
-    {
-      name: 'Product Three',
-      productType: 'recorded',
-      smooveListId: 20,
-      academyCourses: [{courseId: 888, accountSubdomain: 'carmel'}],
-      personalMessageWhenJoining: 'Welcome to Product Three!',
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
-
-  const salesEventNumber = await createSalesEvent(
-    {
-      name: 'Test Sales Event',
-      fromDate: new Date('2025-01-01'),
-      toDate: new Date('2025-12-31'),
-      landingPageUrl: 'https://example.com/test-sale',
-      productsForSale: [product1Number, product2Number, product3Number],
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
-
-  await page.goto(new URL('/sales', url()).href)
-
-  const newSaleModel = createNewSalePageModel(page)
-  const updateSaleModel = createUpdateSalePageModel(page)
-  const updateStudentModel = createUpdateStudentPageModel(page)
-
-  // Navigate to create new sale page
-  await page.goto(new URL('/sales/new', url()).href)
-
-  await expect(newSaleModel.pageTitle().locator).toHaveText('New Sale')
-
-  // Fill the new sale form
-  const newForm = newSaleModel.form()
-  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
-  await newForm.salesEventInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.studentInput().locator.fill(`${studentNumber}`)
-  await newForm.studentInput().locator.blur()
-  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
-
-  await newForm.products().product(0).quantity().locator.fill('2')
-  await newForm.products().product(0).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await expect(newForm.products().product(0).quantity().locator).toHaveValue('2')
-  await newForm.products().product(0).unitPrice().locator.fill('1')
-  await newForm.products().product(0).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await expect(newForm.products().product(0).unitPrice().locator).toHaveValue('1')
-  await newForm.products().product(1).quantity().locator.fill('1')
-  await newForm.products().product(1).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(1).unitPrice().locator.fill('3')
-  await newForm.products().product(1).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(2).quantity().locator.fill('0')
-  await newForm.products().product(2).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(2).unitPrice().locator.fill('5')
-  await newForm.products().product(2).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.finalSaleRevenueInput().locator.fill('27')
-  await newForm.finalSaleRevenueInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-
-  // Save the sale
-  await newForm.createButton().locator.click()
-
-  // Wait for navigation to update page
-  await page.waitForURL(updateSaleModel.urlRegex)
-
-  const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
-
-  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
-
-  await expect(updateSaleModel.saleStatus().locator).toHaveText(
-    'Regular Sale | Disconnected from External Providers',
-  )
-
-  await updateSaleModel.form().connectButton().locator.click()
-  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
-  await updateSaleModel.connectDialog().connectButton().locator.click()
-
-  await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
-  await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
-
-  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
-  await expect(updateSaleModel.saleStatus().locator).toHaveText(
-    'Regular Sale | Connected to External Providers',
-  )
-
-  await expect(updateSaleModel.form().viewInvoiceLink().locator).toHaveAttribute(
-    'href',
-    `http://invoice-document.example.com/1`,
-  )
-
-  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
-
-  expect(taxInvoiceDocument).toBeDefined()
-
-  await expect(taxInvoiceDocument).toMatchObject({
-    customerName: 'John Doe',
-    customerEmail: 'john.doe@example.com',
-    customerPhone: '1234567890',
-    productsSold: [
+for (const provider of mailingListProviders) {
+  test(`create sale then connect it (${provider})`, async ({page}) => {
+    const lists = mailingListFixtures[provider]
+    const mailingList = mailingListTestkit(provider, {smooveIntegration, ravmesserIntegration})
+    // Setup: Create a student, sales event, and products
+    const studentNumber = await createStudent(
       {
-        productId: product1Number.toString(),
-        productName: 'Product One',
-        quantity: 2,
-        unitPriceInCents: 100,
+        names: [{firstName: 'John', lastName: 'Doe'}],
+        emails: ['john.doe@example.com'],
+        phones: ['1234567890'],
+        facebookNames: [],
       },
+      undefined,
+      smooveIntegration(),
+      ravmesserIntegration(),
+      new Date(),
+      sql(),
+    )
+
+    const product1Number = await createProduct(
       {
-        productId: product2Number.toString(),
-        productName: 'Product Two',
-        quantity: 1,
-        unitPriceInCents: 300,
+        name: 'Product One',
+        productType: 'recorded',
+        ...mailingListProductFields(provider, {listId: lists.main.id}),
+        academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
+        personalMessageWhenJoining: 'Welcome to Product One!',
+        sendSkoolInvitation: true,
       },
+      undefined,
+      new Date(),
+      sql(),
+    )
+
+    const product2Number = await createProduct(
       {
-        productId: product3Number.toString(),
-        productName: 'Product Three',
-        quantity: 0,
-        unitPriceInCents: 500,
+        name: 'Product Two',
+        productType: 'challenge',
+        ...mailingListProductFields(provider, {listId: lists.secondMain.id}),
+        academyCourses: [
+          {courseId: 33, accountSubdomain: 'carmel'},
+          {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+        ],
+        personalMessageWhenJoining: 'Welcome to Product Two!',
+        sendSkoolInvitation: true,
       },
-    ],
-    transactionRevenueInCents: 2700,
-  } as Omit<TaxInvoiceInformation, 'transactionDate'>)
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  expect(taxInvoiceDocument?.transactionDescription).toBeUndefined()
+    const product3Number = await createProduct(
+      {
+        name: 'Product Three',
+        productType: 'recorded',
+        ...mailingListProductFields(provider, {listId: lists.thirdMain.id}),
+        academyCourses: [{courseId: 888, accountSubdomain: 'carmel'}],
+        personalMessageWhenJoining: 'Welcome to Product Three!',
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
-      accountSubdomain: 'inspiredlivingdaily',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 888, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(false)
+    const salesEventNumber = await createSalesEvent(
+      {
+        name: 'Test Sales Event',
+        fromDate: new Date('2025-01-01'),
+        toDate: new Date('2025-12-31'),
+        landingPageUrl: 'https://example.com/test-sale',
+        productsForSale: [product1Number, product2Number, product3Number],
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  expect(
-    (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
-  ).toEqual(['john.doe@example.com'])
-  expect(
-    (await smooveIntegration().fetchContactsOfList(10)).map((contact) => contact.email),
-  ).toEqual(['john.doe@example.com'])
-  expect(
-    (await smooveIntegration().fetchContactsOfList(20)).map((contact) => contact.email),
-  ).toEqual([])
+    await page.goto(new URL('/sales', url()).href)
 
-  // Verify personal messages were sent for products with quantity > 0
-  await expect(async () => {
-    const contactId = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
-    const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
-    expect(sentMessages).toContain('Welcome to Product One!')
-    expect(sentMessages).toContain('Welcome to Product Two!')
-    expect(sentMessages).not.toContain('Welcome to Product Three!')
-  }).toPass()
+    const newSaleModel = createNewSalePageModel(page)
+    const updateSaleModel = createUpdateSalePageModel(page)
+    const updateStudentModel = createUpdateStudentPageModel(page)
 
-  // Verify skool invitations were sent for products with sendSkoolInvitation
-  await expect(async () => {
-    expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
-  }).toPass()
+    // Navigate to create new sale page
+    await page.goto(new URL('/sales/new', url()).href)
 
-  await page.goto(new URL(`/students/${studentNumber}`, url()).href)
+    await expect(newSaleModel.pageTitle().locator).toHaveText('New Sale')
 
-  await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
+    // Fill the new sale form
+    const newForm = newSaleModel.form()
+    await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+    await newForm.salesEventInput().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.studentInput().locator.fill(`${studentNumber}`)
+    await newForm.studentInput().locator.blur()
+    await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
 
-  const studentForm = updateStudentModel.form()
-  await expect(studentForm.cardcomCustomerIdsInput().locator).toHaveValue(
-    taxInvoiceDocument?.cardcomCustomerId?.toString() ?? '',
-  )
+    await newForm.products().product(0).quantity().locator.fill('2')
+    await newForm.products().product(0).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await expect(newForm.products().product(0).quantity().locator).toHaveValue('2')
+    await newForm.products().product(0).unitPrice().locator.fill('1')
+    await newForm.products().product(0).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await expect(newForm.products().product(0).unitPrice().locator).toHaveValue('1')
+    await newForm.products().product(1).quantity().locator.fill('1')
+    await newForm.products().product(1).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(1).unitPrice().locator.fill('3')
+    await newForm.products().product(1).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(2).quantity().locator.fill('0')
+    await newForm.products().product(2).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(2).unitPrice().locator.fill('5')
+    await newForm.products().product(2).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.finalSaleRevenueInput().locator.fill('27')
+    await newForm.finalSaleRevenueInput().locator.blur()
+    await page.waitForLoadState('networkidle')
 
-  // Verify notes can be updated on a connected manual sale
-  await page.goto(new URL(`/sales/${saleNumber}`, url()).href)
-  await page.waitForURL(updateSaleModel.urlRegex)
+    // Save the sale
+    await newForm.createButton().locator.click()
 
-  await updateSaleModel.form().notesInput().locator.fill('Notes on a connected sale')
-  await updateSaleModel.form().updateButton().locator.click()
+    // Wait for navigation to update page
+    await page.waitForURL(updateSaleModel.urlRegex)
 
-  await page.waitForURL(updateSaleModel.urlRegex)
-  await expect(updateSaleModel.form().notesInput().locator).toHaveValue('Notes on a connected sale')
-})
+    const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
 
-test('create sale with existing cardcom invoice id, then connect it', async ({page}) => {
-  // Setup: Create a student, sales event, and products
-  const studentNumber = await createStudent(
-    {
-      names: [{firstName: 'John', lastName: 'Doe'}],
-      emails: ['john.doe@example.com'],
-      phones: ['1234567890'],
-      facebookNames: [],
-    },
-    undefined,
-    smooveIntegration(),
-    new Date(),
-    sql(),
-  )
-  const product1Number = await createProduct(
-    {
-      name: 'Product One',
-      productType: 'recorded',
-      smooveListId: 2,
-      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
-      personalMessageWhenJoining: 'Welcome to Product One!',
-      sendSkoolInvitation: true,
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
 
-  const product2Number = await createProduct(
-    {
-      name: 'Product Two',
-      productType: 'challenge',
-      smooveListId: 10,
-      academyCourses: [
-        {courseId: 33, accountSubdomain: 'carmel'},
-        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
-      ],
-      personalMessageWhenJoining: 'Welcome to Product Two!',
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    await expect(updateSaleModel.saleStatus().locator).toHaveText(
+      'Regular Sale | Disconnected from External Providers',
+    )
 
-  const {cardcomInvoiceNumber} = await cardcomIntegration().createTaxInvoiceDocument(
-    {
-      cardcomCustomerId: 1,
-      customerEmail: 'john.doe@example.com',
+    await updateSaleModel.form().connectButton().locator.click()
+    await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+    await updateSaleModel.connectDialog().connectButton().locator.click()
+
+    await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
+    await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
+
+    await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
+    await expect(updateSaleModel.saleStatus().locator).toHaveText(
+      'Regular Sale | Connected to External Providers',
+    )
+
+    await expect(updateSaleModel.form().viewInvoiceLink().locator).toHaveAttribute(
+      'href',
+      `http://invoice-document.example.com/1`,
+    )
+
+    const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
+
+    expect(taxInvoiceDocument).toBeDefined()
+
+    await expect(taxInvoiceDocument).toMatchObject({
       customerName: 'John Doe',
+      customerEmail: 'john.doe@example.com',
       customerPhone: '1234567890',
-      transactionDate: new Date(),
-      transactionDescription: undefined,
-      transactionRevenueInCents: 100,
       productsSold: [
         {
           productId: product1Number.toString(),
+          productName: 'Product One',
           quantity: 2,
           unitPriceInCents: 100,
-          productName: 'Product One',
         },
         {
           productId: product2Number.toString(),
+          productName: 'Product Two',
           quantity: 1,
           unitPriceInCents: 300,
-          productName: 'Product Two',
+        },
+        {
+          productId: product3Number.toString(),
+          productName: 'Product Three',
+          quantity: 0,
+          unitPriceInCents: 500,
         },
       ],
-    },
-    {sendInvoiceByMail: false},
-  )
+      transactionRevenueInCents: 2700,
+    } as Omit<TaxInvoiceInformation, 'transactionDate'>)
 
-  const salesEventNumber = await createSalesEvent(
-    {
-      name: 'Test Sales Event',
-      fromDate: new Date('2025-01-01'),
-      toDate: new Date('2025-12-31'),
-      landingPageUrl: 'https://example.com/test-sale',
-      productsForSale: [product1Number, product2Number],
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    expect(taxInvoiceDocument?.transactionDescription).toBeUndefined()
 
-  await page.goto(new URL('/sales', url()).href)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
+        accountSubdomain: 'inspiredlivingdaily',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 888, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(false)
 
-  const newSaleModel = createNewSalePageModel(page)
-  const updateSaleModel = createUpdateSalePageModel(page)
-  const updateStudentModel = createUpdateStudentPageModel(page)
+    expect(await mailingList.emailsOfList(lists.main.id)).toEqual(['john.doe@example.com'])
+    expect(await mailingList.emailsOfList(lists.secondMain.id)).toEqual(['john.doe@example.com'])
+    expect(await mailingList.emailsOfList(lists.thirdMain.id)).toEqual([])
 
-  // Navigate to create new sale page
-  await page.goto(new URL('/sales/new', url()).href)
+    // Verify personal messages were sent for products with quantity > 0
+    await expect(async () => {
+      const contactId = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+      const sentMessages = whatsappIntegration()._test_sentContactMessages(contactId)
+      expect(sentMessages).toContain('Welcome to Product One!')
+      expect(sentMessages).toContain('Welcome to Product Two!')
+      expect(sentMessages).not.toContain('Welcome to Product Three!')
+    }).toPass()
 
-  await expect(newSaleModel.pageTitle().locator).toHaveText('New Sale')
+    // Verify skool invitations were sent for products with sendSkoolInvitation
+    await expect(async () => {
+      expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
+    }).toPass()
 
-  // Fill the new sale form
-  const newForm = newSaleModel.form()
-  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
-  await newForm.salesEventInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.studentInput().locator.fill(`${studentNumber}`)
-  await newForm.studentInput().locator.blur()
-  await page.waitForLoadState('networkidle')
+    await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
-  await newForm.products().product(0).quantity().locator.fill('2')
-  await newForm.products().product(0).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(0).unitPrice().locator.fill('1')
-  await newForm.products().product(0).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(1).quantity().locator.fill('1')
-  await newForm.products().product(1).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(1).unitPrice().locator.fill('3')
-  await newForm.products().product(1).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
+    await expect(updateStudentModel.pageTitle().locator).toHaveText(
+      `Update Student ${studentNumber}`,
+    )
 
-  await newForm.cardcomInvoiceNumberInput().locator.fill(cardcomInvoiceNumber.toString())
-  await newForm.finalSaleRevenueInput().locator.fill('777')
-  await newForm.finalSaleRevenueInput().locator.blur()
-  await page.waitForLoadState('networkidle')
+    const studentForm = updateStudentModel.form()
+    await expect(studentForm.cardcomCustomerIdsInput().locator).toHaveValue(
+      taxInvoiceDocument?.cardcomCustomerId?.toString() ?? '',
+    )
 
-  // Save the sale
-  await newForm.createButton().locator.click()
+    // Verify notes can be updated on a connected manual sale
+    await page.goto(new URL(`/sales/${saleNumber}`, url()).href)
+    await page.waitForURL(updateSaleModel.urlRegex)
 
-  // Wait for navigation to update page
-  await page.waitForURL(updateSaleModel.urlRegex)
+    await updateSaleModel.form().notesInput().locator.fill('Notes on a connected sale')
+    await updateSaleModel.form().updateButton().locator.click()
 
-  const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
+    await page.waitForURL(updateSaleModel.urlRegex)
+    await expect(updateSaleModel.form().notesInput().locator).toHaveValue(
+      'Notes on a connected sale',
+    )
+  })
 
-  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
-
-  await updateSaleModel.form().connectButton().locator.click()
-  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
-  await updateSaleModel.connectDialog().connectButton().locator.click()
-
-  await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
-  await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
-
-  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
-
-  await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue(
-    cardcomInvoiceNumber.toString(),
-  )
-
-  await expect(updateSaleModel.form().viewInvoiceLink().locator).toHaveAttribute(
-    'href',
-    `http://invoice-document.example.com/${cardcomInvoiceNumber}`,
-  )
-  await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('777')
-
-  const taxInvoiceDocument =
-    await cardcomIntegration().fetchInvoiceInformation(cardcomInvoiceNumber)
-
-  expect(taxInvoiceDocument).toBeDefined()
-
-  await expect(taxInvoiceDocument).toMatchObject({
-    customerName: 'John Doe',
-    customerEmail: 'john.doe@example.com',
-    customerPhone: '1234567890',
-    productsSold: [
+  test(`create sale with existing cardcom invoice id, then connect it (${provider})`, async ({
+    page,
+  }) => {
+    const lists = mailingListFixtures[provider]
+    const mailingList = mailingListTestkit(provider, {smooveIntegration, ravmesserIntegration})
+    // Setup: Create a student, sales event, and products
+    const studentNumber = await createStudent(
       {
-        productId: product1Number.toString(),
-        productName: 'Product One',
-        quantity: 2,
-        unitPriceInCents: 100,
+        names: [{firstName: 'John', lastName: 'Doe'}],
+        emails: ['john.doe@example.com'],
+        phones: ['1234567890'],
+        facebookNames: [],
       },
+      undefined,
+      smooveIntegration(),
+      ravmesserIntegration(),
+      new Date(),
+      sql(),
+    )
+    const product1Number = await createProduct(
       {
-        productId: product2Number.toString(),
-        productName: 'Product Two',
-        quantity: 1,
-        unitPriceInCents: 300,
+        name: 'Product One',
+        productType: 'recorded',
+        ...mailingListProductFields(provider, {listId: lists.main.id}),
+        academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
+        personalMessageWhenJoining: 'Welcome to Product One!',
+        sendSkoolInvitation: true,
       },
-    ],
-    transactionRevenueInCents: 100,
-  } as Omit<TaxInvoiceInformation, 'transactionDate'>)
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
-      accountSubdomain: 'inspiredlivingdaily',
-    }),
-  ).toBe(true)
+    const product2Number = await createProduct(
+      {
+        name: 'Product Two',
+        productType: 'challenge',
+        ...mailingListProductFields(provider, {listId: lists.secondMain.id}),
+        academyCourses: [
+          {courseId: 33, accountSubdomain: 'carmel'},
+          {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+        ],
+        personalMessageWhenJoining: 'Welcome to Product Two!',
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  expect(
-    (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
-  ).toEqual(['john.doe@example.com'])
-  expect(
-    (await smooveIntegration().fetchContactsOfList(10)).map((contact) => contact.email),
-  ).toEqual(['john.doe@example.com'])
+    const {cardcomInvoiceNumber} = await cardcomIntegration().createTaxInvoiceDocument(
+      {
+        cardcomCustomerId: 1,
+        customerEmail: 'john.doe@example.com',
+        customerName: 'John Doe',
+        customerPhone: '1234567890',
+        transactionDate: new Date(),
+        transactionDescription: undefined,
+        transactionRevenueInCents: 100,
+        productsSold: [
+          {
+            productId: product1Number.toString(),
+            quantity: 2,
+            unitPriceInCents: 100,
+            productName: 'Product One',
+          },
+          {
+            productId: product2Number.toString(),
+            quantity: 1,
+            unitPriceInCents: 300,
+            productName: 'Product Two',
+          },
+        ],
+      },
+      {sendInvoiceByMail: false},
+    )
 
-  // Verify personal messages were sent
-  await expect(async () => {
-    const contactId2 = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
-    const sentMessages2 = whatsappIntegration()._test_sentContactMessages(contactId2)
-    expect(sentMessages2).toContain('Welcome to Product One!')
-    expect(sentMessages2).toContain('Welcome to Product Two!')
-  }).toPass()
+    const salesEventNumber = await createSalesEvent(
+      {
+        name: 'Test Sales Event',
+        fromDate: new Date('2025-01-01'),
+        toDate: new Date('2025-12-31'),
+        landingPageUrl: 'https://example.com/test-sale',
+        productsForSale: [product1Number, product2Number],
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  // Verify skool invitation was sent
-  await expect(async () => {
-    expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
-  }).toPass()
+    await page.goto(new URL('/sales', url()).href)
 
-  await page.goto(new URL(`/students/${studentNumber}`, url()).href)
+    const newSaleModel = createNewSalePageModel(page)
+    const updateSaleModel = createUpdateSalePageModel(page)
+    const updateStudentModel = createUpdateStudentPageModel(page)
 
-  await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
+    // Navigate to create new sale page
+    await page.goto(new URL('/sales/new', url()).href)
 
-  const studentForm = updateStudentModel.form()
-  await expect(studentForm.cardcomCustomerIdsInput().locator).toBeHidden()
-})
+    await expect(newSaleModel.pageTitle().locator).toHaveText('New Sale')
 
-test('connect sale then reconnect it', async ({page}) => {
-  // Setup: Create a student, sales event, and products
-  const studentNumber = await createStudent(
-    {
-      names: [{firstName: 'John', lastName: 'Doe'}],
-      emails: ['john.doe@example.com'],
-      phones: ['1234567890'],
-      facebookNames: [],
-    },
-    undefined,
-    smooveIntegration(),
-    new Date(),
-    sql(),
-  )
+    // Fill the new sale form
+    const newForm = newSaleModel.form()
+    await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+    await newForm.salesEventInput().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.studentInput().locator.fill(`${studentNumber}`)
+    await newForm.studentInput().locator.blur()
+    await page.waitForLoadState('networkidle')
 
-  const product1Number = await createProduct(
-    {
-      name: 'Product One',
-      productType: 'recorded',
-      smooveListId: 2,
-      academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
-      personalMessageWhenJoining: 'Welcome to Product One!',
-      sendSkoolInvitation: true,
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    await newForm.products().product(0).quantity().locator.fill('2')
+    await newForm.products().product(0).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(0).unitPrice().locator.fill('1')
+    await newForm.products().product(0).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(1).quantity().locator.fill('1')
+    await newForm.products().product(1).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(1).unitPrice().locator.fill('3')
+    await newForm.products().product(1).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
 
-  const product2Number = await createProduct(
-    {
-      name: 'Product Two',
-      productType: 'challenge',
-      smooveListId: 10,
-      academyCourses: [
-        {courseId: 33, accountSubdomain: 'carmel'},
-        {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+    await newForm.cardcomInvoiceNumberInput().locator.fill(cardcomInvoiceNumber.toString())
+    await newForm.finalSaleRevenueInput().locator.fill('777')
+    await newForm.finalSaleRevenueInput().locator.blur()
+    await page.waitForLoadState('networkidle')
+
+    // Save the sale
+    await newForm.createButton().locator.click()
+
+    // Wait for navigation to update page
+    await page.waitForURL(updateSaleModel.urlRegex)
+
+    const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
+
+    await expect(updateSaleModel.pageTitle().locator).toHaveText(`Update Sale ${saleNumber}`)
+
+    await updateSaleModel.form().connectButton().locator.click()
+    await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+    await updateSaleModel.connectDialog().connectButton().locator.click()
+
+    await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
+    await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
+
+    await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
+
+    await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue(
+      cardcomInvoiceNumber.toString(),
+    )
+
+    await expect(updateSaleModel.form().viewInvoiceLink().locator).toHaveAttribute(
+      'href',
+      `http://invoice-document.example.com/${cardcomInvoiceNumber}`,
+    )
+    await expect(updateSaleModel.form().finalSaleRevenueInput().locator).toHaveValue('777')
+
+    const taxInvoiceDocument =
+      await cardcomIntegration().fetchInvoiceInformation(cardcomInvoiceNumber)
+
+    expect(taxInvoiceDocument).toBeDefined()
+
+    await expect(taxInvoiceDocument).toMatchObject({
+      customerName: 'John Doe',
+      customerEmail: 'john.doe@example.com',
+      customerPhone: '1234567890',
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          productName: 'Product One',
+          quantity: 2,
+          unitPriceInCents: 100,
+        },
+        {
+          productId: product2Number.toString(),
+          productName: 'Product Two',
+          quantity: 1,
+          unitPriceInCents: 300,
+        },
       ],
-      personalMessageWhenJoining: 'Welcome to Product Two!',
-      sendSkoolInvitation: true,
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+      transactionRevenueInCents: 100,
+    } as Omit<TaxInvoiceInformation, 'transactionDate'>)
 
-  const salesEventNumber = await createSalesEvent(
-    {
-      name: 'Test Sales Event',
-      fromDate: new Date('2025-01-01'),
-      toDate: new Date('2025-12-31'),
-      landingPageUrl: 'https://example.com/test-sale',
-      productsForSale: [product1Number, product2Number],
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
+        accountSubdomain: 'inspiredlivingdaily',
+      }),
+    ).toBe(true)
 
-  await page.goto(new URL('/sales', url()).href)
+    expect(await mailingList.emailsOfList(lists.main.id)).toEqual(['john.doe@example.com'])
+    expect(await mailingList.emailsOfList(lists.secondMain.id)).toEqual(['john.doe@example.com'])
 
-  const newSaleModel = createNewSalePageModel(page)
-  const updateSaleModel = createUpdateSalePageModel(page)
-  const updateStudentModel = createUpdateStudentPageModel(page)
+    // Verify personal messages were sent
+    await expect(async () => {
+      const contactId2 = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+      const sentMessages2 = whatsappIntegration()._test_sentContactMessages(contactId2)
+      expect(sentMessages2).toContain('Welcome to Product One!')
+      expect(sentMessages2).toContain('Welcome to Product Two!')
+    }).toPass()
 
-  // Navigate to create new sale page
-  await page.goto(new URL('/sales/new', url()).href)
+    // Verify skool invitation was sent
+    await expect(async () => {
+      expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
+    }).toPass()
 
-  // Fill the new sale form
-  const newForm = newSaleModel.form()
-  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
-  await newForm.salesEventInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.studentInput().locator.fill(`${studentNumber}`)
-  await newForm.studentInput().locator.blur()
-  await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
+    await page.goto(new URL(`/students/${studentNumber}`, url()).href)
 
-  await newForm.products().product(0).quantity().locator.fill('2')
-  await newForm.products().product(0).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await expect(newForm.products().product(0).quantity().locator).toHaveValue('2')
-  await newForm.products().product(0).unitPrice().locator.fill('1')
-  await newForm.products().product(0).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await expect(newForm.products().product(0).unitPrice().locator).toHaveValue('1')
-  await newForm.products().product(1).quantity().locator.fill('1')
-  await newForm.products().product(1).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(1).unitPrice().locator.fill('3')
-  await newForm.products().product(1).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await expect(newForm.products().product(1).unitPrice().locator).toHaveValue('3')
+    await expect(updateStudentModel.pageTitle().locator).toHaveText(
+      `Update Student ${studentNumber}`,
+    )
 
-  await newForm.finalSaleRevenueInput().locator.fill('27')
-  await newForm.finalSaleRevenueInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-
-  // Save the sale
-  await newForm.createButton().locator.click()
-
-  // Wait for navigation to update page
-  await page.waitForURL(updateSaleModel.urlRegex)
-
-  await expect(updateSaleModel.history().items().locator).toHaveCount(1)
-
-  await updateSaleModel.form().connectButton().locator.click()
-  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
-  await updateSaleModel.connectDialog().connectButton().locator.click()
-
-  await expect(updateSaleModel.history().items().locator).toHaveCount(3)
-
-  await expect(updateSaleModel.form().reconnectButton().locator).toBeVisible()
-  await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
-  await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
-
-  const smooveId = (
-    await smooveIntegration().fetchSmooveContact('john.doe@example.com', {by: 'email'})
-  ).id!
-  await smooveIntegration().changeContactLinkedLists(smooveId, {
-    unsubscribeFrom: [2],
-    subscribeTo: [],
+    const studentForm = updateStudentModel.form()
+    await expect(studentForm.cardcomCustomerIdsInput().locator).toBeHidden()
   })
-  expect(await smooveIntegration().fetchContactsOfList(2)).toEqual([])
 
-  await academyIntegration().removeContactFromAccount('john.doe@example.com', {
-    accountSubdomain: 'carmel',
+  test(`connect sale then reconnect it (${provider})`, async ({page}) => {
+    const lists = mailingListFixtures[provider]
+    const mailingList = mailingListTestkit(provider, {smooveIntegration, ravmesserIntegration})
+    // Setup: Create a student, sales event, and products
+    const studentNumber = await createStudent(
+      {
+        names: [{firstName: 'John', lastName: 'Doe'}],
+        emails: ['john.doe@example.com'],
+        phones: ['1234567890'],
+        facebookNames: [],
+      },
+      undefined,
+      smooveIntegration(),
+      ravmesserIntegration(),
+      new Date(),
+      sql(),
+    )
+
+    const product1Number = await createProduct(
+      {
+        name: 'Product One',
+        productType: 'recorded',
+        ...mailingListProductFields(provider, {listId: lists.main.id}),
+        academyCourses: [{courseId: 1, accountSubdomain: 'carmel'}],
+        personalMessageWhenJoining: 'Welcome to Product One!',
+        sendSkoolInvitation: true,
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
+
+    const product2Number = await createProduct(
+      {
+        name: 'Product Two',
+        productType: 'challenge',
+        ...mailingListProductFields(provider, {listId: lists.secondMain.id}),
+        academyCourses: [
+          {courseId: 33, accountSubdomain: 'carmel'},
+          {courseId: 100, accountSubdomain: 'inspiredlivingdaily'},
+        ],
+        personalMessageWhenJoining: 'Welcome to Product Two!',
+        sendSkoolInvitation: true,
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
+
+    const salesEventNumber = await createSalesEvent(
+      {
+        name: 'Test Sales Event',
+        fromDate: new Date('2025-01-01'),
+        toDate: new Date('2025-12-31'),
+        landingPageUrl: 'https://example.com/test-sale',
+        productsForSale: [product1Number, product2Number],
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
+
+    await page.goto(new URL('/sales', url()).href)
+
+    const newSaleModel = createNewSalePageModel(page)
+    const updateSaleModel = createUpdateSalePageModel(page)
+    const updateStudentModel = createUpdateStudentPageModel(page)
+
+    // Navigate to create new sale page
+    await page.goto(new URL('/sales/new', url()).href)
+
+    // Fill the new sale form
+    const newForm = newSaleModel.form()
+    await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+    await newForm.salesEventInput().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.studentInput().locator.fill(`${studentNumber}`)
+    await newForm.studentInput().locator.blur()
+    await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
+
+    await newForm.products().product(0).quantity().locator.fill('2')
+    await newForm.products().product(0).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await expect(newForm.products().product(0).quantity().locator).toHaveValue('2')
+    await newForm.products().product(0).unitPrice().locator.fill('1')
+    await newForm.products().product(0).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await expect(newForm.products().product(0).unitPrice().locator).toHaveValue('1')
+    await newForm.products().product(1).quantity().locator.fill('1')
+    await newForm.products().product(1).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(1).unitPrice().locator.fill('3')
+    await newForm.products().product(1).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await expect(newForm.products().product(1).unitPrice().locator).toHaveValue('3')
+
+    await newForm.finalSaleRevenueInput().locator.fill('27')
+    await newForm.finalSaleRevenueInput().locator.blur()
+    await page.waitForLoadState('networkidle')
+
+    // Save the sale
+    await newForm.createButton().locator.click()
+
+    // Wait for navigation to update page
+    await page.waitForURL(updateSaleModel.urlRegex)
+
+    await expect(updateSaleModel.history().items().locator).toHaveCount(1)
+
+    await updateSaleModel.form().connectButton().locator.click()
+    await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+    await updateSaleModel.connectDialog().connectButton().locator.click()
+
+    await expect(updateSaleModel.history().items().locator).toHaveCount(3)
+
+    await expect(updateSaleModel.form().reconnectButton().locator).toBeVisible()
+    await expect(updateSaleModel.form().connectButton().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().updateButton().locator).toBeVisible()
+    await expect(updateSaleModel.form().restoreButton().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().discardButton().locator).not.toBeVisible()
+
+    const mailingListContactId = (await mailingList.contactByEmail('john.doe@example.com')).id!
+    await mailingList.changeContactLinkedLists(mailingListContactId, {
+      unsubscribeFrom: [lists.main.id],
+      subscribeTo: [],
+    })
+    expect(await mailingList.contactsOfList(lists.main.id)).toEqual([])
+
+    await academyIntegration().removeContactFromAccount('john.doe@example.com', {
+      accountSubdomain: 'carmel',
+    })
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(false)
+
+    await updateSaleModel.form().reconnectButton().locator.click()
+    await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
+    await updateSaleModel.connectDialog().connectButton().locator.click()
+    await expect(updateSaleModel.history().items().locator).toHaveCount(5)
+    await expect(updateSaleModel.saleStatus().locator).toHaveText(
+      'Regular Sale | Connected to External Providers',
+    )
+
+    const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
+
+    expect(taxInvoiceDocument).toBeDefined()
+
+    await expect(taxInvoiceDocument).toMatchObject({
+      customerName: 'John Doe',
+      customerEmail: 'john.doe@example.com',
+      customerPhone: '1234567890',
+      productsSold: [
+        {
+          productId: product1Number.toString(),
+          productName: 'Product One',
+          quantity: 2,
+          unitPriceInCents: 100,
+        },
+        {
+          productId: product2Number.toString(),
+          productName: 'Product Two',
+          quantity: 1,
+          unitPriceInCents: 300,
+        },
+      ],
+      transactionRevenueInCents: 2700,
+    } as Omit<TaxInvoiceInformation, 'transactionDate'>)
+
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
+        accountSubdomain: 'inspiredlivingdaily',
+      }),
+    ).toBe(true)
+
+    expect(await mailingList.emailsOfList(lists.main.id)).toEqual(['john.doe@example.com'])
+    expect(await mailingList.emailsOfList(lists.secondMain.id)).toEqual(['john.doe@example.com'])
+
+    // Verify personal messages were sent on both connect and reconnect
+    await expect(async () => {
+      const contactId3 = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
+      const sentMessages3 = whatsappIntegration()._test_sentContactMessages(contactId3)
+      expect(sentMessages3.filter((m) => m === 'Welcome to Product One!').length).toBe(2)
+      expect(sentMessages3.filter((m) => m === 'Welcome to Product Two!').length).toBe(2)
+    }).toPass()
+
+    // Verify skool invitation was sent (on both connect and reconnect)
+    await expect(async () => {
+      expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
+    }).toPass()
+
+    await page.goto(new URL(`/students/${studentNumber}`, url()).href)
+
+    await expect(updateStudentModel.pageTitle().locator).toHaveText(
+      `Update Student ${studentNumber}`,
+    )
+
+    const studentForm = updateStudentModel.form()
+    await expect(studentForm.cardcomCustomerIdsInput().locator).toBeHidden()
   })
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(false)
-
-  await updateSaleModel.form().reconnectButton().locator.click()
-  await updateSaleModel.connectDialog().createInvoiceRadio().locator.check()
-  await updateSaleModel.connectDialog().connectButton().locator.click()
-  await expect(updateSaleModel.history().items().locator).toHaveCount(5)
-  await expect(updateSaleModel.saleStatus().locator).toHaveText(
-    'Regular Sale | Connected to External Providers',
-  )
-
-  const taxInvoiceDocument = await cardcomIntegration().fetchInvoiceInformation(1)
-
-  expect(taxInvoiceDocument).toBeDefined()
-
-  await expect(taxInvoiceDocument).toMatchObject({
-    customerName: 'John Doe',
-    customerEmail: 'john.doe@example.com',
-    customerPhone: '1234567890',
-    productsSold: [
-      {
-        productId: product1Number.toString(),
-        productName: 'Product One',
-        quantity: 2,
-        unitPriceInCents: 100,
-      },
-      {
-        productId: product2Number.toString(),
-        productName: 'Product Two',
-        quantity: 1,
-        unitPriceInCents: 300,
-      },
-    ],
-    transactionRevenueInCents: 2700,
-  } as Omit<TaxInvoiceInformation, 'transactionDate'>)
-
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 1, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 33, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('john.doe@example.com', 100, {
-      accountSubdomain: 'inspiredlivingdaily',
-    }),
-  ).toBe(true)
-
-  expect(
-    (await smooveIntegration().fetchContactsOfList(2)).map((contact) => contact.email),
-  ).toEqual(['john.doe@example.com'])
-  expect(
-    (await smooveIntegration().fetchContactsOfList(10)).map((contact) => contact.email),
-  ).toEqual(['john.doe@example.com'])
-
-  // Verify personal messages were sent on both connect and reconnect
-  await expect(async () => {
-    const contactId3 = humanIsraeliPhoneNumberToWhatsAppId('1234567890')
-    const sentMessages3 = whatsappIntegration()._test_sentContactMessages(contactId3)
-    expect(sentMessages3.filter((m) => m === 'Welcome to Product One!').length).toBe(2)
-    expect(sentMessages3.filter((m) => m === 'Welcome to Product Two!').length).toBe(2)
-  }).toPass()
-
-  // Verify skool invitation was sent (on both connect and reconnect)
-  await expect(async () => {
-    expect(skoolIntegration()._test_isInviteSentForEmail('john.doe@example.com')).toBe(true)
-  }).toPass()
-
-  await page.goto(new URL(`/students/${studentNumber}`, url()).href)
-
-  await expect(updateStudentModel.pageTitle().locator).toHaveText(`Update Student ${studentNumber}`)
-
-  const studentForm = updateStudentModel.form()
-  await expect(studentForm.cardcomCustomerIdsInput().locator).toBeHidden()
-})
+}
 
 test('create sale with transaction description then connect it', async ({page}) => {
   // Setup: Create a student, sales event, and products
@@ -712,6 +724,7 @@ test('create sale with transaction description then connect it', async ({page}) 
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -818,106 +831,108 @@ test('create sale with transaction description then connect it', async ({page}) 
   }).toPass()
 })
 
-test('create sale then connect it without creating an invoice', async ({page}) => {
-  const studentNumber = await createStudent(
-    {
-      names: [{firstName: 'Nancy', lastName: 'NoInvoice'}],
-      emails: ['nancy.noinvoice@example.com'],
-      phones: ['0502222222'],
-      facebookNames: [],
-    },
-    undefined,
-    smooveIntegration(),
-    new Date(),
-    sql(),
-  )
+for (const provider of mailingListProviders) {
+  test(`create sale then connect it without creating an invoice (${provider})`, async ({page}) => {
+    const mailingList = mailingListTestkit(provider, {smooveIntegration, ravmesserIntegration})
+    const studentNumber = await createStudent(
+      {
+        names: [{firstName: 'Nancy', lastName: 'NoInvoice'}],
+        emails: ['nancy.noinvoice@example.com'],
+        phones: ['0502222222'],
+        facebookNames: [],
+      },
+      undefined,
+      smooveIntegration(),
+      ravmesserIntegration(),
+      new Date(),
+      sql(),
+    )
 
-  const productNumber = await createProduct(
-    {
-      name: 'No Invoice Product',
-      productType: 'recorded',
-      smooveListId: 7,
-      academyCourses: [{courseId: 55, accountSubdomain: 'carmel'}],
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    const productNumber = await createProduct(
+      {
+        name: 'No Invoice Product',
+        productType: 'recorded',
+        ...mailingListProductFields(provider, {listId: 7}),
+        academyCourses: [{courseId: 55, accountSubdomain: 'carmel'}],
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  const salesEventNumber = await createSalesEvent(
-    {
-      name: 'No Invoice Sales Event',
-      fromDate: new Date('2025-01-01'),
-      toDate: new Date('2025-12-31'),
-      landingPageUrl: 'https://example.com/no-invoice-sale',
-      productsForSale: [productNumber],
-    },
-    undefined,
-    new Date(),
-    sql(),
-  )
+    const salesEventNumber = await createSalesEvent(
+      {
+        name: 'No Invoice Sales Event',
+        fromDate: new Date('2025-01-01'),
+        toDate: new Date('2025-12-31'),
+        landingPageUrl: 'https://example.com/no-invoice-sale',
+        productsForSale: [productNumber],
+      },
+      undefined,
+      new Date(),
+      sql(),
+    )
 
-  const newSaleModel = createNewSalePageModel(page)
-  const updateSaleModel = createUpdateSalePageModel(page)
+    const newSaleModel = createNewSalePageModel(page)
+    const updateSaleModel = createUpdateSalePageModel(page)
 
-  await page.goto(new URL('/sales/new', url()).href)
+    await page.goto(new URL('/sales/new', url()).href)
 
-  const newForm = newSaleModel.form()
-  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
-  await newForm.salesEventInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.studentInput().locator.fill(`${studentNumber}`)
-  await newForm.studentInput().locator.blur()
-  await page.waitForLoadState('networkidle')
+    const newForm = newSaleModel.form()
+    await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+    await newForm.salesEventInput().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.studentInput().locator.fill(`${studentNumber}`)
+    await newForm.studentInput().locator.blur()
+    await page.waitForLoadState('networkidle')
 
-  await newForm.products().product(0).quantity().locator.fill('1')
-  await newForm.products().product(0).quantity().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.products().product(0).unitPrice().locator.fill('80')
-  await newForm.products().product(0).unitPrice().locator.blur()
-  await page.waitForLoadState('networkidle')
+    await newForm.products().product(0).quantity().locator.fill('1')
+    await newForm.products().product(0).quantity().locator.blur()
+    await page.waitForLoadState('networkidle')
+    await newForm.products().product(0).unitPrice().locator.fill('80')
+    await newForm.products().product(0).unitPrice().locator.blur()
+    await page.waitForLoadState('networkidle')
 
-  await newForm.finalSaleRevenueInput().locator.fill('80')
-  await newForm.finalSaleRevenueInput().locator.blur()
-  await page.waitForLoadState('networkidle')
+    await newForm.finalSaleRevenueInput().locator.fill('80')
+    await newForm.finalSaleRevenueInput().locator.blur()
+    await page.waitForLoadState('networkidle')
 
-  await newForm.createButton().locator.click()
+    await newForm.createButton().locator.click()
 
-  await page.waitForURL(updateSaleModel.urlRegex)
+    await page.waitForURL(updateSaleModel.urlRegex)
 
-  const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
+    const saleNumber = new URL(await page.url()).pathname.split('/').at(-1)
 
-  // Cancelling the dialog does not connect the sale
-  await updateSaleModel.form().connectButton().locator.click()
-  await expect(updateSaleModel.connectDialog().locator).toBeVisible()
-  await updateSaleModel.connectDialog().cancelButton().locator.click()
-  await expect(updateSaleModel.connectDialog().locator).not.toBeVisible()
-  await expect(updateSaleModel.saleStatus().locator).toHaveText(
-    'Regular Sale | Disconnected from External Providers',
-  )
+    // Cancelling the dialog does not connect the sale
+    await updateSaleModel.form().connectButton().locator.click()
+    await expect(updateSaleModel.connectDialog().locator).toBeVisible()
+    await updateSaleModel.connectDialog().cancelButton().locator.click()
+    await expect(updateSaleModel.connectDialog().locator).not.toBeVisible()
+    await expect(updateSaleModel.saleStatus().locator).toHaveText(
+      'Regular Sale | Disconnected from External Providers',
+    )
 
-  await updateSaleModel.form().connectButton().locator.click()
-  await updateSaleModel.connectDialog().doNotCreateInvoiceRadio().locator.check()
-  await updateSaleModel.connectDialog().connectButton().locator.click()
+    await updateSaleModel.form().connectButton().locator.click()
+    await updateSaleModel.connectDialog().doNotCreateInvoiceRadio().locator.check()
+    await updateSaleModel.connectDialog().connectButton().locator.click()
 
-  await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
-  await expect(updateSaleModel.saleStatus().locator).toHaveText(
-    'Regular Sale | Connected to External Providers',
-  )
+    await expect(updateSaleModel.pageTitle().locator).toHaveText(`Sale ${saleNumber}`)
+    await expect(updateSaleModel.saleStatus().locator).toHaveText(
+      'Regular Sale | Connected to External Providers',
+    )
 
-  // No invoice was created in Cardcom
-  await expect(updateSaleModel.form().viewInvoiceLink().locator).not.toBeVisible()
-  await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
+    // No invoice was created in Cardcom
+    await expect(updateSaleModel.form().viewInvoiceLink().locator).not.toBeVisible()
+    await expect(updateSaleModel.form().cardcomInvoiceNumberInput().locator).toHaveValue('')
 
-  await expect(cardcomIntegration().fetchInvoiceInformation(1)).rejects.toThrow()
+    await expect(cardcomIntegration().fetchInvoiceInformation(1)).rejects.toThrow()
 
-  // But the student was still connected to the external providers
-  expect(
-    await academyIntegration().isStudentEnrolledInCourse('nancy.noinvoice@example.com', 55, {
-      accountSubdomain: 'carmel',
-    }),
-  ).toBe(true)
-  expect(
-    (await smooveIntegration().fetchContactsOfList(7)).map((contact) => contact.email),
-  ).toEqual(['nancy.noinvoice@example.com'])
-})
+    // But the student was still connected to the external providers
+    expect(
+      await academyIntegration().isStudentEnrolledInCourse('nancy.noinvoice@example.com', 55, {
+        accountSubdomain: 'carmel',
+      }),
+    ).toBe(true)
+    expect(await mailingList.emailsOfList(7)).toEqual(['nancy.noinvoice@example.com'])
+  })
+}

@@ -1,12 +1,30 @@
-.products-view_form-fields:has(#smooveListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveListId {
+.products-view_form-fields:has(#smooveListId:not(:placeholder-shown))
+  .smoove-list-create-btn-smooveListId {
   display: none;
 }
 
-.products-view_form-fields:has(#smooveCancelledListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveCancelledListId {
+.products-view_form-fields:has(#smooveCancelledListId:not(:placeholder-shown))
+  .smoove-list-create-btn-smooveCancelledListId {
   display: none;
 }
 
-.products-view_form-fields:has(#smooveRemovedListId:not(:placeholder-shown)) .smoove-list-create-btn-smooveRemovedListId {
+.products-view_form-fields:has(#smooveRemovedListId:not(:placeholder-shown))
+  .smoove-list-create-btn-smooveRemovedListId {
+  display: none;
+}
+
+.products-view_form-fields:has(#ravmesserListId:not(:placeholder-shown))
+  .ravmesser-list-create-btn-ravmesserListId {
+  display: none;
+}
+
+.products-view_form-fields:has(#ravmesserCancelledListId:not(:placeholder-shown))
+  .ravmesser-list-create-btn-ravmesserCancelledListId {
+  display: none;
+}
+
+.products-view_form-fields:has(#ravmesserRemovedListId:not(:placeholder-shown))
+  .ravmesser-list-create-btn-ravmesserRemovedListId {
   display: none;
 }
 

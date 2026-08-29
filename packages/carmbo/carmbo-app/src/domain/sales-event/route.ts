@@ -21,6 +21,7 @@ import {itemPickerSchema} from '../../commons/schema-commons.ts'
 import {initialzeImportSmooveJobHandlers} from './model/model-import-smoove.ts'
 import {initializePropagateSalesEventProductChangesJobHandlers} from '../sale/model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
@@ -30,6 +31,7 @@ export default function (
   {
     sql,
     smooveIntegration,
+    ravmesserIntegration,
     academyIntegration,
     whatsappIntegration,
     appBaseUrl,
@@ -40,6 +42,7 @@ export default function (
     appBaseUrl: string
     apiSecret: string | undefined
     smooveIntegration: SmooveIntegrationService | undefined
+    ravmesserIntegration: RavmesserIntegrationService | undefined
     academyIntegration: AcademyIntegrationService | undefined
     whatsappIntegration: WhatsAppIntegrationService
     nowService: NowService
@@ -50,6 +53,7 @@ export default function (
   if (smooveIntegration && academyIntegration) {
     initialzeImportSmooveJobHandlers(
       smooveIntegration,
+      ravmesserIntegration,
       academyIntegration,
       whatsappIntegration,
       sql,

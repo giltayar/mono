@@ -9,6 +9,7 @@ import postgres from 'postgres'
 import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
+import {createFakeRavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/testkit'
 import {migrate} from '../../../src/sql/migration.ts'
 import {fileURLToPath} from 'node:url'
 import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
@@ -30,18 +31,33 @@ export type SmooveContact = {
   isDeleted?: boolean
 }
 
+export type RavmesserContact = {
+  id: number
+  email: string
+  firstName: string
+  lastName: string
+  telephone: string
+  lists: number[]
+  signupDate: Date
+  birthday?: Date
+  unsubscribed?: boolean
+}
+
 export function setup(
   testUrl: string,
   options?: {
     smooveContacts?: Record<number, SmooveContact>
+    ravmesserContacts?: Record<number, RavmesserContact>
     withAcademyIntegration?: boolean // default is true
     withSmooveIntegration?: boolean // default is true
+    withRavmesserIntegration?: boolean // default is false
     withSkoolIntegration?: boolean // default is true
   },
 ): {
   url: () => URL
   sql: () => Sql
   smooveIntegration: () => ReturnType<typeof createFakeSmooveIntegrationService>
+  ravmesserIntegration: () => ReturnType<typeof createFakeRavmesserIntegrationService>
   academyIntegration: () => ReturnType<typeof createFakeAcademyIntegrationService>
   cardcomIntegration: () => ReturnType<typeof createFakeCardcomIntegrationService>
   whatsappIntegration: () => ReturnType<typeof createFakeWhatsAppIntegrationService>
@@ -51,6 +67,7 @@ export function setup(
   resetTime: () => void
 } {
   const withSmooveIntegration = options?.withSmooveIntegration ?? true
+  const withRavmesserIntegration = options?.withRavmesserIntegration ?? false
   const withAcademyIntegration = options?.withAcademyIntegration ?? true
   const withSkoolIntegration = options?.withSkoolIntegration ?? true
   const databaseName = 'd' + crypto.createHash('sha256').update(testUrl).digest('hex').slice(0, 62)
@@ -64,6 +81,7 @@ export function setup(
   let url: URL
   let overridingDate: Date | undefined
   let smooveIntegration: ReturnType<typeof createFakeSmooveIntegrationService>
+  let ravmesserIntegration: ReturnType<typeof createFakeRavmesserIntegrationService>
   let academyIntegration: ReturnType<typeof createFakeAcademyIntegrationService>
   let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
   let whatsappIntegration: ReturnType<typeof createFakeWhatsAppIntegrationService>
@@ -105,6 +123,19 @@ export function setup(
         {id: 20, name: 'Smoove List ID Alpha'},
       ],
       contacts: options?.smooveContacts ?? {},
+    })
+    ravmesserIntegration = createFakeRavmesserIntegrationService({
+      lists: [
+        {id: 100, name: 'Ravmesser All Lists', isAllLists: true},
+        {id: 102, name: 'Ravmesser List ID 1'},
+        {id: 104, name: 'Ravmesser List Cancelled 2'},
+        {id: 106, name: 'Ravmesser List Removed 3'},
+        {id: 110, name: 'Ravmesser List ID A'},
+        {id: 112, name: 'Ravmesser List Cancelled B'},
+        {id: 114, name: 'Ravmesser List Removed C'},
+        {id: 120, name: 'Ravmesser List ID Alpha'},
+      ],
+      contacts: options?.ravmesserContacts ?? {},
     })
     academyIntegration = createFakeAcademyIntegrationService({
       accounts: new Map([
@@ -183,6 +214,7 @@ export function setup(
           : undefined,
         whatsappIntegration,
         smooveIntegration: when(withSmooveIntegration, () => smooveIntegration),
+        ravmesserIntegration: when(withRavmesserIntegration, () => ravmesserIntegration),
         cardcomIntegration,
         skoolIntegration: when(withSkoolIntegration, () => skoolIntegration),
         nowService: () => (overridingDate ? overridingDate : new Date()),
@@ -212,6 +244,7 @@ export function setup(
     resetHooks()
     cardcomIntegration._test_reset_data()
     smooveIntegration._test_reset_data()
+    ravmesserIntegration._test_reset_data()
     whatsappIntegration._test_reset()
     skoolIntegration._test_reset()
     overridingDate = undefined
@@ -245,6 +278,7 @@ export function setup(
     url: () => url,
     sql: () => sql,
     smooveIntegration: () => smooveIntegration,
+    ravmesserIntegration: () => ravmesserIntegration,
     academyIntegration: () => academyIntegration,
     cardcomIntegration: () => cardcomIntegration,
     whatsappIntegration: () => whatsappIntegration,

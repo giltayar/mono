@@ -4,7 +4,9 @@ import {createNewStudentPageModel} from '../../page-model/students/new-student-p
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {setup} from '../common/setup.ts'
 
-const {url, TEST_hooks} = setup(import.meta.url)
+const {url, smooveIntegration, ravmesserIntegration, TEST_hooks} = setup(import.meta.url, {
+  withRavmesserIntegration: true,
+})
 
 test('deleting a student', async ({page}) => {
   await page.goto(new URL('/students', url()).href)
@@ -66,6 +68,17 @@ test('deleting a student', async ({page}) => {
   await expect(updateStudentModel.history().items().locator).toHaveCount(2)
   await expect(updateStudentModel.history().items().item(0).locator).toContainText('archived')
   await expect(updateStudentModel.history().items().item(1).locator).toContainText('created')
+
+  // Archiving unsubscribes the contact in both mailing list providers
+  const bobSmoove = await smooveIntegration().fetchSmooveContact('bob.williams@example.com', {
+    by: 'email',
+  })
+  expect(smooveIntegration()._test_isContactDeleted(bobSmoove.id)).toBe(true)
+  const bobRavmesser = await ravmesserIntegration().fetchRavmesserContact(
+    'bob.williams@example.com',
+    {by: 'email'},
+  )
+  expect(ravmesserIntegration()._test_isContactUnsubscribed(bobRavmesser.id)).toBe(true)
 
   // Verify that form inputs are read-only after archiving
   const updateForm = updateStudentModel.form()
@@ -164,6 +177,17 @@ test('restoring a student', async ({page}) => {
   await expect(updateStudentModel.history().items().item(2).locator).toContainText('created')
 
   await expect(updateStudentModel.pageTitle().locator).not.toContainText('(archived)')
+
+  // Restoring resubscribes the contact in both mailing list providers
+  const aliceSmoove = await smooveIntegration().fetchSmooveContact('alice.johnson@example.com', {
+    by: 'email',
+  })
+  expect(smooveIntegration()._test_isContactDeleted(aliceSmoove.id)).toBe(false)
+  const aliceRavmesser = await ravmesserIntegration().fetchRavmesserContact(
+    'alice.johnson@example.com',
+    {by: 'email'},
+  )
+  expect(ravmesserIntegration()._test_isContactUnsubscribed(aliceRavmesser.id)).toBe(false)
 
   await page.goto(new URL('/students', url()).href)
 

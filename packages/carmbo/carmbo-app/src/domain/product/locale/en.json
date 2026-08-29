@@ -14,17 +14,31 @@
     "whatsappGroups": "WhatsApp Groups",
     "facebookGroupId": "Facebook Group ID",
     "facebookGroups": "Facebook Groups",
+    "mailingListProvider": "Mailing List Provider",
+    "smoove": "Smoove",
+    "ravmesser": "RavMesser",
     "smooveListId": "Smoove List ID",
     "smooveCancelledListId": "Smoove Cancelled Club List ID",
     "smooveRemovedListId": "Smoove Removed List ID",
     "smooveRemovedDateCustomField": "Removed Date Custom Field",
+    "ravmesserListId": "RavMesser List ID",
+    "ravmesserCancelledListId": "RavMesser Cancelled Club List ID",
+    "ravmesserRemovedListId": "RavMesser Removed List ID",
+    "ravmesserRemovedDateCustomField": "RavMesser Removed Date Custom Field",
     "notes": "Notes",
     "personalMessageWhenJoining": "Personal Message When Joining",
     "sendSkoolInvitation": "Send Skool Invitation",
-    "createSmooveList": "Create"
+    "createSmooveList": "Create",
+    "createRavmesserList": "Create"
   },
   "smooveListDialog": {
     "createSmooveList": "Create Smoove List",
+    "listName": "List Name",
+    "create": "Create",
+    "cancel": "Cancel"
+  },
+  "ravmesserListDialog": {
+    "createRavmesserList": "Create RavMesser List",
     "listName": "List Name",
     "create": "Create",
     "cancel": "Cancel"

@@ -2,6 +2,7 @@ import {makeApp} from './carmbo-app.ts'
 import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/testkit'
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
+import {createFakeRavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/testkit'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {prepareDatabase} from './prepare-database.ts'
 import {range, when} from '@giltayar/functional-commons'
@@ -84,6 +85,18 @@ const {app, sql} = await makeApp({
         contacts: {},
       }),
     ),
+    ravmesserIntegration: createFakeRavmesserIntegrationService({
+      lists: [
+        {id: 100, name: 'Ravmesser All Lists', isAllLists: true},
+        {id: 102, name: 'Ravmesser List ID 1'},
+        {id: 104, name: 'Ravmesser List Cancelled 2'},
+        {id: 106, name: 'Ravmesser List Removed 3'},
+        {id: 110, name: 'Ravmesser List ID A'},
+        {id: 112, name: 'Ravmesser List Cancelled B'},
+        {id: 114, name: 'Ravmesser List Removed C'},
+      ],
+      contacts: {},
+    }),
     cardcomIntegration: fakeCardcomIntegrationService,
     skoolIntegration: createFakeSkoolIntegrationService(),
     nowService: () => new Date(),

@@ -132,6 +132,7 @@ test('refund manual sale allows full refund only', async ({page}) => {
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )

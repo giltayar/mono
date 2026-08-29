@@ -7,7 +7,9 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 
-const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, cardcomIntegration} = setup(
+  import.meta.url,
+)
 
 test('create sale with delivery address then update it', async ({page}) => {
   // Setup: Create a student, sales event, and products
@@ -20,6 +22,7 @@ test('create sale with delivery address then update it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

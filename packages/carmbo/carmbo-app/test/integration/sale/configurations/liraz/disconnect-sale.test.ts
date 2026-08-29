@@ -114,6 +114,7 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )

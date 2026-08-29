@@ -6,11 +6,15 @@ import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
 import {itemPickerSchema, stringItemPickerSchema} from '../../commons/schema-commons.ts'
 import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/types'
+import type {RavmesserList} from '@giltayar/carmel-tools-ravmesser-integration/types'
 import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {AcademyCourse} from '@giltayar/carmel-tools-academy-integration/service'
 
 export const ProductTypeSchema = z.enum(['recorded', 'challenge', 'club', 'bundle'])
 export type ProductType = z.infer<typeof ProductTypeSchema>
+
+export const MailingListProviderSchema = z.enum(['smoove', 'ravmesser'])
+export type MailingListProvider = z.infer<typeof MailingListProviderSchema>
 
 export const ProductSchema = z.object({
   productNumber: z.coerce.number().int().positive(),
@@ -33,10 +37,15 @@ export const ProductSchema = z.object({
     )
     .optional(),
   facebookGroups: z.array(z.string().min(1)).optional(),
+  mailingListProvider: MailingListProviderSchema.optional(),
   smooveListId: itemPickerSchema(),
   smooveCancelledListId: itemPickerSchema(),
   smooveRemovedListId: itemPickerSchema(),
   smooveRemovedDateCustomField: z.coerce.number().int().positive().optional(),
+  ravmesserListId: itemPickerSchema(),
+  ravmesserCancelledListId: itemPickerSchema(),
+  ravmesserRemovedListId: itemPickerSchema(),
+  ravmesserRemovedDateCustomField: z.coerce.number().int().positive().optional(),
   sendSkoolInvitation: z.coerce.boolean().optional(),
   personalMessageWhenJoining: z.string().optional(),
   notes: z.string().optional(),
@@ -104,10 +113,12 @@ export function isValidProduct(
   product: Product | NewProduct,
   {
     smooveLists,
+    ravmesserLists,
     whatsappGroups,
     academyCoursesBySubdomain,
   }: {
     smooveLists: SmooveList[] | undefined
+    ravmesserLists: RavmesserList[] | undefined
     whatsappGroups: WhatsAppGroup[]
     academyCoursesBySubdomain: Map<string, AcademyCourse[]> | undefined
   },
@@ -129,6 +140,27 @@ export function isValidProduct(
   if (smooveLists && product.smooveRemovedListId) {
     const smooveListIds = smooveLists.map((l) => l.id)
     if (!smooveListIds.includes(product.smooveRemovedListId)) {
+      return false
+    }
+  }
+
+  if (ravmesserLists && product.ravmesserListId) {
+    const ravmesserListIds = ravmesserLists.map((l) => l.id)
+    if (!ravmesserListIds.includes(product.ravmesserListId)) {
+      return false
+    }
+  }
+
+  if (ravmesserLists && product.ravmesserCancelledListId) {
+    const ravmesserListIds = ravmesserLists.map((l) => l.id)
+    if (!ravmesserListIds.includes(product.ravmesserCancelledListId)) {
+      return false
+    }
+  }
+
+  if (ravmesserLists && product.ravmesserRemovedListId) {
+    const ravmesserListIds = ravmesserLists.map((l) => l.id)
+    if (!ravmesserListIds.includes(product.ravmesserRemovedListId)) {
       return false
     }
   }
@@ -367,10 +399,15 @@ SELECT
   product_data.product_type AS product_type,
   product_data.notes AS notes,
   product_data.personal_message_when_joining AS personal_message_when_joining,
+  product_data.mailing_list_provider AS mailing_list_provider,
   product_integration_smoove.list_id AS smoove_list_id,
   product_integration_smoove.cancelled_list_id AS smoove_cancelled_list_id,
   product_integration_smoove.removed_list_id AS smoove_removed_list_id,
   product_integration_smoove.removed_date_custom_field AS smoove_removed_date_custom_field,
+  product_integration_ravmesser.list_id AS ravmesser_list_id,
+  product_integration_ravmesser.cancelled_list_id AS ravmesser_cancelled_list_id,
+  product_integration_ravmesser.removed_list_id AS ravmesser_removed_list_id,
+  product_integration_ravmesser.removed_date_custom_field AS ravmesser_removed_date_custom_field,
   COALESCE(product_integration_skool.send_invitation, false) AS send_skool_invitation,
   COALESCE(academy_courses, json_build_array()) AS academy_courses,
   COALESCE(whatsapp_groups, json_build_array()) AS whatsapp_groups,
@@ -380,6 +417,7 @@ FROM
   LEFT JOIN product_history ON product_history.id = current_history_id
   LEFT JOIN product_data ON product_data.data_id = current_data_id
   LEFT JOIN product_integration_smoove ON product_integration_smoove.data_id = current_data_id
+  LEFT JOIN product_integration_ravmesser ON product_integration_ravmesser.data_id = current_data_id
   LEFT JOIN product_integration_skool ON product_integration_skool.data_id = current_data_id
   LEFT JOIN LATERAL (
     SELECT
@@ -456,7 +494,7 @@ async function addProductStuff(
 
   ops = ops.concat(sql`
     INSERT INTO product_data VALUES
-      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'}, ${product.notes ?? null}, ${product.personalMessageWhenJoining ?? null})
+      (${dataId}, ${product.name ?? ''}, ${product.productType ?? 'recorded'}, ${product.notes ?? null}, ${product.personalMessageWhenJoining ?? null}, ${product.mailingListProvider ?? 'smoove'})
   `)
 
   ops = ops.concat(
@@ -504,6 +542,24 @@ async function addProductStuff(
       `)
   }
 
+  if (
+    product.ravmesserListId !== undefined ||
+    product.ravmesserCancelledListId !== undefined ||
+    product.ravmesserRemovedListId !== undefined ||
+    product.ravmesserRemovedDateCustomField !== undefined
+  ) {
+    ops = ops.concat(sql`
+        INSERT INTO product_integration_ravmesser VALUES
+          (
+            ${dataId},
+            ${product.ravmesserListId ?? null},
+            ${product.ravmesserCancelledListId ?? null},
+            ${product.ravmesserRemovedListId ?? null},
+            ${product.ravmesserRemovedDateCustomField ?? null}
+          )
+      `)
+  }
+
   if (product.sendSkoolInvitation !== undefined) {
     ops = ops.concat(sql`
         INSERT INTO product_integration_skool VALUES
@@ -526,6 +582,9 @@ function searchableProductText(productNumber: number, product: Product | NewProd
     product.smooveListId,
     product.smooveCancelledListId,
     product.smooveRemovedListId,
+    product.ravmesserListId,
+    product.ravmesserCancelledListId,
+    product.ravmesserRemovedListId,
   ]
     .filter((x) => x !== undefined)
     .map((x) => x.toString())

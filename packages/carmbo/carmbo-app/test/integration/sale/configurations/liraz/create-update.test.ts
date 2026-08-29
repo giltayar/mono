@@ -29,6 +29,7 @@ test('create sale then update it', async ({page}) => {
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )
@@ -180,6 +181,7 @@ test('discard button', async ({page}) => {
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )
@@ -261,6 +263,7 @@ test('optional fields', async ({page}) => {
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )
@@ -326,6 +329,7 @@ test('transaction description field', async ({page}) => {
       phones: [],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),
@@ -398,6 +402,7 @@ test('creation/update error shows alert', async ({page}) => {
       phones: [],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),
