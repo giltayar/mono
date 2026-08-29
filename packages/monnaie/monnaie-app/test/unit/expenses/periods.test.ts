@@ -2,9 +2,55 @@ import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import {
   periodDayCounts,
+  periodNavigationDates,
   periodRanges,
   previousPeriodName,
 } from '../../../src/domain/expenses/periods.ts'
+
+describe('periodNavigationDates', () => {
+  it('should navigate days without normalizing them', () => {
+    const dates = periodNavigationDates(
+      new Date('2026-07-29T12:00:00Z'),
+      new Date('2026-08-01T12:00:00Z'),
+      'UTC',
+    )
+
+    assert.deepStrictEqual(dates.day, {backward: '2026-07-28', forward: '2026-07-30'})
+  })
+
+  it('should navigate weeks to Saturday, or today when returning to the current week', () => {
+    const dates = periodNavigationDates(
+      new Date('2026-07-22T12:00:00Z'),
+      new Date('2026-07-29T12:00:00Z'),
+      'UTC',
+    )
+
+    assert.deepStrictEqual(dates.week, {backward: '2026-07-18', forward: '2026-07-29'})
+  })
+
+  it('should navigate months and years to their final day, including a leap day', () => {
+    const dates = periodNavigationDates(
+      new Date('2024-03-15T12:00:00Z'),
+      new Date('2026-07-29T12:00:00Z'),
+      'UTC',
+    )
+
+    assert.deepStrictEqual(dates.month, {backward: '2024-02-29', forward: '2024-04-30'})
+    assert.deepStrictEqual(dates.year, {backward: '2023-12-31', forward: '2025-12-31'})
+  })
+
+  it('should not navigate any period past today', () => {
+    const dates = periodNavigationDates(
+      new Date('2026-07-29T12:00:00Z'),
+      new Date('2026-07-29T18:00:00Z'),
+      'UTC',
+    )
+
+    for (const period of ['day', 'week', 'month', 'year'] as const) {
+      assert.strictEqual(dates[period].forward, undefined)
+    }
+  })
+})
 
 describe('periodDayCounts', () => {
   it('should count elapsed days in current periods and all days in previous periods', () => {

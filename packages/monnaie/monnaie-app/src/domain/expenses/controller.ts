@@ -14,6 +14,7 @@ import {
 import {
   dateStringToTimestamp,
   periodDayCounts,
+  periodNavigationDates,
   periodRanges,
   timestampToDateString,
 } from './periods.ts'
@@ -37,15 +38,19 @@ export async function showExpensesPage(
   userId: string,
   timeZone: string,
   categoryIds: number[],
+  selectedDay: string | undefined,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
   const now = new Date()
-  const ranges = periodRanges(now, timeZone)
+  const referenceDate =
+    selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
+  const currentDay = timestampToDateString(now, timeZone)
+  const ranges = periodRanges(referenceDate, timeZone)
 
   if (renderTarget === 'expense-month') {
     const expenses = await fetchPeriodExpenses(db, userId, ranges.month, categoryIds)
 
-    return {html: renderExpensesMonth(expenses, timeZone, categoryIds)}
+    return {html: renderExpensesMonth(expenses, timeZone, categoryIds, selectedDay)}
   }
 
   const [summary, expenses] = await Promise.all([
@@ -56,10 +61,14 @@ export async function showExpensesPage(
   return {
     html: renderExpensesPage(
       summary.totals,
-      periodDayCounts(now, timeZone, summary.firstExpenseDate),
+      periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       expenses,
       timeZone,
       categoryIds,
+      referenceDate,
+      selectedDay,
+      currentDay,
+      periodNavigationDates(referenceDate, now, timeZone),
     ),
   }
 }
@@ -69,15 +78,19 @@ export async function showGraphsPage(
   userId: string,
   timeZone: string,
   categoryIds: number[],
+  selectedDay: string | undefined,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
   const now = new Date()
-  const ranges = periodRanges(now, timeZone)
+  const referenceDate =
+    selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
+  const currentDay = timestampToDateString(now, timeZone)
+  const ranges = periodRanges(referenceDate, timeZone)
 
   if (renderTarget === 'expense-month') {
     const categoryTotals = await fetchCategoryTotals(db, userId, ranges.month, categoryIds)
 
-    return {html: renderGraphsMonth(categoryTotals, categoryIds)}
+    return {html: renderGraphsMonth(categoryTotals, categoryIds, selectedDay)}
   }
 
   const [summary, categoryTotals] = await Promise.all([
@@ -88,9 +101,14 @@ export async function showGraphsPage(
   return {
     html: renderGraphsPage(
       summary.totals,
-      periodDayCounts(now, timeZone, summary.firstExpenseDate),
+      periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       categoryTotals,
       categoryIds,
+      referenceDate,
+      timeZone,
+      selectedDay,
+      currentDay,
+      periodNavigationDates(referenceDate, now, timeZone),
     ),
   }
 }
@@ -186,11 +204,15 @@ export async function removeExpense(
   id: number,
   timeZone: string,
   categoryIds: number[],
+  selectedDay: string | undefined,
 ): Promise<ControllerResult> {
   await deleteExpense(db, userId, id)
 
   const now = new Date()
-  const ranges = periodRanges(now, timeZone)
+  const referenceDate =
+    selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
+  const currentDay = timestampToDateString(now, timeZone)
+  const ranges = periodRanges(referenceDate, timeZone)
 
   const [summary, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges, categoryIds),
@@ -199,11 +221,20 @@ export async function removeExpense(
 
   return {
     html:
-      renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds}) +
+      renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds, selectedDay}) +
       renderExpenseSummary(
         summary.totals,
-        periodDayCounts(now, timeZone, summary.firstExpenseDate),
-        {outOfBand: true},
+        periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
+        {
+          outOfBand: true,
+          path: '/',
+          referenceDate,
+          timeZone,
+          categoryIds,
+          referenceDay: selectedDay ?? currentDay,
+          currentDay,
+          navigationDates: periodNavigationDates(referenceDate, now, timeZone),
+        },
       ),
   }
 }

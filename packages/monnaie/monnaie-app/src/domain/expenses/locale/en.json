@@ -4,12 +4,15 @@
   },
   "summary": {
     "title": "Summary",
+    "today": "Today",
     "current": "Current",
     "previous": "Previous",
     "day": "Day",
     "week": "Week",
     "month": "Month",
     "year": "Year",
+    "backward": "Previous {{period}}",
+    "forward": "Next {{period}}",
     "perDay": "per day"
   },
   "list": {

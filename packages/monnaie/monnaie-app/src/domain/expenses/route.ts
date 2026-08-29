@@ -29,6 +29,7 @@ const CategoryFilterQuerySchema = z.object({
     .union([z.string(), z.array(z.string())])
     .default([])
     .transform((category) => (Array.isArray(category) ? category : [category])),
+  day: z.iso.date().optional(),
 })
 
 const EditExpenseBodySchema = z.object({
@@ -57,6 +58,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseCategoryFilter(request.query.category),
+          request.query.day,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
       ),
@@ -73,6 +75,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseCategoryFilter(request.query.category),
+          request.query.day,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
       ),
@@ -127,6 +130,7 @@ export default function expensesRoutes(
           request.params.id,
           timeZone,
           parseCategoryFilter(request.query.category),
+          request.query.day,
         ),
       ),
   )

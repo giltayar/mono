@@ -63,7 +63,20 @@ test.describe('with a Hebrew browser', () => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
     await expect(page.getByRole('link', {name: 'הוספת הוצאה'})).toBeVisible()
     await expect(page.getByRole('region', {name: 'סיכום'})).toBeVisible()
+    await expect(page.getByRole('heading', {name: 'סיכום: היום'})).toBeVisible()
     await expect(page.getByRole('region', {name: 'החודש'})).toBeVisible()
+  })
+
+  test('keeps the time arrows in backward-then-forward order', async ({page}) => {
+    await page.goto(url().href)
+
+    const navigation = page.locator('.period-navigation').first()
+    const backwardBox = await navigation.getByRole('link').boundingBox()
+    const forwardBox = await navigation.locator('span').boundingBox()
+
+    expect(backwardBox).not.toBeNull()
+    expect(forwardBox).not.toBeNull()
+    expect(backwardBox!.x).toBeLessThan(forwardBox!.x)
   })
 
   test('shows the validation errors in Hebrew', async ({page}) => {

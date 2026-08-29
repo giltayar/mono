@@ -32,6 +32,34 @@ export type PeriodRanges = Record<PeriodName, PeriodRange>
 
 export type PeriodDayCounts = Record<PeriodName, number>
 
+export type PeriodNavigationDates = Record<
+  BasePeriodName,
+  {backward: string; forward: string | undefined}
+>
+
+/** The dates used when moving each summary row to its adjacent calendar period. */
+export function periodNavigationDates(
+  referenceDate: Date,
+  now: Date,
+  timeZone: string,
+): PeriodNavigationDates {
+  const reference = toPlainDate(referenceDate, timeZone)
+  const today = toPlainDate(now, timeZone)
+
+  return {
+    day: {
+      backward: reference.subtract({days: 1}).toString(),
+      forward:
+        Temporal.PlainDate.compare(reference, today) < 0
+          ? reference.add({days: 1}).toString()
+          : undefined,
+    },
+    week: adjacentPeriodDates(reference, today, 'week'),
+    month: adjacentPeriodDates(reference, today, 'month'),
+    year: adjacentPeriodDates(reference, today, 'year'),
+  }
+}
+
 /**
  * The eight ranges the summary is made of, as of `now` and as seen from `timeZone`. Periods are
  * calendar periods — "today", "this month" — and the week starts on Sunday.
@@ -113,6 +141,48 @@ function toPlainDate(date: Date, timeZone: string): Temporal.PlainDate {
   return Temporal.Instant.fromEpochMilliseconds(date.getTime())
     .toZonedDateTimeISO(timeZone)
     .toPlainDate()
+}
+
+function adjacentPeriodDates(
+  reference: Temporal.PlainDate,
+  today: Temporal.PlainDate,
+  period: Exclude<BasePeriodName, 'day'>,
+): {backward: string; forward: string | undefined} {
+  const currentStart = periodStart(reference, period)
+  const forwardStart = currentStart.add({[`${period}s`]: 1})
+
+  return {
+    backward: navigationDate(currentStart.subtract({[`${period}s`]: 1}), today, period),
+    forward:
+      Temporal.PlainDate.compare(forwardStart, today) <= 0
+        ? navigationDate(forwardStart, today, period)
+        : undefined,
+  }
+}
+
+function navigationDate(
+  start: Temporal.PlainDate,
+  today: Temporal.PlainDate,
+  period: Exclude<BasePeriodName, 'day'>,
+): string {
+  const end = start.add({[`${period}s`]: 1}).subtract({days: 1})
+
+  return (
+    Temporal.PlainDate.compare(today, start) >= 0 && Temporal.PlainDate.compare(today, end) <= 0
+      ? today
+      : end
+  ).toString()
+}
+
+function periodStart(
+  date: Temporal.PlainDate,
+  period: Exclude<BasePeriodName, 'day'>,
+): Temporal.PlainDate {
+  if (period === 'week') {
+    return date.subtract({days: date.dayOfWeek % 7})
+  }
+
+  return period === 'month' ? date.with({day: 1}) : date.with({month: 1, day: 1})
 }
 
 function rangeStartingAt(from: Temporal.ZonedDateTime, length: Temporal.DurationLike): PeriodRange {

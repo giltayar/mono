@@ -64,6 +64,44 @@ test('switches views with HTMX and browser history', async ({page}) => {
   await expect(expenses.graph().canvas().locator).toBeVisible()
 })
 
+test('keeps the graph tab and persistent controls when navigating summary dates', async ({
+  page,
+}) => {
+  const expenses = createExpensesPageModel(page)
+  const yesterday = new Date()
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1)
+  const yesterdayString = yesterday.toISOString().slice(0, 10)
+
+  await page.goto(url().href)
+  await expenses.heading().locator.evaluate((heading) => heading.setAttribute('data-preserved', ''))
+  await expenses.filter().locator.evaluate((filter) => filter.setAttribute('data-preserved', ''))
+  await expenses.tabs().graphs().locator.click()
+
+  // The summary was not part of the tab swap and still rendered its links for `/`.
+  await expenses.summary().period('Day').backward().locator.click()
+
+  await expect(page).toHaveURL((currentUrl) => {
+    return (
+      currentUrl.pathname === '/expenses/graphs' &&
+      currentUrl.searchParams.get('day') === yesterdayString
+    )
+  })
+  await expect(expenses.tabs().graphs().locator).toHaveAttribute('aria-current', 'page')
+  await expect(expenses.heading().locator).toHaveAttribute('data-preserved', '')
+  await expect(expenses.filter().locator).toHaveAttribute('data-preserved', '')
+
+  await expenses.filter().toggle().locator.click()
+  await expenses.filter().category('אוכל').locator.check()
+
+  await expect(page).toHaveURL((currentUrl) => {
+    return (
+      currentUrl.pathname === '/expenses/graphs' &&
+      currentUrl.searchParams.get('day') === yesterdayString &&
+      currentUrl.searchParams.get('category') === '1'
+    )
+  })
+})
+
 test('groups this month by category and renders the pie', async ({page}) => {
   await saveExpense(db(), FIRST_USER.uid, {
     description: 'Coffee',

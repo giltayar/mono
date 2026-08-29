@@ -4,12 +4,15 @@
   },
   "summary": {
     "title": "סיכום",
+    "today": "היום",
     "current": "נוכחי",
     "previous": "קודם",
     "day": "יום",
     "week": "שבוע",
     "month": "חודש",
     "year": "שנה",
+    "backward": "{{period}} קודם",
+    "forward": "{{period}} הבא",
     "perDay": "ליום"
   },
   "list": {

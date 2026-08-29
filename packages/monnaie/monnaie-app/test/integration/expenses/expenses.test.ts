@@ -18,9 +18,84 @@ test('shows an empty summary and no expenses to begin with', async ({page}) => {
   await page.goto(url().href)
 
   await expect(expenses.heading().locator).toBeVisible()
+  await expect(expenses.summary().heading().locator).toHaveText('Summary: Today')
   await expect(expenses.list().empty().locator).toBeVisible()
   await expect(expenses.summary().period('Day').current().locator).toHaveText('0.00')
   await expect(expenses.summary().period('Year').previous().locator).toHaveText('0.00')
+
+  for (const period of ['Day', 'Week', 'Month', 'Year']) {
+    await expect(expenses.summary().period(period).forward().locator).toHaveCount(0)
+  }
+})
+
+test('navigates summary periods around the selected day', async ({page}) => {
+  await seedExpense('Selected day', 15, new Date('2024-03-15T12:00:00Z'))
+  await seedExpense('Previous day', 14, new Date('2024-03-14T12:00:00Z'))
+  const expenses = createExpensesPageModel(page)
+
+  await gotoDayWithFoodFilter(page, '2024-03-15')
+
+  await expect(expenses.summary().heading().locator).toHaveText('Summary: Friday, March 15, 2024')
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('15.00')
+  await expect(expenses.summary().period('Day').previous().locator).toHaveText('14.00')
+
+  for (const {period, direction, expectedHeading} of [
+    {period: 'Week', direction: 'backward', expectedHeading: 'Summary: Saturday, March 9, 2024'},
+    {period: 'Week', direction: 'forward', expectedHeading: 'Summary: Saturday, March 23, 2024'},
+    {
+      period: 'Month',
+      direction: 'backward',
+      expectedHeading: 'Summary: Thursday, February 29, 2024',
+    },
+    {
+      period: 'Year',
+      direction: 'forward',
+      expectedHeading: 'Summary: Wednesday, December 31, 2025',
+    },
+  ] as const) {
+    await gotoDayWithFoodFilter(page, '2024-03-15')
+    await expenses.summary().period(period)[direction]().locator.click()
+
+    await expect(expenses.summary().heading().locator).toHaveText(expectedHeading)
+    await expect(expenses.filter().category('אוכל').locator).toBeChecked()
+  }
+
+  await gotoDayWithFoodFilter(page, '2024-03-15')
+
+  await expenses.summary().period('Day').backward().locator.click()
+
+  await expect(page).toHaveURL(new URL('/?category=1&day=2024-03-14', url()).href)
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('14.00')
+
+  await expenses.filter().category('אוכל').locator.uncheck()
+
+  await expect(page).toHaveURL(new URL('/?day=2024-03-14', url()).href)
+})
+
+test('returns to today from either title and keeps the category filter', async ({page}) => {
+  const expenses = createExpensesPageModel(page)
+
+  for (const title of [expenses.heading().link(), expenses.summary().heading().link()]) {
+    await gotoDayWithFoodFilter(page, '2024-03-15')
+    await title.locator.click()
+
+    await expect(expenses.summary().heading().locator).toHaveText('Summary: Today')
+    await expect(expenses.filter().category('אוכל').locator).toBeChecked()
+    await expect(page).toHaveURL((currentUrl) => !currentUrl.searchParams.has('day'))
+  }
+})
+
+test('links forward from yesterday to today without a day query', async ({page}) => {
+  const yesterday = noonYesterdayUtc().toISOString().slice(0, 10)
+  const expenses = createExpensesPageModel(page)
+
+  await gotoDayWithFoodFilter(page, yesterday)
+
+  await expenses.summary().period('Day').forward().locator.click()
+
+  await expect(expenses.summary().heading().locator).toHaveText('Summary: Today')
+  await expect(expenses.filter().category('אוכל').locator).toBeChecked()
+  await expect(page).toHaveURL((currentUrl) => !currentUrl.searchParams.has('day'))
 })
 
 test('adds an expense, and shows it in the list and in the totals', async ({page}) => {
@@ -285,6 +360,15 @@ async function seedExpense(description: string, amount: number, createdAt: Date)
       created_at: createdAt.toISOString(),
     })
     .execute()
+}
+
+async function gotoDayWithFoodFilter(page: Page, day: string) {
+  const expenses = createExpensesPageModel(page)
+
+  await page.goto(new URL(`/?day=${day}`, url()).href)
+  await expenses.filter().toggle().locator.click()
+  await expenses.filter().category('אוכל').locator.check()
+  await expect(page).toHaveURL((currentUrl) => currentUrl.searchParams.get('category') === '1')
 }
 
 // the app runs the tests in UTC, so these are the instants it will put in the previous period

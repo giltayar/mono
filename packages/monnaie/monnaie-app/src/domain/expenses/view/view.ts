@@ -10,10 +10,16 @@ import {
   previousPeriodName,
   type BasePeriodName,
   type PeriodDayCounts,
+  type PeriodNavigationDates,
 } from '../periods.ts'
 
 const STYLE_SHEET = 'domain/expenses/view/style/style.css'
 const SCRIPT = 'domain/expenses/view/client/render-charts.js'
+const RESET_TO_TODAY_ON_CLICK = `
+  const query = new URL(location.href).searchParams;
+  query.delete('day');
+  event.currentTarget.href = '/' + (query.size === 0 ? '' : '?' + query)
+`
 const CHART_COLORS = [
   '#d1495b',
   '#00798c',
@@ -39,6 +45,10 @@ export function renderExpensesPage(
   expenses: Expense[],
   timeZone: string,
   categoryIds: number[],
+  referenceDate: Date,
+  selectedDay: string | undefined,
+  currentDay: string,
+  navigationDates: PeriodNavigationDates,
 ): string {
   const t = translator('expenses')
 
@@ -46,14 +56,25 @@ export function renderExpensesPage(
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
+      headingHref=${`/${expenseQuery(categoryIds, undefined)}`}
+      headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/', categoryIds)}
+      ${renderCategoryFilter('/', categoryIds, selectedDay)}
       <div id="expense-content">
-        ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
+        ${renderExpenseSummary(totals, dayCounts, {
+          outOfBand: false,
+          path: '/',
+          referenceDate,
+          referenceDay: selectedDay ?? currentDay,
+          currentDay,
+          timeZone,
+          categoryIds,
+          navigationDates,
+        })}
         <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-        ${renderExpensesMonth(expenses, timeZone, categoryIds)}
+        ${renderExpensesMonth(expenses, timeZone, categoryIds, selectedDay)}
       </div>
     </${MainLayout}>
   ` as string
@@ -64,6 +85,11 @@ export function renderGraphsPage(
   dayCounts: PeriodDayCounts,
   categoryTotals: CategoryTotal[],
   categoryIds: number[],
+  referenceDate: Date,
+  timeZone: string,
+  selectedDay: string | undefined,
+  currentDay: string,
+  navigationDates: PeriodNavigationDates,
 ): string {
   const t = translator('expenses')
 
@@ -71,14 +97,25 @@ export function renderGraphsPage(
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
+      headingHref=${`/${expenseQuery(categoryIds, undefined)}`}
+      headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/expenses/graphs', categoryIds)}
+      ${renderCategoryFilter('/expenses/graphs', categoryIds, selectedDay)}
       <div id="expense-content">
-        ${renderExpenseSummary(totals, dayCounts, {outOfBand: false})}
+        ${renderExpenseSummary(totals, dayCounts, {
+          outOfBand: false,
+          path: '/expenses/graphs',
+          referenceDate,
+          referenceDay: selectedDay ?? currentDay,
+          currentDay,
+          timeZone,
+          categoryIds,
+          navigationDates,
+        })}
         <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-        ${renderGraphsMonth(categoryTotals, categoryIds)}
+        ${renderGraphsMonth(categoryTotals, categoryIds, selectedDay)}
       </div>
     </${MainLayout}>
   ` as string
@@ -90,7 +127,11 @@ export function renderGraphsPage(
  * The price is that `hx-get` is frozen at the tab this page loaded on, so the path is taken from
  * the address bar at request time instead — the tabs push it, and the filter follows.
  */
-function renderCategoryFilter(path: string, categoryIds: number[]): string {
+function renderCategoryFilter(
+  path: string,
+  categoryIds: number[],
+  selectedDay: string | undefined,
+): string {
   const t = translator('expenses')
 
   return html`
@@ -99,13 +140,24 @@ function renderCategoryFilter(path: string, categoryIds: number[]): string {
       method="get"
       action=${path}
       hx-get=${path}
-      hx-on:htmx:config-request="event.detail.path = location.pathname"
+      hx-on:htmx:config-request="
+        const day = new URL(location.href).searchParams.get('day');
+        if (day === null) delete event.detail.parameters.day;
+        else event.detail.parameters.day = day;
+        event.detail.path = location.pathname
+      "
       hx-trigger="change"
       hx-target="#expense-content"
       hx-select="#expense-content"
       hx-swap="outerHTML"
       hx-push-url="true"
     >
+      <input
+        type="hidden"
+        name="day"
+        value=${selectedDay}
+        disabled=${selectedDay === undefined || undefined}
+      />
       <details open=${categoryIds.length > 0 || undefined}>
         <summary>${t('filter.label')}</summary>
         <fieldset class="category-options" aria-label=${t('filter.categories')}>
@@ -130,37 +182,50 @@ function renderCategoryFilter(path: string, categoryIds: number[]): string {
 }
 
 /** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
-function categoryFilterQuery(categoryIds: number[]): string {
-  if (categoryIds.length === 0) {
+function expenseQuery(categoryIds: number[], selectedDay: string | undefined): string {
+  if (categoryIds.length === 0 && selectedDay === undefined) {
     return ''
   }
 
-  return `?${new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))}`
+  const query = new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))
+
+  if (selectedDay !== undefined) {
+    query.set('day', selectedDay)
+  }
+
+  return `?${query}`
 }
 
 export function renderExpensesMonth(
   expenses: Expense[],
   timeZone: string,
   categoryIds: number[],
+  selectedDay: string | undefined,
 ): string {
   return renderMonthlyPanel(
     'expenses',
-    renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds}),
+    renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds, selectedDay}),
     categoryIds,
+    selectedDay,
   )
 }
 
-export function renderGraphsMonth(categoryTotals: CategoryTotal[], categoryIds: number[]): string {
-  return renderMonthlyPanel('graphs', renderCategoryGraph(categoryTotals), categoryIds)
+export function renderGraphsMonth(
+  categoryTotals: CategoryTotal[],
+  categoryIds: number[],
+  selectedDay: string | undefined,
+): string {
+  return renderMonthlyPanel('graphs', renderCategoryGraph(categoryTotals), categoryIds, selectedDay)
 }
 
 function renderMonthlyPanel(
   activeTab: 'expenses' | 'graphs',
   content: string,
   categoryIds: number[],
+  selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
-  const filter = categoryFilterQuery(categoryIds)
+  const filter = expenseQuery(categoryIds, selectedDay)
 
   return html`
     <section id="expense-month" aria-label=${t('list.title')}>
@@ -195,9 +260,29 @@ function renderTab(label: string, href: string, active: boolean): string {
 export function renderExpenseSummary(
   totals: PeriodTotals,
   dayCounts: PeriodDayCounts,
-  {outOfBand}: {outOfBand: boolean},
+  {
+    outOfBand,
+    path,
+    referenceDate,
+    referenceDay,
+    currentDay,
+    timeZone,
+    categoryIds,
+    navigationDates,
+  }: {
+    outOfBand: boolean
+    path: string
+    referenceDate: Date
+    referenceDay: string
+    currentDay: string
+    timeZone: string
+    categoryIds: number[]
+    navigationDates: PeriodNavigationDates
+  },
 ): string {
   const t = translator('expenses')
+  const discussionDay =
+    referenceDay === currentDay ? t('summary.today') : formatDiscussionDate(referenceDate, timeZone)
 
   return html`
     <section
@@ -205,7 +290,19 @@ export function renderExpenseSummary(
       aria-label=${t('summary.title')}
       hx-swap-oob=${outOfBand || undefined}
     >
-      <h2>${t('summary.title')}</h2>
+      <h2>
+        <a
+          href=${`${path}${expenseQuery(categoryIds, undefined)}`}
+          hx-get=${`${path}${expenseQuery(categoryIds, undefined)}`}
+          hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
+          hx-target="#expense-content"
+          hx-select="#expense-content"
+          hx-swap="outerHTML"
+          hx-push-url="true"
+        >
+          ${`${t('summary.title')}: ${discussionDay}`}
+        </a>
+      </h2>
       <table>
         <thead>
           <tr>
@@ -218,7 +315,20 @@ export function renderExpenseSummary(
           ${BASE_PERIOD_NAMES.map(
             (period) => html`
               <tr>
-                <th scope="row">${t(`summary.${period}`)}</th>
+                <th scope="row">
+                  <span class="period-heading">
+                    <span>${t(`summary.${period}`)}</span>
+                    <span class="period-navigation">
+                      ${renderPeriodNavigation(
+                        path,
+                        categoryIds,
+                        navigationDates[period],
+                        t(`summary.${period}`),
+                        currentDay,
+                      )}
+                    </span>
+                  </span>
+                </th>
                 <td>${renderPeriodTotal(period, totals[period], dayCounts[period])}</td>
                 <td class="previous">
                   ${renderPeriodTotal(
@@ -233,6 +343,51 @@ export function renderExpenseSummary(
         </tbody>
       </table>
     </section>
+  ` as string
+}
+
+function renderPeriodNavigation(
+  path: string,
+  categoryIds: number[],
+  dates: {backward: string; forward: string | undefined},
+  periodLabel: string,
+  currentDay: string,
+): string {
+  const t = translator('expenses')
+
+  return html`
+    <a
+      href=${`${path}${expenseQuery(categoryIds, dates.backward)}`}
+      hx-get=${`${path}${expenseQuery(categoryIds, dates.backward)}`}
+      hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
+      hx-target="#expense-content"
+      hx-select="#expense-content"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+      aria-label=${t('summary.backward', {period: periodLabel})}
+      >←</a
+    >
+    ${
+      dates.forward === undefined
+        ? html`<span aria-hidden="true">→</span>`
+        : html`<a
+            href=${`${path}${expenseQuery(
+              categoryIds,
+              dates.forward === currentDay ? undefined : dates.forward,
+            )}`}
+            hx-get=${`${path}${expenseQuery(
+              categoryIds,
+              dates.forward === currentDay ? undefined : dates.forward,
+            )}`}
+            hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
+            hx-target="#expense-content"
+            hx-select="#expense-content"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            aria-label=${t('summary.forward', {period: periodLabel})}
+            >→</a
+          >`
+    }
   ` as string
 }
 
@@ -253,7 +408,17 @@ function renderPeriodTotal(period: BasePeriodName, total: number, dayCount: numb
 
 export function renderExpenseList(
   expenses: Expense[],
-  {outOfBand, timeZone, categoryIds}: {outOfBand: boolean; timeZone: string; categoryIds: number[]},
+  {
+    outOfBand,
+    timeZone,
+    categoryIds,
+    selectedDay,
+  }: {
+    outOfBand: boolean
+    timeZone: string
+    categoryIds: number[]
+    selectedDay: string | undefined
+  },
 ): string {
   const t = translator('expenses')
 
@@ -264,7 +429,9 @@ export function renderExpenseList(
           ? html`<p class="empty">${t('list.empty')}</p>`
           : html`
               <ul>
-                ${expenses.map((expense) => renderExpenseItem(expense, timeZone, categoryIds))}
+                ${expenses.map((expense) =>
+                  renderExpenseItem(expense, timeZone, categoryIds, selectedDay),
+                )}
               </ul>
             `
       }
@@ -334,7 +501,12 @@ function renderCategoryGraph(categoryTotals: CategoryTotal[]): string {
   ` as string
 }
 
-function renderExpenseItem(expense: Expense, timeZone: string, categoryIds: number[]): string {
+function renderExpenseItem(
+  expense: Expense,
+  timeZone: string,
+  categoryIds: number[],
+  selectedDay: string | undefined,
+): string {
   const t = translator('expenses')
 
   return html`
@@ -359,7 +531,7 @@ function renderExpenseItem(expense: Expense, timeZone: string, categoryIds: numb
         <button
           type="button"
           aria-label=${`${t('actions.delete')} ${expense.description}`}
-          hx-delete=${`/expenses/${expense.id}${categoryFilterQuery(categoryIds)}`}
+          hx-delete=${`/expenses/${expense.id}${expenseQuery(categoryIds, selectedDay)}`}
           hx-target="#expense-list"
           hx-swap="outerHTML"
           hx-confirm=${t('actions.confirmDelete')}
@@ -392,5 +564,15 @@ function formatDate(date: Date, timeZone: string): string {
     day: 'numeric',
     month: 'short',
     timeZone,
+  }).format(date)
+}
+
+function formatDiscussionDate(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat(currentLanguage(), {
+    timeZone,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   }).format(date)
 }

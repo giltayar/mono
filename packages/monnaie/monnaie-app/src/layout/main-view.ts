@@ -21,12 +21,16 @@ const HTMX_CONFIG = JSON.stringify({
 export function MainLayout({
   title,
   heading,
+  headingHref,
+  headingOnClick,
   styleSheet,
   script,
   children,
 }: {
   title: string
   heading: string
+  headingHref?: string
+  headingOnClick?: string
   /** Path of an additional stylesheet, relative to `src` */
   styleSheet?: string
   /** Path of a client-side ES module, relative to `src` */
@@ -51,7 +55,13 @@ export function MainLayout({
         <body>
           <main class="main-view">
             <header class="main-header">
-              <h1>${heading}</h1>
+              <h1>
+                ${
+                  headingHref === undefined
+                    ? heading
+                    : html`<a href=${headingHref} hx-on:click=${headingOnClick}>${heading}</a>`
+                }
+              </h1>
               <${UserMenu} />
             </header>
             ${children}
