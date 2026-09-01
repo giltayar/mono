@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   DESCRIPTION_MAX_LENGTH,
   parseCategoryFilter,
+  parseExpenseIds,
   parseRecurringFilter,
   validateExpense,
   type ExpenseInput,
@@ -152,5 +153,15 @@ describe('parseRecurringFilter', () => {
   it('should use all expenses for a missing or stale filter', () => {
     assert.equal(parseRecurringFilter(undefined), 'all')
     assert.equal(parseRecurringFilter('old-value'), 'all')
+  })
+})
+
+describe('parseExpenseIds', () => {
+  it('should keep unique positive integer ids', () => {
+    assert.deepStrictEqual(parseExpenseIds(['3', '1', '3']), [3, 1])
+  })
+
+  it('should drop malformed ids', () => {
+    assert.deepStrictEqual(parseExpenseIds(['', 'expense', '1.5', '0', '-1']), [])
   })
 })

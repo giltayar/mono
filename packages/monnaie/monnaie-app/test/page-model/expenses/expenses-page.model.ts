@@ -7,6 +7,9 @@ export function createExpensesPageModel(page: Page) {
       link: () => ({locator: locator.getByRole('link')}),
     }),
     addButton: (locator = page.getByRole('link', {name: 'Add an expense'})) => ({locator}),
+    copyRecurringButton: (
+      locator = page.getByRole('button', {name: 'Copy recurring', exact: true}),
+    ) => ({locator}),
     filter: (locator = page.locator('#category-filter')) => ({
       locator,
       // the `<summary>`, which is what opens and closes the pills

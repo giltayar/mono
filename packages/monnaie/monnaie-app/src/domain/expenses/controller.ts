@@ -1,6 +1,7 @@
 import type {ControllerResult} from '../../commons/controller.ts'
 import type {Db} from '../../commons/db.ts'
 import {
+  copyRecurringExpenses,
   deleteExpense,
   fetchCategoryTotals,
   fetchExpense,
@@ -33,6 +34,7 @@ import {
   renderExpenseFormPage,
   type ExpenseFormMode,
 } from './view/expense-form-view.ts'
+import {renderCopyRecurringDialog} from './view/copy-recurring-view.ts'
 
 export async function showExpensesPage(
   db: Db,
@@ -140,6 +142,43 @@ export function showNewExpensePage(): ControllerResult {
       error: undefined,
     }),
   }
+}
+
+export async function showCopyRecurringDialog(
+  db: Db,
+  userId: string,
+  timeZone: string,
+): Promise<ControllerResult> {
+  const now = new Date()
+  const expenses = await fetchPeriodExpenses(
+    db,
+    userId,
+    periodRanges(now, timeZone).previousMonth,
+    [],
+    'only',
+  )
+
+  return {html: renderCopyRecurringDialog(expenses, timestampToDateString(now, timeZone))}
+}
+
+export async function copyRecurring(
+  db: Db,
+  userId: string,
+  timeZone: string,
+  expenseIds: number[],
+  date: string,
+): Promise<ControllerResult> {
+  const now = new Date()
+
+  await copyRecurringExpenses(
+    db,
+    userId,
+    periodRanges(now, timeZone).previousMonth,
+    expenseIds,
+    dateStringToTimestamp(date, timeZone),
+  )
+
+  return redirectToExpenses()
 }
 
 export async function addExpense(

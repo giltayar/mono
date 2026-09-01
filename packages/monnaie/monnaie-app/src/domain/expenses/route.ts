@@ -6,14 +6,16 @@ import {authenticatedUser} from '../../commons/auth.ts'
 import {replyWithControllerResult} from '../../commons/controller.ts'
 import {
   addExpense,
+  copyRecurring,
   removeExpense,
   saveExpenseEdit,
   showEditExpensePage,
   showExpensesPage,
   showGraphsPage,
   showNewExpensePage,
+  showCopyRecurringDialog,
 } from './controller.ts'
-import {parseCategoryFilter, parseRecurringFilter} from './model.ts'
+import {parseCategoryFilter, parseExpenseIds, parseRecurringFilter} from './model.ts'
 
 // the model is what validates these, so that the same rules apply however they arrive
 const ExpenseBodySchema = z.object({
@@ -40,6 +42,14 @@ const EditExpenseBodySchema = z.object({
   categoryId: z.string(),
   recurring: z.literal('on').optional(),
   date: z.string(),
+})
+
+const CopyRecurringBodySchema = z.object({
+  expenseId: z
+    .union([z.string(), z.array(z.string())])
+    .default([])
+    .transform((expenseId) => (Array.isArray(expenseId) ? expenseId : [expenseId])),
+  date: z.iso.date(),
 })
 
 const ExpenseParamsSchema = z.object({id: z.coerce.number().int()})
@@ -99,6 +109,29 @@ export default function expensesRoutes(
         date: undefined,
       }),
     ),
+  )
+
+  appWithTypes.get('/expenses/copy-recurring', async (_request, reply) =>
+    replyWithControllerResult(
+      reply,
+      await showCopyRecurringDialog(db, authenticatedUser().uid, timeZone),
+    ),
+  )
+
+  appWithTypes.post(
+    '/expenses/copy-recurring',
+    {schema: {body: CopyRecurringBodySchema}},
+    async (request, reply) =>
+      replyWithControllerResult(
+        reply,
+        await copyRecurring(
+          db,
+          authenticatedUser().uid,
+          timeZone,
+          parseExpenseIds(request.body.expenseId),
+          request.body.date,
+        ),
+      ),
   )
 
   appWithTypes.get(

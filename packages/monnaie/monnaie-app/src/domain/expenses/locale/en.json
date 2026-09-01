@@ -40,6 +40,15 @@
     "empty": "No expenses to graph this month",
     "chartLabel": "Expenses by category this month"
   },
+  "copyRecurring": {
+    "title": "Copy recurring expenses",
+    "empty": "No recurring expenses last month",
+    "selectAll": "Select all",
+    "expenses": "Recurring expenses from last month",
+    "date": "To date",
+    "copy": "Copy",
+    "cancel": "Cancel"
+  },
   "form": {
     "addTitle": "Add an expense",
     "editTitle": "Edit the expense",
@@ -54,6 +63,7 @@
   },
   "actions": {
     "add": "Add an expense",
+    "copyRecurring": "Copy recurring",
     "edit": "Edit",
     "delete": "Delete",
     "confirmDelete": "Delete this expense?"

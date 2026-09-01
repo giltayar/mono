@@ -75,7 +75,7 @@ export function renderExpensesPage(
           recurringFilter,
           navigationDates,
         })}
-        <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
+        ${renderCreateExpenseActions()}
         ${renderExpensesMonth(expenses, timeZone, categoryIds, recurringFilter, selectedDay)}
       </div>
     </${MainLayout}>
@@ -118,10 +118,32 @@ export function renderGraphsPage(
           recurringFilter,
           navigationDates,
         })}
-        <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
+        ${renderCreateExpenseActions()}
         ${renderGraphsMonth(categoryTotals, categoryIds, recurringFilter, selectedDay)}
       </div>
     </${MainLayout}>
+  ` as string
+}
+
+function renderCreateExpenseActions(): string {
+  const t = translator('expenses')
+
+  return html`
+    <div class="expense-create-actions">
+      <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
+      <button
+        class="copy-recurring"
+        type="button"
+        hx-get="/expenses/copy-recurring"
+        hx-target="#copy-recurring-dialog-container"
+      >
+        ${t('actions.copyRecurring')}
+      </button>
+    </div>
+    <div
+      id="copy-recurring-dialog-container"
+      hx-on:htmx:after-swap="this.querySelector('dialog')?.showModal()"
+    ></div>
   ` as string
 }
 

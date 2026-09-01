@@ -79,6 +79,10 @@ export function parseRecurringFilter(input: string | undefined): RecurringFilter
   return input === 'exclude' || input === 'only' ? input : 'all'
 }
 
+export function parseExpenseIds(input: string[]): number[] {
+  return [...new Set(input.map(Number).filter((id) => Number.isInteger(id) && id > 0))]
+}
+
 export function validateExpense({
   description,
   amount,
@@ -141,6 +145,46 @@ export async function saveExpense(db: Db, userId: string, expense: ValidExpense)
       category_id: expense.categoryId,
       recurring: expense.recurring,
     })
+    .execute()
+}
+
+export async function copyRecurringExpenses(
+  db: Db,
+  userId: string,
+  sourceRange: PeriodRange,
+  expenseIds: number[],
+  createdAt: Date,
+): Promise<void> {
+  if (expenseIds.length === 0) {
+    return
+  }
+
+  const expenses = await db
+    .selectFrom('expense')
+    .select(['description', 'amount', 'category_id'])
+    .where('user_id', '=', userId)
+    .where('recurring', '=', true)
+    .where('created_at', '>=', sourceRange.from)
+    .where('created_at', '<', sourceRange.to)
+    .where('id', 'in', expenseIds)
+    .execute()
+
+  if (expenses.length === 0) {
+    return
+  }
+
+  await db
+    .insertInto('expense')
+    .values(
+      expenses.map((expense) => ({
+        user_id: userId,
+        description: expense.description,
+        amount: Number(expense.amount),
+        category_id: expense.category_id,
+        recurring: true,
+        created_at: createdAt.toISOString(),
+      })),
+    )
     .execute()
 }
 
