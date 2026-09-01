@@ -609,6 +609,7 @@ function renderExpenseItem(
         >
           ${t('actions.delete')}
         </button>
+        ${expense.recurring && html`<span class="expense-recurring">${t('list.recurring')}</span>`}
       </div>
     </li>
   ` as string

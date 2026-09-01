@@ -242,6 +242,17 @@
     opacity: 0.6;
   }
 
+  & .expense-recurring {
+    margin-inline-start: auto;
+    font-size: 0.625rem;
+    line-height: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding-block: calc(var(--spacing) / 5);
+    padding-inline: calc(var(--spacing) / 2);
+    opacity: 0.7;
+  }
+
   & .expense-amount {
     font-variant-numeric: tabular-nums;
     font-weight: 600;

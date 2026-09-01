@@ -111,6 +111,12 @@ test('cycles between all, non-recurring and recurring expenses', async ({page}) 
   await expenses.filter().toggle().locator.click()
 
   await expect(expenses.filter().recurring().locator).toHaveText('All expenses')
+  await expect(expenses.list().item('Coffee').recurring().locator).toHaveText('recurring')
+  await expect(expenses.list().item('Coffee').recurring().locator).toHaveJSProperty(
+    'parentElement.className',
+    'expense-actions',
+  )
+  await expect(expenses.list().item('Bus ticket').recurring().locator).toHaveCount(0)
 
   await expenses.filter().recurring().locator.click()
 

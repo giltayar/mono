@@ -57,6 +57,7 @@ export function createExpensesPageModel(page: Page) {
 
         return {
           locator: item,
+          recurring: () => ({locator: item.locator('.expense-recurring')}),
           editLink: () => ({locator: item.getByRole('link', {name: `Edit ${description}`})}),
           deleteButton: () => ({
             locator: item.getByRole('button', {name: `Delete ${description}`}),

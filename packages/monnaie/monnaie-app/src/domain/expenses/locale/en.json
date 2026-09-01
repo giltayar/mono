@@ -17,7 +17,8 @@
   },
   "list": {
     "title": "This month",
-    "empty": "No expenses this month"
+    "empty": "No expenses this month",
+    "recurring": "recurring"
   },
   "filter": {
     "label": "Filter",
