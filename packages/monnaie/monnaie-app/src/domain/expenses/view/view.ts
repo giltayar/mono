@@ -4,7 +4,7 @@ import {currentLanguage, translator} from '../../../commons/i18n.ts'
 import {version} from '../../../commons/version.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {categoryById, EXPENSE_CATEGORIES} from '../categories.ts'
-import type {CategoryTotal, Expense, PeriodTotals} from '../model.ts'
+import type {CategoryTotal, Expense, PeriodTotals, RecurringFilter} from '../model.ts'
 import {
   BASE_PERIOD_NAMES,
   previousPeriodName,
@@ -45,6 +45,7 @@ export function renderExpensesPage(
   expenses: Expense[],
   timeZone: string,
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   referenceDate: Date,
   selectedDay: string | undefined,
   currentDay: string,
@@ -56,12 +57,12 @@ export function renderExpensesPage(
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
-      headingHref=${`/${expenseQuery(categoryIds, undefined)}`}
+      headingHref=${`/${expenseQuery(categoryIds, recurringFilter, undefined)}`}
       headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/', categoryIds, selectedDay)}
+      ${renderCategoryFilter('/', categoryIds, recurringFilter, selectedDay)}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -71,10 +72,11 @@ export function renderExpensesPage(
           currentDay,
           timeZone,
           categoryIds,
+          recurringFilter,
           navigationDates,
         })}
         <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-        ${renderExpensesMonth(expenses, timeZone, categoryIds, selectedDay)}
+        ${renderExpensesMonth(expenses, timeZone, categoryIds, recurringFilter, selectedDay)}
       </div>
     </${MainLayout}>
   ` as string
@@ -85,6 +87,7 @@ export function renderGraphsPage(
   dayCounts: PeriodDayCounts,
   categoryTotals: CategoryTotal[],
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   referenceDate: Date,
   timeZone: string,
   selectedDay: string | undefined,
@@ -97,12 +100,12 @@ export function renderGraphsPage(
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
-      headingHref=${`/${expenseQuery(categoryIds, undefined)}`}
+      headingHref=${`/${expenseQuery(categoryIds, recurringFilter, undefined)}`}
       headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/expenses/graphs', categoryIds, selectedDay)}
+      ${renderCategoryFilter('/expenses/graphs', categoryIds, recurringFilter, selectedDay)}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -112,10 +115,11 @@ export function renderGraphsPage(
           currentDay,
           timeZone,
           categoryIds,
+          recurringFilter,
           navigationDates,
         })}
         <a class="add-expense" href="/expenses/new">${t('actions.add')}</a>
-        ${renderGraphsMonth(categoryTotals, categoryIds, selectedDay)}
+        ${renderGraphsMonth(categoryTotals, categoryIds, recurringFilter, selectedDay)}
       </div>
     </${MainLayout}>
   ` as string
@@ -130,6 +134,7 @@ export function renderGraphsPage(
 function renderCategoryFilter(
   path: string,
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
@@ -158,7 +163,7 @@ function renderCategoryFilter(
         value=${selectedDay}
         disabled=${selectedDay === undefined || undefined}
       />
-      <details open=${categoryIds.length > 0 || undefined}>
+      <details open=${categoryIds.length > 0 || recurringFilter !== 'all' || undefined}>
         <summary>${t('filter.label')}</summary>
         <fieldset class="category-options" aria-label=${t('filter.categories')}>
           ${EXPENSE_CATEGORIES.map(
@@ -175,6 +180,35 @@ function renderCategoryFilter(
             `,
           )}
         </fieldset>
+        <input
+          id="recurring-filter-value"
+          type="hidden"
+          name="recurring"
+          value=${recurringFilter}
+          disabled=${recurringFilter === 'all' || undefined}
+        />
+        <button
+          class="recurring-filter"
+          type="button"
+          aria-label=${t('filter.recurring.label')}
+          aria-live="polite"
+          onclick="
+            const input = this.form.elements.recurring;
+            const states = ['all', 'exclude', 'only'];
+            const state = states[(states.indexOf(this.dataset.state) + 1) % states.length];
+            this.dataset.state = state;
+            input.value = state;
+            input.disabled = state === 'all';
+            this.textContent = this.dataset[state];
+            input.dispatchEvent(new Event('change', {bubbles: true}))
+          "
+          data-state=${recurringFilter}
+          data-all=${t('filter.recurring.all')}
+          data-exclude=${t('filter.recurring.exclude')}
+          data-only=${t('filter.recurring.only')}
+        >
+          ${t(`filter.recurring.${recurringFilter}`)}
+        </button>
         <noscript><button type="submit">${t('filter.apply')}</button></noscript>
       </details>
     </form>
@@ -182,12 +216,20 @@ function renderCategoryFilter(
 }
 
 /** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
-function expenseQuery(categoryIds: number[], selectedDay: string | undefined): string {
-  if (categoryIds.length === 0 && selectedDay === undefined) {
+function expenseQuery(
+  categoryIds: number[],
+  recurringFilter: RecurringFilter,
+  selectedDay: string | undefined,
+): string {
+  if (categoryIds.length === 0 && recurringFilter === 'all' && selectedDay === undefined) {
     return ''
   }
 
   const query = new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))
+
+  if (recurringFilter !== 'all') {
+    query.set('recurring', recurringFilter)
+  }
 
   if (selectedDay !== undefined) {
     query.set('day', selectedDay)
@@ -200,12 +242,20 @@ export function renderExpensesMonth(
   expenses: Expense[],
   timeZone: string,
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   selectedDay: string | undefined,
 ): string {
   return renderMonthlyPanel(
     'expenses',
-    renderExpenseList(expenses, {outOfBand: false, timeZone, categoryIds, selectedDay}),
+    renderExpenseList(expenses, {
+      outOfBand: false,
+      timeZone,
+      categoryIds,
+      recurringFilter,
+      selectedDay,
+    }),
     categoryIds,
+    recurringFilter,
     selectedDay,
   )
 }
@@ -213,19 +263,27 @@ export function renderExpensesMonth(
 export function renderGraphsMonth(
   categoryTotals: CategoryTotal[],
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   selectedDay: string | undefined,
 ): string {
-  return renderMonthlyPanel('graphs', renderCategoryGraph(categoryTotals), categoryIds, selectedDay)
+  return renderMonthlyPanel(
+    'graphs',
+    renderCategoryGraph(categoryTotals),
+    categoryIds,
+    recurringFilter,
+    selectedDay,
+  )
 }
 
 function renderMonthlyPanel(
   activeTab: 'expenses' | 'graphs',
   content: string,
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
-  const filter = expenseQuery(categoryIds, selectedDay)
+  const filter = expenseQuery(categoryIds, recurringFilter, selectedDay)
 
   return html`
     <section id="expense-month" aria-label=${t('list.title')}>
@@ -268,6 +326,7 @@ export function renderExpenseSummary(
     currentDay,
     timeZone,
     categoryIds,
+    recurringFilter,
     navigationDates,
   }: {
     outOfBand: boolean
@@ -277,6 +336,7 @@ export function renderExpenseSummary(
     currentDay: string
     timeZone: string
     categoryIds: number[]
+    recurringFilter: RecurringFilter
     navigationDates: PeriodNavigationDates
   },
 ): string {
@@ -292,8 +352,8 @@ export function renderExpenseSummary(
     >
       <h2>
         <a
-          href=${`${path}${expenseQuery(categoryIds, undefined)}`}
-          hx-get=${`${path}${expenseQuery(categoryIds, undefined)}`}
+          href=${`${path}${expenseQuery(categoryIds, recurringFilter, undefined)}`}
+          hx-get=${`${path}${expenseQuery(categoryIds, recurringFilter, undefined)}`}
           hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
           hx-target="#expense-content"
           hx-select="#expense-content"
@@ -322,6 +382,7 @@ export function renderExpenseSummary(
                       ${renderPeriodNavigation(
                         path,
                         categoryIds,
+                        recurringFilter,
                         navigationDates[period],
                         t(`summary.${period}`),
                         currentDay,
@@ -349,6 +410,7 @@ export function renderExpenseSummary(
 function renderPeriodNavigation(
   path: string,
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   dates: {backward: string; forward: string | undefined},
   periodLabel: string,
   currentDay: string,
@@ -357,8 +419,8 @@ function renderPeriodNavigation(
 
   return html`
     <a
-      href=${`${path}${expenseQuery(categoryIds, dates.backward)}`}
-      hx-get=${`${path}${expenseQuery(categoryIds, dates.backward)}`}
+      href=${`${path}${expenseQuery(categoryIds, recurringFilter, dates.backward)}`}
+      hx-get=${`${path}${expenseQuery(categoryIds, recurringFilter, dates.backward)}`}
       hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
       hx-target="#expense-content"
       hx-select="#expense-content"
@@ -373,10 +435,12 @@ function renderPeriodNavigation(
         : html`<a
             href=${`${path}${expenseQuery(
               categoryIds,
+              recurringFilter,
               dates.forward === currentDay ? undefined : dates.forward,
             )}`}
             hx-get=${`${path}${expenseQuery(
               categoryIds,
+              recurringFilter,
               dates.forward === currentDay ? undefined : dates.forward,
             )}`}
             hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
@@ -412,11 +476,13 @@ export function renderExpenseList(
     outOfBand,
     timeZone,
     categoryIds,
+    recurringFilter,
     selectedDay,
   }: {
     outOfBand: boolean
     timeZone: string
     categoryIds: number[]
+    recurringFilter: RecurringFilter
     selectedDay: string | undefined
   },
 ): string {
@@ -430,7 +496,7 @@ export function renderExpenseList(
           : html`
               <ul>
                 ${expenses.map((expense) =>
-                  renderExpenseItem(expense, timeZone, categoryIds, selectedDay),
+                  renderExpenseItem(expense, timeZone, categoryIds, recurringFilter, selectedDay),
                 )}
               </ul>
             `
@@ -505,6 +571,7 @@ function renderExpenseItem(
   expense: Expense,
   timeZone: string,
   categoryIds: number[],
+  recurringFilter: RecurringFilter,
   selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
@@ -531,7 +598,11 @@ function renderExpenseItem(
         <button
           type="button"
           aria-label=${`${t('actions.delete')} ${expense.description}`}
-          hx-delete=${`/expenses/${expense.id}${expenseQuery(categoryIds, selectedDay)}`}
+          hx-delete=${`/expenses/${expense.id}${expenseQuery(
+            categoryIds,
+            recurringFilter,
+            selectedDay,
+          )}`}
           hx-target="#expense-list"
           hx-swap="outerHTML"
           hx-confirm=${t('actions.confirmDelete')}

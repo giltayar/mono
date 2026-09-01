@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   DESCRIPTION_MAX_LENGTH,
   parseCategoryFilter,
+  parseRecurringFilter,
   validateExpense,
   type ExpenseInput,
 } from '../../../src/domain/expenses/model.ts'
@@ -12,18 +13,37 @@ describe('validateExpense', () => {
     description: 'Coffee',
     amount: '12.50',
     categoryId: '1',
+    recurring: undefined,
     date: undefined,
   }
 
   it('should accept an expense and trim its description', () => {
     assert.deepStrictEqual(validateExpense({...valid, description: '  Coffee  '}), {
-      expense: {description: 'Coffee', amount: 12.5, categoryId: 1, date: undefined},
+      expense: {
+        description: 'Coffee',
+        amount: 12.5,
+        categoryId: 1,
+        recurring: false,
+        date: undefined,
+      },
     })
   })
 
   it('should accept an amount with no decimals', () => {
     assert.deepStrictEqual(validateExpense({...valid, amount: '6'}), {
-      expense: {description: 'Coffee', amount: 6, categoryId: 1, date: undefined},
+      expense: {description: 'Coffee', amount: 6, categoryId: 1, recurring: false, date: undefined},
+    })
+  })
+
+  it('should accept a recurring expense', () => {
+    assert.deepStrictEqual(validateExpense({...valid, recurring: 'on'}), {
+      expense: {
+        description: 'Coffee',
+        amount: 12.5,
+        categoryId: 1,
+        recurring: true,
+        date: undefined,
+      },
     })
   })
 
@@ -66,7 +86,13 @@ describe('validateExpense', () => {
 
   it('should complain about the description before the amount', () => {
     assert.deepStrictEqual(
-      validateExpense({description: '', amount: 'nope', categoryId: '99', date: undefined}),
+      validateExpense({
+        description: '',
+        amount: 'nope',
+        categoryId: '99',
+        recurring: undefined,
+        date: undefined,
+      }),
       {
         error: 'empty-description',
       },
@@ -75,7 +101,13 @@ describe('validateExpense', () => {
 
   it('should accept a valid date string', () => {
     assert.deepStrictEqual(validateExpense({...valid, date: '2024-03-15'}), {
-      expense: {description: 'Coffee', amount: 12.5, categoryId: 1, date: '2024-03-15'},
+      expense: {
+        description: 'Coffee',
+        amount: 12.5,
+        categoryId: 1,
+        recurring: false,
+        date: '2024-03-15',
+      },
     })
   })
 
@@ -109,4 +141,16 @@ describe('parseCategoryFilter', () => {
       assert.deepStrictEqual(parseCategoryFilter([id]), [])
     })
   }
+})
+
+describe('parseRecurringFilter', () => {
+  it('should parse both recurring filter states', () => {
+    assert.equal(parseRecurringFilter('exclude'), 'exclude')
+    assert.equal(parseRecurringFilter('only'), 'only')
+  })
+
+  it('should use all expenses for a missing or stale filter', () => {
+    assert.equal(parseRecurringFilter(undefined), 'all')
+    assert.equal(parseRecurringFilter('old-value'), 'all')
+  })
 })

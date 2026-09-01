@@ -12,6 +12,9 @@ export function createExpensesPageModel(page: Page) {
       // the `<summary>`, which is what opens and closes the pills
       toggle: () => ({locator: locator.getByText('Filter', {exact: true})}),
       category: (name: string) => ({locator: locator.getByRole('checkbox', {name})}),
+      recurring: () => ({
+        locator: locator.getByRole('button', {name: 'Recurring expense filter'}),
+      }),
     }),
     tabs: (locator = page.getByRole('navigation', {name: 'Monthly views'})) => ({
       locator,

@@ -14,6 +14,7 @@ export type ExpenseTable = {
   description: string
   amount: ColumnType<string, number, number>
   category_id: number
+  recurring: boolean
   created_at: ColumnType<Date, string | undefined, string>
 }
 

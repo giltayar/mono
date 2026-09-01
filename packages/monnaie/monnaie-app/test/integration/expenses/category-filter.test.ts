@@ -102,6 +102,45 @@ test('ignores a category in the url that is not a category', async ({page}) => {
   await expect(expenses.summary().period('Day').current().locator).toHaveText('18.50')
 })
 
+test('cycles between all, non-recurring and recurring expenses', async ({page}) => {
+  await seedExpenses()
+
+  const expenses = createExpensesPageModel(page)
+
+  await page.goto(url().href)
+  await expenses.filter().toggle().locator.click()
+
+  await expect(expenses.filter().recurring().locator).toHaveText('All expenses')
+
+  await expenses.filter().recurring().locator.click()
+
+  await expect(page).toHaveURL(new URL('/?recurring=exclude', url()).href)
+  await expect(expenses.filter().recurring().locator).toHaveText('No recurring expenses')
+  await expect(expenses.list().item('Bus ticket').locator).toBeVisible()
+  await expect(expenses.list().items().locator).toHaveCount(1)
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('6.00')
+
+  await expenses.filter().recurring().locator.click()
+
+  await expect(page).toHaveURL(new URL('/?recurring=only', url()).href)
+  await expect(expenses.filter().recurring().locator).toHaveText('Only recurring expenses')
+  await expect(expenses.list().item('Coffee').locator).toBeVisible()
+  await expect(expenses.list().items().locator).toHaveCount(1)
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('12.50')
+
+  await expenses.tabs().graphs().locator.click()
+
+  await expect(page).toHaveURL(new URL('/expenses/graphs?recurring=only', url()).href)
+  await expect(expenses.graph().entries().locator).toHaveCount(1)
+  await expect(expenses.graph().entry(FOOD.name).locator).toBeVisible()
+
+  await expenses.filter().recurring().locator.click()
+
+  await expect(page).toHaveURL(new URL('/expenses/graphs', url()).href)
+  await expect(expenses.filter().recurring().locator).toHaveText('All expenses')
+  await expect(expenses.graph().entries().locator).toHaveCount(2)
+})
+
 test('keeps the filter when switching to the graphs', async ({page}) => {
   await seedExpenses()
 
@@ -141,6 +180,7 @@ test('keeps the filter when deleting an expense', async ({page}) => {
     description: 'Lunch',
     amount: 20,
     categoryId: FOOD.id,
+    recurring: false,
     date: undefined,
   })
 
@@ -187,12 +227,14 @@ async function seedExpenses(): Promise<void> {
     description: 'Coffee',
     amount: 12.5,
     categoryId: FOOD.id,
+    recurring: true,
     date: undefined,
   })
   await saveExpense(db(), FIRST_USER.uid, {
     description: 'Bus ticket',
     amount: 6,
     categoryId: TRANSPORT.id,
+    recurring: false,
     date: undefined,
   })
 }

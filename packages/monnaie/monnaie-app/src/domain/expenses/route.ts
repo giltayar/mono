@@ -13,13 +13,14 @@ import {
   showGraphsPage,
   showNewExpensePage,
 } from './controller.ts'
-import {parseCategoryFilter} from './model.ts'
+import {parseCategoryFilter, parseRecurringFilter} from './model.ts'
 
 // the model is what validates these, so that the same rules apply however they arrive
 const ExpenseBodySchema = z.object({
   description: z.string(),
   amount: z.string(),
   categoryId: z.string(),
+  recurring: z.literal('on').optional(),
 })
 
 // a single `?category=3` arrives as a string and repeated ones as an array; the ids themselves are
@@ -29,6 +30,7 @@ const CategoryFilterQuerySchema = z.object({
     .union([z.string(), z.array(z.string())])
     .default([])
     .transform((category) => (Array.isArray(category) ? category : [category])),
+  recurring: z.string().optional(),
   day: z.iso.date().optional(),
 })
 
@@ -36,6 +38,7 @@ const EditExpenseBodySchema = z.object({
   description: z.string(),
   amount: z.string(),
   categoryId: z.string(),
+  recurring: z.literal('on').optional(),
   date: z.string(),
 })
 
@@ -58,6 +61,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseCategoryFilter(request.query.category),
+          parseRecurringFilter(request.query.recurring),
           request.query.day,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
@@ -75,6 +79,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseCategoryFilter(request.query.category),
+          parseRecurringFilter(request.query.recurring),
           request.query.day,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
@@ -88,7 +93,11 @@ export default function expensesRoutes(
   appWithTypes.post('/expenses', {schema: {body: ExpenseBodySchema}}, async (request, reply) =>
     replyWithControllerResult(
       reply,
-      await addExpense(db, authenticatedUser().uid, {...request.body, date: undefined}),
+      await addExpense(db, authenticatedUser().uid, {
+        ...request.body,
+        recurring: request.body.recurring,
+        date: undefined,
+      }),
     ),
   )
 
@@ -112,7 +121,7 @@ export default function expensesRoutes(
           db,
           authenticatedUser().uid,
           request.params.id,
-          request.body,
+          {...request.body, recurring: request.body.recurring},
           timeZone,
         ),
       ),
@@ -130,6 +139,7 @@ export default function expensesRoutes(
           request.params.id,
           timeZone,
           parseCategoryFilter(request.query.category),
+          parseRecurringFilter(request.query.recurring),
           request.query.day,
         ),
       ),

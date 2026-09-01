@@ -9,6 +9,7 @@ export function createExpenseFormPageModel(page: Page) {
     date: (locator = page.getByLabel('Date')) => ({locator}),
     // the radios are visually hidden and styled through their label, but they are still radios
     category: (name: string) => ({locator: page.getByRole('radio', {name})}),
+    recurring: (locator = page.getByRole('checkbox', {name: 'Recurring expense'})) => ({locator}),
     submitButton: (locator = page.getByRole('button', {name: /^(Add|Save)$/})) => ({locator}),
     cancelLink: (locator = page.getByRole('link', {name: 'Cancel'})) => ({locator}),
     error: (locator = page.getByRole('alert')) => ({locator}),

@@ -40,6 +40,7 @@ test('switches views with HTMX and browser history', async ({page}) => {
     description: 'Coffee',
     amount: 12.5,
     categoryId: 1,
+    recurring: false,
     date: undefined,
   })
   const expenses = createExpensesPageModel(page)
@@ -107,24 +108,28 @@ test('groups this month by category and renders the pie', async ({page}) => {
     description: 'Coffee',
     amount: 10,
     categoryId: 1,
+    recurring: false,
     date: undefined,
   })
   await saveExpense(db(), FIRST_USER.uid, {
     description: 'Lunch',
     amount: 2.5,
     categoryId: 1,
+    recurring: false,
     date: undefined,
   })
   await saveExpense(db(), FIRST_USER.uid, {
     description: 'Bus',
     amount: 6,
     categoryId: 2,
+    recurring: false,
     date: undefined,
   })
   await saveExpense(db(), SECOND_USER.uid, {
     description: 'Somebody else',
     amount: 100,
     categoryId: 2,
+    recurring: false,
     date: undefined,
   })
   const expenses = createExpensesPageModel(page)

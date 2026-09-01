@@ -23,6 +23,18 @@
   & .category-options {
     margin-block-end: var(--spacing);
   }
+
+  & .recurring-filter {
+    font: inherit;
+    font-size: 0.875rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding-block: calc(var(--spacing) / 2);
+    padding-inline: var(--spacing);
+    cursor: pointer;
+  }
 }
 
 #expense-summary {
@@ -328,6 +340,19 @@
   & .error {
     color: crimson;
     margin: 0;
+  }
+
+  & .recurring-option {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) / 2);
+    cursor: pointer;
+
+    & input {
+      inline-size: 1rem;
+      block-size: 1rem;
+      margin: 0;
+    }
   }
 }
 

@@ -110,9 +110,17 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   await form.description().locator.fill('Coffee')
   await form.amount().locator.fill('12.50')
   await form.category('אוכל').locator.check()
+  await form.recurring().locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
+
+  const savedExpense = await db()
+    .selectFrom('expense')
+    .select('recurring')
+    .where('description', '=', 'Coffee')
+    .executeTakeFirstOrThrow()
+  expect(savedExpense.recurring).toBe(true)
 
   const item = expenses.list().item('Coffee')
 
@@ -239,11 +247,13 @@ test('edits an expense', async ({page}) => {
   await expect(form.description().locator).toHaveValue('Coffee')
   await expect(form.amount().locator).toHaveValue('12.50')
   await expect(form.category('אוכל').locator).toBeChecked()
+  await expect(form.recurring().locator).not.toBeChecked()
   await expect(form.date().locator).toBeVisible()
 
   await form.description().locator.fill('Espresso')
   await form.amount().locator.fill('8.00')
   await form.category('בילוי').locator.check()
+  await form.recurring().locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
@@ -254,6 +264,13 @@ test('edits an expense', async ({page}) => {
   await expect(item.locator).toContainText('בילוי')
   await expect(item.locator).toContainText('8.00')
   await expect(expenses.summary().period('Day').current().locator).toHaveText('8.00')
+
+  const savedExpense = await db()
+    .selectFrom('expense')
+    .select('recurring')
+    .where('description', '=', 'Espresso')
+    .executeTakeFirstOrThrow()
+  expect(savedExpense.recurring).toBe(true)
 })
 
 test('changes the date of an expense when editing', async ({page}) => {
@@ -357,6 +374,7 @@ async function seedExpense(description: string, amount: number, createdAt: Date)
       description,
       amount,
       category_id: 1,
+      recurring: false,
       created_at: createdAt.toISOString(),
     })
     .execute()
