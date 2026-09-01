@@ -20,6 +20,8 @@ export const EXPENSE_CATEGORIES = [
   {id: 14, name: 'עסק'},
   {id: 15, name: 'טיפוח'},
   {id: 16, name: 'תרבות'},
+  {id: 17, name: 'שרותי אינטרנט'},
+
   {id: 12, name: 'אחר'},
 ] as const
 
