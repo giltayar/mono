@@ -186,7 +186,7 @@ test('keeps the filter when deleting an expense', async ({page}) => {
     description: 'Lunch',
     amount: 20,
     categoryId: FOOD.id,
-    recurring: false,
+    expenseType: 'day-to-day',
     date: undefined,
   })
 
@@ -233,14 +233,14 @@ async function seedExpenses(): Promise<void> {
     description: 'Coffee',
     amount: 12.5,
     categoryId: FOOD.id,
-    recurring: true,
+    expenseType: 'recurring',
     date: undefined,
   })
   await saveExpense(db(), FIRST_USER.uid, {
     description: 'Bus ticket',
     amount: 6,
     categoryId: TRANSPORT.id,
-    recurring: false,
+    expenseType: 'day-to-day',
     date: undefined,
   })
 }

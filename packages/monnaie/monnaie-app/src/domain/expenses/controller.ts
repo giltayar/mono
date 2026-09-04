@@ -226,7 +226,7 @@ export async function showEditExpensePage(
         description: expense.description,
         amount: expense.amount.toFixed(2),
         categoryId: String(expense.categoryId),
-        recurring: expense.recurring ? 'on' : undefined,
+        expenseType: expense.expenseType,
         date: timestampToDateString(expense.createdAt, timeZone),
       },
       error: undefined,

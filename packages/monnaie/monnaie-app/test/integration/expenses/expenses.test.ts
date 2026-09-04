@@ -110,17 +110,17 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   await form.description().locator.fill('Coffee')
   await form.amount().locator.fill('12.50')
   await form.category('אוכל').locator.check()
-  await form.recurring().locator.check()
+  await form.expenseType('Recurring').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
 
   const savedExpense = await db()
     .selectFrom('expense')
-    .select('recurring')
+    .select('expense_type')
     .where('description', '=', 'Coffee')
     .executeTakeFirstOrThrow()
-  expect(savedExpense.recurring).toBe(true)
+  expect(savedExpense.expense_type).toBe('recurring')
 
   const item = expenses.list().item('Coffee')
 
@@ -140,6 +140,31 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
       'per day',
     )
   }
+})
+
+test('adds a special expense', async ({page}) => {
+  const expenses = createExpensesPageModel(page)
+  const form = createExpenseFormPageModel(page)
+
+  await page.goto(new URL('/expenses/new', url()).href)
+  await expect(form.expenseType('Day to day').locator).toBeChecked()
+
+  await form.description().locator.fill('Refrigerator')
+  await form.amount().locator.fill('1200')
+  await form.category('אחר').locator.check()
+  await form.expenseType('Special').locator.check()
+  await form.submitButton().locator.click()
+
+  await expect(page).toHaveURL(url().href)
+
+  const savedExpense = await db()
+    .selectFrom('expense')
+    .select('expense_type')
+    .where('description', '=', 'Refrigerator')
+    .executeTakeFirstOrThrow()
+
+  expect(savedExpense.expense_type).toBe('special')
+  await expect(expenses.list().item('Refrigerator').special().locator).toHaveText('special')
 })
 
 test('adds up several expenses', async ({page}) => {
@@ -194,7 +219,12 @@ test('refuses an expense with no category even when the browser is bypassed', as
   const expenses = createExpensesPageModel(page)
 
   const response = await page.request.post(new URL('/expenses', url()).href, {
-    form: {description: 'Coffee', amount: '12.50', categoryId: ''},
+    form: {
+      description: 'Coffee',
+      amount: '12.50',
+      categoryId: '',
+      expenseType: 'day-to-day',
+    },
   })
 
   expect(response.status()).toBe(400)
@@ -210,7 +240,12 @@ test('refuses an amount that is not a number even when the browser is bypassed',
 
   // `type=number` will not hold a non-number, which is exactly why the server checks too
   const response = await page.request.post(new URL('/expenses', url()).href, {
-    form: {description: 'Coffee', amount: 'a lot', categoryId: '1'},
+    form: {
+      description: 'Coffee',
+      amount: 'a lot',
+      categoryId: '1',
+      expenseType: 'day-to-day',
+    },
   })
 
   expect(response.status()).toBe(400)
@@ -247,13 +282,13 @@ test('edits an expense', async ({page}) => {
   await expect(form.description().locator).toHaveValue('Coffee')
   await expect(form.amount().locator).toHaveValue('12.50')
   await expect(form.category('אוכל').locator).toBeChecked()
-  await expect(form.recurring().locator).not.toBeChecked()
+  await expect(form.expenseType('Day to day').locator).toBeChecked()
   await expect(form.date().locator).toBeVisible()
 
   await form.description().locator.fill('Espresso')
   await form.amount().locator.fill('8.00')
   await form.category('בילוי').locator.check()
-  await form.recurring().locator.check()
+  await form.expenseType('Recurring').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
@@ -267,10 +302,10 @@ test('edits an expense', async ({page}) => {
 
   const savedExpense = await db()
     .selectFrom('expense')
-    .select('recurring')
+    .select('expense_type')
     .where('description', '=', 'Espresso')
     .executeTakeFirstOrThrow()
-  expect(savedExpense.recurring).toBe(true)
+  expect(savedExpense.expense_type).toBe('recurring')
 })
 
 test('changes the date of an expense when editing', async ({page}) => {
@@ -374,7 +409,7 @@ async function seedExpense(description: string, amount: number, createdAt: Date)
       description,
       amount,
       category_id: 1,
-      recurring: false,
+      expense_type: 'day-to-day',
       created_at: createdAt.toISOString(),
     })
     .execute()

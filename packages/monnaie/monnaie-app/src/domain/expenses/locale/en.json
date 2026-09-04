@@ -18,7 +18,8 @@
   "list": {
     "title": "This month",
     "empty": "No expenses this month",
-    "recurring": "recurring"
+    "recurring": "recurring",
+    "special": "special"
   },
   "filter": {
     "label": "Filter",
@@ -56,7 +57,12 @@
     "amount": "Amount",
     "date": "Date",
     "category": "Category",
-    "recurring": "Recurring expense",
+    "expenseType": {
+      "label": "Expense type",
+      "day-to-day": "Day to day",
+      "recurring": "Recurring",
+      "special": "Special"
+    },
     "add": "Add",
     "save": "Save",
     "cancel": "Cancel"
@@ -73,6 +79,7 @@
     "description-too-long": "That description is too long",
     "invalid-amount": "Please enter an amount, like 12.50",
     "invalid-category": "Please choose a category",
+    "invalid-expense-type": "Please choose an expense type",
     "invalid-date": "Please enter a valid date",
     "not-found": "That expense no longer exists"
   }

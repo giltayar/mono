@@ -18,7 +18,8 @@
   "list": {
     "title": "החודש",
     "empty": "אין הוצאות החודש",
-    "recurring": "חוזרת"
+    "recurring": "חוזרת",
+    "special": "מיוחדת"
   },
   "filter": {
     "label": "סינון",
@@ -56,7 +57,12 @@
     "amount": "סכום",
     "date": "תאריך",
     "category": "קטגוריה",
-    "recurring": "הוצאה חוזרת",
+    "expenseType": {
+      "label": "סוג הוצאה",
+      "day-to-day": "יום-יומית",
+      "recurring": "חוזרת",
+      "special": "מיוחדת"
+    },
     "add": "הוספה",
     "save": "שמירה",
     "cancel": "ביטול"
@@ -73,6 +79,7 @@
     "description-too-long": "התיאור ארוך מדי",
     "invalid-amount": "נא להזין סכום, למשל 12.50",
     "invalid-category": "נא לבחור קטגוריה",
+    "invalid-expense-type": "נא לבחור סוג הוצאה",
     "invalid-date": "נא להזין תאריך תקין",
     "not-found": "ההוצאה הזאת כבר לא קיימת"
   }

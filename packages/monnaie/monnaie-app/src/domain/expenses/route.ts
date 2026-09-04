@@ -22,7 +22,7 @@ const ExpenseBodySchema = z.object({
   description: z.string(),
   amount: z.string(),
   categoryId: z.string(),
-  recurring: z.literal('on').optional(),
+  expenseType: z.string(),
 })
 
 // a single `?category=3` arrives as a string and repeated ones as an array; the ids themselves are
@@ -40,7 +40,7 @@ const EditExpenseBodySchema = z.object({
   description: z.string(),
   amount: z.string(),
   categoryId: z.string(),
-  recurring: z.literal('on').optional(),
+  expenseType: z.string(),
   date: z.string(),
 })
 
@@ -105,7 +105,6 @@ export default function expensesRoutes(
       reply,
       await addExpense(db, authenticatedUser().uid, {
         ...request.body,
-        recurring: request.body.recurring,
         date: undefined,
       }),
     ),
@@ -154,7 +153,7 @@ export default function expensesRoutes(
           db,
           authenticatedUser().uid,
           request.params.id,
-          {...request.body, recurring: request.body.recurring},
+          request.body,
           timeZone,
         ),
       ),

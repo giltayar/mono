@@ -12,11 +12,21 @@ test.beforeEach(async ({page}) => {
 
 test('loads the dialog on demand and copies selected recurring expenses', async ({page}) => {
   const previousMonth = monthDate(-1, 15)
-  await seedExpense(FIRST_USER.uid, 'Coffee subscription', true, previousMonth)
-  await seedExpense(FIRST_USER.uid, 'Rent', true, previousMonth)
-  const ordinaryId = await seedExpense(FIRST_USER.uid, 'Groceries', false, previousMonth)
-  const tooOldId = await seedExpense(FIRST_USER.uid, 'Old subscription', true, monthDate(-2, 15))
-  const otherUserId = await seedExpense(SECOND_USER.uid, 'Other subscription', true, previousMonth)
+  await seedExpense(FIRST_USER.uid, 'Coffee subscription', 'recurring', previousMonth)
+  await seedExpense(FIRST_USER.uid, 'Rent', 'recurring', previousMonth)
+  const ordinaryId = await seedExpense(FIRST_USER.uid, 'Groceries', 'day-to-day', previousMonth)
+  const tooOldId = await seedExpense(
+    FIRST_USER.uid,
+    'Old subscription',
+    'recurring',
+    monthDate(-2, 15),
+  )
+  const otherUserId = await seedExpense(
+    SECOND_USER.uid,
+    'Other subscription',
+    'recurring',
+    previousMonth,
+  )
   const expenses = createExpensesPageModel(page)
   const dialog = createCopyRecurringDialogPageModel(page)
 
@@ -84,7 +94,7 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
 
   const copied = await db()
     .selectFrom('expense')
-    .select(['description', 'amount', 'category_id', 'recurring', 'created_at'])
+    .select(['description', 'amount', 'category_id', 'expense_type', 'created_at'])
     .where('user_id', '=', FIRST_USER.uid)
     .where('created_at', '=', new Date(`${targetDate}T00:00:00.000Z`))
     .execute()
@@ -94,7 +104,7 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
       description: 'Coffee subscription',
       amount: '12.50',
       category_id: 1,
-      recurring: true,
+      expense_type: 'recurring',
       created_at: new Date(`${targetDate}T00:00:00.000Z`),
     },
   ])
@@ -103,7 +113,7 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
 async function seedExpense(
   userId: string,
   description: string,
-  recurring: boolean,
+  expenseType: 'day-to-day' | 'special' | 'recurring',
   createdAt: Date,
 ): Promise<number> {
   const expense = await db()
@@ -113,7 +123,7 @@ async function seedExpense(
       description,
       amount: 12.5,
       category_id: 1,
-      recurring,
+      expense_type: expenseType,
       created_at: createdAt.toISOString(),
     })
     .returning('id')

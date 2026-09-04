@@ -9,15 +9,18 @@ export type ExpenseError =
   | 'description-too-long'
   | 'invalid-amount'
   | 'invalid-category'
+  | 'invalid-expense-type'
   | 'invalid-date'
   | 'not-found'
+
+export type ExpenseType = 'day-to-day' | 'recurring' | 'special'
 
 /** An expense as the form sends it: every field is still a string, and none of it is trusted */
 export type ExpenseInput = {
   description: string
   amount: string
   categoryId: string
-  recurring: 'on' | undefined
+  expenseType: string
   date: string | undefined
 }
 
@@ -25,7 +28,7 @@ export type ValidExpense = {
   description: string
   amount: number
   categoryId: number
-  recurring: boolean
+  expenseType: ExpenseType
   date: string | undefined
 }
 
@@ -34,7 +37,7 @@ export type Expense = {
   description: string
   amount: number
   categoryId: number
-  recurring: boolean
+  expenseType: ExpenseType
   createdAt: Date
 }
 
@@ -87,7 +90,7 @@ export function validateExpense({
   description,
   amount,
   categoryId,
-  recurring,
+  expenseType,
   date,
 }: ExpenseInput): {expense: ValidExpense} | {error: ExpenseError} {
   const trimmedDescription = description.trim()
@@ -118,6 +121,10 @@ export function validateExpense({
     return {error: 'invalid-category'}
   }
 
+  if (expenseType !== 'day-to-day' && expenseType !== 'recurring' && expenseType !== 'special') {
+    return {error: 'invalid-expense-type'}
+  }
+
   if (date !== undefined) {
     if (!DATE_REGEX.test(date) || !isValidDate(date)) {
       return {error: 'invalid-date'}
@@ -129,7 +136,7 @@ export function validateExpense({
       description: trimmedDescription,
       amount: amountAsNumber,
       categoryId: categoryIdAsNumber,
-      recurring: recurring === 'on',
+      expenseType,
       date,
     },
   }
@@ -143,7 +150,7 @@ export async function saveExpense(db: Db, userId: string, expense: ValidExpense)
       description: expense.description,
       amount: expense.amount,
       category_id: expense.categoryId,
-      recurring: expense.recurring,
+      expense_type: expense.expenseType,
     })
     .execute()
 }
@@ -163,7 +170,7 @@ export async function copyRecurringExpenses(
     .selectFrom('expense')
     .select(['description', 'amount', 'category_id'])
     .where('user_id', '=', userId)
-    .where('recurring', '=', true)
+    .where('expense_type', '=', 'recurring')
     .where('created_at', '>=', sourceRange.from)
     .where('created_at', '<', sourceRange.to)
     .where('id', 'in', expenseIds)
@@ -181,7 +188,7 @@ export async function copyRecurringExpenses(
         description: expense.description,
         amount: Number(expense.amount),
         category_id: expense.category_id,
-        recurring: true,
+        expense_type: 'recurring' as const,
         created_at: createdAt.toISOString(),
       })),
     )
@@ -202,7 +209,7 @@ export async function updateExpense(
       description: expense.description,
       amount: expense.amount,
       category_id: expense.categoryId,
-      recurring: expense.recurring,
+      expense_type: expense.expenseType,
       created_at: createdAt.toISOString(),
     })
     .where('id', '=', id)
@@ -223,7 +230,7 @@ export async function fetchExpense(
 ): Promise<Expense | undefined> {
   const row = await db
     .selectFrom('expense')
-    .select(['id', 'description', 'amount', 'category_id', 'recurring', 'created_at'])
+    .select(['id', 'description', 'amount', 'category_id', 'expense_type', 'created_at'])
     .where('id', '=', id)
     .where('user_id', '=', userId)
     .executeTakeFirst()
@@ -240,7 +247,7 @@ export async function fetchPeriodExpenses(
 ): Promise<Expense[]> {
   let query = db
     .selectFrom('expense')
-    .select(['id', 'description', 'amount', 'category_id', 'recurring', 'created_at'])
+    .select(['id', 'description', 'amount', 'category_id', 'expense_type', 'created_at'])
     .where('user_id', '=', userId)
     .where('created_at', '>=', range.from)
     .where('created_at', '<', range.to)
@@ -252,7 +259,10 @@ export async function fetchPeriodExpenses(
   }
 
   if (recurringFilter !== 'all') {
-    query = query.where('recurring', '=', recurringFilter === 'only')
+    query =
+      recurringFilter === 'only'
+        ? query.where('expense_type', '=', 'recurring')
+        : query.where('expense_type', '!=', 'recurring')
   }
 
   const rows = await query.execute()
@@ -280,7 +290,10 @@ export async function fetchCategoryTotals(
   }
 
   if (recurringFilter !== 'all') {
-    query = query.where('recurring', '=', recurringFilter === 'only')
+    query =
+      recurringFilter === 'only'
+        ? query.where('expense_type', '=', 'recurring')
+        : query.where('expense_type', '!=', 'recurring')
   }
 
   const rows = await query.execute()
@@ -350,7 +363,9 @@ function totalIn(
 
   return recurringFilter === 'all'
     ? categoryTotal
-    : categoryTotal.filterWhere('recurring', '=', recurringFilter === 'only')
+    : recurringFilter === 'only'
+      ? categoryTotal.filterWhere('expense_type', '=', 'recurring')
+      : categoryTotal.filterWhere('expense_type', '!=', 'recurring')
 }
 
 /** `sum` is `null` over no rows at all, and a string otherwise, since `numeric` stays exact */
@@ -363,7 +378,7 @@ function toExpense(row: {
   description: string
   amount: string
   category_id: number
-  recurring: boolean
+  expense_type: ExpenseType
   created_at: Date
 }): Expense {
   return {
@@ -371,7 +386,7 @@ function toExpense(row: {
     description: row.description,
     amount: Number(row.amount),
     categoryId: row.category_id,
-    recurring: row.recurring,
+    expenseType: row.expense_type,
     createdAt: row.created_at,
   }
 }

@@ -16,7 +16,7 @@ export const EMPTY_EXPENSE_FORM_VALUES: ExpenseInput = {
   description: '',
   amount: '',
   categoryId: '',
-  recurring: undefined,
+  expenseType: 'day-to-day',
   date: undefined,
 }
 
@@ -97,10 +97,23 @@ export function renderExpenseForm({mode, values, error}: ExpenseFormProps): stri
           `,
         )}
       </fieldset>
-      <label class="recurring-option">
-        <input type="checkbox" name="recurring" checked=${values.recurring === 'on' || undefined} />
-        <span>${t('form.recurring')}</span>
-      </label>
+      <fieldset class="expense-type-options">
+        <legend>${t('form.expenseType.label')}</legend>
+        ${(['day-to-day', 'recurring', 'special'] as const).map(
+          (expenseType) => html`
+            <label>
+              <input
+                type="radio"
+                name="expenseType"
+                value=${expenseType}
+                checked=${values.expenseType === expenseType || undefined}
+                required
+              />
+              <span>${t(`form.expenseType.${expenseType}`)}</span>
+            </label>
+          `,
+        )}
+      </fieldset>
       ${error && html`<p class="error" role="alert">${t(`errors.${error}`)}</p>`}
       <div class="form-actions">
         <button type="submit">${mode.kind === 'add' ? t('form.add') : t('form.save')}</button>

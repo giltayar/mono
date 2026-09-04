@@ -14,7 +14,7 @@ describe('validateExpense', () => {
     description: 'Coffee',
     amount: '12.50',
     categoryId: '1',
-    recurring: undefined,
+    expenseType: 'day-to-day',
     date: undefined,
   }
 
@@ -24,7 +24,7 @@ describe('validateExpense', () => {
         description: 'Coffee',
         amount: 12.5,
         categoryId: 1,
-        recurring: false,
+        expenseType: 'day-to-day',
         date: undefined,
       },
     })
@@ -32,19 +32,43 @@ describe('validateExpense', () => {
 
   it('should accept an amount with no decimals', () => {
     assert.deepStrictEqual(validateExpense({...valid, amount: '6'}), {
-      expense: {description: 'Coffee', amount: 6, categoryId: 1, recurring: false, date: undefined},
+      expense: {
+        description: 'Coffee',
+        amount: 6,
+        categoryId: 1,
+        expenseType: 'day-to-day',
+        date: undefined,
+      },
     })
   })
 
   it('should accept a recurring expense', () => {
-    assert.deepStrictEqual(validateExpense({...valid, recurring: 'on'}), {
+    assert.deepStrictEqual(validateExpense({...valid, expenseType: 'recurring'}), {
       expense: {
         description: 'Coffee',
         amount: 12.5,
         categoryId: 1,
-        recurring: true,
+        expenseType: 'recurring',
         date: undefined,
       },
+    })
+  })
+
+  it('should accept a special expense', () => {
+    assert.deepStrictEqual(validateExpense({...valid, expenseType: 'special'}), {
+      expense: {
+        description: 'Coffee',
+        amount: 12.5,
+        categoryId: 1,
+        expenseType: 'special',
+        date: undefined,
+      },
+    })
+  })
+
+  it('should refuse an unknown expense type', () => {
+    assert.deepStrictEqual(validateExpense({...valid, expenseType: 'occasional'}), {
+      error: 'invalid-expense-type',
     })
   })
 
@@ -91,7 +115,7 @@ describe('validateExpense', () => {
         description: '',
         amount: 'nope',
         categoryId: '99',
-        recurring: undefined,
+        expenseType: 'day-to-day',
         date: undefined,
       }),
       {
@@ -106,7 +130,7 @@ describe('validateExpense', () => {
         description: 'Coffee',
         amount: 12.5,
         categoryId: 1,
-        recurring: false,
+        expenseType: 'day-to-day',
         date: '2024-03-15',
       },
     })
