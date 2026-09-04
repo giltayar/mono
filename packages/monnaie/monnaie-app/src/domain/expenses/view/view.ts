@@ -4,7 +4,14 @@ import {currentLanguage, translator} from '../../../commons/i18n.ts'
 import {version} from '../../../commons/version.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {categoryById, EXPENSE_CATEGORIES} from '../categories.ts'
-import type {CategoryTotal, Expense, PeriodTotals, RecurringFilter} from '../model.ts'
+import {
+  DEFAULT_EXPENSE_TYPE_FILTER,
+  type CategoryTotal,
+  type Expense,
+  type ExpenseType,
+  type ExpenseTypeFilter,
+  type PeriodTotals,
+} from '../model.ts'
 import {
   BASE_PERIOD_NAMES,
   previousPeriodName,
@@ -45,7 +52,7 @@ export function renderExpensesPage(
   expenses: Expense[],
   timeZone: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   referenceDate: Date,
   selectedDay: string | undefined,
   currentDay: string,
@@ -57,12 +64,12 @@ export function renderExpensesPage(
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
-      headingHref=${`/${expenseQuery(categoryIds, recurringFilter, undefined)}`}
+      headingHref=${`/${expenseQuery(categoryIds, expenseTypes, undefined)}`}
       headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/', categoryIds, recurringFilter, selectedDay)}
+      ${renderCategoryFilter('/', categoryIds, expenseTypes, selectedDay)}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -72,11 +79,11 @@ export function renderExpensesPage(
           currentDay,
           timeZone,
           categoryIds,
-          recurringFilter,
+          expenseTypes: expenseTypes,
           navigationDates,
         })}
         ${renderCreateExpenseActions()}
-        ${renderExpensesMonth(expenses, timeZone, categoryIds, recurringFilter, selectedDay)}
+        ${renderExpensesMonth(expenses, timeZone, categoryIds, expenseTypes, selectedDay)}
       </div>
     </${MainLayout}>
   ` as string
@@ -87,7 +94,7 @@ export function renderGraphsPage(
   dayCounts: PeriodDayCounts,
   categoryTotals: CategoryTotal[],
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   referenceDate: Date,
   timeZone: string,
   selectedDay: string | undefined,
@@ -100,12 +107,12 @@ export function renderGraphsPage(
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
-      headingHref=${`/${expenseQuery(categoryIds, recurringFilter, undefined)}`}
+      headingHref=${`/${expenseQuery(categoryIds, expenseTypes, undefined)}`}
       headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/expenses/graphs', categoryIds, recurringFilter, selectedDay)}
+      ${renderCategoryFilter('/expenses/graphs', categoryIds, expenseTypes, selectedDay)}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -115,11 +122,11 @@ export function renderGraphsPage(
           currentDay,
           timeZone,
           categoryIds,
-          recurringFilter,
+          expenseTypes: expenseTypes,
           navigationDates,
         })}
         ${renderCreateExpenseActions()}
-        ${renderGraphsMonth(categoryTotals, categoryIds, recurringFilter, selectedDay)}
+        ${renderGraphsMonth(categoryTotals, categoryIds, expenseTypes, selectedDay)}
       </div>
     </${MainLayout}>
   ` as string
@@ -156,7 +163,7 @@ function renderCreateExpenseActions(): string {
 function renderCategoryFilter(
   path: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
@@ -171,6 +178,10 @@ function renderCategoryFilter(
         const day = new URL(location.href).searchParams.get('day');
         if (day === null) delete event.detail.parameters.day;
         else event.detail.parameters.day = day;
+        const selectedTypes = Array.from(this.querySelectorAll('[name=expenseType]:checked'), input => input.value);
+        if (selectedTypes.length === 2 && selectedTypes.includes('day-to-day') && selectedTypes.includes('special')) {
+          delete event.detail.parameters.expenseType;
+        }
         event.detail.path = location.pathname
       "
       hx-trigger="change"
@@ -185,72 +196,126 @@ function renderCategoryFilter(
         value=${selectedDay}
         disabled=${selectedDay === undefined || undefined}
       />
-      <details open=${categoryIds.length > 0 || recurringFilter !== 'all' || undefined}>
-        <summary>${t('filter.label')}</summary>
-        <fieldset class="category-options" aria-label=${t('filter.categories')}>
-          ${EXPENSE_CATEGORIES.map(
-            (category) => html`
-              <label>
-                <input
-                  type="checkbox"
-                  name="category"
-                  value=${category.id}
-                  checked=${categoryIds.includes(category.id) || undefined}
-                />
-                <span>${category.name}</span>
-              </label>
-            `,
+      <div class="filter-controls">
+        <button
+          class="category-filter-toggle"
+          type="button"
+          aria-controls="category-options"
+          aria-expanded=${categoryIds.length > 0 ? 'true' : 'false'}
+          onclick="
+            const categories = document.getElementById('category-options');
+            categories.hidden = !categories.hidden;
+            this.setAttribute('aria-expanded', String(!categories.hidden))
+          "
+        >
+          ${t('filter.label')}
+        </button>
+        <fieldset class="expense-type-filter" aria-label=${t('filter.expenseType')}>
+          ${(['day-to-day', 'special', 'recurring'] as const).map((expenseType) =>
+            renderExpenseTypeFilterOption(expenseType, expenseTypes.includes(expenseType)),
           )}
         </fieldset>
-        <input
-          id="recurring-filter-value"
-          type="hidden"
-          name="recurring"
-          value=${recurringFilter}
-          disabled=${recurringFilter === 'all' || undefined}
-        />
-        <button
-          class="recurring-filter"
-          type="button"
-          aria-label=${t('filter.recurring.label')}
-          aria-live="polite"
-          onclick="
-            const input = this.form.elements.recurring;
-            const states = ['all', 'exclude', 'only'];
-            const state = states[(states.indexOf(this.dataset.state) + 1) % states.length];
-            this.dataset.state = state;
-            input.value = state;
-            input.disabled = state === 'all';
-            this.textContent = this.dataset[state];
-            input.dispatchEvent(new Event('change', {bubbles: true}))
-          "
-          data-state=${recurringFilter}
-          data-all=${t('filter.recurring.all')}
-          data-exclude=${t('filter.recurring.exclude')}
-          data-only=${t('filter.recurring.only')}
-        >
-          ${t(`filter.recurring.${recurringFilter}`)}
-        </button>
-        <noscript><button type="submit">${t('filter.apply')}</button></noscript>
-      </details>
+      </div>
+      <fieldset
+        id="category-options"
+        class="category-options"
+        aria-label=${t('filter.categories')}
+        hidden=${categoryIds.length === 0 || undefined}
+      >
+        ${EXPENSE_CATEGORIES.map(
+          (category) => html`
+            <label>
+              <input
+                type="checkbox"
+                name="category"
+                value=${category.id}
+                checked=${categoryIds.includes(category.id) || undefined}
+              />
+              <span>${category.name}</span>
+            </label>
+          `,
+        )}
+      </fieldset>
+      <noscript><button type="submit">${t('filter.apply')}</button></noscript>
     </form>
+  ` as string
+}
+
+function renderExpenseTypeFilterOption(expenseType: ExpenseType, checked: boolean): string {
+  const t = translator('expenses')
+
+  return html`
+    <label
+      ondblclick="
+        event.preventDefault();
+        const selected = this.querySelector('input');
+        for (const input of this.form.elements.expenseType) input.checked = input === selected;
+        selected.dispatchEvent(new Event('change', {bubbles: true}))
+      "
+      onpointerdown="
+        if (event.pointerType !== 'mouse') {
+          this.dataset.longPress = 'false';
+          this.longPressTimer = setTimeout(() => {
+            this.dataset.longPress = 'true';
+            const selected = this.querySelector('input');
+            for (const input of this.form.elements.expenseType) input.checked = input === selected;
+            selected.dispatchEvent(new Event('change', {bubbles: true}))
+          }, 500)
+        }
+      "
+      onpointerup="
+        clearTimeout(this.longPressTimer);
+        if (this.dataset.longPress === 'true') {
+          setTimeout(() => { this.dataset.longPress = 'false' })
+        }
+      "
+      onpointercancel="clearTimeout(this.longPressTimer)"
+      onclick="
+        if (this.dataset.longPress === 'true') {
+          event.preventDefault();
+          this.dataset.longPress = 'false'
+        }
+      "
+    >
+      <input
+        type="checkbox"
+        name="expenseType"
+        value=${expenseType}
+        checked=${checked || undefined}
+        onchange="
+          if (!this.form.querySelector('[name=expenseType]:checked')) this.checked = true;
+          event.stopPropagation();
+          clearTimeout(this.form.expenseTypeFilterTimer);
+          this.form.expenseTypeFilterTimer = setTimeout(() => {
+            this.form.dispatchEvent(new Event('change'))
+          }, 300)
+        "
+      />
+      <span>${t(`form.expenseType.${expenseType}`)}</span>
+    </label>
   ` as string
 }
 
 /** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
 function expenseQuery(
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   selectedDay: string | undefined,
 ): string {
-  if (categoryIds.length === 0 && recurringFilter === 'all' && selectedDay === undefined) {
+  if (
+    categoryIds.length === 0 &&
+    isDefaultExpenseTypeFilter(expenseTypes) &&
+    selectedDay === undefined
+  ) {
     return ''
   }
 
   const query = new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))
 
-  if (recurringFilter !== 'all') {
-    query.set('recurring', recurringFilter)
+  if (!isDefaultExpenseTypeFilter(expenseTypes)) {
+    for (const expenseType of expenseTypes) {
+      query.append('expenseType', expenseType)
+    }
   }
 
   if (selectedDay !== undefined) {
@@ -260,11 +325,18 @@ function expenseQuery(
   return `?${query}`
 }
 
+function isDefaultExpenseTypeFilter(expenseTypes: ExpenseTypeFilter): boolean {
+  return (
+    expenseTypes.length === DEFAULT_EXPENSE_TYPE_FILTER.length &&
+    DEFAULT_EXPENSE_TYPE_FILTER.every((expenseType) => expenseTypes.includes(expenseType))
+  )
+}
+
 export function renderExpensesMonth(
   expenses: Expense[],
   timeZone: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   selectedDay: string | undefined,
 ): string {
   return renderMonthlyPanel(
@@ -273,11 +345,11 @@ export function renderExpensesMonth(
       outOfBand: false,
       timeZone,
       categoryIds,
-      recurringFilter,
+      expenseTypes: expenseTypes,
       selectedDay,
     }),
     categoryIds,
-    recurringFilter,
+    expenseTypes,
     selectedDay,
   )
 }
@@ -285,14 +357,14 @@ export function renderExpensesMonth(
 export function renderGraphsMonth(
   categoryTotals: CategoryTotal[],
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   selectedDay: string | undefined,
 ): string {
   return renderMonthlyPanel(
     'graphs',
     renderCategoryGraph(categoryTotals),
     categoryIds,
-    recurringFilter,
+    expenseTypes,
     selectedDay,
   )
 }
@@ -301,11 +373,11 @@ function renderMonthlyPanel(
   activeTab: 'expenses' | 'graphs',
   content: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
-  const filter = expenseQuery(categoryIds, recurringFilter, selectedDay)
+  const filter = expenseQuery(categoryIds, expenseTypes, selectedDay)
 
   return html`
     <section id="expense-month" aria-label=${t('list.title')}>
@@ -348,7 +420,7 @@ export function renderExpenseSummary(
     currentDay,
     timeZone,
     categoryIds,
-    recurringFilter,
+    expenseTypes,
     navigationDates,
   }: {
     outOfBand: boolean
@@ -358,7 +430,7 @@ export function renderExpenseSummary(
     currentDay: string
     timeZone: string
     categoryIds: number[]
-    recurringFilter: RecurringFilter
+    expenseTypes: ExpenseTypeFilter
     navigationDates: PeriodNavigationDates
   },
 ): string {
@@ -374,8 +446,8 @@ export function renderExpenseSummary(
     >
       <h2>
         <a
-          href=${`${path}${expenseQuery(categoryIds, recurringFilter, undefined)}`}
-          hx-get=${`${path}${expenseQuery(categoryIds, recurringFilter, undefined)}`}
+          href=${`${path}${expenseQuery(categoryIds, expenseTypes, undefined)}`}
+          hx-get=${`${path}${expenseQuery(categoryIds, expenseTypes, undefined)}`}
           hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
           hx-target="#expense-content"
           hx-select="#expense-content"
@@ -404,7 +476,7 @@ export function renderExpenseSummary(
                       ${renderPeriodNavigation(
                         path,
                         categoryIds,
-                        recurringFilter,
+                        expenseTypes,
                         navigationDates[period],
                         t(`summary.${period}`),
                         currentDay,
@@ -432,7 +504,7 @@ export function renderExpenseSummary(
 function renderPeriodNavigation(
   path: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   dates: {backward: string; forward: string | undefined},
   periodLabel: string,
   currentDay: string,
@@ -441,8 +513,8 @@ function renderPeriodNavigation(
 
   return html`
     <a
-      href=${`${path}${expenseQuery(categoryIds, recurringFilter, dates.backward)}`}
-      hx-get=${`${path}${expenseQuery(categoryIds, recurringFilter, dates.backward)}`}
+      href=${`${path}${expenseQuery(categoryIds, expenseTypes, dates.backward)}`}
+      hx-get=${`${path}${expenseQuery(categoryIds, expenseTypes, dates.backward)}`}
       hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
       hx-target="#expense-content"
       hx-select="#expense-content"
@@ -457,12 +529,12 @@ function renderPeriodNavigation(
         : html`<a
             href=${`${path}${expenseQuery(
               categoryIds,
-              recurringFilter,
+              expenseTypes,
               dates.forward === currentDay ? undefined : dates.forward,
             )}`}
             hx-get=${`${path}${expenseQuery(
               categoryIds,
-              recurringFilter,
+              expenseTypes,
               dates.forward === currentDay ? undefined : dates.forward,
             )}`}
             hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
@@ -498,13 +570,13 @@ export function renderExpenseList(
     outOfBand,
     timeZone,
     categoryIds,
-    recurringFilter,
+    expenseTypes,
     selectedDay,
   }: {
     outOfBand: boolean
     timeZone: string
     categoryIds: number[]
-    recurringFilter: RecurringFilter
+    expenseTypes: ExpenseTypeFilter
     selectedDay: string | undefined
   },
 ): string {
@@ -518,7 +590,7 @@ export function renderExpenseList(
           : html`
               <ul>
                 ${expenses.map((expense) =>
-                  renderExpenseItem(expense, timeZone, categoryIds, recurringFilter, selectedDay),
+                  renderExpenseItem(expense, timeZone, categoryIds, expenseTypes, selectedDay),
                 )}
               </ul>
             `
@@ -593,7 +665,7 @@ function renderExpenseItem(
   expense: Expense,
   timeZone: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseTypeFilter,
   selectedDay: string | undefined,
 ): string {
   const t = translator('expenses')
@@ -622,7 +694,7 @@ function renderExpenseItem(
           aria-label=${`${t('actions.delete')} ${expense.description}`}
           hx-delete=${`/expenses/${expense.id}${expenseQuery(
             categoryIds,
-            recurringFilter,
+            expenseTypes,
             selectedDay,
           )}`}
           hx-target="#expense-list"

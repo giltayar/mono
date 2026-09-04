@@ -110,7 +110,6 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   await form.description().locator.fill('Coffee')
   await form.amount().locator.fill('12.50')
   await form.category('אוכל').locator.check()
-  await form.expenseType('Recurring').locator.check()
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
@@ -120,7 +119,7 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
     .select('expense_type')
     .where('description', '=', 'Coffee')
     .executeTakeFirstOrThrow()
-  expect(savedExpense.expense_type).toBe('recurring')
+  expect(savedExpense.expense_type).toBe('day-to-day')
 
   const item = expenses.list().item('Coffee')
 
@@ -292,6 +291,10 @@ test('edits an expense', async ({page}) => {
   await form.submitButton().locator.click()
 
   await expect(page).toHaveURL(url().href)
+  await expect(expenses.list().items().locator).toHaveCount(0)
+
+  await page.goto(new URL('/?expenseType=recurring', url()).href)
+
   await expect(expenses.list().items().locator).toHaveCount(1)
 
   const item = expenses.list().item('Espresso')

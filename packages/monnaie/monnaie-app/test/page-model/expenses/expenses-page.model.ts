@@ -12,11 +12,10 @@ export function createExpensesPageModel(page: Page) {
     ) => ({locator}),
     filter: (locator = page.locator('#category-filter')) => ({
       locator,
-      // the `<summary>`, which is what opens and closes the pills
-      toggle: () => ({locator: locator.getByText('Filter', {exact: true})}),
+      toggle: () => ({locator: locator.getByRole('button', {name: 'Filter', exact: true})}),
       category: (name: string) => ({locator: locator.getByRole('checkbox', {name})}),
-      recurring: () => ({
-        locator: locator.getByRole('button', {name: 'Recurring expense filter'}),
+      expenseType: (name: 'Day to day' | 'Special' | 'Recurring') => ({
+        locator: locator.getByRole('checkbox', {name, exact: true}),
       }),
     }),
     tabs: (locator = page.getByRole('navigation', {name: 'Monthly views'})) => ({

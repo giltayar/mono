@@ -24,12 +24,7 @@
   "filter": {
     "label": "Filter",
     "categories": "Filter by category",
-    "recurring": {
-      "label": "Recurring expense filter",
-      "all": "All expenses",
-      "exclude": "No recurring expenses",
-      "only": "Only recurring expenses"
-    },
+    "expenseType": "Filter by expense type",
     "apply": "Apply"
   },
   "tabs": {

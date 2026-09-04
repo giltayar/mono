@@ -1,39 +1,70 @@
 #category-filter {
   margin-block-end: var(--spacing);
 
-  & summary {
-    /* the disclosure is a small link, not a button, so it does not compete with "Add an expense" */
-    display: inline-block;
-    list-style: none;
-    cursor: pointer;
-    font-size: 0.875rem;
-    text-decoration: underline;
-    opacity: 0.65;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 0.2rem;
-    }
+  & .filter-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) / 2);
   }
 
   & .category-options {
-    margin-block-end: var(--spacing);
+    margin-block: var(--spacing);
   }
 
-  & .recurring-filter {
+  & .category-filter-toggle {
     font: inherit;
     font-size: 0.875rem;
     color: inherit;
     background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding-block: calc(var(--spacing) / 2);
-    padding-inline: var(--spacing);
+    border: 0;
+    padding: 0;
     cursor: pointer;
+    text-decoration: underline;
+    opacity: 0.65;
+  }
+
+  & .expense-type-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) / 3);
+    border: 0;
+    margin-block: 0;
+    margin-inline-start: auto;
+    padding: 0;
+
+    & label {
+      position: relative;
+      display: inline-block;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding-block: calc(var(--spacing) / 3);
+      padding-inline: calc(var(--spacing) / 2);
+      cursor: pointer;
+      font-size: 0.75rem;
+      opacity: 1;
+
+      &:has(input:checked) {
+        color: canvas;
+        background: canvastext;
+        border-color: canvastext;
+      }
+
+      &:has(input:focus-visible) {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+      }
+    }
+
+    & input {
+      position: absolute;
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
   }
 }
 
@@ -540,6 +571,10 @@
   margin: 0;
   padding: 0;
   margin-block-start: calc(var(--spacing) / 2);
+
+  &[hidden] {
+    display: none;
+  }
 
   & legend {
     font-size: 0.875rem;

@@ -15,7 +15,7 @@ import {
   showNewExpensePage,
   showCopyRecurringDialog,
 } from './controller.ts'
-import {parseCategoryFilter, parseExpenseIds, parseRecurringFilter} from './model.ts'
+import {parseCategoryFilter, parseExpenseIds, parseExpenseTypeFilter} from './model.ts'
 
 // the model is what validates these, so that the same rules apply however they arrive
 const ExpenseBodySchema = z.object({
@@ -32,7 +32,10 @@ const CategoryFilterQuerySchema = z.object({
     .union([z.string(), z.array(z.string())])
     .default([])
     .transform((category) => (Array.isArray(category) ? category : [category])),
-  recurring: z.string().optional(),
+  expenseType: z
+    .union([z.string(), z.array(z.string())])
+    .default([])
+    .transform((expenseType) => (Array.isArray(expenseType) ? expenseType : [expenseType])),
   day: z.iso.date().optional(),
 })
 
@@ -71,7 +74,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseCategoryFilter(request.query.category),
-          parseRecurringFilter(request.query.recurring),
+          parseExpenseTypeFilter(request.query.expenseType),
           request.query.day,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
@@ -89,7 +92,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseCategoryFilter(request.query.category),
-          parseRecurringFilter(request.query.recurring),
+          parseExpenseTypeFilter(request.query.expenseType),
           request.query.day,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
@@ -171,7 +174,7 @@ export default function expensesRoutes(
           request.params.id,
           timeZone,
           parseCategoryFilter(request.query.category),
-          parseRecurringFilter(request.query.recurring),
+          parseExpenseTypeFilter(request.query.expenseType),
           request.query.day,
         ),
       ),

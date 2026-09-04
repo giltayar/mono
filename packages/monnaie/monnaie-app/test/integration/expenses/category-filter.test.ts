@@ -14,7 +14,9 @@ test.beforeEach(async ({page}) => {
   page.on('dialog', (dialog) => dialog.accept())
 })
 
-test('shows everything, with the pills hidden, until a category is chosen', async ({page}) => {
+test('shows day-to-day and special expenses by default, with category pills hidden', async ({
+  page,
+}) => {
   await seedExpenses()
 
   const expenses = createExpensesPageModel(page)
@@ -22,6 +24,9 @@ test('shows everything, with the pills hidden, until a category is chosen', asyn
   await page.goto(url().href)
 
   await expect(expenses.filter().category(FOOD.name).locator).toBeHidden()
+  await expect(expenses.filter().expenseType('Day to day').locator).toBeChecked()
+  await expect(expenses.filter().expenseType('Special').locator).toBeChecked()
+  await expect(expenses.filter().expenseType('Recurring').locator).not.toBeChecked()
 
   await expenses.filter().toggle().locator.click()
 
@@ -102,49 +107,66 @@ test('ignores a category in the url that is not a category', async ({page}) => {
   await expect(expenses.summary().period('Day').current().locator).toHaveText('18.50')
 })
 
-test('cycles between all, non-recurring and recurring expenses', async ({page}) => {
+test('filters by expense type and supports exclusive double-click and long press', async ({
+  page,
+}) => {
   await seedExpenses()
+  await saveExpense(db(), FIRST_USER.uid, {
+    description: 'Coffee subscription',
+    amount: 4,
+    categoryId: FOOD.id,
+    expenseType: 'recurring',
+    date: undefined,
+  })
 
   const expenses = createExpensesPageModel(page)
 
   await page.goto(url().href)
-  await expenses.filter().toggle().locator.click()
+  await expect(expenses.list().item('Coffee subscription').locator).toHaveCount(0)
+  await expect(expenses.list().items().locator).toHaveCount(2)
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('18.50')
 
-  await expect(expenses.filter().recurring().locator).toHaveText('All expenses')
-  await expect(expenses.list().item('Coffee').recurring().locator).toHaveText('recurring')
-  await expect(expenses.list().item('Coffee').recurring().locator).toHaveJSProperty(
-    'parentElement.className',
-    'expense-actions',
-  )
-  await expect(expenses.list().item('Bus ticket').recurring().locator).toHaveCount(0)
+  await expenses.filter().expenseType('Special').locator.uncheck()
 
-  await expenses.filter().recurring().locator.click()
-
-  await expect(page).toHaveURL(new URL('/?recurring=exclude', url()).href)
-  await expect(expenses.filter().recurring().locator).toHaveText('No recurring expenses')
+  await expect(page).toHaveURL(new URL('/?expenseType=day-to-day', url()).href)
   await expect(expenses.list().item('Bus ticket').locator).toBeVisible()
   await expect(expenses.list().items().locator).toHaveCount(1)
   await expect(expenses.summary().period('Day').current().locator).toHaveText('6.00')
 
-  await expenses.filter().recurring().locator.click()
+  await expenses.filter().expenseType('Recurring').locator.check()
 
-  await expect(page).toHaveURL(new URL('/?recurring=only', url()).href)
-  await expect(expenses.filter().recurring().locator).toHaveText('Only recurring expenses')
+  await expect(page).toHaveURL(
+    new URL('/?expenseType=day-to-day&expenseType=recurring', url()).href,
+  )
+  await expect(expenses.list().items().locator).toHaveCount(2)
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('10.00')
+
+  const filterRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.headers()['hx-request'] === 'true') filterRequests.push(request.url())
+  })
+
+  await expenses.filter().expenseType('Special').locator.dblclick()
+
+  await expect(page).toHaveURL(new URL('/?expenseType=special', url()).href)
+  await page.waitForTimeout(350)
+  expect(filterRequests).toHaveLength(1)
+  await expect(expenses.filter().expenseType('Special').locator).toBeChecked()
+  await expect(expenses.filter().expenseType('Day to day').locator).not.toBeChecked()
+  await expect(expenses.filter().expenseType('Recurring').locator).not.toBeChecked()
   await expect(expenses.list().item('Coffee').locator).toBeVisible()
   await expect(expenses.list().items().locator).toHaveCount(1)
-  await expect(expenses.summary().period('Day').current().locator).toHaveText('12.50')
 
-  await expenses.tabs().graphs().locator.click()
+  const recurring = expenses.filter().expenseType('Recurring').locator
+  await recurring.dispatchEvent('pointerdown', {pointerType: 'touch'})
+  await page.waitForTimeout(550)
+  await recurring.dispatchEvent('pointerup', {pointerType: 'touch'})
 
-  await expect(page).toHaveURL(new URL('/expenses/graphs?recurring=only', url()).href)
-  await expect(expenses.graph().entries().locator).toHaveCount(1)
-  await expect(expenses.graph().entry(FOOD.name).locator).toBeVisible()
-
-  await expenses.filter().recurring().locator.click()
-
-  await expect(page).toHaveURL(new URL('/expenses/graphs', url()).href)
-  await expect(expenses.filter().recurring().locator).toHaveText('All expenses')
-  await expect(expenses.graph().entries().locator).toHaveCount(2)
+  await expect(page).toHaveURL(new URL('/?expenseType=recurring', url()).href)
+  await expect(recurring).toBeChecked()
+  await expect(expenses.filter().expenseType('Special').locator).not.toBeChecked()
+  await expect(expenses.list().item('Coffee subscription').locator).toBeVisible()
+  await expect(expenses.list().items().locator).toHaveCount(1)
 })
 
 test('keeps the filter when switching to the graphs', async ({page}) => {
@@ -233,7 +255,7 @@ async function seedExpenses(): Promise<void> {
     description: 'Coffee',
     amount: 12.5,
     categoryId: FOOD.id,
-    expenseType: 'recurring',
+    expenseType: 'special',
     date: undefined,
   })
   await saveExpense(db(), FIRST_USER.uid, {

@@ -11,7 +11,7 @@ import {
   updateExpense,
   validateExpense,
   type ExpenseInput,
-  type RecurringFilter,
+  type ExpenseType,
 } from './model.ts'
 import {
   dateStringToTimestamp,
@@ -41,7 +41,7 @@ export async function showExpensesPage(
   userId: string,
   timeZone: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
   selectedDay: string | undefined,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
@@ -52,22 +52,16 @@ export async function showExpensesPage(
   const ranges = periodRanges(referenceDate, timeZone)
 
   if (renderTarget === 'expense-month') {
-    const expenses = await fetchPeriodExpenses(
-      db,
-      userId,
-      ranges.month,
-      categoryIds,
-      recurringFilter,
-    )
+    const expenses = await fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes)
 
     return {
-      html: renderExpensesMonth(expenses, timeZone, categoryIds, recurringFilter, selectedDay),
+      html: renderExpensesMonth(expenses, timeZone, categoryIds, expenseTypes, selectedDay),
     }
   }
 
   const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, categoryIds, recurringFilter),
-    fetchPeriodExpenses(db, userId, ranges.month, categoryIds, recurringFilter),
+    fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
+    fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes),
   ])
 
   return {
@@ -77,7 +71,7 @@ export async function showExpensesPage(
       expenses,
       timeZone,
       categoryIds,
-      recurringFilter,
+      expenseTypes,
       referenceDate,
       selectedDay,
       currentDay,
@@ -91,7 +85,7 @@ export async function showGraphsPage(
   userId: string,
   timeZone: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
   selectedDay: string | undefined,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
@@ -107,15 +101,15 @@ export async function showGraphsPage(
       userId,
       ranges.month,
       categoryIds,
-      recurringFilter,
+      expenseTypes,
     )
 
-    return {html: renderGraphsMonth(categoryTotals, categoryIds, recurringFilter, selectedDay)}
+    return {html: renderGraphsMonth(categoryTotals, categoryIds, expenseTypes, selectedDay)}
   }
 
   const [summary, categoryTotals] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, categoryIds, recurringFilter),
-    fetchCategoryTotals(db, userId, ranges.month, categoryIds, recurringFilter),
+    fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
+    fetchCategoryTotals(db, userId, ranges.month, categoryIds, expenseTypes),
   ])
 
   return {
@@ -124,7 +118,7 @@ export async function showGraphsPage(
       periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       categoryTotals,
       categoryIds,
-      recurringFilter,
+      expenseTypes,
       referenceDate,
       timeZone,
       selectedDay,
@@ -155,7 +149,7 @@ export async function showCopyRecurringDialog(
     userId,
     periodRanges(now, timeZone).previousMonth,
     [],
-    'only',
+    ['recurring'],
   )
 
   return {html: renderCopyRecurringDialog(expenses, timestampToDateString(now, timeZone))}
@@ -263,7 +257,7 @@ export async function removeExpense(
   id: number,
   timeZone: string,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
   selectedDay: string | undefined,
 ): Promise<ControllerResult> {
   await deleteExpense(db, userId, id)
@@ -275,8 +269,8 @@ export async function removeExpense(
   const ranges = periodRanges(referenceDate, timeZone)
 
   const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, categoryIds, recurringFilter),
-    fetchPeriodExpenses(db, userId, ranges.month, categoryIds, recurringFilter),
+    fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
+    fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes),
   ])
 
   return {
@@ -285,7 +279,7 @@ export async function removeExpense(
         outOfBand: false,
         timeZone,
         categoryIds,
-        recurringFilter,
+        expenseTypes: expenseTypes,
         selectedDay,
       }) +
       renderExpenseSummary(
@@ -297,7 +291,7 @@ export async function removeExpense(
           referenceDate,
           timeZone,
           categoryIds,
-          recurringFilter,
+          expenseTypes: expenseTypes,
           referenceDay: selectedDay ?? currentDay,
           currentDay,
           navigationDates: periodNavigationDates(referenceDate, now, timeZone),

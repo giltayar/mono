@@ -14,6 +14,7 @@ export type ExpenseError =
   | 'not-found'
 
 export type ExpenseType = 'day-to-day' | 'recurring' | 'special'
+export type ExpenseTypeFilter = ExpenseType[]
 
 /** An expense as the form sends it: every field is still a string, and none of it is trusted */
 export type ExpenseInput = {
@@ -53,9 +54,9 @@ export type CategoryTotal = {
   total: number
 }
 
-export type RecurringFilter = 'all' | 'exclude' | 'only'
-
 export const DESCRIPTION_MAX_LENGTH = 100
+
+export const DEFAULT_EXPENSE_TYPE_FILTER: ExpenseType[] = ['day-to-day', 'special']
 
 /** What `numeric(12, 2)` can hold */
 const AMOUNT_MAX = 9_999_999_999.99
@@ -78,8 +79,13 @@ export function parseCategoryFilter(input: string[]): number[] {
   return EXPENSE_CATEGORIES.map(({id}) => id).filter((id) => ids.has(id))
 }
 
-export function parseRecurringFilter(input: string | undefined): RecurringFilter {
-  return input === 'exclude' || input === 'only' ? input : 'all'
+export function parseExpenseTypeFilter(input: string[]): ExpenseType[] {
+  if (input.length === 0) {
+    return DEFAULT_EXPENSE_TYPE_FILTER
+  }
+
+  const selected = new Set(input)
+  return (['day-to-day', 'special', 'recurring'] as const).filter((type) => selected.has(type))
 }
 
 export function parseExpenseIds(input: string[]): number[] {
@@ -243,7 +249,7 @@ export async function fetchPeriodExpenses(
   userId: string,
   range: PeriodRange,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
 ): Promise<Expense[]> {
   let query = db
     .selectFrom('expense')
@@ -258,12 +264,7 @@ export async function fetchPeriodExpenses(
     query = query.where('category_id', 'in', categoryIds)
   }
 
-  if (recurringFilter !== 'all') {
-    query =
-      recurringFilter === 'only'
-        ? query.where('expense_type', '=', 'recurring')
-        : query.where('expense_type', '!=', 'recurring')
-  }
+  query = query.where('expense_type', 'in', expenseTypes)
 
   const rows = await query.execute()
 
@@ -275,7 +276,7 @@ export async function fetchCategoryTotals(
   userId: string,
   range: PeriodRange,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
 ): Promise<CategoryTotal[]> {
   let query = db
     .selectFrom('expense')
@@ -289,12 +290,7 @@ export async function fetchCategoryTotals(
     query = query.where('category_id', 'in', categoryIds)
   }
 
-  if (recurringFilter !== 'all') {
-    query =
-      recurringFilter === 'only'
-        ? query.where('expense_type', '=', 'recurring')
-        : query.where('expense_type', '!=', 'recurring')
-  }
+  query = query.where('expense_type', 'in', expenseTypes)
 
   const rows = await query.execute()
 
@@ -312,20 +308,20 @@ export async function fetchPeriodTotals(
   userId: string,
   ranges: PeriodRanges,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
 ): Promise<PeriodSummary> {
   const summary = await db
     .selectFrom('expense')
     .where('user_id', '=', userId)
     .select((eb) => [
-      totalIn(eb, ranges.day, categoryIds, recurringFilter).as('day'),
-      totalIn(eb, ranges.week, categoryIds, recurringFilter).as('week'),
-      totalIn(eb, ranges.month, categoryIds, recurringFilter).as('month'),
-      totalIn(eb, ranges.year, categoryIds, recurringFilter).as('year'),
-      totalIn(eb, ranges.previousDay, categoryIds, recurringFilter).as('previousDay'),
-      totalIn(eb, ranges.previousWeek, categoryIds, recurringFilter).as('previousWeek'),
-      totalIn(eb, ranges.previousMonth, categoryIds, recurringFilter).as('previousMonth'),
-      totalIn(eb, ranges.previousYear, categoryIds, recurringFilter).as('previousYear'),
+      totalIn(eb, ranges.day, categoryIds, expenseTypes).as('day'),
+      totalIn(eb, ranges.week, categoryIds, expenseTypes).as('week'),
+      totalIn(eb, ranges.month, categoryIds, expenseTypes).as('month'),
+      totalIn(eb, ranges.year, categoryIds, expenseTypes).as('year'),
+      totalIn(eb, ranges.previousDay, categoryIds, expenseTypes).as('previousDay'),
+      totalIn(eb, ranges.previousWeek, categoryIds, expenseTypes).as('previousWeek'),
+      totalIn(eb, ranges.previousMonth, categoryIds, expenseTypes).as('previousMonth'),
+      totalIn(eb, ranges.previousYear, categoryIds, expenseTypes).as('previousYear'),
       // deliberately not filtered by category: the daily averages are capped by when this user
       // started tracking at all, which a category filter must not appear to move
       eb.fn.min<Date | null>('created_at').as('firstExpenseDate'),
@@ -351,7 +347,7 @@ function totalIn(
   eb: ExpressionBuilder<Database, 'expense'>,
   range: PeriodRange,
   categoryIds: number[],
-  recurringFilter: RecurringFilter,
+  expenseTypes: ExpenseType[],
 ) {
   const total = eb.fn
     .sum<string | null>('amount')
@@ -361,11 +357,7 @@ function totalIn(
   const categoryTotal =
     categoryIds.length === 0 ? total : total.filterWhere('category_id', 'in', categoryIds)
 
-  return recurringFilter === 'all'
-    ? categoryTotal
-    : recurringFilter === 'only'
-      ? categoryTotal.filterWhere('expense_type', '=', 'recurring')
-      : categoryTotal.filterWhere('expense_type', '!=', 'recurring')
+  return categoryTotal.filterWhere('expense_type', 'in', expenseTypes)
 }
 
 /** `sum` is `null` over no rows at all, and a string otherwise, since `numeric` stays exact */

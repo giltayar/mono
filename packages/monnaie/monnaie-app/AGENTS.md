@@ -173,11 +173,13 @@ deletes them.
 - `amount` is `numeric(12, 2)`, and kysely types it as `ColumnType<string, number, number>`: postgres
   hands back a string, which the model turns into a number in one place (`toExpense`/`toAmount`).
 
-### The category filter
+### The expense filters
 
-A `<details>` under the `Monnaie` heading holds the same pills as the add-expense form, but as
-**checkboxes**, and narrows the eight totals, the list and the pie to the ticked categories. None
-ticked means no filter.
+A filter form under the `Monnaie` heading narrows the eight totals, the list and the pie. Its
+`Filter` button reveals category checkboxes; none ticked means no category filter. Beside that
+button, three always-visible rectangular checkbox pills select day-to-day, special and recurring
+expenses. Double-clicking or long-pressing one type selects it exclusively. At least one type stays
+selected, and an absent type query defaults to day-to-day plus special (not recurring).
 
 - The selection lives in the URL as repeated **`?category=<id>`** params — `/?category=1&category=5`,
   `/expenses/graphs?category=1` — so it is bookmarkable and works with back/forward. The ids are the
@@ -186,9 +188,11 @@ ticked means no filter.
   unreadable URLs. `categoryFilterQuery` in `view/view.ts` is the only place that builds the query,
   and `parseCategoryFilter` in `model.ts` the only place that reads it — it drops ids that are not
   categories rather than answering `400`, since a stale bookmark should still render.
+- The type selection lives in repeated **`?expenseType=<type>`** params. The default selection is
+  omitted from the URL; `parseExpenseTypeFilter` restores it when no type params are present.
 - ⚠️ The form swaps **`#expense-content`** (summary + add link + monthly section) and is itself
   rendered _outside_ it, so nothing ever re-renders the form. Which pills are ticked and whether the
-  disclosure is open are therefore the browser's business, exactly as with the HTMX conventions
+  category panel is open are therefore the browser's business, exactly as with the HTMX conventions
   above. Do not move the form inside `#expense-content` "for consistency" — a swap would reset it
   mid-interaction.
 - It is a plain `<form method="get">` with `hx-trigger="change"`, so htmx serializes the ticked boxes

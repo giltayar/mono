@@ -87,6 +87,10 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
 
   await expect(page).toHaveURL(url().href)
   await expect(dialog.locator).toHaveCount(0)
+  await expect(expenses.list().item('Coffee subscription').locator).toHaveCount(0)
+
+  await page.goto(new URL('/?expenseType=recurring', url()).href)
+
   await expect(expenses.list().item('Coffee subscription').locator).toBeVisible()
   await expect(expenses.list().item('Coffee subscription').recurring().locator).toHaveText(
     'recurring',

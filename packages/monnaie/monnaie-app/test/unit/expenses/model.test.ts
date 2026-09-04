@@ -4,7 +4,7 @@ import {
   DESCRIPTION_MAX_LENGTH,
   parseCategoryFilter,
   parseExpenseIds,
-  parseRecurringFilter,
+  parseExpenseTypeFilter,
   validateExpense,
   type ExpenseInput,
 } from '../../../src/domain/expenses/model.ts'
@@ -168,15 +168,20 @@ describe('parseCategoryFilter', () => {
   }
 })
 
-describe('parseRecurringFilter', () => {
-  it('should parse both recurring filter states', () => {
-    assert.equal(parseRecurringFilter('exclude'), 'exclude')
-    assert.equal(parseRecurringFilter('only'), 'only')
+describe('parseExpenseTypeFilter', () => {
+  it('should default to day-to-day and special expenses', () => {
+    assert.deepStrictEqual(parseExpenseTypeFilter([]), ['day-to-day', 'special'])
   })
 
-  it('should use all expenses for a missing or stale filter', () => {
-    assert.equal(parseRecurringFilter(undefined), 'all')
-    assert.equal(parseRecurringFilter('old-value'), 'all')
+  it('should keep known types in their display order', () => {
+    assert.deepStrictEqual(parseExpenseTypeFilter(['recurring', 'day-to-day']), [
+      'day-to-day',
+      'recurring',
+    ])
+  })
+
+  it('should drop stale and repeated types', () => {
+    assert.deepStrictEqual(parseExpenseTypeFilter(['special', 'old-value', 'special']), ['special'])
   })
 })
 
