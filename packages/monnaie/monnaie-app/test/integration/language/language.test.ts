@@ -83,7 +83,12 @@ test.describe('with a Hebrew browser', () => {
     // the empty category is what the browser itself would refuse, so the form is posted directly —
     // and a direct request carries none of the context's locale, so it asks for Hebrew itself
     const response = await page.request.post(new URL('/expenses', url()).href, {
-      form: {description: 'קפה', amount: '12.50', categoryId: ''},
+      form: {
+        description: 'קפה',
+        amount: '12.50',
+        categoryId: '',
+        expenseType: 'day-to-day',
+      },
       headers: {'accept-language': 'he-IL'},
     })
 
