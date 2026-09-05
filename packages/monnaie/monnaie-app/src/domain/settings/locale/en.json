@@ -1,0 +1,12 @@
+{
+  "page": {
+    "title": "Settings"
+  },
+  "language": {
+    "heading": "Language"
+  },
+  "account": {
+    "noEmail": "No email address",
+    "logOut": "Log out"
+  }
+}

@@ -1,6 +1,7 @@
 import type enLayout from '../layout/locale/en.json'
 import type enExpenses from '../domain/expenses/locale/en.json'
 import type enLogin from '../domain/login/locale/en.json'
+import type enSettings from '../domain/settings/locale/en.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -11,6 +12,7 @@ declare module 'i18next' {
       layout: typeof enLayout
       expenses: typeof enExpenses
       login: typeof enLogin
+      settings: typeof enSettings
     }
   }
 }

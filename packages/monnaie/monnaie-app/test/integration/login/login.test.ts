@@ -5,6 +5,7 @@ import {createLoginPageModel} from '../../page-model/login/login-page.model.ts'
 import {createLayoutPageModel} from '../../page-model/layout/layout-page.model.ts'
 import {createExpensesPageModel} from '../../page-model/expenses/expenses-page.model.ts'
 import {createExpenseFormPageModel} from '../../page-model/expenses/expense-form-page.model.ts'
+import {createSettingsPageModel} from '../../page-model/settings/settings-page.model.ts'
 
 const {url, logIn} = setup(import.meta.url)
 
@@ -32,6 +33,7 @@ test('logs in with an email and a password', async ({page}) => {
   const login = createLoginPageModel(page)
   const expenses = createExpensesPageModel(page)
   const layout = createLayoutPageModel(page)
+  const settings = createSettingsPageModel(page)
 
   await page.goto(loginUrl())
 
@@ -41,12 +43,14 @@ test('logs in with an email and a password', async ({page}) => {
 
   await expect(page).toHaveURL(url().href)
   await expect(expenses.heading().locator).toBeVisible()
-  await expect(layout.userMenu().user().locator).toHaveText(FIRST_USER.displayName ?? '')
+  await layout.userMenu().settingsLink().locator.click()
+  await expect(settings.email().locator).toHaveText(FIRST_USER.email)
 })
 
 test('shows the email of a user who has no name', async ({page}) => {
   const login = createLoginPageModel(page)
   const layout = createLayoutPageModel(page)
+  const settings = createSettingsPageModel(page)
 
   await page.goto(loginUrl())
 
@@ -54,7 +58,8 @@ test('shows the email of a user who has no name', async ({page}) => {
   await login.password().locator.fill(SECOND_USER.password)
   await login.logInButton().locator.click()
 
-  await expect(layout.userMenu().user().locator).toHaveText(SECOND_USER.email)
+  await layout.userMenu().settingsLink().locator.click()
+  await expect(settings.email().locator).toHaveText(SECOND_USER.email)
 })
 
 test('refuses a wrong password, without saying whether the email exists', async ({page}) => {
@@ -104,11 +109,13 @@ test('sends someone who is already logged in from the login page to the app', as
 test('logs out', async ({page}) => {
   const layout = createLayoutPageModel(page)
   const login = createLoginPageModel(page)
+  const settings = createSettingsPageModel(page)
 
   await logIn(page, FIRST_USER)
   await page.goto(url().href)
 
-  await layout.userMenu().logOutButton().locator.click()
+  await layout.userMenu().settingsLink().locator.click()
+  await settings.logOutButton().locator.click()
 
   await expect(page).toHaveURL(loginUrl())
   await expect(login.heading().locator).toBeVisible()

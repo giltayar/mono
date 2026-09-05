@@ -24,6 +24,7 @@ test('shows the app in the default language when the browser asks for nothing we
 
 test('switches the language, and remembers it for the next visit', async ({page}) => {
   await page.goto(url().href)
+  await page.getByRole('link', {name: 'Settings'}).click()
 
   await page.getByLabel('Language').selectOption('he')
 
@@ -39,6 +40,7 @@ test('switches the language, and remembers it for the next visit', async ({page}
 
 test('remembers the language on the account, not only in the browser', async ({page}) => {
   await page.goto(url().href)
+  await page.getByRole('link', {name: 'Settings'}).click()
 
   await page.getByLabel('Language').selectOption('he')
 
@@ -96,7 +98,7 @@ test.describe('with a Hebrew browser', () => {
   })
 
   test('prefers the language of the cookie over the language of the browser', async ({page}) => {
-    await page.goto(url().href)
+    await page.goto(new URL('/settings', url()).href)
 
     await page.getByLabel('שפה').selectOption('en')
 

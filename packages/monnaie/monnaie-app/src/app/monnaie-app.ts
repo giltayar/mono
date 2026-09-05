@@ -7,6 +7,7 @@ import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import expensesRoutes from '../domain/expenses/route.ts'
 import languageRoutes from '../domain/language/route.ts'
 import loginRoutes from '../domain/login/route.ts'
+import settingsRoutes from '../domain/settings/route.ts'
 import {userSettings} from '../domain/user/model.ts'
 import {prepareDatabase} from './prepare-database.ts'
 import {createDb, type Db} from '../commons/db.ts'
@@ -103,6 +104,7 @@ export async function makeApp({
       privateApp.addHook('onRequest', requireAuthentication)
 
       privateApp.register(expensesRoutes, {db, timeZone})
+      privateApp.register(settingsRoutes)
     })
   })
 

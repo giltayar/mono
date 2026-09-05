@@ -1,0 +1,12 @@
+{
+  "page": {
+    "title": "הגדרות"
+  },
+  "language": {
+    "heading": "שפה"
+  },
+  "account": {
+    "noEmail": "אין כתובת דוא״ל",
+    "logOut": "יציאה"
+  }
+}
