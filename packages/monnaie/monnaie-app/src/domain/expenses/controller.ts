@@ -2,6 +2,7 @@ import type {ControllerResult} from '../../commons/controller.ts'
 import type {Db} from '../../commons/db.ts'
 import {
   copyRecurringExpenses,
+  DEFAULT_EXPENSE_TYPE_FILTER,
   deleteExpense,
   fetchCategoryTotals,
   fetchExpense,
@@ -50,12 +51,13 @@ export async function showExpensesPage(
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
 
   if (renderTarget === 'expense-month') {
     const expenses = await fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes)
 
     return {
-      html: renderExpensesMonth(expenses, timeZone, categoryIds, expenseTypes, selectedDay),
+      html: renderExpensesMonth(expenses, timeZone, query),
     }
   }
 
@@ -72,6 +74,7 @@ export async function showExpensesPage(
       timeZone,
       categoryIds,
       expenseTypes,
+      query,
       referenceDate,
       selectedDay,
       currentDay,
@@ -94,6 +97,7 @@ export async function showGraphsPage(
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
 
   if (renderTarget === 'expense-month') {
     const categoryTotals = await fetchCategoryTotals(
@@ -104,7 +108,9 @@ export async function showGraphsPage(
       expenseTypes,
     )
 
-    return {html: renderGraphsMonth(categoryTotals, categoryIds, expenseTypes, selectedDay)}
+    return {
+      html: renderGraphsMonth(categoryTotals, query),
+    }
   }
 
   const [summary, categoryTotals] = await Promise.all([
@@ -119,6 +125,7 @@ export async function showGraphsPage(
       categoryTotals,
       categoryIds,
       expenseTypes,
+      query,
       referenceDate,
       timeZone,
       selectedDay,
@@ -128,10 +135,17 @@ export async function showGraphsPage(
   }
 }
 
-export function showNewExpensePage(): ControllerResult {
+export function showNewExpensePage(
+  categoryIds: number[],
+  expenseTypes: ExpenseType[],
+  selectedDay: string | undefined,
+): ControllerResult {
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+
   return {
     html: renderExpenseFormPage({
       mode: {kind: 'add'},
+      query,
       values: EMPTY_EXPENSE_FORM_VALUES,
       error: undefined,
     }),
@@ -179,19 +193,23 @@ export async function addExpense(
   db: Db,
   userId: string,
   input: ExpenseInput,
+  categoryIds: number[],
+  expenseTypes: ExpenseType[],
+  selectedDay: string | undefined,
 ): Promise<ControllerResult> {
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
   const result = validateExpense(input)
 
   if ('error' in result) {
     return {
-      html: renderExpenseForm({mode: {kind: 'add'}, values: input, error: result.error}),
+      html: renderExpenseForm({mode: {kind: 'add'}, query, values: input, error: result.error}),
       statusCode: 400,
     }
   }
 
   await saveExpense(db, userId, result.expense)
 
-  return redirectToExpenses()
+  return redirectToExpenses(`/${query}`)
 }
 
 export async function showEditExpensePage(
@@ -199,13 +217,18 @@ export async function showEditExpensePage(
   userId: string,
   id: number,
   timeZone: string,
+  categoryIds: number[],
+  expenseTypes: ExpenseType[],
+  selectedDay: string | undefined,
 ): Promise<ControllerResult> {
   const expense = await fetchExpense(db, userId, id)
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
 
   if (expense === undefined) {
     return {
       html: renderExpenseFormPage({
         mode: {kind: 'add'},
+        query,
         values: EMPTY_EXPENSE_FORM_VALUES,
         error: 'not-found',
       }),
@@ -216,6 +239,7 @@ export async function showEditExpensePage(
   return {
     html: renderExpenseFormPage({
       mode: {kind: 'edit', id},
+      query,
       values: {
         description: expense.description,
         amount: expense.amount.toFixed(2),
@@ -234,21 +258,31 @@ export async function saveExpenseEdit(
   id: number,
   input: ExpenseInput,
   timeZone: string,
+  categoryIds: number[],
+  expenseTypes: ExpenseType[],
+  selectedDay: string | undefined,
 ): Promise<ControllerResult> {
   const mode: ExpenseFormMode = {kind: 'edit', id}
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
   const result = validateExpense(input)
 
   if ('error' in result) {
-    return {html: renderExpenseForm({mode, values: input, error: result.error}), statusCode: 400}
+    return {
+      html: renderExpenseForm({mode, query, values: input, error: result.error}),
+      statusCode: 400,
+    }
   }
 
   const createdAt = dateStringToTimestamp(result.expense.date!, timeZone)
 
   if (!(await updateExpense(db, userId, id, result.expense, createdAt))) {
-    return {html: renderExpenseForm({mode, values: input, error: 'not-found'}), statusCode: 404}
+    return {
+      html: renderExpenseForm({mode, query, values: input, error: 'not-found'}),
+      statusCode: 404,
+    }
   }
 
-  return redirectToExpenses()
+  return redirectToExpenses(`/${query}`)
 }
 
 export async function removeExpense(
@@ -272,15 +306,14 @@ export async function removeExpense(
     fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
     fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes),
   ])
+  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
 
   return {
     html:
       renderExpenseList(expenses, {
         outOfBand: false,
         timeZone,
-        categoryIds,
-        expenseTypes: expenseTypes,
-        selectedDay,
+        query,
       }) +
       renderExpenseSummary(
         summary.totals,
@@ -290,8 +323,7 @@ export async function removeExpense(
           path: '/',
           referenceDate,
           timeZone,
-          categoryIds,
-          expenseTypes: expenseTypes,
+          query,
           referenceDay: selectedDay ?? currentDay,
           currentDay,
           navigationDates: periodNavigationDates(referenceDate, now, timeZone),
@@ -300,10 +332,46 @@ export async function removeExpense(
   }
 }
 
+/** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
+function expenseQuery(
+  categoryIds: number[],
+  expenseTypes: ExpenseType[],
+  selectedDay: string | undefined,
+): string {
+  if (
+    categoryIds.length === 0 &&
+    isDefaultExpenseTypeFilter(expenseTypes) &&
+    selectedDay === undefined
+  ) {
+    return ''
+  }
+
+  const query = new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))
+
+  if (!isDefaultExpenseTypeFilter(expenseTypes)) {
+    for (const expenseType of expenseTypes) {
+      query.append('expenseType', expenseType)
+    }
+  }
+
+  if (selectedDay !== undefined) {
+    query.set('day', selectedDay)
+  }
+
+  return `?${query}`
+}
+
+function isDefaultExpenseTypeFilter(expenseTypes: ExpenseType[]): boolean {
+  return (
+    expenseTypes.length === DEFAULT_EXPENSE_TYPE_FILTER.length &&
+    DEFAULT_EXPENSE_TYPE_FILTER.every((expenseType) => expenseTypes.includes(expenseType))
+  )
+}
+
 /**
  * HTMX follows a `303` inside its own request, which would swap a whole page into a fragment, so a
  * successful save asks the browser to navigate instead.
  */
-function redirectToExpenses(): ControllerResult {
-  return {html: '', headers: {'HX-Redirect': '/'}}
+function redirectToExpenses(path = '/'): ControllerResult {
+  return {html: '', headers: {'HX-Redirect': path}}
 }

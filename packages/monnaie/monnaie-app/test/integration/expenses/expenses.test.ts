@@ -166,6 +166,27 @@ test('adds a special expense', async ({page}) => {
   await expect(expenses.list().item('Refrigerator').special().locator).toHaveText('special')
 })
 
+test('keeps the filters after adding an expense', async ({page}) => {
+  const expenses = createExpensesPageModel(page)
+  const form = createExpenseFormPageModel(page)
+
+  await page.goto(new URL('/?category=1&expenseType=special', url()).href)
+  await expenses.addButton().locator.click()
+
+  await expect(page).toHaveURL(new URL('/expenses/new?category=1&expenseType=special', url()).href)
+
+  await form.description().locator.fill('Filtered expense')
+  await form.amount().locator.fill('42')
+  await form.category('אוכל').locator.check()
+  await form.expenseType('Special').locator.check()
+  await form.submitButton().locator.click()
+
+  await expect(page).toHaveURL(new URL('/?category=1&expenseType=special', url()).href)
+  await expect(expenses.filter().category('אוכל').locator).toBeChecked()
+  await expect(expenses.filter().expenseType('Special').locator).toBeChecked()
+  await expect(expenses.list().item('Filtered expense').locator).toBeVisible()
+})
+
 test('adds up several expenses', async ({page}) => {
   await addExpense(page, 'Coffee', '12.50', 'אוכל')
   await addExpense(page, 'Bus ticket', '6.00', 'תחבורה')
@@ -309,6 +330,28 @@ test('edits an expense', async ({page}) => {
     .where('description', '=', 'Espresso')
     .executeTakeFirstOrThrow()
   expect(savedExpense.expense_type).toBe('recurring')
+})
+
+test('keeps all filters after editing an expense', async ({page}) => {
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+
+  const expenses = createExpensesPageModel(page)
+  const form = createExpenseFormPageModel(page)
+  const today = new Date().toISOString().slice(0, 10)
+  const filterPath = `/?category=1&expenseType=day-to-day&day=${today}`
+
+  await page.goto(new URL(filterPath, url()).href)
+  await expenses.list().item('Coffee').editLink().locator.click()
+
+  await expect(page).toHaveURL(new URL(`/expenses/1/edit${filterPath.slice(1)}`, url()).href)
+
+  await form.description().locator.fill('Espresso')
+  await form.submitButton().locator.click()
+
+  await expect(page).toHaveURL(new URL(filterPath, url()).href)
+  await expect(expenses.filter().category('אוכל').locator).toBeChecked()
+  await expect(expenses.filter().expenseType('Day to day').locator).toBeChecked()
+  await expect(expenses.list().item('Espresso').locator).toBeVisible()
 })
 
 test('changes the date of an expense when editing', async ({page}) => {

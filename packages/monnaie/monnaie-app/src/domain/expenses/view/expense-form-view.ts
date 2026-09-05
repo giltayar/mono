@@ -8,6 +8,7 @@ export type ExpenseFormMode = {kind: 'add'} | {kind: 'edit'; id: number}
 
 export type ExpenseFormProps = {
   mode: ExpenseFormMode
+  query: string
   values: ExpenseInput
   error: ExpenseError | undefined
 }
@@ -39,16 +40,12 @@ export function renderExpenseFormPage(props: ExpenseFormProps): string {
  * Posts to itself and replaces itself, so that an error comes back as this same form with the
  * values still in it. A success never reaches here: it answers with an `HX-Redirect` instead.
  */
-export function renderExpenseForm({mode, values, error}: ExpenseFormProps): string {
+export function renderExpenseForm({mode, query, values, error}: ExpenseFormProps): string {
   const t = translator('expenses')
+  const postPath = mode.kind === 'add' ? `/expenses${query}` : `/expenses/${mode.id}${query}`
 
   return html`
-    <form
-      id="expense-form"
-      hx-post=${mode.kind === 'add' ? '/expenses' : `/expenses/${mode.id}`}
-      hx-target="#expense-form"
-      hx-swap="outerHTML"
-    >
+    <form id="expense-form" hx-post=${postPath} hx-target="#expense-form" hx-swap="outerHTML">
       <label for="description">${t('form.description')}</label>
       <input
         id="description"
@@ -117,7 +114,7 @@ export function renderExpenseForm({mode, values, error}: ExpenseFormProps): stri
       ${error && html`<p class="error" role="alert">${t(`errors.${error}`)}</p>`}
       <div class="form-actions">
         <button type="submit">${mode.kind === 'add' ? t('form.add') : t('form.save')}</button>
-        <a href="/">${t('form.cancel')}</a>
+        <a href=${`/${query}`}>${t('form.cancel')}</a>
       </div>
     </form>
   ` as string

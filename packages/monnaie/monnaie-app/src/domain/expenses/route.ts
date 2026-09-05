@@ -99,18 +99,35 @@ export default function expensesRoutes(
       ),
   )
 
-  appWithTypes.get('/expenses/new', async (_request, reply) =>
-    replyWithControllerResult(reply, showNewExpensePage()),
+  appWithTypes.get(
+    '/expenses/new',
+    {schema: {querystring: CategoryFilterQuerySchema}},
+    async (request, reply) =>
+      replyWithControllerResult(
+        reply,
+        showNewExpensePage(
+          parseCategoryFilter(request.query.category),
+          parseExpenseTypeFilter(request.query.expenseType),
+          request.query.day,
+        ),
+      ),
   )
 
-  appWithTypes.post('/expenses', {schema: {body: ExpenseBodySchema}}, async (request, reply) =>
-    replyWithControllerResult(
-      reply,
-      await addExpense(db, authenticatedUser().uid, {
-        ...request.body,
-        date: undefined,
-      }),
-    ),
+  appWithTypes.post(
+    '/expenses',
+    {schema: {body: ExpenseBodySchema, querystring: CategoryFilterQuerySchema}},
+    async (request, reply) =>
+      replyWithControllerResult(
+        reply,
+        await addExpense(
+          db,
+          authenticatedUser().uid,
+          {...request.body, date: undefined},
+          parseCategoryFilter(request.query.category),
+          parseExpenseTypeFilter(request.query.expenseType),
+          request.query.day,
+        ),
+      ),
   )
 
   appWithTypes.get('/expenses/copy-recurring', async (_request, reply) =>
@@ -138,17 +155,31 @@ export default function expensesRoutes(
 
   appWithTypes.get(
     '/expenses/:id/edit',
-    {schema: {params: ExpenseParamsSchema}},
+    {schema: {params: ExpenseParamsSchema, querystring: CategoryFilterQuerySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
-        await showEditExpensePage(db, authenticatedUser().uid, request.params.id, timeZone),
+        await showEditExpensePage(
+          db,
+          authenticatedUser().uid,
+          request.params.id,
+          timeZone,
+          parseCategoryFilter(request.query.category),
+          parseExpenseTypeFilter(request.query.expenseType),
+          request.query.day,
+        ),
       ),
   )
 
   appWithTypes.post(
     '/expenses/:id',
-    {schema: {params: ExpenseParamsSchema, body: EditExpenseBodySchema}},
+    {
+      schema: {
+        params: ExpenseParamsSchema,
+        body: EditExpenseBodySchema,
+        querystring: CategoryFilterQuerySchema,
+      },
+    },
     async (request, reply) =>
       replyWithControllerResult(
         reply,
@@ -158,6 +189,9 @@ export default function expensesRoutes(
           request.params.id,
           request.body,
           timeZone,
+          parseCategoryFilter(request.query.category),
+          parseExpenseTypeFilter(request.query.expenseType),
+          request.query.day,
         ),
       ),
   )
