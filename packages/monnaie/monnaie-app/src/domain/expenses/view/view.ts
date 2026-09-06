@@ -111,6 +111,7 @@ export function renderGraphsPage(
           categoryTotals,
           expenseTypeTotals,
           dailyTotals,
+          dayCounts.month,
           monthWeekendDays(referenceDate, timeZone),
           query,
         )}
@@ -345,6 +346,7 @@ export function renderGraphsMonthForDate(
   categoryTotals: CategoryTotal[],
   expenseTypeTotals: ExpenseTypeTotal[],
   dailyTotals: number[],
+  averageDayCount: number,
   referenceDate: Date,
   timeZone: string,
   query: string,
@@ -353,6 +355,7 @@ export function renderGraphsMonthForDate(
     categoryTotals,
     expenseTypeTotals,
     dailyTotals,
+    averageDayCount,
     monthWeekendDays(referenceDate, timeZone),
     query,
   )
@@ -647,6 +650,7 @@ function renderGraphsMonth(
   categoryTotals: CategoryTotal[],
   expenseTypeTotals: ExpenseTypeTotal[],
   dailyTotals: number[],
+  daysInMonth: number,
   weekendDays: boolean[],
   query: string,
 ): string {
@@ -666,7 +670,7 @@ function renderGraphsMonth(
         </section>
         <section class="expense-graph-section">
           <h3>${t('graph.dailyTitle')}</h3>
-          ${renderDailyGraph(dailyTotals, weekendDays)}
+          ${renderDailyGraph(dailyTotals, daysInMonth, weekendDays)}
         </section>
       </div>
     ` as string,

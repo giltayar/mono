@@ -212,7 +212,7 @@ test('graphs expense types without their filter and every day with a monthly ave
   })
   expect(dailyConfiguration.data.datasets[1]).toMatchObject({
     type: 'line',
-    data: Array.from({length: 29}, () => 15 / 29),
+    data: Array.from({length: 29}, () => 1),
     borderDash: [5, 5],
   })
 

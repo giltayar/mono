@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/monnaie-app",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "A mobile-first web app that tracks expenses",
   "type": "module",
   "exports": {

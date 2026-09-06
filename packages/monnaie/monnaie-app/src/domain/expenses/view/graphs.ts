@@ -141,7 +141,11 @@ function renderPieGraph(
   ` as string
 }
 
-export function renderDailyGraph(dailyTotals: number[], weekendDays: boolean[]): string {
+export function renderDailyGraph(
+  dailyTotals: number[],
+  daysInMonth: number,
+  weekendDays: boolean[],
+): string {
   const t = translator('expenses')
 
   if (dailyTotals.every((total) => total === 0)) {
@@ -150,7 +154,7 @@ export function renderDailyGraph(dailyTotals: number[], weekendDays: boolean[]):
     </div>` as string
   }
 
-  const average = dailyTotals.reduce((sum, total) => sum + total, 0) / dailyTotals.length
+  const average = dailyTotals.reduce((sum, total) => sum + total, 0) / daysInMonth
   const chartConfiguration: ChartConfiguration<'bar' | 'line'> = {
     type: 'bar',
     data: {

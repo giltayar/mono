@@ -99,7 +99,8 @@ export async function showGraphsPage(
   const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
-    const [categoryTotals, expenseTypeTotals, expenses] = await Promise.all([
+    const [summary, categoryTotals, expenseTypeTotals, expenses] = await Promise.all([
+      fetchPeriodTotals(db, userId, ranges, expenseQuery),
       fetchCategoryTotals(db, userId, ranges.month, expenseQuery),
       fetchExpenseTypeTotals(db, userId, ranges.month, expenseQuery),
       fetchPeriodExpenses(db, userId, ranges.month, expenseQuery),
@@ -110,6 +111,7 @@ export async function showGraphsPage(
         categoryTotals,
         expenseTypeTotals,
         dailyExpenseTotals(expenses, referenceDate, timeZone),
+        periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate).month,
         referenceDate,
         timeZone,
         query,
