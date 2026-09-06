@@ -22,6 +22,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+@media (min-width: 32rem) {
+  html {
+    scrollbar-gutter: stable both-edges;
+  }
+}
+
 body {
   margin: 0;
   font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
