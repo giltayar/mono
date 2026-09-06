@@ -36,7 +36,14 @@
   },
   "graph": {
     "empty": "אין הוצאות להצגה בגרף החודש",
-    "chartLabel": "הוצאות לפי קטגוריה החודש"
+    "chartLabel": "הוצאות לפי קטגוריה החודש",
+    "categoryTitle": "לפי קטגוריה",
+    "typeTitle": "לפי סוג הוצאה",
+    "dailyTitle": "לפי יום",
+    "typeChartLabel": "הוצאות לפי סוג החודש",
+    "dailyChartLabel": "הוצאות יומיות החודש",
+    "dailyTotal": "הוצאות",
+    "average": "ממוצע יומי"
   },
   "copyRecurring": {
     "title": "העתקת הוצאות חוזרות",

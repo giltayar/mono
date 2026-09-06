@@ -6,6 +6,7 @@ import {
   deleteExpense,
   fetchCategoryTotals,
   fetchExpense,
+  fetchExpenseTypeTotals,
   fetchPeriodExpenses,
   fetchPeriodTotals,
   saveExpense,
@@ -17,6 +18,7 @@ import {
 } from './model.ts'
 import {
   dateStringToTimestamp,
+  monthDateStrings,
   periodDayCounts,
   periodNavigationDates,
   periodRanges,
@@ -97,16 +99,27 @@ export async function showGraphsPage(
   const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
-    const categoryTotals = await fetchCategoryTotals(db, userId, ranges.month, expenseQuery)
+    const [categoryTotals, expenseTypeTotals, expenses] = await Promise.all([
+      fetchCategoryTotals(db, userId, ranges.month, expenseQuery),
+      fetchExpenseTypeTotals(db, userId, ranges.month, expenseQuery),
+      fetchPeriodExpenses(db, userId, ranges.month, expenseQuery),
+    ])
 
     return {
-      html: renderGraphsMonth(categoryTotals, query),
+      html: renderGraphsMonth(
+        categoryTotals,
+        expenseTypeTotals,
+        dailyExpenseTotals(expenses, referenceDate, timeZone),
+        query,
+      ),
     }
   }
 
-  const [summary, categoryTotals] = await Promise.all([
+  const [summary, categoryTotals, expenseTypeTotals, expenses] = await Promise.all([
     fetchPeriodTotals(db, userId, ranges, expenseQuery),
     fetchCategoryTotals(db, userId, ranges.month, expenseQuery),
+    fetchExpenseTypeTotals(db, userId, ranges.month, expenseQuery),
+    fetchPeriodExpenses(db, userId, ranges.month, expenseQuery),
   ])
 
   return {
@@ -114,6 +127,8 @@ export async function showGraphsPage(
       summary.totals,
       periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       categoryTotals,
+      expenseTypeTotals,
+      dailyExpenseTotals(expenses, referenceDate, timeZone),
       expenseQuery,
       query,
       referenceDate,
@@ -122,6 +137,22 @@ export async function showGraphsPage(
       periodNavigationDates(referenceDate, now, timeZone),
     ),
   }
+}
+
+function dailyExpenseTotals(
+  expenses: Awaited<ReturnType<typeof fetchPeriodExpenses>>,
+  referenceDate: Date,
+  timeZone: string,
+): number[] {
+  const dates = monthDateStrings(referenceDate, timeZone)
+  const totals = new Map(dates.map((date) => [date, 0]))
+
+  for (const expense of expenses) {
+    const date = timestampToDateString(expense.createdAt, timeZone)
+    totals.set(date, (totals.get(date) ?? 0) + expense.amount)
+  }
+
+  return dates.map((date) => totals.get(date) ?? 0)
 }
 
 export function showNewExpensePage(expenseQuery: ExpensesQuery): ControllerResult {

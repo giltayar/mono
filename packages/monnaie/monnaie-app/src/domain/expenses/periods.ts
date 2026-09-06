@@ -85,6 +85,14 @@ export function periodRanges(now: Date, timeZone: string): PeriodRanges {
   }
 }
 
+/** Every calendar date in the month containing `referenceDate`, including future dates. */
+export function monthDateStrings(referenceDate: Date, timeZone: string): string[] {
+  const reference = toPlainDate(referenceDate, timeZone)
+  const first = reference.with({day: 1})
+
+  return Array.from({length: first.daysInMonth}, (_, index) => first.add({days: index}).toString())
+}
+
 /** Calendar days represented by each total; current periods include today. */
 export function periodDayCounts(
   now: Date,

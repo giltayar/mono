@@ -462,18 +462,48 @@
   }
 }
 
-#expense-graph {
+#expense-graphs {
+  display: grid;
+  min-inline-size: 0;
+  gap: calc(var(--spacing) * 1.5);
+
+  & .expense-graph-section {
+    min-inline-size: 0;
+  }
+
+  & .expense-graph-section h3 {
+    margin-block: 0 calc(var(--spacing) / 2);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+}
+
+#expense-graph,
+.expense-graph {
+  min-inline-size: 0;
+
   & .chart-container {
     position: relative;
     inline-size: min(100%, 22rem);
+    min-inline-size: 0;
     aspect-ratio: 1;
     margin-inline: auto;
+  }
+
+  & canvas {
+    display: block;
+    max-inline-size: 100%;
   }
 
   & .chart-legend {
     list-style: none;
     margin-block: var(--spacing) 0;
     padding: 0;
+  }
+
+  & .daily-chart-container {
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
   }
 
   & .chart-legend li {

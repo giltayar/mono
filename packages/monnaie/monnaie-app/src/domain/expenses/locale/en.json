@@ -36,7 +36,14 @@
   },
   "graph": {
     "empty": "No expenses to graph this month",
-    "chartLabel": "Expenses by category this month"
+    "chartLabel": "Expenses by category this month",
+    "categoryTitle": "By category",
+    "typeTitle": "By expense type",
+    "dailyTitle": "By day",
+    "typeChartLabel": "Expenses by type this month",
+    "dailyChartLabel": "Daily expenses this month",
+    "dailyTotal": "Expenses",
+    "average": "Daily average"
   },
   "copyRecurring": {
     "title": "Copy recurring expenses",

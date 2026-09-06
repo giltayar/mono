@@ -63,6 +63,11 @@ export type CategoryTotal = {
   total: number
 }
 
+export type ExpenseTypeTotal = {
+  expenseType: ExpenseType
+  total: number
+}
+
 export const DESCRIPTION_MAX_LENGTH = 100
 
 export const DEFAULT_EXPENSE_TYPE_FILTER: ExpenseType[] = ['day-to-day', 'special']
@@ -333,6 +338,37 @@ export async function fetchCategoryTotals(
   return rows
     .map(({category_id, total}) => ({categoryId: category_id, total: Number(total)}))
     .sort((left, right) => right.total - left.total || left.categoryId - right.categoryId)
+}
+
+export async function fetchExpenseTypeTotals(
+  db: Db,
+  userId: string,
+  range: PeriodRange,
+  {categoryIds, title}: ExpensesQueryWithoutSelectedDay,
+): Promise<ExpenseTypeTotal[]> {
+  let query = db
+    .selectFrom('expense')
+    .select(['expense_type', (eb) => eb.fn.sum<string>('amount').as('total')])
+    .where('user_id', '=', userId)
+    .where('created_at', '>=', range.from)
+    .where('created_at', '<', range.to)
+    .groupBy('expense_type')
+
+  if (categoryIds.length > 0) {
+    query = query.where('category_id', 'in', categoryIds)
+  }
+
+  if (title !== '') {
+    query = query.where('description', 'ilike', `%${escapeLikePattern(title)}%`)
+  }
+
+  const rows = await query.execute()
+  const totals = new Map(rows.map(({expense_type, total}) => [expense_type, Number(total)]))
+
+  return (['day-to-day', 'special', 'recurring'] as const).flatMap((expenseType) => {
+    const total = totals.get(expenseType)
+    return total === undefined ? [] : [{expenseType, total}]
+  })
 }
 
 /**

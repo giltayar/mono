@@ -1,11 +1,22 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  monthDateStrings,
   periodDayCounts,
   periodNavigationDates,
   periodRanges,
   previousPeriodName,
 } from '../../../src/domain/expenses/periods.ts'
+
+describe('monthDateStrings', () => {
+  it('should return every day of the selected month, including a leap day', () => {
+    const dates = monthDateStrings(new Date('2024-02-10T22:30:00Z'), 'Asia/Jerusalem')
+
+    assert.strictEqual(dates.length, 29)
+    assert.strictEqual(dates[0], '2024-02-01')
+    assert.strictEqual(dates[28], '2024-02-29')
+  })
+})
 
 describe('periodNavigationDates', () => {
   it('should navigate days without normalizing them', () => {

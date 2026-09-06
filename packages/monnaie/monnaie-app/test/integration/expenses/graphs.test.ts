@@ -168,6 +168,76 @@ test('groups this month by category and renders the pie', async ({page}) => {
     .toBe(true)
 })
 
+test('graphs expense types without their filter and every day with a monthly average', async ({
+  page,
+}) => {
+  await db()
+    .insertInto('expense')
+    .values([
+      expenseRow(FIRST_USER.uid, 'Coffee', 10, 'day-to-day', '2024-02-01T12:00:00Z'),
+      expenseRow(FIRST_USER.uid, 'Lunch', 5, 'day-to-day', '2024-02-03T12:00:00Z'),
+      expenseRow(FIRST_USER.uid, 'Holiday', 20, 'special', '2024-02-03T12:00:00Z'),
+      expenseRow(FIRST_USER.uid, 'Rent', 30, 'recurring', '2024-02-04T12:00:00Z'),
+      expenseRow(SECOND_USER.uid, 'Somebody else', 100, 'recurring', '2024-02-04T12:00:00Z'),
+    ])
+    .execute()
+  const expenses = createExpensesPageModel(page)
+
+  await page.goto(new URL('/expenses/graphs?expenseType=day-to-day&day=2024-02-15', url()).href)
+
+  const typeConfiguration = JSON.parse(
+    (await expenses.expenseTypeGraph().canvas().locator.getAttribute('data-chart-configuration'))!,
+  )
+  expect(typeConfiguration).toMatchObject({
+    type: 'pie',
+    data: {
+      labels: ['Day to day', 'Special', 'Recurring'],
+      datasets: [{data: [15, 20, 30]}],
+    },
+  })
+
+  const dailyConfiguration = JSON.parse(
+    (await expenses.dailyGraph().canvas().locator.getAttribute('data-chart-configuration'))!,
+  )
+  expect(dailyConfiguration.data.labels).toHaveLength(29)
+  expect(dailyConfiguration.data.labels).toEqual(
+    Array.from({length: 29}, (_value, index) => String(index + 1)),
+  )
+  expect(dailyConfiguration.data.datasets[0]).toMatchObject({
+    type: 'bar',
+    data: [10, 0, 5, ...Array.from({length: 26}, () => 0)],
+  })
+  expect(dailyConfiguration.data.datasets[1]).toMatchObject({
+    type: 'line',
+    data: Array.from({length: 29}, () => 15 / 29),
+    borderDash: [5, 5],
+  })
+
+  const graphBounds = await expenses.graphs().locator.evaluate((graphs) => {
+    const {left, right} = graphs.getBoundingClientRect()
+    return {left, right, viewportWidth: document.documentElement.clientWidth}
+  })
+  expect(graphBounds.left).toBeGreaterThanOrEqual(0)
+  expect(graphBounds.right).toBeLessThanOrEqual(graphBounds.viewportWidth)
+})
+
+function expenseRow(
+  userId: string,
+  description: string,
+  amount: number,
+  expenseType: 'day-to-day' | 'special' | 'recurring',
+  createdAt: string,
+) {
+  return {
+    user_id: userId,
+    description,
+    amount,
+    category_id: 1,
+    expense_type: expenseType,
+    created_at: createdAt,
+  }
+}
+
 function graphUrl(): URL {
   return new URL('/expenses/graphs', url())
 }

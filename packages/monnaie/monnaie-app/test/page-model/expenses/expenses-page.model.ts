@@ -25,6 +25,7 @@ export function createExpensesPageModel(page: Page) {
       expenses: () => ({locator: locator.getByRole('link', {name: 'Expenses'})}),
       graphs: () => ({locator: locator.getByRole('link', {name: 'Graphs'})}),
     }),
+    graphs: (locator = page.locator('#expense-graphs')) => ({locator}),
     summary: (locator = page.getByRole('region', {name: 'Summary'})) => ({
       locator,
       heading: (heading = locator.getByRole('heading')) => ({
@@ -80,6 +81,20 @@ export function createExpensesPageModel(page: Page) {
       entry: (category: string) => ({
         locator: locator.locator('.chart-legend li').filter({hasText: category}),
       }),
+    }),
+    expenseTypeGraph: (locator = page.locator('#expense-type-graph')) => ({
+      locator,
+      canvas: () => ({
+        locator: locator.getByRole('img', {name: 'Expenses by type this month'}),
+      }),
+      entries: () => ({locator: locator.locator('.chart-legend li')}),
+      entry: (expenseType: string) => ({
+        locator: locator.locator('.chart-legend li').filter({hasText: expenseType}),
+      }),
+    }),
+    dailyGraph: (locator = page.locator('#daily-expense-graph')) => ({
+      locator,
+      canvas: () => ({locator: locator.getByRole('img', {name: 'Daily expenses this month'})}),
     }),
   }
 }
