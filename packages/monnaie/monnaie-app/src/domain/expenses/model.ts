@@ -14,7 +14,12 @@ export type ExpenseError =
   | 'not-found'
 
 export type ExpenseType = 'day-to-day' | 'recurring' | 'special'
-export type ExpenseTypeFilter = ExpenseType[]
+
+export type ExpensesQuery = {
+  categoryIds: number[]
+  expenseTypes: ExpenseType[]
+  selectedDay: string | undefined
+}
 
 /** An expense as the form sends it: every field is still a string, and none of it is trusted */
 export type ExpenseInput = {
@@ -86,6 +91,22 @@ export function parseExpenseTypeFilter(input: string[]): ExpenseType[] {
 
   const selected = new Set(input)
   return (['day-to-day', 'special', 'recurring'] as const).filter((type) => selected.has(type))
+}
+
+export function parseExpenseQuery({
+  category,
+  expenseType,
+  day,
+}: {
+  category: string[]
+  expenseType: string[]
+  day: string | undefined
+}): ExpensesQuery {
+  return {
+    categoryIds: parseCategoryFilter(category),
+    expenseTypes: parseExpenseTypeFilter(expenseType),
+    selectedDay: day,
+  }
 }
 
 export function parseExpenseIds(input: string[]): number[] {

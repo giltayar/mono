@@ -4,6 +4,7 @@ import {
   DESCRIPTION_MAX_LENGTH,
   parseCategoryFilter,
   parseExpenseIds,
+  parseExpenseQuery,
   parseExpenseTypeFilter,
   validateExpense,
   type ExpenseInput,
@@ -182,6 +183,23 @@ describe('parseExpenseTypeFilter', () => {
 
   it('should drop stale and repeated types', () => {
     assert.deepStrictEqual(parseExpenseTypeFilter(['special', 'old-value', 'special']), ['special'])
+  })
+})
+
+describe('parseExpenseQuery', () => {
+  it('should combine the parsed filters and selected day', () => {
+    assert.deepStrictEqual(
+      parseExpenseQuery({
+        category: ['3', 'invalid'],
+        expenseType: ['recurring'],
+        day: '2026-09-06',
+      }),
+      {
+        categoryIds: [3],
+        expenseTypes: ['recurring'],
+        selectedDay: '2026-09-06',
+      },
+    )
   })
 })
 

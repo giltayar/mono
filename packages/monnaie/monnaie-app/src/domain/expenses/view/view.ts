@@ -7,8 +7,8 @@ import {categoryById, EXPENSE_CATEGORIES} from '../categories.ts'
 import {
   type CategoryTotal,
   type Expense,
+  type ExpensesQuery,
   type ExpenseType,
-  type ExpenseTypeFilter,
   type PeriodTotals,
 } from '../model.ts'
 import {
@@ -50,15 +50,14 @@ export function renderExpensesPage(
   dayCounts: PeriodDayCounts,
   expenses: Expense[],
   timeZone: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseTypeFilter,
+  expenseQuery: ExpensesQuery,
   query: string,
   referenceDate: Date,
-  selectedDay: string | undefined,
   currentDay: string,
   navigationDates: PeriodNavigationDates,
 ): string {
   const t = translator('expenses')
+  const {selectedDay} = expenseQuery
 
   return html`
     <${MainLayout}
@@ -69,7 +68,7 @@ export function renderExpensesPage(
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/', categoryIds, expenseTypes, selectedDay)}
+      ${renderCategoryFilter('/', expenseQuery)}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -92,16 +91,15 @@ export function renderGraphsPage(
   totals: PeriodTotals,
   dayCounts: PeriodDayCounts,
   categoryTotals: CategoryTotal[],
-  categoryIds: number[],
-  expenseTypes: ExpenseTypeFilter,
+  expenseQuery: ExpensesQuery,
   query: string,
   referenceDate: Date,
   timeZone: string,
-  selectedDay: string | undefined,
   currentDay: string,
   navigationDates: PeriodNavigationDates,
 ): string {
   const t = translator('expenses')
+  const {selectedDay} = expenseQuery
 
   return html`
     <${MainLayout}
@@ -112,7 +110,7 @@ export function renderGraphsPage(
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/expenses/graphs', categoryIds, expenseTypes, selectedDay)}
+      ${renderCategoryFilter('/expenses/graphs', expenseQuery)}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -161,9 +159,7 @@ function renderCreateExpenseActions(query: string): string {
  */
 function renderCategoryFilter(
   path: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseTypeFilter,
-  selectedDay: string | undefined,
+  {categoryIds, expenseTypes, selectedDay}: ExpensesQuery,
 ): string {
   const t = translator('expenses')
 

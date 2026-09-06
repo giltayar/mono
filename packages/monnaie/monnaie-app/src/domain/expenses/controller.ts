@@ -12,6 +12,7 @@ import {
   updateExpense,
   validateExpense,
   type ExpenseInput,
+  type ExpensesQuery,
   type ExpenseType,
 } from './model.ts'
 import {
@@ -41,17 +42,16 @@ export async function showExpensesPage(
   db: Db,
   userId: string,
   timeZone: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
+  expenseQuery: ExpensesQuery,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
+  const {categoryIds, expenseTypes, selectedDay} = expenseQuery
   const now = new Date()
   const referenceDate =
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+  const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
     const expenses = await fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes)
@@ -72,11 +72,9 @@ export async function showExpensesPage(
       periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       expenses,
       timeZone,
-      categoryIds,
-      expenseTypes,
+      expenseQuery,
       query,
       referenceDate,
-      selectedDay,
       currentDay,
       periodNavigationDates(referenceDate, now, timeZone),
     ),
@@ -87,17 +85,16 @@ export async function showGraphsPage(
   db: Db,
   userId: string,
   timeZone: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
+  expenseQuery: ExpensesQuery,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
+  const {categoryIds, expenseTypes, selectedDay} = expenseQuery
   const now = new Date()
   const referenceDate =
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+  const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
     const categoryTotals = await fetchCategoryTotals(
@@ -123,24 +120,18 @@ export async function showGraphsPage(
       summary.totals,
       periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       categoryTotals,
-      categoryIds,
-      expenseTypes,
+      expenseQuery,
       query,
       referenceDate,
       timeZone,
-      selectedDay,
       currentDay,
       periodNavigationDates(referenceDate, now, timeZone),
     ),
   }
 }
 
-export function showNewExpensePage(
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
-): ControllerResult {
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+export function showNewExpensePage(expenseQuery: ExpensesQuery): ControllerResult {
+  const query = expenseQueryString(expenseQuery)
 
   return {
     html: renderExpenseFormPage({
@@ -193,11 +184,9 @@ export async function addExpense(
   db: Db,
   userId: string,
   input: ExpenseInput,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
+  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+  const query = expenseQueryString(expenseQuery)
   const result = validateExpense(input)
 
   if ('error' in result) {
@@ -217,12 +206,10 @@ export async function showEditExpensePage(
   userId: string,
   id: number,
   timeZone: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
+  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
   const expense = await fetchExpense(db, userId, id)
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+  const query = expenseQueryString(expenseQuery)
 
   if (expense === undefined) {
     return {
@@ -258,12 +245,10 @@ export async function saveExpenseEdit(
   id: number,
   input: ExpenseInput,
   timeZone: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
+  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
   const mode: ExpenseFormMode = {kind: 'edit', id}
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+  const query = expenseQueryString(expenseQuery)
   const result = validateExpense(input)
 
   if ('error' in result) {
@@ -290,10 +275,9 @@ export async function removeExpense(
   userId: string,
   id: number,
   timeZone: string,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
+  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
+  const {categoryIds, expenseTypes, selectedDay} = expenseQuery
   await deleteExpense(db, userId, id)
 
   const now = new Date()
@@ -306,7 +290,7 @@ export async function removeExpense(
     fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
     fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes),
   ])
-  const query = expenseQuery(categoryIds, expenseTypes, selectedDay)
+  const query = expenseQueryString(expenseQuery)
 
   return {
     html:
@@ -333,11 +317,7 @@ export async function removeExpense(
 }
 
 /** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
-function expenseQuery(
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
-  selectedDay: string | undefined,
-): string {
+function expenseQueryString({categoryIds, expenseTypes, selectedDay}: ExpensesQuery): string {
   if (
     categoryIds.length === 0 &&
     isDefaultExpenseTypeFilter(expenseTypes) &&

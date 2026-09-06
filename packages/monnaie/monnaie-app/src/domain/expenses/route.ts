@@ -15,7 +15,7 @@ import {
   showNewExpensePage,
   showCopyRecurringDialog,
 } from './controller.ts'
-import {parseCategoryFilter, parseExpenseIds, parseExpenseTypeFilter} from './model.ts'
+import {parseExpenseIds, parseExpenseQuery} from './model.ts'
 
 // the model is what validates these, so that the same rules apply however they arrive
 const ExpenseBodySchema = z.object({
@@ -27,17 +27,19 @@ const ExpenseBodySchema = z.object({
 
 // a single `?category=3` arrives as a string and repeated ones as an array; the ids themselves are
 // the model's to judge, since a bookmarked URL may name a category that no longer exists
-const CategoryFilterQuerySchema = z.object({
-  category: z
-    .union([z.string(), z.array(z.string())])
-    .default([])
-    .transform((category) => (Array.isArray(category) ? category : [category])),
-  expenseType: z
-    .union([z.string(), z.array(z.string())])
-    .default([])
-    .transform((expenseType) => (Array.isArray(expenseType) ? expenseType : [expenseType])),
-  day: z.iso.date().optional(),
-})
+const ExpenseQuerySchema = z
+  .object({
+    category: z
+      .union([z.string(), z.array(z.string())])
+      .default([])
+      .transform((category) => (Array.isArray(category) ? category : [category])),
+    expenseType: z
+      .union([z.string(), z.array(z.string())])
+      .default([])
+      .transform((expenseType) => (Array.isArray(expenseType) ? expenseType : [expenseType])),
+    day: z.iso.date().optional(),
+  })
+  .transform((query) => ({...query, day: query.day}))
 
 const EditExpenseBodySchema = z.object({
   description: z.string(),
@@ -63,27 +65,22 @@ export default function expensesRoutes(
 ): void {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  appWithTypes.get(
-    '/',
-    {schema: {querystring: CategoryFilterQuerySchema}},
-    async (request, reply) =>
-      replyWithControllerResult(
-        reply,
-        await showExpensesPage(
-          db,
-          authenticatedUser().uid,
-          timeZone,
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
-          request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
-        ),
+  appWithTypes.get('/', {schema: {querystring: ExpenseQuerySchema}}, async (request, reply) =>
+    replyWithControllerResult(
+      reply,
+      await showExpensesPage(
+        db,
+        authenticatedUser().uid,
+        timeZone,
+        parseExpenseQuery(request.query),
+        request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
       ),
+    ),
   )
 
   appWithTypes.get(
     '/expenses/graphs',
-    {schema: {querystring: CategoryFilterQuerySchema}},
+    {schema: {querystring: ExpenseQuerySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
@@ -91,9 +88,7 @@ export default function expensesRoutes(
           db,
           authenticatedUser().uid,
           timeZone,
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
+          parseExpenseQuery(request.query),
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
       ),
@@ -101,21 +96,14 @@ export default function expensesRoutes(
 
   appWithTypes.get(
     '/expenses/new',
-    {schema: {querystring: CategoryFilterQuerySchema}},
+    {schema: {querystring: ExpenseQuerySchema}},
     async (request, reply) =>
-      replyWithControllerResult(
-        reply,
-        showNewExpensePage(
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
-        ),
-      ),
+      replyWithControllerResult(reply, showNewExpensePage(parseExpenseQuery(request.query))),
   )
 
   appWithTypes.post(
     '/expenses',
-    {schema: {body: ExpenseBodySchema, querystring: CategoryFilterQuerySchema}},
+    {schema: {body: ExpenseBodySchema, querystring: ExpenseQuerySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
@@ -123,9 +111,7 @@ export default function expensesRoutes(
           db,
           authenticatedUser().uid,
           {...request.body, date: undefined},
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
+          parseExpenseQuery(request.query),
         ),
       ),
   )
@@ -155,7 +141,7 @@ export default function expensesRoutes(
 
   appWithTypes.get(
     '/expenses/:id/edit',
-    {schema: {params: ExpenseParamsSchema, querystring: CategoryFilterQuerySchema}},
+    {schema: {params: ExpenseParamsSchema, querystring: ExpenseQuerySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
@@ -164,9 +150,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           request.params.id,
           timeZone,
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
+          parseExpenseQuery(request.query),
         ),
       ),
   )
@@ -177,7 +161,7 @@ export default function expensesRoutes(
       schema: {
         params: ExpenseParamsSchema,
         body: EditExpenseBodySchema,
-        querystring: CategoryFilterQuerySchema,
+        querystring: ExpenseQuerySchema,
       },
     },
     async (request, reply) =>
@@ -189,16 +173,14 @@ export default function expensesRoutes(
           request.params.id,
           request.body,
           timeZone,
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
+          parseExpenseQuery(request.query),
         ),
       ),
   )
 
   appWithTypes.delete(
     '/expenses/:id',
-    {schema: {params: ExpenseParamsSchema, querystring: CategoryFilterQuerySchema}},
+    {schema: {params: ExpenseParamsSchema, querystring: ExpenseQuerySchema}},
     async (request, reply) =>
       replyWithControllerResult(
         reply,
@@ -207,9 +189,7 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           request.params.id,
           timeZone,
-          parseCategoryFilter(request.query.category),
-          parseExpenseTypeFilter(request.query.expenseType),
-          request.query.day,
+          parseExpenseQuery(request.query),
         ),
       ),
   )
