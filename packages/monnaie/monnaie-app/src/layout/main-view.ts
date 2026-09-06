@@ -44,7 +44,7 @@ export function MainLayout({
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta name="color-scheme" content="light dark" />
+          <meta name="color-scheme" content="light" />
           <meta name="htmx-config" content=${HTMX_CONFIG} />
           <link rel="stylesheet" href=${`/src/${version}/layout/style/style.css`} />
           ${styleSheet && html`<link rel="stylesheet" href=${`/src/${version}/${styleSheet}`} />`}

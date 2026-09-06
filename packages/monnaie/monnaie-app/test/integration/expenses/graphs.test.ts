@@ -103,7 +103,7 @@ test('keeps the graph tab and persistent controls when navigating summary dates'
   })
 })
 
-test('groups this month by category and renders the pie', async ({page}) => {
+test('groups this month by category and renders the doughnut', async ({page}) => {
   await saveExpense(db(), FIRST_USER.uid, {
     description: 'Coffee',
     amount: 10,
@@ -141,9 +141,9 @@ test('groups this month by category and renders the pie', async ({page}) => {
   )
 
   expect(chartConfiguration).toMatchObject({
-    type: 'pie',
+    type: 'doughnut',
     data: {datasets: [{data: [12.5, 6]}]},
-    options: {responsive: true, maintainAspectRatio: false},
+    options: {responsive: true, maintainAspectRatio: false, cutout: '56%'},
   })
   await expect(expenses.graph().entries().locator).toHaveCount(2)
   await expect(expenses.graph().entry('אוכל').locator).toContainText('12.50')
@@ -189,7 +189,7 @@ test('graphs expense types without their filter and every day with a monthly ave
     (await expenses.expenseTypeGraph().canvas().locator.getAttribute('data-chart-configuration'))!,
   )
   expect(typeConfiguration).toMatchObject({
-    type: 'pie',
+    type: 'doughnut',
     data: {
       labels: ['Day to day', 'Special', 'Recurring'],
       datasets: [{data: [15, 20, 30]}],
@@ -207,7 +207,7 @@ test('graphs expense types without their filter and every day with a monthly ave
     type: 'bar',
     data: [10, 0, 5, ...Array.from({length: 26}, () => 0)],
     backgroundColor: Array.from({length: 29}, (_value, index) =>
-      [3, 4, 10, 11, 17, 18, 24, 25].includes(index + 1) ? '#66b5bd' : '#00798c',
+      [3, 4, 10, 11, 17, 18, 24, 25].includes(index + 1) ? '#9ac4c9' : '#548a9b',
     ),
   })
   expect(dailyConfiguration.data.datasets[1]).toMatchObject({

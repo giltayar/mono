@@ -445,6 +445,10 @@ export function renderExpenseSummary(
         </a>
       </h2>
       <table>
+        <colgroup>
+          <col class="period-column" />
+          <col class="amount-column" span="2" />
+        </colgroup>
         <thead>
           <tr>
             <td></td>

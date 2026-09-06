@@ -1,5 +1,5 @@
 #category-filter {
-  margin-block-end: var(--spacing);
+  margin-block-end: calc(var(--spacing) * 1.5);
 
   & .filter-controls {
     display: flex;
@@ -25,8 +25,9 @@
     border: 0;
     padding: 0;
     cursor: pointer;
-    text-decoration: underline;
-    opacity: 0.65;
+    border-block-end: 1px solid #aeb7b0;
+    color: var(--muted-ink);
+    text-decoration: none;
   }
 
   & .title-search {
@@ -39,10 +40,13 @@
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       padding: calc(var(--spacing) / 2);
+      color: var(--ink);
+      background: var(--paper);
 
       &:focus-visible {
-        outline: 1px solid Highlight;
-        outline-offset: 0;
+        border-color: var(--accent);
+        outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+        outline-offset: 1px;
       }
     }
   }
@@ -50,16 +54,18 @@
   & .expense-type-filter {
     display: flex;
     flex-wrap: wrap;
-    gap: calc(var(--spacing) / 3);
+    gap: calc(var(--spacing) / 4);
     border: 0;
+    border-radius: calc(var(--radius) + 0.125rem);
     margin-block: 0;
     margin-inline-start: auto;
-    padding: 0;
+    padding: calc(var(--spacing) / 4);
+    background: #eeeee8;
 
     & label {
       position: relative;
       display: inline-block;
-      border: 1px solid var(--border-color);
+      border: 1px solid transparent;
       border-radius: var(--radius);
       padding-block: calc(var(--spacing) / 3);
       padding-inline: calc(var(--spacing) / 2);
@@ -68,9 +74,9 @@
       opacity: 1;
 
       &:has(input:checked) {
-        color: canvas;
-        background: canvastext;
-        border-color: canvastext;
+        color: white;
+        background: var(--accent);
+        border-color: var(--accent);
       }
 
       &:has(input:focus-visible) {
@@ -92,12 +98,12 @@
 }
 
 #expense-summary {
-  margin-block-end: var(--spacing);
+  margin-block-end: calc(var(--spacing) * 1.5);
 
   & h2 {
     font-size: 1rem;
     margin-block: 0 calc(var(--spacing) / 2);
-    opacity: 0.7;
+    color: var(--muted-ink);
 
     & a {
       color: inherit;
@@ -108,16 +114,26 @@
 
   & table {
     inline-size: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     /* the numbers line up under one another whatever the direction of the text */
     text-align: end;
     font-variant-numeric: tabular-nums;
+    border-block-start: 2px solid var(--ink);
+  }
+
+  & .period-column {
+    inline-size: 34%;
+  }
+
+  & .amount-column {
+    inline-size: 33%;
   }
 
   & th[scope='col'] {
     font-size: 0.75rem;
     font-weight: normal;
-    opacity: 0.7;
+    color: var(--muted-ink);
   }
 
   & th[scope='row'] {
@@ -169,10 +185,12 @@
   }
 
   & .previous {
-    opacity: 0.6;
+    color: color-mix(in srgb, var(--ink) 52%, var(--paper));
   }
 
   & td {
+    font-weight: 650;
+
     & .total,
     & .daily-average {
       display: block;
@@ -181,7 +199,7 @@
     & .daily-average {
       font-size: 0.625rem;
       font-weight: normal;
-      opacity: 0.65;
+      color: var(--muted-ink);
     }
   }
 }
@@ -213,8 +231,8 @@
     place-items: center;
     min-block-size: 2.75rem;
     font: inherit;
-    color: inherit;
-    background: transparent;
+    color: var(--ink);
+    background: var(--paper);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding-block: calc(var(--spacing) / 1.5);
@@ -226,22 +244,32 @@
     text-align: center;
     text-decoration: none;
     font-weight: 600;
+    color: white;
+    background: var(--accent);
+    border-color: var(--accent);
+
+    &:hover {
+      background: var(--accent-strong);
+      border-color: var(--accent-strong);
+    }
   }
 
   & .copy-recurring {
     padding-inline: calc(var(--spacing) / 2);
     font-size: 0.75rem;
+    font-weight: 600;
   }
 }
 
 #copy-recurring-dialog {
   inline-size: min(calc(100% - var(--spacing) * 2), 28rem);
   max-block-size: calc(100dvb - var(--spacing) * 2);
-  color: canvastext;
-  background: canvas;
+  color: var(--ink);
+  background: var(--paper);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
   padding: var(--spacing);
+  box-shadow: 0 1rem 3rem rgb(32 37 34 / 20%);
 
   &::backdrop {
     background: rgb(0 0 0 / 45%);
@@ -262,7 +290,7 @@
     font: inherit;
     font-size: 1rem;
     color: inherit;
-    background: transparent;
+    background: var(--paper);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: calc(var(--spacing) / 1.5);
@@ -323,7 +351,7 @@
     & button {
       font: inherit;
       color: inherit;
-      background: transparent;
+      background: var(--paper);
       border: 1px solid var(--border-color);
       border-radius: var(--radius);
       padding-block: calc(var(--spacing) / 1.5);
@@ -332,6 +360,9 @@
 
       &[type='submit'] {
         font-weight: 600;
+        color: white;
+        background: var(--accent);
+        border-color: var(--accent);
       }
 
       &[type='button'] {
@@ -355,7 +386,7 @@
   & h2 {
     font-size: 1rem;
     margin: 0;
-    opacity: 0.7;
+    color: var(--ink);
     white-space: nowrap;
   }
 
@@ -378,7 +409,8 @@
       opacity: 0.65;
 
       &[aria-current='page'] {
-        border-block-end-color: currentColor;
+        color: var(--accent);
+        border-block-end-color: var(--accent);
         font-weight: 700;
         opacity: 1;
       }
@@ -403,7 +435,7 @@
     grid-template-columns: 1fr auto;
     align-items: baseline;
     column-gap: calc(var(--spacing) / 2);
-    padding-block: calc(var(--spacing) / 1.5);
+    padding-block: var(--spacing);
     border-block-end: 1px solid var(--border-color);
   }
 
@@ -422,7 +454,7 @@
   & .expense-category,
   & .expense-date {
     font-size: 0.75rem;
-    opacity: 0.6;
+    color: var(--muted-ink);
   }
 
   & .expense-type {
@@ -433,12 +465,13 @@
     border-radius: 999px;
     padding-block: calc(var(--spacing) / 5);
     padding-inline: calc(var(--spacing) / 2);
-    opacity: 0.7;
+    color: var(--muted-ink);
+    border-color: #b9c2bb;
   }
 
   & .expense-amount {
     font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   & .expense-actions {
@@ -447,6 +480,7 @@
     gap: var(--spacing);
     margin-block-start: calc(var(--spacing) / 3);
     font-size: 0.75rem;
+    color: var(--accent);
 
     & a,
     & button {
@@ -519,7 +553,7 @@
     inline-size: 0.75rem;
     block-size: 0.75rem;
     background: var(--chart-color);
-    border-radius: 50%;
+    border-radius: 0.125rem;
   }
 
   & .chart-category {
@@ -546,23 +580,30 @@
 
   & label {
     font-size: 0.875rem;
-    opacity: 0.7;
+    color: var(--muted-ink);
   }
 
   & input[type='text'],
-  & input[type='number'] {
+  & input[type='number'],
+  & input[type='date'] {
     font: inherit;
     /* below 1rem, mobile safari zooms in on focus */
     font-size: 1rem;
     padding: calc(var(--spacing) / 1.5);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
-    background: transparent;
+    background: var(--paper);
     color: inherit;
+
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+      outline-offset: 1px;
+    }
   }
 
   & .error {
-    color: crimson;
+    color: #a9363e;
     margin: 0;
   }
 }
@@ -597,8 +638,9 @@
     opacity: 1;
 
     &:has(input:checked) {
-      border-color: currentColor;
-      box-shadow: inset 0 0 0 1px currentColor;
+      color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
     }
   }
 
@@ -662,12 +704,12 @@
     font-size: 0.875rem;
 
     &:has(input:checked) {
-      background: currentColor;
-      border-color: currentColor;
+      background: var(--accent);
+      border-color: var(--accent);
 
       & span {
         /* the text has to invert along with the background, in both color schemes */
-        color: canvas;
+        color: white;
       }
     }
 
@@ -688,16 +730,15 @@
     font: inherit;
     font-weight: 600;
     cursor: pointer;
-    color: inherit;
-    background: transparent;
-    border: 1px solid var(--border-color);
+    color: white;
+    background: var(--accent);
+    border: 1px solid var(--accent);
     border-radius: var(--radius);
     padding-block: calc(var(--spacing) / 1.5);
     padding-inline: calc(var(--spacing) * 2);
   }
 
   & a {
-    color: inherit;
-    opacity: 0.7;
+    color: var(--accent);
   }
 }

@@ -7,7 +7,7 @@
 
   & label {
     font-size: 0.875rem;
-    opacity: 0.7;
+    color: var(--muted-ink);
   }
 
   & input,
@@ -21,9 +21,15 @@
 
   & input {
     border: 1px solid var(--border-color);
-    background: transparent;
+    background: var(--paper);
     color: inherit;
     width: 100%;
+
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+      outline-offset: 1px;
+    }
   }
 
   & input + label {
@@ -33,9 +39,13 @@
   & button {
     margin-block-start: var(--spacing);
     border: none;
-    background: #0d6efd;
+    background: var(--accent);
     color: white;
     cursor: pointer;
+
+    &:hover {
+      background: var(--accent-strong);
+    }
   }
 }
 
@@ -65,7 +75,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding-inline: var(--spacing);
-    background: transparent;
+    background: var(--paper);
     color: inherit;
     cursor: pointer;
 
@@ -78,7 +88,7 @@
 
 .error {
   margin-block: calc(var(--spacing) / 2) 0;
-  color: #dc3545;
+  color: #a9363e;
   font-size: 0.875rem;
 }
 
@@ -92,6 +102,10 @@
   margin-block: var(--spacing) 0;
   text-align: center;
   font-size: 0.875rem;
+
+  & a {
+    color: var(--accent);
+  }
 
   /* stacked links are one block of choices, not two paragraphs */
   & + .alternative {

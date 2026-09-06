@@ -38,6 +38,19 @@ test('navigates summary periods around the selected day', async ({page}) => {
   await expect(expenses.summary().heading().locator).toHaveText('Summary: Friday, March 15, 2024')
   await expect(expenses.summary().period('Day').current().locator).toHaveText('15.00')
   await expect(expenses.summary().period('Day').previous().locator).toHaveText('14.00')
+  const amountColumnGeometry = () =>
+    Promise.all(
+      [
+        expenses.summary().period('Day').current().locator,
+        expenses.summary().period('Day').previous().locator,
+      ].map((locator) =>
+        locator.evaluate((element) => {
+          const bounds = element.getBoundingClientRect()
+          return {x: bounds.x, width: bounds.width}
+        }),
+      ),
+    )
+  const initialAmountColumnGeometry = await amountColumnGeometry()
 
   for (const {period, direction, expectedHeading} of [
     {period: 'Week', direction: 'backward', expectedHeading: 'Summary: Saturday, March 9, 2024'},
@@ -58,6 +71,7 @@ test('navigates summary periods around the selected day', async ({page}) => {
 
     await expect(expenses.summary().heading().locator).toHaveText(expectedHeading)
     await expect(expenses.filter().category('אוכל').locator).toBeChecked()
+    expect(await amountColumnGeometry()).toEqual(initialAmountColumnGeometry)
   }
 
   await gotoDayWithFoodFilter(page, '2024-03-15')

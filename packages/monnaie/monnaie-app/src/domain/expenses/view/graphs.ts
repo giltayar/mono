@@ -20,14 +20,15 @@ export function renderCategoryGraph(categoryTotals: CategoryTotal[]): string {
   }
 
   const total = categories.reduce((sum, category) => sum + category.total, 0)
-  const chartConfiguration: ChartConfiguration<'pie'> = {
-    type: 'pie',
+  const chartConfiguration: ChartConfiguration<'doughnut'> = {
+    type: 'doughnut',
     data: {
       labels: categories.map(({name}) => name),
       datasets: [
         {
           data: categories.map(({total: categoryTotal}) => categoryTotal),
           backgroundColor: categories.map(({color}) => color),
+          borderColor: '#faf9f6',
           borderWidth: 2,
         },
       ],
@@ -35,6 +36,7 @@ export function renderCategoryGraph(categoryTotals: CategoryTotal[]): string {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '56%',
       animation: false,
       plugins: {legend: {display: false}},
     },
@@ -76,10 +78,10 @@ export function renderExpenseTypeGraph(expenseTypeTotals: ExpenseTypeTotal[]): s
     color: CHART_COLORS[index],
   }))
 
-  return renderPieGraph('expense-type-graph', types, t('graph.typeChartLabel'))
+  return renderDoughnutGraph('expense-type-graph', types, t('graph.typeChartLabel'))
 }
 
-function renderPieGraph(
+function renderDoughnutGraph(
   id: string,
   entries: {name: string; total: number; color: string}[],
   chartLabel: string,
@@ -93,14 +95,15 @@ function renderPieGraph(
   }
 
   const total = entries.reduce((sum, entry) => sum + entry.total, 0)
-  const chartConfiguration: ChartConfiguration<'pie'> = {
-    type: 'pie',
+  const chartConfiguration: ChartConfiguration<'doughnut'> = {
+    type: 'doughnut',
     data: {
       labels: entries.map(({name}) => name),
       datasets: [
         {
           data: entries.map(({total: entryTotal}) => entryTotal),
           backgroundColor: entries.map(({color}) => color),
+          borderColor: '#faf9f6',
           borderWidth: 2,
         },
       ],
@@ -108,6 +111,7 @@ function renderPieGraph(
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '56%',
       animation: false,
       plugins: {legend: {display: false}},
     },
@@ -217,23 +221,23 @@ function formatPercentage(value: number): string {
 }
 
 const CHART_COLORS = [
-  '#d1495b',
-  '#00798c',
-  '#edae49',
-  '#30638e',
-  '#6a994e',
-  '#9c6644',
-  '#7251b5',
-  '#e76f51',
-  '#2a9d8f',
-  '#577590',
-  '#f4a261',
-  '#bc4749',
-  '#4d908e',
-  '#f9844a',
-  '#7f4f24',
-  '#277da1',
+  '#19724c',
+  '#d6634a',
+  '#dfae43',
+  '#548a9b',
+  '#6f8f62',
+  '#a57351',
+  '#78658a',
+  '#c98368',
+  '#47877f',
+  '#6a7f8d',
+  '#d59857',
+  '#a94f55',
+  '#668d88',
+  '#c8784f',
+  '#816849',
+  '#49768c',
 ]
 
-const DAILY_COLOR = CHART_COLORS[1]
-const WEEKEND_DAILY_COLOR = '#66b5bd'
+const DAILY_COLOR = CHART_COLORS[3]
+const WEEKEND_DAILY_COLOR = '#9ac4c9'
