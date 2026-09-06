@@ -29,7 +29,7 @@ import {
   renderExpenseSummary,
   renderExpensesMonth,
   renderExpensesPage,
-  renderGraphsMonth,
+  renderGraphsMonthForDate,
   renderGraphsPage,
 } from './view/view.ts'
 import {
@@ -106,10 +106,12 @@ export async function showGraphsPage(
     ])
 
     return {
-      html: renderGraphsMonth(
+      html: renderGraphsMonthForDate(
         categoryTotals,
         expenseTypeTotals,
         dailyExpenseTotals(expenses, referenceDate, timeZone),
+        referenceDate,
+        timeZone,
         query,
       ),
     }

@@ -206,6 +206,9 @@ test('graphs expense types without their filter and every day with a monthly ave
   expect(dailyConfiguration.data.datasets[0]).toMatchObject({
     type: 'bar',
     data: [10, 0, 5, ...Array.from({length: 26}, () => 0)],
+    backgroundColor: Array.from({length: 29}, (_value, index) =>
+      [3, 4, 10, 11, 17, 18, 24, 25].includes(index + 1) ? '#66b5bd' : '#00798c',
+    ),
   })
   expect(dailyConfiguration.data.datasets[1]).toMatchObject({
     type: 'line',

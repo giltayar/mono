@@ -2,6 +2,7 @@ import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import {
   monthDateStrings,
+  monthWeekendDays,
   periodDayCounts,
   periodNavigationDates,
   periodRanges,
@@ -15,6 +16,17 @@ describe('monthDateStrings', () => {
     assert.strictEqual(dates.length, 29)
     assert.strictEqual(dates[0], '2024-02-01')
     assert.strictEqual(dates[28], '2024-02-29')
+  })
+})
+
+describe('monthWeekendDays', () => {
+  it('should mark every Saturday and Sunday in the selected month', () => {
+    const weekendDays = monthWeekendDays(new Date('2024-02-15T12:00:00Z'), 'UTC')
+
+    assert.deepStrictEqual(
+      weekendDays.flatMap((isWeekend, index) => (isWeekend ? [index + 1] : [])),
+      [3, 4, 10, 11, 17, 18, 24, 25],
+    )
   })
 })
 

@@ -93,6 +93,16 @@ export function monthDateStrings(referenceDate: Date, timeZone: string): string[
   return Array.from({length: first.daysInMonth}, (_, index) => first.add({days: index}).toString())
 }
 
+export function monthWeekendDays(referenceDate: Date, timeZone: string): boolean[] {
+  const reference = toPlainDate(referenceDate, timeZone)
+  const first = reference.with({day: 1})
+
+  return Array.from({length: first.daysInMonth}, (_, index) => {
+    const dayOfWeek = first.add({days: index}).dayOfWeek
+    return dayOfWeek === 6 || dayOfWeek === 7
+  })
+}
+
 /** Calendar days represented by each total; current periods include today. */
 export function periodDayCounts(
   now: Date,

@@ -141,7 +141,7 @@ function renderPieGraph(
   ` as string
 }
 
-export function renderDailyGraph(dailyTotals: number[]): string {
+export function renderDailyGraph(dailyTotals: number[], weekendDays: boolean[]): string {
   const t = translator('expenses')
 
   if (dailyTotals.every((total) => total === 0)) {
@@ -160,7 +160,9 @@ export function renderDailyGraph(dailyTotals: number[]): string {
           type: 'bar',
           label: t('graph.dailyTotal'),
           data: dailyTotals,
-          backgroundColor: CHART_COLORS[1],
+          backgroundColor: weekendDays.map((isWeekend) =>
+            isWeekend ? WEEKEND_DAILY_COLOR : DAILY_COLOR,
+          ),
         },
         {
           type: 'line',
@@ -228,3 +230,6 @@ const CHART_COLORS = [
   '#7f4f24',
   '#277da1',
 ]
+
+const DAILY_COLOR = CHART_COLORS[1]
+const WEEKEND_DAILY_COLOR = '#66b5bd'

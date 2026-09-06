@@ -12,6 +12,7 @@ import {
 } from '../model.ts'
 import {
   BASE_PERIOD_NAMES,
+  monthWeekendDays,
   previousPeriodName,
   type BasePeriodName,
   type PeriodDayCounts,
@@ -106,7 +107,13 @@ export function renderGraphsPage(
           navigationDates,
         })}
         ${renderCreateExpenseActions(query)}
-        ${renderGraphsMonth(categoryTotals, expenseTypeTotals, dailyTotals, query)}
+        ${renderGraphsMonth(
+          categoryTotals,
+          expenseTypeTotals,
+          dailyTotals,
+          monthWeekendDays(referenceDate, timeZone),
+          query,
+        )}
       </div>
     </${MainLayout}>
   ` as string
@@ -334,32 +341,19 @@ export function renderExpensesMonth(expenses: Expense[], timeZone: string, query
   )
 }
 
-export function renderGraphsMonth(
+export function renderGraphsMonthForDate(
   categoryTotals: CategoryTotal[],
   expenseTypeTotals: ExpenseTypeTotal[],
   dailyTotals: number[],
+  referenceDate: Date,
+  timeZone: string,
   query: string,
 ): string {
-  const t = translator('expenses')
-
-  return renderMonthlyPanel(
-    'graphs',
-    html`
-      <div id="expense-graphs">
-        <section class="expense-graph-section">
-          <h3>${t('graph.categoryTitle')}</h3>
-          ${renderCategoryGraph(categoryTotals)}
-        </section>
-        <section class="expense-graph-section">
-          <h3>${t('graph.typeTitle')}</h3>
-          ${renderExpenseTypeGraph(expenseTypeTotals)}
-        </section>
-        <section class="expense-graph-section">
-          <h3>${t('graph.dailyTitle')}</h3>
-          ${renderDailyGraph(dailyTotals)}
-        </section>
-      </div>
-    ` as string,
+  return renderGraphsMonth(
+    categoryTotals,
+    expenseTypeTotals,
+    dailyTotals,
+    monthWeekendDays(referenceDate, timeZone),
     query,
   )
 }
@@ -647,4 +641,35 @@ function formatDiscussionDate(date: Date, timeZone: string): string {
     month: 'long',
     day: 'numeric',
   }).format(date)
+}
+
+function renderGraphsMonth(
+  categoryTotals: CategoryTotal[],
+  expenseTypeTotals: ExpenseTypeTotal[],
+  dailyTotals: number[],
+  weekendDays: boolean[],
+  query: string,
+): string {
+  const t = translator('expenses')
+
+  return renderMonthlyPanel(
+    'graphs',
+    html`
+      <div id="expense-graphs">
+        <section class="expense-graph-section">
+          <h3>${t('graph.categoryTitle')}</h3>
+          ${renderCategoryGraph(categoryTotals)}
+        </section>
+        <section class="expense-graph-section">
+          <h3>${t('graph.typeTitle')}</h3>
+          ${renderExpenseTypeGraph(expenseTypeTotals)}
+        </section>
+        <section class="expense-graph-section">
+          <h3>${t('graph.dailyTitle')}</h3>
+          ${renderDailyGraph(dailyTotals, weekendDays)}
+        </section>
+      </div>
+    ` as string,
+    query,
+  )
 }
