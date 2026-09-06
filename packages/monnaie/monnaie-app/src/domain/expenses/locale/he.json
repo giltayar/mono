@@ -23,6 +23,8 @@
   },
   "filter": {
     "label": "סינון",
+    "search": "חיפוש",
+    "searchTitle": "חיפוש בכותרות ההוצאות",
     "categories": "סינון לפי קטגוריה",
     "expenseType": "סינון לפי סוג הוצאה",
     "apply": "החלה"

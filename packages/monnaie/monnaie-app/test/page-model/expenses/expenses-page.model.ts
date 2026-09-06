@@ -13,6 +13,8 @@ export function createExpensesPageModel(page: Page) {
     filter: (locator = page.locator('#category-filter')) => ({
       locator,
       toggle: () => ({locator: locator.getByRole('button', {name: 'Filter', exact: true})}),
+      searchToggle: () => ({locator: locator.getByRole('button', {name: 'Search', exact: true})}),
+      title: () => ({locator: locator.getByRole('searchbox', {name: 'Search expense titles'})}),
       category: (name: string) => ({locator: locator.getByRole('checkbox', {name})}),
       expenseType: (name: 'Day to day' | 'Special' | 'Recurring') => ({
         locator: locator.getByRole('checkbox', {name, exact: true}),

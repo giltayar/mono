@@ -192,11 +192,13 @@ describe('parseExpenseQuery', () => {
       parseExpenseQuery({
         category: ['3', 'invalid'],
         expenseType: ['recurring'],
+        title: ' coffee ',
         day: '2026-09-06',
       }),
       {
         categoryIds: [3],
         expenseTypes: ['recurring'],
+        title: 'coffee',
         selectedDay: '2026-09-06',
       },
     )

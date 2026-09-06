@@ -159,7 +159,7 @@ function renderCreateExpenseActions(query: string): string {
  */
 function renderCategoryFilter(
   path: string,
-  {categoryIds, expenseTypes, selectedDay}: ExpensesQuery,
+  {categoryIds, expenseTypes, title, selectedDay}: ExpensesQuery,
 ): string {
   const t = translator('expenses')
 
@@ -173,6 +173,9 @@ function renderCategoryFilter(
         const day = new URL(location.href).searchParams.get('day');
         if (day === null) delete event.detail.parameters.day;
         else event.detail.parameters.day = day;
+        const title = String(event.detail.parameters.title ?? '').trim();
+        if (title === '') delete event.detail.parameters.title;
+        else event.detail.parameters.title = title;
         const selectedTypes = Array.from(this.querySelectorAll('[name=expenseType]:checked'), input => input.value);
         if (selectedTypes.length === 2 && selectedTypes.includes('day-to-day') && selectedTypes.includes('special')) {
           delete event.detail.parameters.expenseType;
@@ -192,19 +195,36 @@ function renderCategoryFilter(
         disabled=${selectedDay === undefined || undefined}
       />
       <div class="filter-controls">
-        <button
-          class="category-filter-toggle"
-          type="button"
-          aria-controls="category-options"
-          aria-expanded=${categoryIds.length > 0 ? 'true' : 'false'}
-          onclick="
-            const categories = document.getElementById('category-options');
-            categories.hidden = !categories.hidden;
-            this.setAttribute('aria-expanded', String(!categories.hidden))
-          "
-        >
-          ${t('filter.label')}
-        </button>
+        <div class="filter-disclosures">
+          <button
+            class="filter-toggle"
+            type="button"
+            aria-controls="category-options"
+            aria-expanded=${categoryIds.length > 0 ? 'true' : 'false'}
+            onclick="
+              const categories = document.getElementById('category-options');
+              categories.hidden = !categories.hidden;
+              this.setAttribute('aria-expanded', String(!categories.hidden))
+            "
+          >
+            ${t('filter.label')}
+          </button>
+          <button
+            class="filter-toggle"
+            type="button"
+            aria-controls="title-search"
+            aria-expanded=${title !== '' ? 'true' : 'false'}
+            onclick="
+              const search = document.getElementById('title-search');
+              search.hidden = !search.hidden;
+              this.setAttribute('aria-expanded', String(!search.hidden));
+              if (!search.hidden) search.querySelector('input').focus()
+            "
+          >
+            <span aria-hidden="true">🔍︎</span>
+            ${t('filter.search')}
+          </button>
+        </div>
         <fieldset class="expense-type-filter" aria-label=${t('filter.expenseType')}>
           ${(['day-to-day', 'special', 'recurring'] as const).map((expenseType) =>
             renderExpenseTypeFilterOption(expenseType, expenseTypes.includes(expenseType)),
@@ -231,6 +251,22 @@ function renderCategoryFilter(
           `,
         )}
       </fieldset>
+      <div id="title-search" class="title-search" hidden=${title === '' || undefined}>
+        <input
+          type="search"
+          name="title"
+          value=${title}
+          aria-label=${t('filter.searchTitle')}
+          placeholder=${t('filter.searchTitle')}
+          oninput="
+            clearTimeout(this.form.titleFilterTimer);
+            this.form.titleFilterTimer = setTimeout(() => {
+              this.form.dispatchEvent(new Event('change'))
+            }, 500)
+          "
+          onchange="event.stopPropagation()"
+        />
+      </div>
       <noscript><button type="submit">${t('filter.apply')}</button></noscript>
     </form>
   ` as string

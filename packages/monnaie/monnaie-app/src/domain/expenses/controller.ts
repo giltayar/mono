@@ -45,7 +45,7 @@ export async function showExpensesPage(
   expenseQuery: ExpensesQuery,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
-  const {categoryIds, expenseTypes, selectedDay} = expenseQuery
+  const {selectedDay} = expenseQuery
   const now = new Date()
   const referenceDate =
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
@@ -54,7 +54,7 @@ export async function showExpensesPage(
   const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
-    const expenses = await fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes)
+    const expenses = await fetchPeriodExpenses(db, userId, ranges.month, expenseQuery)
 
     return {
       html: renderExpensesMonth(expenses, timeZone, query),
@@ -62,8 +62,8 @@ export async function showExpensesPage(
   }
 
   const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
-    fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes),
+    fetchPeriodTotals(db, userId, ranges, expenseQuery),
+    fetchPeriodExpenses(db, userId, ranges.month, expenseQuery),
   ])
 
   return {
@@ -88,7 +88,7 @@ export async function showGraphsPage(
   expenseQuery: ExpensesQuery,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
-  const {categoryIds, expenseTypes, selectedDay} = expenseQuery
+  const {selectedDay} = expenseQuery
   const now = new Date()
   const referenceDate =
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
@@ -97,13 +97,7 @@ export async function showGraphsPage(
   const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
-    const categoryTotals = await fetchCategoryTotals(
-      db,
-      userId,
-      ranges.month,
-      categoryIds,
-      expenseTypes,
-    )
+    const categoryTotals = await fetchCategoryTotals(db, userId, ranges.month, expenseQuery)
 
     return {
       html: renderGraphsMonth(categoryTotals, query),
@@ -111,8 +105,8 @@ export async function showGraphsPage(
   }
 
   const [summary, categoryTotals] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
-    fetchCategoryTotals(db, userId, ranges.month, categoryIds, expenseTypes),
+    fetchPeriodTotals(db, userId, ranges, expenseQuery),
+    fetchCategoryTotals(db, userId, ranges.month, expenseQuery),
   ])
 
   return {
@@ -153,8 +147,7 @@ export async function showCopyRecurringDialog(
     db,
     userId,
     periodRanges(now, timeZone).previousMonth,
-    [],
-    ['recurring'],
+    {categoryIds: [], expenseTypes: ['recurring'], title: ''},
   )
 
   return {html: renderCopyRecurringDialog(expenses, timestampToDateString(now, timeZone))}
@@ -277,7 +270,7 @@ export async function removeExpense(
   timeZone: string,
   expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
-  const {categoryIds, expenseTypes, selectedDay} = expenseQuery
+  const {selectedDay} = expenseQuery
   await deleteExpense(db, userId, id)
 
   const now = new Date()
@@ -287,8 +280,8 @@ export async function removeExpense(
   const ranges = periodRanges(referenceDate, timeZone)
 
   const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, categoryIds, expenseTypes),
-    fetchPeriodExpenses(db, userId, ranges.month, categoryIds, expenseTypes),
+    fetchPeriodTotals(db, userId, ranges, expenseQuery),
+    fetchPeriodExpenses(db, userId, ranges.month, expenseQuery),
   ])
   const query = expenseQueryString(expenseQuery)
 
@@ -317,10 +310,16 @@ export async function removeExpense(
 }
 
 /** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
-function expenseQueryString({categoryIds, expenseTypes, selectedDay}: ExpensesQuery): string {
+function expenseQueryString({
+  categoryIds,
+  expenseTypes,
+  title,
+  selectedDay,
+}: ExpensesQuery): string {
   if (
     categoryIds.length === 0 &&
     isDefaultExpenseTypeFilter(expenseTypes) &&
+    title === '' &&
     selectedDay === undefined
   ) {
     return ''
@@ -332,6 +331,10 @@ function expenseQueryString({categoryIds, expenseTypes, selectedDay}: ExpensesQu
     for (const expenseType of expenseTypes) {
       query.append('expenseType', expenseType)
     }
+  }
+
+  if (title !== '') {
+    query.set('title', title)
   }
 
   if (selectedDay !== undefined) {

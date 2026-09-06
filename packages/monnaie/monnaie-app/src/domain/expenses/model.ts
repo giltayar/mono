@@ -15,9 +15,13 @@ export type ExpenseError =
 
 export type ExpenseType = 'day-to-day' | 'recurring' | 'special'
 
-export type ExpensesQuery = {
+export type ExpensesQueryWithoutSelectedDay = {
   categoryIds: number[]
   expenseTypes: ExpenseType[]
+  title: string
+}
+
+export type ExpensesQuery = ExpensesQueryWithoutSelectedDay & {
   selectedDay: string | undefined
 }
 
@@ -96,15 +100,18 @@ export function parseExpenseTypeFilter(input: string[]): ExpenseType[] {
 export function parseExpenseQuery({
   category,
   expenseType,
+  title,
   day,
 }: {
   category: string[]
   expenseType: string[]
+  title: string
   day: string | undefined
 }): ExpensesQuery {
   return {
     categoryIds: parseCategoryFilter(category),
     expenseTypes: parseExpenseTypeFilter(expenseType),
+    title: title.trim(),
     selectedDay: day,
   }
 }
@@ -269,9 +276,9 @@ export async function fetchPeriodExpenses(
   db: Db,
   userId: string,
   range: PeriodRange,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
+  filters: ExpensesQueryWithoutSelectedDay,
 ): Promise<Expense[]> {
+  const {categoryIds, expenseTypes, title} = filters
   let query = db
     .selectFrom('expense')
     .select(['id', 'description', 'amount', 'category_id', 'expense_type', 'created_at'])
@@ -287,6 +294,10 @@ export async function fetchPeriodExpenses(
 
   query = query.where('expense_type', 'in', expenseTypes)
 
+  if (title !== '') {
+    query = query.where('description', 'ilike', `%${escapeLikePattern(title)}%`)
+  }
+
   const rows = await query.execute()
 
   return rows.map(toExpense)
@@ -296,9 +307,9 @@ export async function fetchCategoryTotals(
   db: Db,
   userId: string,
   range: PeriodRange,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
+  filters: ExpensesQueryWithoutSelectedDay,
 ): Promise<CategoryTotal[]> {
+  const {categoryIds, expenseTypes, title} = filters
   let query = db
     .selectFrom('expense')
     .select(['category_id', (eb) => eb.fn.sum<string>('amount').as('total')])
@@ -312,6 +323,10 @@ export async function fetchCategoryTotals(
   }
 
   query = query.where('expense_type', 'in', expenseTypes)
+
+  if (title !== '') {
+    query = query.where('description', 'ilike', `%${escapeLikePattern(title)}%`)
+  }
 
   const rows = await query.execute()
 
@@ -328,21 +343,20 @@ export async function fetchPeriodTotals(
   db: Db,
   userId: string,
   ranges: PeriodRanges,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
+  filters: ExpensesQueryWithoutSelectedDay,
 ): Promise<PeriodSummary> {
   const summary = await db
     .selectFrom('expense')
     .where('user_id', '=', userId)
     .select((eb) => [
-      totalIn(eb, ranges.day, categoryIds, expenseTypes).as('day'),
-      totalIn(eb, ranges.week, categoryIds, expenseTypes).as('week'),
-      totalIn(eb, ranges.month, categoryIds, expenseTypes).as('month'),
-      totalIn(eb, ranges.year, categoryIds, expenseTypes).as('year'),
-      totalIn(eb, ranges.previousDay, categoryIds, expenseTypes).as('previousDay'),
-      totalIn(eb, ranges.previousWeek, categoryIds, expenseTypes).as('previousWeek'),
-      totalIn(eb, ranges.previousMonth, categoryIds, expenseTypes).as('previousMonth'),
-      totalIn(eb, ranges.previousYear, categoryIds, expenseTypes).as('previousYear'),
+      totalIn(eb, ranges.day, filters).as('day'),
+      totalIn(eb, ranges.week, filters).as('week'),
+      totalIn(eb, ranges.month, filters).as('month'),
+      totalIn(eb, ranges.year, filters).as('year'),
+      totalIn(eb, ranges.previousDay, filters).as('previousDay'),
+      totalIn(eb, ranges.previousWeek, filters).as('previousWeek'),
+      totalIn(eb, ranges.previousMonth, filters).as('previousMonth'),
+      totalIn(eb, ranges.previousYear, filters).as('previousYear'),
       // deliberately not filtered by category: the daily averages are capped by when this user
       // started tracking at all, which a category filter must not appear to move
       eb.fn.min<Date | null>('created_at').as('firstExpenseDate'),
@@ -367,8 +381,7 @@ export async function fetchPeriodTotals(
 function totalIn(
   eb: ExpressionBuilder<Database, 'expense'>,
   range: PeriodRange,
-  categoryIds: number[],
-  expenseTypes: ExpenseType[],
+  {categoryIds, expenseTypes, title}: ExpensesQueryWithoutSelectedDay,
 ) {
   const total = eb.fn
     .sum<string | null>('amount')
@@ -378,7 +391,15 @@ function totalIn(
   const categoryTotal =
     categoryIds.length === 0 ? total : total.filterWhere('category_id', 'in', categoryIds)
 
-  return categoryTotal.filterWhere('expense_type', 'in', expenseTypes)
+  const typedTotal = categoryTotal.filterWhere('expense_type', 'in', expenseTypes)
+
+  return title === ''
+    ? typedTotal
+    : typedTotal.filterWhere('description', 'ilike', `%${escapeLikePattern(title)}%`)
+}
+
+function escapeLikePattern(value: string): string {
+  return value.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_')
 }
 
 /** `sum` is `null` over no rows at all, and a string otherwise, since `numeric` stays exact */

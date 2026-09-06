@@ -23,6 +23,8 @@
   },
   "filter": {
     "label": "Filter",
+    "search": "Search",
+    "searchTitle": "Search expense titles",
     "categories": "Filter by category",
     "expenseType": "Filter by expense type",
     "apply": "Apply"

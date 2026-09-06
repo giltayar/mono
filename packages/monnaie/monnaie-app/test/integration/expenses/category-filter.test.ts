@@ -53,6 +53,46 @@ test('filters the list, the totals and the url by one category', async ({page}) 
   }
 })
 
+test('debounces title searches across the list, totals and graphs and keeps hidden searches', async ({
+  page,
+}) => {
+  await seedExpenses()
+
+  const expenses = createExpensesPageModel(page)
+
+  await page.goto(url().href)
+  await expenses.filter().searchToggle().locator.click()
+
+  const filterRequests: string[] = []
+  page.on('request', (request) => {
+    if (request.headers()['hx-request'] === 'true') filterRequests.push(request.url())
+  })
+
+  await expenses.filter().title().locator.pressSequentially('cof', {delay: 50})
+  await page.waitForTimeout(300)
+  expect(filterRequests).toHaveLength(0)
+
+  await expect(page).toHaveURL(new URL('/?title=cof', url()).href)
+  expect(filterRequests).toHaveLength(1)
+  await expect(expenses.list().items().locator).toHaveCount(1)
+  await expect(expenses.list().item('Coffee').locator).toBeVisible()
+  await expect(expenses.summary().period('Day').current().locator).toHaveText('12.50')
+
+  await expenses.tabs().graphs().locator.click()
+
+  await expect(page).toHaveURL(new URL('/expenses/graphs?title=cof', url()).href)
+  await expect(expenses.graph().entries().locator).toHaveCount(1)
+  await expect(expenses.graph().entry(FOOD.name).locator).toBeVisible()
+
+  await expenses.filter().searchToggle().locator.click()
+
+  await expect(expenses.filter().title().locator).toBeHidden()
+  await expect(page).toHaveURL(new URL('/expenses/graphs?title=cof', url()).href)
+
+  await expenses.filter().searchToggle().locator.click()
+  await expect(expenses.filter().title().locator).toHaveValue('cof')
+})
+
 test('adds a second category to the filter rather than replacing the first', async ({page}) => {
   await seedExpenses()
 

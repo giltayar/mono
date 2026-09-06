@@ -37,6 +37,7 @@ const ExpenseQuerySchema = z
       .union([z.string(), z.array(z.string())])
       .default([])
       .transform((expenseType) => (Array.isArray(expenseType) ? expenseType : [expenseType])),
+    title: z.string().default(''),
     day: z.iso.date().optional(),
   })
   .transform((query) => ({...query, day: query.day}))
