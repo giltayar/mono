@@ -9,7 +9,8 @@ import {
   fetchExpenseTypeTotals,
   fetchPeriodExpenses,
   fetchPeriodTotals,
-  saveExpense,
+  parseExpenseCreatedAt,
+  saveExpenseAt,
   updateExpense,
   validateExpense,
   type ExpenseInput,
@@ -167,6 +168,7 @@ export function showNewExpensePage(expenseQuery: ExpensesQuery): ControllerResul
       mode: {kind: 'add'},
       query,
       values: EMPTY_EXPENSE_FORM_VALUES,
+      createdAt: undefined,
       error: undefined,
     }),
   }
@@ -212,6 +214,7 @@ export async function addExpense(
   db: Db,
   userId: string,
   input: ExpenseInput,
+  createdAt: string,
   expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
   const query = expenseQueryString(expenseQuery)
@@ -219,12 +222,33 @@ export async function addExpense(
 
   if ('error' in result) {
     return {
-      html: renderExpenseForm({mode: {kind: 'add'}, query, values: input, error: result.error}),
+      html: renderExpenseForm({
+        mode: {kind: 'add'},
+        query,
+        values: input,
+        createdAt,
+        error: result.error,
+      }),
       statusCode: 400,
     }
   }
 
-  await saveExpense(db, userId, result.expense)
+  const parsedCreatedAt = parseExpenseCreatedAt(createdAt)
+
+  if (parsedCreatedAt === undefined) {
+    return {
+      html: renderExpenseForm({
+        mode: {kind: 'add'},
+        query,
+        values: input,
+        createdAt,
+        error: 'invalid-date',
+      }),
+      statusCode: 400,
+    }
+  }
+
+  await saveExpenseAt(db, userId, result.expense, parsedCreatedAt)
 
   return redirectToExpenses(`/${query}`)
 }
@@ -245,6 +269,7 @@ export async function showEditExpensePage(
         mode: {kind: 'add'},
         query,
         values: EMPTY_EXPENSE_FORM_VALUES,
+        createdAt: undefined,
         error: 'not-found',
       }),
       statusCode: 404,
@@ -262,6 +287,7 @@ export async function showEditExpensePage(
         expenseType: expense.expenseType,
         date: timestampToDateString(expense.createdAt, timeZone),
       },
+      createdAt: undefined,
       error: undefined,
     }),
   }
@@ -281,7 +307,13 @@ export async function saveExpenseEdit(
 
   if ('error' in result) {
     return {
-      html: renderExpenseForm({mode, query, values: input, error: result.error}),
+      html: renderExpenseForm({
+        mode,
+        query,
+        values: input,
+        createdAt: undefined,
+        error: result.error,
+      }),
       statusCode: 400,
     }
   }
@@ -290,7 +322,13 @@ export async function saveExpenseEdit(
 
   if (!(await updateExpense(db, userId, id, result.expense, createdAt))) {
     return {
-      html: renderExpenseForm({mode, query, values: input, error: 'not-found'}),
+      html: renderExpenseForm({
+        mode,
+        query,
+        values: input,
+        createdAt: undefined,
+        error: 'not-found',
+      }),
       statusCode: 404,
     }
   }

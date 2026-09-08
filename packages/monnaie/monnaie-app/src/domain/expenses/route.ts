@@ -23,6 +23,7 @@ const ExpenseBodySchema = z.object({
   amount: z.string(),
   categoryId: z.string(),
   expenseType: z.string(),
+  createdAt: z.string(),
 })
 
 // a single `?category=3` arrives as a string and repeated ones as an array; the ids themselves are
@@ -111,7 +112,14 @@ export default function expensesRoutes(
         await addExpense(
           db,
           authenticatedUser().uid,
-          {...request.body, date: undefined},
+          {
+            description: request.body.description,
+            amount: request.body.amount,
+            categoryId: request.body.categoryId,
+            expenseType: request.body.expenseType,
+            date: undefined,
+          },
+          request.body.createdAt,
           parseExpenseQuery(request.query),
         ),
       ),

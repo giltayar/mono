@@ -6,6 +6,7 @@ import {
   periodDayCounts,
   periodNavigationDates,
   periodRanges,
+  periodStartDate,
   previousPeriodName,
 } from '../../../src/domain/expenses/periods.ts'
 
@@ -72,6 +73,36 @@ describe('periodNavigationDates', () => {
     for (const period of ['day', 'week', 'month', 'year'] as const) {
       assert.strictEqual(dates[period].forward, undefined)
     }
+  })
+})
+
+describe('periodStartDate', () => {
+  it('should identify current and previous totals by their calendar period start', () => {
+    const referenceDate = new Date('2026-07-29T12:00:00Z')
+
+    assert.strictEqual(periodStartDate(referenceDate, 'UTC', 'day'), '2026-07-29')
+    assert.strictEqual(periodStartDate(referenceDate, 'UTC', 'week'), '2026-07-26')
+    assert.strictEqual(periodStartDate(referenceDate, 'UTC', 'previousDay'), '2026-07-28')
+    assert.strictEqual(periodStartDate(referenceDate, 'UTC', 'previousWeek'), '2026-07-19')
+  })
+
+  it('should preserve only the navigated period identity when moving backward', () => {
+    const current = new Date('2026-07-29T12:00:00Z')
+    const previousDay = new Date('2026-07-28T12:00:00Z')
+    const previousWeek = new Date('2026-07-25T12:00:00Z')
+
+    assert.strictEqual(
+      periodStartDate(previousDay, 'UTC', 'day'),
+      periodStartDate(current, 'UTC', 'previousDay'),
+    )
+    assert.notStrictEqual(
+      periodStartDate(previousWeek, 'UTC', 'day'),
+      periodStartDate(current, 'UTC', 'previousDay'),
+    )
+    assert.strictEqual(
+      periodStartDate(previousWeek, 'UTC', 'week'),
+      periodStartDate(current, 'UTC', 'previousWeek'),
+    )
   })
 })
 

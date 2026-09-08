@@ -85,6 +85,10 @@ export function periodRanges(now: Date, timeZone: string): PeriodRanges {
   }
 }
 
+export function periodStartDate(referenceDate: Date, timeZone: string, period: PeriodName): string {
+  return timestampToDateString(periodRanges(referenceDate, timeZone)[period].from, timeZone)
+}
+
 /** Every calendar date in the month containing `referenceDate`, including future dates. */
 export function monthDateStrings(referenceDate: Date, timeZone: string): string[] {
   const reference = toPlainDate(referenceDate, timeZone)

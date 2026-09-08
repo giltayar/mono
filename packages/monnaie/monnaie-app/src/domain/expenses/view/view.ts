@@ -13,12 +13,15 @@ import {
 import {
   BASE_PERIOD_NAMES,
   monthWeekendDays,
+  periodStartDate,
   previousPeriodName,
   type BasePeriodName,
   type PeriodDayCounts,
   type PeriodNavigationDates,
+  type PeriodName,
 } from '../periods.ts'
 import {renderCategoryGraph, renderDailyGraph, renderExpenseTypeGraph} from './graphs.ts'
+import {expenseTransitionName} from './expense-transition.ts'
 
 const STYLE_SHEET = 'domain/expenses/view/style/style.css'
 const SCRIPT = 'domain/expenses/view/client/render-charts.js'
@@ -125,7 +128,12 @@ function renderCreateExpenseActions(query: string): string {
 
   return html`
     <div class="expense-create-actions">
-      <a class="add-expense" href=${`/expenses/new${query}`}>${t('actions.add')}</a>
+      <a
+        class="add-expense"
+        href=${`/expenses/new${query}`}
+        style="view-transition-name: add-expense"
+        >${t('actions.add')}</a
+      >
       <button
         class="copy-recurring"
         type="button"
@@ -474,12 +482,24 @@ export function renderExpenseSummary(
                     </span>
                   </span>
                 </th>
-                <td>${renderPeriodTotal(period, totals[period], dayCounts[period])}</td>
+                <td>
+                  ${renderPeriodTotal(
+                    period,
+                    period,
+                    totals[period],
+                    dayCounts[period],
+                    referenceDate,
+                    timeZone,
+                  )}
+                </td>
                 <td class="previous">
                   ${renderPeriodTotal(
                     period,
+                    previousPeriodName(period),
                     totals[previousPeriodName(period)],
                     dayCounts[previousPeriodName(period)],
+                    referenceDate,
+                    timeZone,
                   )}
                 </td>
               </tr>
@@ -512,7 +532,7 @@ function renderPeriodNavigation(
       hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
       hx-target="#expense-content"
       hx-select="#expense-content"
-      hx-swap="outerHTML"
+      hx-swap="outerHTML transition:true"
       hx-push-url="true"
       aria-label=${t('summary.backward', {period: periodLabel})}
       >←</a
@@ -526,7 +546,7 @@ function renderPeriodNavigation(
             hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
             hx-target="#expense-content"
             hx-select="#expense-content"
-            hx-swap="outerHTML"
+            hx-swap="outerHTML transition:true"
             hx-push-url="true"
             aria-label=${t('summary.forward', {period: periodLabel})}
             >→</a
@@ -535,15 +555,27 @@ function renderPeriodNavigation(
   ` as string
 }
 
-function renderPeriodTotal(period: BasePeriodName, total: number, dayCount: number): string {
+function renderPeriodTotal(
+  period: BasePeriodName,
+  periodName: PeriodName,
+  total: number,
+  dayCount: number,
+  referenceDate: Date,
+  timeZone: string,
+): string {
   const t = translator('expenses')
+  const startDate = periodStartDate(referenceDate, timeZone, periodName)
 
   return html`
-    <span class="total">${formatAmount(total)}</span>
+    <span class="total" style=${`view-transition-name: transition-${period}-${startDate}`}
+      >${formatAmount(total)}</span
+    >
     ${
       period === 'day'
         ? undefined
-        : html`<small class="daily-average"
+        : html`<small
+            class="daily-average"
+            style=${`view-transition-name: transition-${period}-average-${startDate}`}
             >${formatAmount(total / dayCount)} ${t('summary.perDay')}</small
           >`
     }
@@ -583,7 +615,7 @@ function renderExpenseItem(expense: Expense, timeZone: string, query: string): s
   const t = translator('expenses')
 
   return html`
-    <li>
+    <li style=${`view-transition-name: ${expenseTransitionName(expense.createdAt)}`}>
       <div class="expense-what">
         <span class="expense-description">${expense.description}</span>
       </div>

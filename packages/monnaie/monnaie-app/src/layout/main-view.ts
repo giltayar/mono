@@ -23,6 +23,7 @@ export function MainLayout({
   heading,
   headingHref,
   headingOnClick,
+  headingViewTransitionName,
   styleSheet,
   script,
   children,
@@ -31,6 +32,7 @@ export function MainLayout({
   heading: string
   headingHref?: string
   headingOnClick?: string
+  headingViewTransitionName?: string
   /** Path of an additional stylesheet, relative to `src` */
   styleSheet?: string
   /** Path of a client-side ES module, relative to `src` */
@@ -55,7 +57,13 @@ export function MainLayout({
         <body>
           <main class="main-view">
             <header class="main-header">
-              <h1>
+              <h1
+                style=${
+                  headingViewTransitionName === undefined
+                    ? undefined
+                    : `view-transition-name: ${headingViewTransitionName}`
+                }
+              >
                 ${
                   headingHref === undefined
                     ? heading

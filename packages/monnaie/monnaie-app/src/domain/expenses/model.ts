@@ -181,7 +181,31 @@ export function validateExpense({
   }
 }
 
+export function parseExpenseCreatedAt(createdAt: string): Date | undefined {
+  const parsed = new Date(createdAt)
+
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === createdAt ? parsed : undefined
+}
+
 export async function saveExpense(db: Db, userId: string, expense: ValidExpense): Promise<void> {
+  await insertExpense(db, userId, expense, undefined)
+}
+
+export async function saveExpenseAt(
+  db: Db,
+  userId: string,
+  expense: ValidExpense,
+  createdAt: Date,
+): Promise<void> {
+  await insertExpense(db, userId, expense, createdAt.toISOString())
+}
+
+async function insertExpense(
+  db: Db,
+  userId: string,
+  expense: ValidExpense,
+  createdAt: string | undefined,
+): Promise<void> {
   await db
     .insertInto('expense')
     .values({
@@ -190,6 +214,7 @@ export async function saveExpense(db: Db, userId: string, expense: ValidExpense)
       amount: expense.amount,
       category_id: expense.categoryId,
       expense_type: expense.expenseType,
+      created_at: createdAt,
     })
     .execute()
 }

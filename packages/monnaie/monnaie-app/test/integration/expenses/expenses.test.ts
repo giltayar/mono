@@ -86,6 +86,44 @@ test('navigates summary periods around the selected day', async ({page}) => {
   await expect(page).toHaveURL(new URL('/?day=2024-03-14', url()).href)
 })
 
+test('names every summary number for its calendar period (to support view transitions)', async ({
+  page,
+}) => {
+  const expenses = createExpensesPageModel(page)
+
+  await page.goto(new URL('/?day=2024-03-15', url()).href)
+
+  for (const {period, currentStart, previousStart} of [
+    {period: 'Day', currentStart: '2024-03-15', previousStart: '2024-03-14'},
+    {period: 'Week', currentStart: '2024-03-10', previousStart: '2024-03-03'},
+    {period: 'Month', currentStart: '2024-03-01', previousStart: '2024-02-01'},
+    {period: 'Year', currentStart: '2024-01-01', previousStart: '2023-01-01'},
+  ] as const) {
+    const periodName = period.toLowerCase()
+    const summaryPeriod = expenses.summary().period(period)
+
+    await expect(summaryPeriod.current().locator).toHaveAttribute(
+      'style',
+      `view-transition-name: transition-${periodName}-${currentStart}`,
+    )
+    await expect(summaryPeriod.previous().locator).toHaveAttribute(
+      'style',
+      `view-transition-name: transition-${periodName}-${previousStart}`,
+    )
+
+    if (period !== 'Day') {
+      await expect(summaryPeriod.current().dailyAverage().locator).toHaveAttribute(
+        'style',
+        `view-transition-name: transition-${periodName}-average-${currentStart}`,
+      )
+      await expect(summaryPeriod.previous().dailyAverage().locator).toHaveAttribute(
+        'style',
+        `view-transition-name: transition-${periodName}-average-${previousStart}`,
+      )
+    }
+  }
+})
+
 test('returns to today from either title and keeps the category filter', async ({page}) => {
   const expenses = createExpensesPageModel(page)
 
@@ -117,9 +155,23 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
   const form = createExpenseFormPageModel(page)
 
   await page.goto(url().href)
+  await expect(expenses.addButton().locator).toHaveAttribute(
+    'style',
+    'view-transition-name: add-expense',
+  )
   await expenses.addButton().locator.click()
 
-  await expect(form.addHeading().locator).toBeVisible()
+  await expect(form.addHeading().locator).toHaveAttribute(
+    'style',
+    'view-transition-name: add-expense',
+  )
+  const createdAt = await form.createdAt().locator.inputValue()
+  const expenseTransitionName = `expense-${createdAt.replaceAll(/[:.]/g, '-')}`
+  await expect(form.fields().locator).toHaveAttribute(
+    'style',
+    `view-transition-name: ${expenseTransitionName}`,
+  )
+  await expect(form.submitButton().locator).not.toHaveAttribute('style')
 
   await form.description().locator.fill('Coffee')
   await form.amount().locator.fill('12.50')
@@ -130,13 +182,18 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
 
   const savedExpense = await db()
     .selectFrom('expense')
-    .select('expense_type')
+    .select(['expense_type', 'created_at'])
     .where('description', '=', 'Coffee')
     .executeTakeFirstOrThrow()
   expect(savedExpense.expense_type).toBe('day-to-day')
+  expect(savedExpense.created_at.toISOString()).toBe(createdAt)
 
   const item = expenses.list().item('Coffee')
 
+  await expect(item.locator).toHaveAttribute(
+    'style',
+    `view-transition-name: ${expenseTransitionName}`,
+  )
   await expect(item.locator).toContainText('Coffee')
   await expect(item.locator).toContainText('אוכל')
   await expect(item.locator).toContainText('12.50')
@@ -258,6 +315,7 @@ test('refuses an expense with no category even when the browser is bypassed', as
       amount: '12.50',
       categoryId: '',
       expenseType: 'day-to-day',
+      createdAt: new Date().toISOString(),
     },
   })
 
@@ -279,6 +337,7 @@ test('refuses an amount that is not a number even when the browser is bypassed',
       amount: 'a lot',
       categoryId: '1',
       expenseType: 'day-to-day',
+      createdAt: new Date().toISOString(),
     },
   })
 
