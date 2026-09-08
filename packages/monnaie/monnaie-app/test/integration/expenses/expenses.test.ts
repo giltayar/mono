@@ -124,6 +124,26 @@ test('names every summary number for its calendar period (to support view transi
   }
 })
 
+test('gives expenses at midnight distinct view transition names', async ({page}) => {
+  const createdAt = new Date('2024-03-15T00:00:00Z')
+  await seedExpense('First expense', 1, createdAt)
+  await seedExpense('Second expense', 2, createdAt)
+  const expenses = createExpensesPageModel(page)
+
+  await page.goto(new URL('/?day=2024-03-15', url()).href)
+
+  const firstName = await expenses.list().item('First expense').locator.getAttribute('style')
+  const secondName = await expenses.list().item('Second expense').locator.getAttribute('style')
+
+  expect(firstName).toMatch(
+    /^view-transition-name: expense-2024-03-15T00-00-00-000Z-[0-9a-f-]{36}$/,
+  )
+  expect(secondName).toMatch(
+    /^view-transition-name: expense-2024-03-15T00-00-00-000Z-[0-9a-f-]{36}$/,
+  )
+  expect(firstName).not.toBe(secondName)
+})
+
 test('returns to today from either title and keeps the category filter', async ({page}) => {
   const expenses = createExpensesPageModel(page)
 

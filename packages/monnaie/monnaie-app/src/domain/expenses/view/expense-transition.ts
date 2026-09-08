@@ -1,3 +1,8 @@
+import {randomUUID} from 'node:crypto'
+
 export function expenseTransitionName(createdAt: Date | string): string {
-  return `expense-${new Date(createdAt).toISOString().replaceAll(/[:.]/g, '-')}`
+  const isoDate = new Date(createdAt).toISOString()
+  const baseName = `expense-${isoDate.replaceAll(/[:.]/g, '-')}`
+
+  return isoDate.endsWith('T00:00:00.000Z') ? `${baseName}-${randomUUID()}` : baseName
 }
