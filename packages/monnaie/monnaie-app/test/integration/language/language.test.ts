@@ -90,7 +90,6 @@ test.describe('with a Hebrew browser', () => {
         amount: '12.50',
         categoryId: '',
         expenseType: 'day-to-day',
-        createdAt: new Date().toISOString(),
       },
       headers: {'accept-language': 'he-IL'},
     })

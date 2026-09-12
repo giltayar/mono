@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import {
   DESCRIPTION_MAX_LENGTH,
   parseCategoryFilter,
-  parseExpenseCreatedAt,
   parseExpenseIds,
   parseExpenseQuery,
   parseExpenseTypeFilter,
@@ -141,20 +140,6 @@ describe('validateExpense', () => {
   for (const date of ['', 'yesterday', '2024-13-01', '2024-02-30', '15-03-2024']) {
     it(`should refuse the date ${JSON.stringify(date)}`, () => {
       assert.deepStrictEqual(validateExpense({...valid, date}), {error: 'invalid-date'})
-    })
-  }
-})
-
-describe('parseExpenseCreatedAt', () => {
-  it('should parse a canonical ISO timestamp', () => {
-    const createdAt = '2026-09-08T12:34:56.789Z'
-
-    assert.strictEqual(parseExpenseCreatedAt(createdAt)?.toISOString(), createdAt)
-  })
-
-  for (const createdAt of ['today', '2026-09-08', '2026-09-08T12:34:56Z']) {
-    it(`should refuse the non-canonical timestamp ${JSON.stringify(createdAt)}`, () => {
-      assert.strictEqual(parseExpenseCreatedAt(createdAt), undefined)
     })
   }
 })

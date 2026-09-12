@@ -23,7 +23,6 @@ const ExpenseBodySchema = z.object({
   amount: z.string(),
   categoryId: z.string(),
   expenseType: z.string(),
-  createdAt: z.string(),
 })
 
 // a single `?category=3` arrives as a string and repeated ones as an array; the ids themselves are
@@ -40,6 +39,7 @@ const ExpenseQuerySchema = z
       .transform((expenseType) => (Array.isArray(expenseType) ? expenseType : [expenseType])),
     title: z.string().default(''),
     day: z.iso.date().optional(),
+    savedExpense: z.coerce.number().int().positive().catch(0),
   })
   .transform((query) => ({...query, day: query.day}))
 
@@ -75,6 +75,7 @@ export default function expensesRoutes(
         authenticatedUser().uid,
         timeZone,
         parseExpenseQuery(request.query),
+        request.query.savedExpense,
         request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
       ),
     ),
@@ -119,7 +120,6 @@ export default function expensesRoutes(
             expenseType: request.body.expenseType,
             date: undefined,
           },
-          request.body.createdAt,
           parseExpenseQuery(request.query),
         ),
       ),

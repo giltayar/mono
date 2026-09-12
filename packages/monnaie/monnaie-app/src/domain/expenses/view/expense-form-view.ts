@@ -3,7 +3,6 @@ import {translator} from '../../../commons/i18n.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {EXPENSE_CATEGORIES} from '../categories.ts'
 import {DESCRIPTION_MAX_LENGTH, type ExpenseError, type ExpenseInput} from '../model.ts'
-import {expenseTransitionName} from './expense-transition.ts'
 
 export type ExpenseFormMode = {kind: 'add'} | {kind: 'edit'; id: number}
 
@@ -11,7 +10,6 @@ export type ExpenseFormProps = {
   mode: ExpenseFormMode
   query: string
   values: ExpenseInput
-  createdAt: string | undefined
   error: ExpenseError | undefined
 }
 
@@ -26,20 +24,17 @@ export const EMPTY_EXPENSE_FORM_VALUES: ExpenseInput = {
 export function renderExpenseFormPage(props: ExpenseFormProps): string {
   const t = translator('expenses')
   const heading = props.mode.kind === 'add' ? t('form.addTitle') : t('form.editTitle')
-  const formProps = {
-    ...props,
-    createdAt:
-      props.mode.kind === 'add' ? (props.createdAt ?? new Date().toISOString()) : props.createdAt,
-  }
 
   return html`
     <${MainLayout}
       title=${t('page.title')}
       heading=${heading}
-      headingViewTransitionName=${props.mode.kind === 'add' ? 'add-expense' : undefined}
+      headingViewTransitionName=${
+        props.mode.kind === 'add' ? 'add-expense' : `edit-expense-${props.mode.id}`
+      }
       styleSheet="domain/expenses/view/style/style.css"
     >
-      ${renderExpenseForm(formProps)}
+      ${renderExpenseForm(props)}
     </${MainLayout}>
   ` as string
 }
@@ -48,27 +43,13 @@ export function renderExpenseFormPage(props: ExpenseFormProps): string {
  * Posts to itself and replaces itself, so that an error comes back as this same form with the
  * values still in it. A success never reaches here: it answers with an `HX-Redirect` instead.
  */
-export function renderExpenseForm({
-  mode,
-  query,
-  values,
-  createdAt,
-  error,
-}: ExpenseFormProps): string {
+export function renderExpenseForm({mode, query, values, error}: ExpenseFormProps): string {
   const t = translator('expenses')
   const postPath = mode.kind === 'add' ? `/expenses${query}` : `/expenses/${mode.id}${query}`
 
   return html`
     <form id="expense-form" hx-post=${postPath} hx-target="#expense-form" hx-swap="outerHTML">
-      ${mode.kind === 'add' && html`<input type="hidden" name="createdAt" value=${createdAt} />`}
-      <div
-        class="expense-fields"
-        style=${
-          mode.kind === 'add' && createdAt !== undefined
-            ? `view-transition-name: ${expenseTransitionName(createdAt)}`
-            : undefined
-        }
-      >
+      <div class="expense-fields" style="view-transition-name: saved-expense">
         <label for="description">${t('form.description')}</label>
         <input
           id="description"

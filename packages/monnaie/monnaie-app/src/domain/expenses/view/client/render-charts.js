@@ -3,6 +3,12 @@ let chartJsPromise
 /** @type {WeakMap<HTMLCanvasElement, import('chart.js').Chart>} */
 const charts = new WeakMap()
 
+const currentUrl = new URL(location.href)
+if (currentUrl.searchParams.has('savedExpense')) {
+  currentUrl.searchParams.delete('savedExpense')
+  history.replaceState(history.state, '', currentUrl)
+}
+
 /** @param {string} source */
 function loadChartJs(source) {
   chartJsPromise ??= import(source).then((chartModule) => chartModule.default)

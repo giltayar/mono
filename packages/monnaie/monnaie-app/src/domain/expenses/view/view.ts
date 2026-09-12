@@ -40,6 +40,7 @@ export function renderExpensesPage(
   referenceDate: Date,
   currentDay: string,
   navigationDates: PeriodNavigationDates,
+  savedExpenseId: number,
 ): string {
   const t = translator('expenses')
   const {selectedDay} = expenseQuery
@@ -66,7 +67,7 @@ export function renderExpensesPage(
           navigationDates,
         })}
         ${renderCreateExpenseActions(query)}
-        ${renderExpensesMonth(expenses, timeZone, query)}
+        ${renderExpensesMonth(expenses, timeZone, query, savedExpenseId)}
       </div>
     </${MainLayout}>
   ` as string
@@ -338,13 +339,19 @@ function expenseQueryForDay(query: string, selectedDay: string | undefined): str
   return queryParameters.size === 0 ? '' : `?${queryParameters}`
 }
 
-export function renderExpensesMonth(expenses: Expense[], timeZone: string, query: string): string {
+export function renderExpensesMonth(
+  expenses: Expense[],
+  timeZone: string,
+  query: string,
+  savedExpenseId: number,
+): string {
   return renderMonthlyPanel(
     'expenses',
     renderExpenseList(expenses, {
       outOfBand: false,
       timeZone,
       query,
+      savedExpenseId,
     }),
     query,
   )
@@ -530,6 +537,10 @@ function renderPeriodNavigation(
       href=${`${path}${backwardQuery}`}
       hx-get=${`${path}${backwardQuery}`}
       hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
+      hx-on:htmx:before-transition="
+        document.documentElement.dataset.expenseDirection = 'backward';
+        setTimeout(() => delete document.documentElement.dataset.expenseDirection, 500)
+      "
       hx-target="#expense-content"
       hx-select="#expense-content"
       hx-swap="outerHTML transition:true"
@@ -544,6 +555,10 @@ function renderPeriodNavigation(
             href=${`${path}${forwardQuery}`}
             hx-get=${`${path}${forwardQuery}`}
             hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
+            hx-on:htmx:before-transition="
+              document.documentElement.dataset.expenseDirection = 'forward';
+              setTimeout(() => delete document.documentElement.dataset.expenseDirection, 500)
+            "
             hx-target="#expense-content"
             hx-select="#expense-content"
             hx-swap="outerHTML transition:true"
@@ -588,34 +603,38 @@ export function renderExpenseList(
     outOfBand,
     timeZone,
     query,
+    savedExpenseId,
   }: {
     outOfBand: boolean
     timeZone: string
     query: string
+    savedExpenseId: number
   },
 ): string {
   const t = translator('expenses')
 
   return html`
     <div id="expense-list" hx-swap-oob=${outOfBand || undefined}>
-      ${
-        expenses.length === 0
-          ? html`<p class="empty">${t('list.empty')}</p>`
-          : html`
-              <ul>
-                ${expenses.map((expense) => renderExpenseItem(expense, timeZone, query))}
-              </ul>
-            `
-      }
+      <ul>
+        ${expenses.map((expense) => renderExpenseItem(expense, timeZone, query, savedExpenseId))}
+      </ul>
+      <p class="empty">${t('list.empty')}</p>
     </div>
   ` as string
 }
 
-function renderExpenseItem(expense: Expense, timeZone: string, query: string): string {
+function renderExpenseItem(
+  expense: Expense,
+  timeZone: string,
+  query: string,
+  savedExpenseId: number,
+): string {
   const t = translator('expenses')
+  const transitionName =
+    expense.id === savedExpenseId ? 'saved-expense' : expenseTransitionName(expense.createdAt)
 
   return html`
-    <li style=${`view-transition-name: ${expenseTransitionName(expense.createdAt)}`}>
+    <li style=${`view-transition-name: ${transitionName}`}>
       <div class="expense-what">
         <span class="expense-description">${expense.description}</span>
       </div>
@@ -630,6 +649,7 @@ function renderExpenseItem(expense: Expense, timeZone: string, query: string): s
         <a
           href=${`/expenses/${expense.id}/edit${query}`}
           aria-label=${`${t('actions.edit')} ${expense.description}`}
+          style=${`view-transition-name: edit-expense-${expense.id}`}
         >
           ${t('actions.edit')}
         </a>
@@ -637,8 +657,8 @@ function renderExpenseItem(expense: Expense, timeZone: string, query: string): s
           type="button"
           aria-label=${`${t('actions.delete')} ${expense.description}`}
           hx-delete=${`/expenses/${expense.id}${query}`}
-          hx-target="#expense-list"
-          hx-swap="outerHTML"
+          hx-target="closest li"
+          hx-swap="outerHTML swap:250ms"
           hx-confirm=${t('actions.confirmDelete')}
         >
           ${t('actions.delete')}

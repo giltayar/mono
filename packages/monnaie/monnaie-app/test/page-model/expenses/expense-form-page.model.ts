@@ -7,7 +7,6 @@ export function createExpenseFormPageModel(page: Page) {
     description: (locator = page.getByRole('textbox', {name: 'What was it'})) => ({locator}),
     amount: (locator = page.getByRole('spinbutton', {name: 'Amount'})) => ({locator}),
     date: (locator = page.getByLabel('Date')) => ({locator}),
-    createdAt: (locator = page.locator('input[name="createdAt"]')) => ({locator}),
     fields: (locator = page.locator('.expense-fields')) => ({locator}),
     // the radios are visually hidden and styled through their label, but they are still radios
     category: (name: string) => ({locator: page.getByRole('radio', {name})}),

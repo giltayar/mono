@@ -9,8 +9,7 @@ import {
   fetchExpenseTypeTotals,
   fetchPeriodExpenses,
   fetchPeriodTotals,
-  parseExpenseCreatedAt,
-  saveExpenseAt,
+  saveExpense,
   updateExpense,
   validateExpense,
   type ExpenseInput,
@@ -26,7 +25,6 @@ import {
   timestampToDateString,
 } from './periods.ts'
 import {
-  renderExpenseList,
   renderExpenseSummary,
   renderExpensesMonth,
   renderExpensesPage,
@@ -46,6 +44,7 @@ export async function showExpensesPage(
   userId: string,
   timeZone: string,
   expenseQuery: ExpensesQuery,
+  savedExpenseId: number,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
   const {selectedDay} = expenseQuery
@@ -60,7 +59,7 @@ export async function showExpensesPage(
     const expenses = await fetchPeriodExpenses(db, userId, ranges.month, expenseQuery)
 
     return {
-      html: renderExpensesMonth(expenses, timeZone, query),
+      html: renderExpensesMonth(expenses, timeZone, query, 0),
     }
   }
 
@@ -80,6 +79,7 @@ export async function showExpensesPage(
       referenceDate,
       currentDay,
       periodNavigationDates(referenceDate, now, timeZone),
+      savedExpenseId,
     ),
   }
 }
@@ -168,7 +168,6 @@ export function showNewExpensePage(expenseQuery: ExpensesQuery): ControllerResul
       mode: {kind: 'add'},
       query,
       values: EMPTY_EXPENSE_FORM_VALUES,
-      createdAt: undefined,
       error: undefined,
     }),
   }
@@ -214,7 +213,6 @@ export async function addExpense(
   db: Db,
   userId: string,
   input: ExpenseInput,
-  createdAt: string,
   expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
   const query = expenseQueryString(expenseQuery)
@@ -226,31 +224,18 @@ export async function addExpense(
         mode: {kind: 'add'},
         query,
         values: input,
-        createdAt,
         error: result.error,
       }),
       statusCode: 400,
     }
   }
 
-  const parsedCreatedAt = parseExpenseCreatedAt(createdAt)
+  const savedExpenseId = await saveExpense(db, userId, result.expense)
 
-  if (parsedCreatedAt === undefined) {
-    return {
-      html: renderExpenseForm({
-        mode: {kind: 'add'},
-        query,
-        values: input,
-        createdAt,
-        error: 'invalid-date',
-      }),
-      statusCode: 400,
-    }
-  }
+  const redirectQuery = new URLSearchParams(query)
+  redirectQuery.set('savedExpense', String(savedExpenseId))
 
-  await saveExpenseAt(db, userId, result.expense, parsedCreatedAt)
-
-  return redirectToExpenses(`/${query}`)
+  return redirectToExpenses(`/?${redirectQuery}`)
 }
 
 export async function showEditExpensePage(
@@ -269,7 +254,6 @@ export async function showEditExpensePage(
         mode: {kind: 'add'},
         query,
         values: EMPTY_EXPENSE_FORM_VALUES,
-        createdAt: undefined,
         error: 'not-found',
       }),
       statusCode: 404,
@@ -287,7 +271,6 @@ export async function showEditExpensePage(
         expenseType: expense.expenseType,
         date: timestampToDateString(expense.createdAt, timeZone),
       },
-      createdAt: undefined,
       error: undefined,
     }),
   }
@@ -311,7 +294,6 @@ export async function saveExpenseEdit(
         mode,
         query,
         values: input,
-        createdAt: undefined,
         error: result.error,
       }),
       statusCode: 400,
@@ -326,14 +308,16 @@ export async function saveExpenseEdit(
         mode,
         query,
         values: input,
-        createdAt: undefined,
         error: 'not-found',
       }),
       statusCode: 404,
     }
   }
 
-  return redirectToExpenses(`/${query}`)
+  const redirectQuery = new URLSearchParams(query)
+  redirectQuery.set('savedExpense', String(id))
+
+  return redirectToExpenses(`/?${redirectQuery}`)
 }
 
 export async function removeExpense(
@@ -352,33 +336,24 @@ export async function removeExpense(
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
 
-  const [summary, expenses] = await Promise.all([
-    fetchPeriodTotals(db, userId, ranges, expenseQuery),
-    fetchPeriodExpenses(db, userId, ranges.month, expenseQuery),
-  ])
+  const summary = await fetchPeriodTotals(db, userId, ranges, expenseQuery)
   const query = expenseQueryString(expenseQuery)
 
   return {
-    html:
-      renderExpenseList(expenses, {
-        outOfBand: false,
+    html: renderExpenseSummary(
+      summary.totals,
+      periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
+      {
+        outOfBand: true,
+        path: '/',
+        referenceDate,
         timeZone,
         query,
-      }) +
-      renderExpenseSummary(
-        summary.totals,
-        periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
-        {
-          outOfBand: true,
-          path: '/',
-          referenceDate,
-          timeZone,
-          query,
-          referenceDay: selectedDay ?? currentDay,
-          currentDay,
-          navigationDates: periodNavigationDates(referenceDate, now, timeZone),
-        },
-      ),
+        referenceDay: selectedDay ?? currentDay,
+        currentDay,
+        navigationDates: periodNavigationDates(referenceDate, now, timeZone),
+      },
+    ),
   }
 }
 

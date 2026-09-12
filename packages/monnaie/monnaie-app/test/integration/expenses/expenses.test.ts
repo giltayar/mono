@@ -67,7 +67,13 @@ test('navigates summary periods around the selected day', async ({page}) => {
     },
   ] as const) {
     await gotoDayWithFoodFilter(page, '2024-03-15')
-    await expenses.summary().period(period)[direction]().locator.click()
+    const navigation = expenses.summary().period(period)[direction]().locator
+
+    await expect(navigation).toHaveAttribute(
+      'hx-on:htmx:before-transition',
+      new RegExp(`expenseDirection = '${direction}'`),
+    )
+    await navigation.click()
 
     await expect(expenses.summary().heading().locator).toHaveText(expectedHeading)
     await expect(expenses.filter().category('אוכל').locator).toBeChecked()
@@ -185,11 +191,9 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
     'style',
     'view-transition-name: add-expense',
   )
-  const createdAt = await form.createdAt().locator.inputValue()
-  const expenseTransitionName = `expense-${createdAt.replaceAll(/[:.]/g, '-')}`
   await expect(form.fields().locator).toHaveAttribute(
     'style',
-    `view-transition-name: ${expenseTransitionName}`,
+    'view-transition-name: saved-expense',
   )
   await expect(form.submitButton().locator).not.toHaveAttribute('style')
 
@@ -202,18 +206,14 @@ test('adds an expense, and shows it in the list and in the totals', async ({page
 
   const savedExpense = await db()
     .selectFrom('expense')
-    .select(['expense_type', 'created_at'])
+    .select('expense_type')
     .where('description', '=', 'Coffee')
     .executeTakeFirstOrThrow()
   expect(savedExpense.expense_type).toBe('day-to-day')
-  expect(savedExpense.created_at.toISOString()).toBe(createdAt)
 
   const item = expenses.list().item('Coffee')
 
-  await expect(item.locator).toHaveAttribute(
-    'style',
-    `view-transition-name: ${expenseTransitionName}`,
-  )
+  await expect(item.locator).toHaveAttribute('style', 'view-transition-name: saved-expense')
   await expect(item.locator).toContainText('Coffee')
   await expect(item.locator).toContainText('אוכל')
   await expect(item.locator).toContainText('12.50')
@@ -335,7 +335,6 @@ test('refuses an expense with no category even when the browser is bypassed', as
       amount: '12.50',
       categoryId: '',
       expenseType: 'day-to-day',
-      createdAt: new Date().toISOString(),
     },
   })
 
@@ -357,7 +356,6 @@ test('refuses an amount that is not a number even when the browser is bypassed',
       amount: 'a lot',
       categoryId: '1',
       expenseType: 'day-to-day',
-      createdAt: new Date().toISOString(),
     },
   })
 
@@ -388,10 +386,26 @@ test('edits an expense', async ({page}) => {
 
   const expenses = createExpensesPageModel(page)
   const form = createExpenseFormPageModel(page)
+  const expense = await db()
+    .selectFrom('expense')
+    .select('id')
+    .where('description', '=', 'Coffee')
+    .executeTakeFirstOrThrow()
 
+  await expect(expenses.list().item('Coffee').editLink().locator).toHaveAttribute(
+    'style',
+    `view-transition-name: edit-expense-${expense.id}`,
+  )
   await expenses.list().item('Coffee').editLink().locator.click()
 
-  await expect(form.editHeading().locator).toBeVisible()
+  await expect(form.editHeading().locator).toHaveAttribute(
+    'style',
+    `view-transition-name: edit-expense-${expense.id}`,
+  )
+  await expect(form.fields().locator).toHaveAttribute(
+    'style',
+    'view-transition-name: saved-expense',
+  )
   await expect(form.description().locator).toHaveValue('Coffee')
   await expect(form.amount().locator).toHaveValue('12.50')
   await expect(form.category('אוכל').locator).toBeChecked()
@@ -423,6 +437,23 @@ test('edits an expense', async ({page}) => {
     .where('description', '=', 'Espresso')
     .executeTakeFirstOrThrow()
   expect(savedExpense.expense_type).toBe('recurring')
+})
+
+test('transitions an edited expense from the form back to its row', async ({page}) => {
+  await addExpense(page, 'Coffee', '12.50', 'אוכל')
+
+  const expenses = createExpensesPageModel(page)
+  const form = createExpenseFormPageModel(page)
+
+  await expenses.list().item('Coffee').editLink().locator.click()
+  await form.amount().locator.fill('8.00')
+  await form.submitButton().locator.click()
+
+  await expect(expenses.list().item('Coffee').locator).toHaveAttribute(
+    'style',
+    'view-transition-name: saved-expense',
+  )
+  await expect(page).toHaveURL(url().href)
 })
 
 test('keeps all filters after editing an expense', async ({page}) => {
@@ -483,8 +514,11 @@ test('deletes an expense, and takes it out of the totals', async ({page}) => {
   await addExpense(page, 'Bus ticket', '6.00', 'תחבורה')
 
   const expenses = createExpensesPageModel(page)
+  const deleteButton = expenses.list().item('Coffee').deleteButton().locator
 
-  await expenses.list().item('Coffee').deleteButton().locator.click()
+  await expect(deleteButton).toHaveAttribute('hx-target', 'closest li')
+  await expect(deleteButton).toHaveAttribute('hx-swap', 'outerHTML swap:250ms')
+  await deleteButton.click()
 
   await expect(expenses.list().items().locator).toHaveCount(1)
   await expect(expenses.list().item('Bus ticket').locator).toBeVisible()
@@ -494,6 +528,10 @@ test('deletes an expense, and takes it out of the totals', async ({page}) => {
   await page.goto(url().href)
 
   await expect(expenses.list().items().locator).toHaveCount(1)
+
+  await expenses.list().item('Bus ticket').deleteButton().locator.click()
+
+  await expect(expenses.list().empty().locator).toBeVisible()
 })
 
 test('counts an expense from yesterday in the previous day and not in today', async ({page}) => {
