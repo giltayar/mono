@@ -2,7 +2,6 @@ import type {ControllerResult} from '../../commons/controller.ts'
 import type {Db} from '../../commons/db.ts'
 import {
   copyRecurringExpenses,
-  DEFAULT_EXPENSE_TYPE_FILTER,
   deleteExpense,
   fetchCategoryTotals,
   fetchExpense,
@@ -14,7 +13,6 @@ import {
   validateExpense,
   type ExpenseInput,
   type ExpensesQuery,
-  type ExpenseType,
 } from './model.ts'
 import {
   dateStringToTimestamp,
@@ -38,28 +36,27 @@ import {
   type ExpenseFormMode,
 } from './view/expense-form-view.ts'
 import {renderCopyRecurringDialog} from './view/copy-recurring-view.ts'
+import {currentExpenseQueryString, currentTimeZone} from './request-context.ts'
 
 export async function showExpensesPage(
   db: Db,
   userId: string,
-  timeZone: string,
   expenseQuery: ExpensesQuery,
-  savedExpenseId: number,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const {selectedDay} = expenseQuery
   const now = new Date()
   const referenceDate =
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
-  const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
     const expenses = await fetchPeriodExpenses(db, userId, ranges.month, expenseQuery)
 
     return {
-      html: renderExpensesMonth(expenses, timeZone, query, 0),
+      html: renderExpensesMonth(expenses),
     }
   }
 
@@ -73,13 +70,9 @@ export async function showExpensesPage(
       summary.totals,
       periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate),
       expenses,
-      timeZone,
-      expenseQuery,
-      query,
       referenceDate,
       currentDay,
       periodNavigationDates(referenceDate, now, timeZone),
-      savedExpenseId,
     ),
   }
 }
@@ -87,17 +80,16 @@ export async function showExpensesPage(
 export async function showGraphsPage(
   db: Db,
   userId: string,
-  timeZone: string,
   expenseQuery: ExpensesQuery,
   renderTarget: 'page' | 'expense-month',
 ): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const {selectedDay} = expenseQuery
   const now = new Date()
   const referenceDate =
     selectedDay === undefined ? now : dateStringToTimestamp(selectedDay, timeZone)
   const currentDay = timestampToDateString(now, timeZone)
   const ranges = periodRanges(referenceDate, timeZone)
-  const query = expenseQueryString(expenseQuery)
 
   if (renderTarget === 'expense-month') {
     const [summary, categoryTotals, expenseTypeTotals, expenses] = await Promise.all([
@@ -114,8 +106,6 @@ export async function showGraphsPage(
         dailyExpenseTotals(expenses, referenceDate, timeZone),
         periodDayCounts(referenceDate, timeZone, summary.firstExpenseDate).month,
         referenceDate,
-        timeZone,
-        query,
       ),
     }
   }
@@ -134,10 +124,7 @@ export async function showGraphsPage(
       categoryTotals,
       expenseTypeTotals,
       dailyExpenseTotals(expenses, referenceDate, timeZone),
-      expenseQuery,
-      query,
       referenceDate,
-      timeZone,
       currentDay,
       periodNavigationDates(referenceDate, now, timeZone),
     ),
@@ -160,24 +147,18 @@ function dailyExpenseTotals(
   return dates.map((date) => totals.get(date) ?? 0)
 }
 
-export function showNewExpensePage(expenseQuery: ExpensesQuery): ControllerResult {
-  const query = expenseQueryString(expenseQuery)
-
+export function showNewExpensePage(): ControllerResult {
   return {
     html: renderExpenseFormPage({
       mode: {kind: 'add'},
-      query,
       values: EMPTY_EXPENSE_FORM_VALUES,
       error: undefined,
     }),
   }
 }
 
-export async function showCopyRecurringDialog(
-  db: Db,
-  userId: string,
-  timeZone: string,
-): Promise<ControllerResult> {
+export async function showCopyRecurringDialog(db: Db, userId: string): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const now = new Date()
   const expenses = await fetchPeriodExpenses(
     db,
@@ -192,9 +173,9 @@ export async function showCopyRecurringDialog(
 export async function copyRecurring(
   db: Db,
   userId: string,
-  timeZone: string,
   expenseIds: number[],
 ): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const now = new Date()
 
   await copyRecurringExpenses(
@@ -213,16 +194,13 @@ export async function addExpense(
   db: Db,
   userId: string,
   input: ExpenseInput,
-  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
-  const query = expenseQueryString(expenseQuery)
   const result = validateExpense(input)
 
   if ('error' in result) {
     return {
       html: renderExpenseForm({
         mode: {kind: 'add'},
-        query,
         values: input,
         error: result.error,
       }),
@@ -232,7 +210,7 @@ export async function addExpense(
 
   const savedExpenseId = await saveExpense(db, userId, result.expense)
 
-  const redirectQuery = new URLSearchParams(query)
+  const redirectQuery = new URLSearchParams(currentExpenseQueryString())
   redirectQuery.set('savedExpense', String(savedExpenseId))
 
   return redirectToExpenses(`/?${redirectQuery}`)
@@ -242,17 +220,14 @@ export async function showEditExpensePage(
   db: Db,
   userId: string,
   id: number,
-  timeZone: string,
-  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const expense = await fetchExpense(db, userId, id)
-  const query = expenseQueryString(expenseQuery)
 
   if (expense === undefined) {
     return {
       html: renderExpenseFormPage({
         mode: {kind: 'add'},
-        query,
         values: EMPTY_EXPENSE_FORM_VALUES,
         error: 'not-found',
       }),
@@ -263,7 +238,6 @@ export async function showEditExpensePage(
   return {
     html: renderExpenseFormPage({
       mode: {kind: 'edit', id},
-      query,
       values: {
         description: expense.description,
         amount: expense.amount.toFixed(2),
@@ -281,18 +255,15 @@ export async function saveExpenseEdit(
   userId: string,
   id: number,
   input: ExpenseInput,
-  timeZone: string,
-  expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const mode: ExpenseFormMode = {kind: 'edit', id}
-  const query = expenseQueryString(expenseQuery)
   const result = validateExpense(input)
 
   if ('error' in result) {
     return {
       html: renderExpenseForm({
         mode,
-        query,
         values: input,
         error: result.error,
       }),
@@ -306,7 +277,6 @@ export async function saveExpenseEdit(
     return {
       html: renderExpenseForm({
         mode,
-        query,
         values: input,
         error: 'not-found',
       }),
@@ -314,7 +284,7 @@ export async function saveExpenseEdit(
     }
   }
 
-  const redirectQuery = new URLSearchParams(query)
+  const redirectQuery = new URLSearchParams(currentExpenseQueryString())
   redirectQuery.set('savedExpense', String(id))
 
   return redirectToExpenses(`/?${redirectQuery}`)
@@ -324,9 +294,9 @@ export async function removeExpense(
   db: Db,
   userId: string,
   id: number,
-  timeZone: string,
   expenseQuery: ExpensesQuery,
 ): Promise<ControllerResult> {
+  const timeZone = currentTimeZone()
   const {selectedDay} = expenseQuery
   await deleteExpense(db, userId, id)
 
@@ -337,7 +307,6 @@ export async function removeExpense(
   const ranges = periodRanges(referenceDate, timeZone)
 
   const summary = await fetchPeriodTotals(db, userId, ranges, expenseQuery)
-  const query = expenseQueryString(expenseQuery)
 
   return {
     html: renderExpenseSummary(
@@ -347,56 +316,12 @@ export async function removeExpense(
         outOfBand: true,
         path: '/',
         referenceDate,
-        timeZone,
-        query,
         referenceDay: selectedDay ?? currentDay,
         currentDay,
         navigationDates: periodNavigationDates(referenceDate, now, timeZone),
       },
     ),
   }
-}
-
-/** The ids, never the names: an id is permanent, so a bookmarked filter keeps its meaning */
-function expenseQueryString({
-  categoryIds,
-  expenseTypes,
-  title,
-  selectedDay,
-}: ExpensesQuery): string {
-  if (
-    categoryIds.length === 0 &&
-    isDefaultExpenseTypeFilter(expenseTypes) &&
-    title === '' &&
-    selectedDay === undefined
-  ) {
-    return ''
-  }
-
-  const query = new URLSearchParams(categoryIds.map((id) => ['category', String(id)]))
-
-  if (!isDefaultExpenseTypeFilter(expenseTypes)) {
-    for (const expenseType of expenseTypes) {
-      query.append('expenseType', expenseType)
-    }
-  }
-
-  if (title !== '') {
-    query.set('title', title)
-  }
-
-  if (selectedDay !== undefined) {
-    query.set('day', selectedDay)
-  }
-
-  return `?${query}`
-}
-
-function isDefaultExpenseTypeFilter(expenseTypes: ExpenseType[]): boolean {
-  return (
-    expenseTypes.length === DEFAULT_EXPENSE_TYPE_FILTER.length &&
-    DEFAULT_EXPENSE_TYPE_FILTER.every((expenseType) => expenseTypes.includes(expenseType))
-  )
 }
 
 /**

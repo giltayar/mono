@@ -62,7 +62,14 @@ export async function makeApp({
   // `onRequest` hook: same-level fastify hooks run in registration order
   app.register(cookie)
   app.register(fastifyRequestContext, {
-    defaultStoreValues: (request) => ({language: resolveLanguage(request), user: undefined}),
+    defaultStoreValues: (request) => ({
+      language: resolveLanguage(request),
+      user: undefined,
+      expenseQuery: undefined,
+      expenseQueryString: undefined,
+      savedExpenseId: 0,
+      timeZone,
+    }),
   })
 
   const staticCache =
@@ -103,7 +110,7 @@ export async function makeApp({
     appWithUser.register(async (privateApp) => {
       privateApp.addHook('onRequest', requireAuthentication)
 
-      privateApp.register(expensesRoutes, {db, timeZone})
+      privateApp.register(expensesRoutes, {db})
       privateApp.register(settingsRoutes)
     })
   })

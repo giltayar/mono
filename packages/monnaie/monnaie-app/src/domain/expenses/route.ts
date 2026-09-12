@@ -16,6 +16,7 @@ import {
   showCopyRecurringDialog,
 } from './controller.ts'
 import {parseExpenseIds, parseExpenseQuery} from './model.ts'
+import {setExpenseRequestContext} from './request-context.ts'
 
 // the model is what validates these, so that the same rules apply however they arrive
 const ExpenseBodySchema = z.object({
@@ -60,75 +61,75 @@ const CopyRecurringBodySchema = z.object({
 
 const ExpenseParamsSchema = z.object({id: z.coerce.number().int()})
 
-export default function expensesRoutes(
-  app: FastifyInstance,
-  {db, timeZone}: {db: Db; timeZone: string},
-): void {
+export default function expensesRoutes(app: FastifyInstance, {db}: {db: Db}): void {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
 
-  appWithTypes.get('/', {schema: {querystring: ExpenseQuerySchema}}, async (request, reply) =>
-    replyWithControllerResult(
+  appWithTypes.get('/', {schema: {querystring: ExpenseQuerySchema}}, async (request, reply) => {
+    const expenseQuery = initializeExpenseRequestContext(request.query, rawQueryString(request.url))
+
+    return replyWithControllerResult(
       reply,
       await showExpensesPage(
         db,
         authenticatedUser().uid,
-        timeZone,
-        parseExpenseQuery(request.query),
-        request.query.savedExpense,
+        expenseQuery,
         request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
       ),
-    ),
-  )
+    )
+  })
 
   appWithTypes.get(
     '/expenses/graphs',
     {schema: {querystring: ExpenseQuerySchema}},
-    async (request, reply) =>
-      replyWithControllerResult(
+    async (request, reply) => {
+      const expenseQuery = initializeExpenseRequestContext(
+        request.query,
+        rawQueryString(request.url),
+      )
+
+      return replyWithControllerResult(
         reply,
         await showGraphsPage(
           db,
           authenticatedUser().uid,
-          timeZone,
-          parseExpenseQuery(request.query),
+          expenseQuery,
           request.headers['hx-target'] === 'expense-month' ? 'expense-month' : 'page',
         ),
-      ),
+      )
+    },
   )
 
   appWithTypes.get(
     '/expenses/new',
     {schema: {querystring: ExpenseQuerySchema}},
-    async (request, reply) =>
-      replyWithControllerResult(reply, showNewExpensePage(parseExpenseQuery(request.query))),
+    async (request, reply) => {
+      initializeExpenseRequestContext(request.query, rawQueryString(request.url))
+
+      return replyWithControllerResult(reply, showNewExpensePage())
+    },
   )
 
   appWithTypes.post(
     '/expenses',
     {schema: {body: ExpenseBodySchema, querystring: ExpenseQuerySchema}},
-    async (request, reply) =>
-      replyWithControllerResult(
+    async (request, reply) => {
+      initializeExpenseRequestContext(request.query, rawQueryString(request.url))
+
+      return replyWithControllerResult(
         reply,
-        await addExpense(
-          db,
-          authenticatedUser().uid,
-          {
-            description: request.body.description,
-            amount: request.body.amount,
-            categoryId: request.body.categoryId,
-            expenseType: request.body.expenseType,
-            date: undefined,
-          },
-          parseExpenseQuery(request.query),
-        ),
-      ),
+        await addExpense(db, authenticatedUser().uid, {
+          description: request.body.description,
+          amount: request.body.amount,
+          categoryId: request.body.categoryId,
+          expenseType: request.body.expenseType,
+          date: undefined,
+        }),
+      )
+    },
   )
 
   appWithTypes.get('/expenses/copy-recurring', async (_request, reply) =>
-    replyWithControllerResult(
-      reply,
-      await showCopyRecurringDialog(db, authenticatedUser().uid, timeZone),
-    ),
+    replyWithControllerResult(reply, await showCopyRecurringDialog(db, authenticatedUser().uid)),
   )
 
   appWithTypes.post(
@@ -137,29 +138,21 @@ export default function expensesRoutes(
     async (request, reply) =>
       replyWithControllerResult(
         reply,
-        await copyRecurring(
-          db,
-          authenticatedUser().uid,
-          timeZone,
-          parseExpenseIds(request.body.expenseId),
-        ),
+        await copyRecurring(db, authenticatedUser().uid, parseExpenseIds(request.body.expenseId)),
       ),
   )
 
   appWithTypes.get(
     '/expenses/:id/edit',
     {schema: {params: ExpenseParamsSchema, querystring: ExpenseQuerySchema}},
-    async (request, reply) =>
-      replyWithControllerResult(
+    async (request, reply) => {
+      initializeExpenseRequestContext(request.query, rawQueryString(request.url))
+
+      return replyWithControllerResult(
         reply,
-        await showEditExpensePage(
-          db,
-          authenticatedUser().uid,
-          request.params.id,
-          timeZone,
-          parseExpenseQuery(request.query),
-        ),
-      ),
+        await showEditExpensePage(db, authenticatedUser().uid, request.params.id),
+      )
+    },
   )
 
   appWithTypes.post(
@@ -171,33 +164,45 @@ export default function expensesRoutes(
         querystring: ExpenseQuerySchema,
       },
     },
-    async (request, reply) =>
-      replyWithControllerResult(
+    async (request, reply) => {
+      initializeExpenseRequestContext(request.query, rawQueryString(request.url))
+
+      return replyWithControllerResult(
         reply,
-        await saveExpenseEdit(
-          db,
-          authenticatedUser().uid,
-          request.params.id,
-          request.body,
-          timeZone,
-          parseExpenseQuery(request.query),
-        ),
-      ),
+        await saveExpenseEdit(db, authenticatedUser().uid, request.params.id, request.body),
+      )
+    },
   )
 
   appWithTypes.delete(
     '/expenses/:id',
     {schema: {params: ExpenseParamsSchema, querystring: ExpenseQuerySchema}},
-    async (request, reply) =>
-      replyWithControllerResult(
+    async (request, reply) => {
+      const expenseQuery = initializeExpenseRequestContext(
+        request.query,
+        rawQueryString(request.url),
+      )
+
+      return replyWithControllerResult(
         reply,
-        await removeExpense(
-          db,
-          authenticatedUser().uid,
-          request.params.id,
-          timeZone,
-          parseExpenseQuery(request.query),
-        ),
-      ),
+        await removeExpense(db, authenticatedUser().uid, request.params.id, expenseQuery),
+      )
+    },
   )
+}
+
+function initializeExpenseRequestContext(
+  query: z.output<typeof ExpenseQuerySchema>,
+  queryString: string,
+): ReturnType<typeof parseExpenseQuery> {
+  const expenseQuery = parseExpenseQuery(query)
+  setExpenseRequestContext(expenseQuery, queryString, query.savedExpense)
+
+  return expenseQuery
+}
+
+function rawQueryString(url: string): string {
+  const queryStart = url.indexOf('?')
+
+  return queryStart === -1 ? '' : url.slice(queryStart)
 }

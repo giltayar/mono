@@ -3,12 +3,12 @@ import {translator} from '../../../commons/i18n.ts'
 import {MainLayout} from '../../../layout/main-view.ts'
 import {EXPENSE_CATEGORIES} from '../categories.ts'
 import {DESCRIPTION_MAX_LENGTH, type ExpenseError, type ExpenseInput} from '../model.ts'
+import {currentExpenseQueryString} from '../request-context.ts'
 
 export type ExpenseFormMode = {kind: 'add'} | {kind: 'edit'; id: number}
 
 export type ExpenseFormProps = {
   mode: ExpenseFormMode
-  query: string
   values: ExpenseInput
   error: ExpenseError | undefined
 }
@@ -43,8 +43,9 @@ export function renderExpenseFormPage(props: ExpenseFormProps): string {
  * Posts to itself and replaces itself, so that an error comes back as this same form with the
  * values still in it. A success never reaches here: it answers with an `HX-Redirect` instead.
  */
-export function renderExpenseForm({mode, query, values, error}: ExpenseFormProps): string {
+export function renderExpenseForm({mode, values, error}: ExpenseFormProps): string {
   const t = translator('expenses')
+  const query = currentExpenseQueryString()
   const postPath = mode.kind === 'add' ? `/expenses${query}` : `/expenses/${mode.id}${query}`
 
   return html`

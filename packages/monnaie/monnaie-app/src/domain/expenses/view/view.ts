@@ -5,7 +5,6 @@ import {categoryById, EXPENSE_CATEGORIES} from '../categories.ts'
 import {
   type CategoryTotal,
   type Expense,
-  type ExpensesQuery,
   type ExpenseType,
   type ExpenseTypeTotal,
   type PeriodTotals,
@@ -22,6 +21,12 @@ import {
 } from '../periods.ts'
 import {renderCategoryGraph, renderDailyGraph, renderExpenseTypeGraph} from './graphs.ts'
 import {expenseTransitionName} from './expense-transition.ts'
+import {
+  currentExpenseQuery,
+  currentExpenseQueryString,
+  currentSavedExpenseId,
+  currentTimeZone,
+} from '../request-context.ts'
 
 const STYLE_SHEET = 'domain/expenses/view/style/style.css'
 const SCRIPT = 'domain/expenses/view/client/render-charts.js'
@@ -34,27 +39,24 @@ export function renderExpensesPage(
   totals: PeriodTotals,
   dayCounts: PeriodDayCounts,
   expenses: Expense[],
-  timeZone: string,
-  expenseQuery: ExpensesQuery,
-  query: string,
   referenceDate: Date,
   currentDay: string,
   navigationDates: PeriodNavigationDates,
-  savedExpenseId: number,
 ): string {
   const t = translator('expenses')
+  const expenseQuery = currentExpenseQuery()
   const {selectedDay} = expenseQuery
 
   return html`
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
-      headingHref=${`/${expenseQueryForDay(query, undefined)}`}
+      headingHref=${`/${expenseQueryForDay(undefined)}`}
       headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/', expenseQuery)}
+      ${renderCategoryFilter('/')}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -62,12 +64,10 @@ export function renderExpensesPage(
           referenceDate,
           referenceDay: selectedDay ?? currentDay,
           currentDay,
-          timeZone,
-          query,
           navigationDates,
         })}
-        ${renderCreateExpenseActions(query)}
-        ${renderExpensesMonth(expenses, timeZone, query, savedExpenseId)}
+        ${renderCreateExpenseActions()}
+        ${renderExpensesMonth(expenses)}
       </div>
     </${MainLayout}>
   ` as string
@@ -79,26 +79,25 @@ export function renderGraphsPage(
   categoryTotals: CategoryTotal[],
   expenseTypeTotals: ExpenseTypeTotal[],
   dailyTotals: number[],
-  expenseQuery: ExpensesQuery,
-  query: string,
   referenceDate: Date,
-  timeZone: string,
   currentDay: string,
   navigationDates: PeriodNavigationDates,
 ): string {
   const t = translator('expenses')
+  const timeZone = currentTimeZone()
+  const expenseQuery = currentExpenseQuery()
   const {selectedDay} = expenseQuery
 
   return html`
     <${MainLayout}
       title=${t('page.title')}
       heading=${t('page.title')}
-      headingHref=${`/${expenseQueryForDay(query, undefined)}`}
+      headingHref=${`/${expenseQueryForDay(undefined)}`}
       headingOnClick=${RESET_TO_TODAY_ON_CLICK}
       styleSheet=${STYLE_SHEET}
       script=${SCRIPT}
     >
-      ${renderCategoryFilter('/expenses/graphs', expenseQuery)}
+      ${renderCategoryFilter('/expenses/graphs')}
       <div id="expense-content">
         ${renderExpenseSummary(totals, dayCounts, {
           outOfBand: false,
@@ -106,26 +105,24 @@ export function renderGraphsPage(
           referenceDate,
           referenceDay: selectedDay ?? currentDay,
           currentDay,
-          timeZone,
-          query,
           navigationDates,
         })}
-        ${renderCreateExpenseActions(query)}
+        ${renderCreateExpenseActions()}
         ${renderGraphsMonth(
           categoryTotals,
           expenseTypeTotals,
           dailyTotals,
           dayCounts.month,
           monthWeekendDays(referenceDate, timeZone),
-          query,
         )}
       </div>
     </${MainLayout}>
   ` as string
 }
 
-function renderCreateExpenseActions(query: string): string {
+function renderCreateExpenseActions(): string {
   const t = translator('expenses')
+  const query = currentExpenseQueryString()
 
   return html`
     <div class="expense-create-actions">
@@ -157,11 +154,9 @@ function renderCreateExpenseActions(query: string): string {
  * The price is that `hx-get` is frozen at the tab this page loaded on, so the path is taken from
  * the address bar at request time instead — the tabs push it, and the filter follows.
  */
-function renderCategoryFilter(
-  path: string,
-  {categoryIds, expenseTypes, title, selectedDay}: ExpensesQuery,
-): string {
+function renderCategoryFilter(path: string): string {
   const t = translator('expenses')
+  const {categoryIds, expenseTypes, title, selectedDay} = currentExpenseQuery()
 
   return html`
     <form
@@ -327,8 +322,8 @@ function renderExpenseTypeFilterOption(expenseType: ExpenseType, checked: boolea
   ` as string
 }
 
-function expenseQueryForDay(query: string, selectedDay: string | undefined): string {
-  const queryParameters = new URLSearchParams(query)
+function expenseQueryForDay(selectedDay: string | undefined): string {
+  const queryParameters = new URLSearchParams(currentExpenseQueryString())
 
   if (selectedDay === undefined) {
     queryParameters.delete('day')
@@ -339,21 +334,12 @@ function expenseQueryForDay(query: string, selectedDay: string | undefined): str
   return queryParameters.size === 0 ? '' : `?${queryParameters}`
 }
 
-export function renderExpensesMonth(
-  expenses: Expense[],
-  timeZone: string,
-  query: string,
-  savedExpenseId: number,
-): string {
+export function renderExpensesMonth(expenses: Expense[]): string {
   return renderMonthlyPanel(
     'expenses',
     renderExpenseList(expenses, {
       outOfBand: false,
-      timeZone,
-      query,
-      savedExpenseId,
     }),
-    query,
   )
 }
 
@@ -363,25 +349,21 @@ export function renderGraphsMonthForDate(
   dailyTotals: number[],
   averageDayCount: number,
   referenceDate: Date,
-  timeZone: string,
-  query: string,
 ): string {
+  const timeZone = currentTimeZone()
+
   return renderGraphsMonth(
     categoryTotals,
     expenseTypeTotals,
     dailyTotals,
     averageDayCount,
     monthWeekendDays(referenceDate, timeZone),
-    query,
   )
 }
 
-function renderMonthlyPanel(
-  activeTab: 'expenses' | 'graphs',
-  content: string,
-  query: string,
-): string {
+function renderMonthlyPanel(activeTab: 'expenses' | 'graphs', content: string): string {
   const t = translator('expenses')
+  const query = currentExpenseQueryString()
 
   return html`
     <section id="expense-month" aria-label=${t('list.title')}>
@@ -422,8 +404,6 @@ export function renderExpenseSummary(
     referenceDate,
     referenceDay,
     currentDay,
-    timeZone,
-    query,
     navigationDates,
   }: {
     outOfBand: boolean
@@ -431,14 +411,12 @@ export function renderExpenseSummary(
     referenceDate: Date
     referenceDay: string
     currentDay: string
-    timeZone: string
-    query: string
     navigationDates: PeriodNavigationDates
   },
 ): string {
   const t = translator('expenses')
   const discussionDay =
-    referenceDay === currentDay ? t('summary.today') : formatDiscussionDate(referenceDate, timeZone)
+    referenceDay === currentDay ? t('summary.today') : formatDiscussionDate(referenceDate)
 
   return html`
     <section
@@ -448,8 +426,8 @@ export function renderExpenseSummary(
     >
       <h2>
         <a
-          href=${`${path}${expenseQueryForDay(query, undefined)}`}
-          hx-get=${`${path}${expenseQueryForDay(query, undefined)}`}
+          href=${`${path}${expenseQueryForDay(undefined)}`}
+          hx-get=${`${path}${expenseQueryForDay(undefined)}`}
           hx-on:htmx:config-request="event.detail.path = location.pathname + new URL(event.detail.path, location.href).search"
           hx-target="#expense-content"
           hx-select="#expense-content"
@@ -481,7 +459,6 @@ export function renderExpenseSummary(
                     <span class="period-navigation">
                       ${renderPeriodNavigation(
                         path,
-                        query,
                         navigationDates[period],
                         t(`summary.${period}`),
                         currentDay,
@@ -496,7 +473,6 @@ export function renderExpenseSummary(
                     totals[period],
                     dayCounts[period],
                     referenceDate,
-                    timeZone,
                   )}
                 </td>
                 <td class="previous">
@@ -506,7 +482,6 @@ export function renderExpenseSummary(
                     totals[previousPeriodName(period)],
                     dayCounts[previousPeriodName(period)],
                     referenceDate,
-                    timeZone,
                   )}
                 </td>
               </tr>
@@ -520,17 +495,16 @@ export function renderExpenseSummary(
 
 function renderPeriodNavigation(
   path: string,
-  query: string,
   dates: {backward: string; forward: string | undefined},
   periodLabel: string,
   currentDay: string,
 ): string {
   const t = translator('expenses')
-  const backwardQuery = expenseQueryForDay(query, dates.backward)
+  const backwardQuery = expenseQueryForDay(dates.backward)
   const forwardQuery =
     dates.forward === undefined
       ? undefined
-      : expenseQueryForDay(query, dates.forward === currentDay ? undefined : dates.forward)
+      : expenseQueryForDay(dates.forward === currentDay ? undefined : dates.forward)
 
   return html`
     <a
@@ -576,10 +550,9 @@ function renderPeriodTotal(
   total: number,
   dayCount: number,
   referenceDate: Date,
-  timeZone: string,
 ): string {
   const t = translator('expenses')
-  const startDate = periodStartDate(referenceDate, timeZone, periodName)
+  const startDate = periodStartDate(referenceDate, currentTimeZone(), periodName)
 
   return html`
     <span class="total" style=${`view-transition-name: transition-${period}-${startDate}`}
@@ -597,41 +570,26 @@ function renderPeriodTotal(
   ` as string
 }
 
-export function renderExpenseList(
-  expenses: Expense[],
-  {
-    outOfBand,
-    timeZone,
-    query,
-    savedExpenseId,
-  }: {
-    outOfBand: boolean
-    timeZone: string
-    query: string
-    savedExpenseId: number
-  },
-): string {
+export function renderExpenseList(expenses: Expense[], {outOfBand}: {outOfBand: boolean}): string {
   const t = translator('expenses')
 
   return html`
     <div id="expense-list" hx-swap-oob=${outOfBand || undefined}>
       <ul>
-        ${expenses.map((expense) => renderExpenseItem(expense, timeZone, query, savedExpenseId))}
+        ${expenses.map((expense) => renderExpenseItem(expense))}
       </ul>
       <p class="empty">${t('list.empty')}</p>
     </div>
   ` as string
 }
 
-function renderExpenseItem(
-  expense: Expense,
-  timeZone: string,
-  query: string,
-  savedExpenseId: number,
-): string {
+function renderExpenseItem(expense: Expense): string {
   const t = translator('expenses')
+  const query = currentExpenseQueryString()
   const transitionName =
-    expense.id === savedExpenseId ? 'saved-expense' : expenseTransitionName(expense.createdAt)
+    expense.id === currentSavedExpenseId()
+      ? 'saved-expense'
+      : expenseTransitionName(expense.createdAt)
 
   return html`
     <li style=${`view-transition-name: ${transitionName}`}>
@@ -642,7 +600,7 @@ function renderExpenseItem(
       <div class="expense-meta">
         <span class="expense-category">${categoryById(expense.categoryId)?.name}</span>
         <time class="expense-date" datetime=${expense.createdAt.toISOString()}>
-          ${formatDate(expense.createdAt, timeZone)}
+          ${formatDate(expense.createdAt)}
         </time>
       </div>
       <div class="expense-actions">
@@ -682,19 +640,19 @@ function formatAmount(amount: number): string {
   }).format(amount)
 }
 
-function formatDate(date: Date, timeZone: string): string {
+function formatDate(date: Date): string {
   // the same timezone the periods are calculated in, so that an expense never looks as if it
   // belongs to a different day than the one it was counted in
   return new Intl.DateTimeFormat(currentLanguage(), {
     day: 'numeric',
     month: 'short',
-    timeZone,
+    timeZone: currentTimeZone(),
   }).format(date)
 }
 
-function formatDiscussionDate(date: Date, timeZone: string): string {
+function formatDiscussionDate(date: Date): string {
   return new Intl.DateTimeFormat(currentLanguage(), {
-    timeZone,
+    timeZone: currentTimeZone(),
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -708,7 +666,6 @@ function renderGraphsMonth(
   dailyTotals: number[],
   daysInMonth: number,
   weekendDays: boolean[],
-  query: string,
 ): string {
   const t = translator('expenses')
 
@@ -730,6 +687,5 @@ function renderGraphsMonth(
         </section>
       </div>
     ` as string,
-    query,
   )
 }
