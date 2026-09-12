@@ -717,16 +717,16 @@ function renderGraphsMonth(
     html`
       <div id="expense-graphs">
         <section class="expense-graph-section">
+          <h3>${t('graph.dailyTitle')}</h3>
+          ${renderDailyGraph(dailyTotals, daysInMonth, weekendDays)}
+        </section>
+        <section class="expense-graph-section">
           <h3>${t('graph.categoryTitle')}</h3>
           ${renderCategoryGraph(categoryTotals)}
         </section>
         <section class="expense-graph-section">
           <h3>${t('graph.typeTitle')}</h3>
           ${renderExpenseTypeGraph(expenseTypeTotals)}
-        </section>
-        <section class="expense-graph-section">
-          <h3>${t('graph.dailyTitle')}</h3>
-          ${renderDailyGraph(dailyTotals, daysInMonth, weekendDays)}
         </section>
       </div>
     ` as string,

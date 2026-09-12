@@ -185,6 +185,12 @@ test('graphs expense types without their filter and every day with a monthly ave
 
   await page.goto(new URL('/expenses/graphs?expenseType=day-to-day&day=2024-02-15', url()).href)
 
+  await expect(expenses.graphs().locator.getByRole('heading', {level: 3})).toHaveText([
+    'By day',
+    'By category',
+    'By expense type',
+  ])
+
   const typeConfiguration = JSON.parse(
     (await expenses.expenseTypeGraph().canvas().locator.getAttribute('data-chart-configuration'))!,
   )
