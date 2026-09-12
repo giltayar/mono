@@ -242,3 +242,11 @@ export function dateStringToTimestamp(dateString: string, timeZone: string): Dat
   const zoned = plain.toZonedDateTime(timeZone)
   return toDate(zoned)
 }
+
+/** Moves a date into another date's month, constraining its day when that month is shorter. */
+export function dateInMonth(date: Date, targetMonth: Date, timeZone: string): Date {
+  const source = toPlainDate(date, timeZone)
+  const target = toPlainDate(targetMonth, timeZone).with({day: source.day})
+
+  return toDate(target.toZonedDateTime(timeZone))
+}

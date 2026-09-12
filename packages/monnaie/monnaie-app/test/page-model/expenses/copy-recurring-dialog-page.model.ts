@@ -13,7 +13,6 @@ export function createCopyRecurringDialogPageModel(page: Page) {
         .filter({hasText: description})
         .getByRole('checkbox'),
     }),
-    date: () => ({locator: dialog.getByLabel('Date')}),
     copyButton: () => ({locator: dialog.getByRole('button', {name: 'Copy', exact: true})}),
     cancelButton: () => ({locator: dialog.getByRole('button', {name: 'Cancel'})}),
   }

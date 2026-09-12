@@ -1,7 +1,7 @@
 import type {ExpressionBuilder} from 'kysely'
 import type {Database, Db} from '../../commons/db.ts'
 import {EXPENSE_CATEGORIES, isKnownCategoryId} from './categories.ts'
-import type {PeriodName, PeriodRange, PeriodRanges} from './periods.ts'
+import {dateInMonth, type PeriodName, type PeriodRange, type PeriodRanges} from './periods.ts'
 
 /** Translated by the view layer, so that the model has no display text in it */
 export type ExpenseError =
@@ -212,7 +212,8 @@ export async function copyRecurringExpenses(
   userId: string,
   sourceRange: PeriodRange,
   expenseIds: number[],
-  createdAt: Date,
+  targetMonth: Date,
+  timeZone: string,
 ): Promise<void> {
   if (expenseIds.length === 0) {
     return
@@ -220,7 +221,7 @@ export async function copyRecurringExpenses(
 
   const expenses = await db
     .selectFrom('expense')
-    .select(['description', 'amount', 'category_id'])
+    .select(['description', 'amount', 'category_id', 'created_at'])
     .where('user_id', '=', userId)
     .where('expense_type', '=', 'recurring')
     .where('created_at', '>=', sourceRange.from)
@@ -241,7 +242,7 @@ export async function copyRecurringExpenses(
         amount: Number(expense.amount),
         category_id: expense.category_id,
         expense_type: 'recurring' as const,
-        created_at: createdAt.toISOString(),
+        created_at: dateInMonth(expense.created_at, targetMonth, timeZone).toISOString(),
       })),
     )
     .execute()

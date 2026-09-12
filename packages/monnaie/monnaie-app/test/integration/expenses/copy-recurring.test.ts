@@ -11,15 +11,15 @@ test.beforeEach(async ({page}) => {
 })
 
 test('loads the dialog on demand and copies selected recurring expenses', async ({page}) => {
-  const previousMonth = monthDate(-1, 15)
-  await seedExpense(FIRST_USER.uid, 'Coffee subscription', 'recurring', previousMonth)
+  const previousMonth = monthDate(-1, 15, 12)
+  await seedExpense(FIRST_USER.uid, 'Coffee subscription', 'recurring', monthDate(-1, 7, 12))
   await seedExpense(FIRST_USER.uid, 'Rent', 'recurring', previousMonth)
   const ordinaryId = await seedExpense(FIRST_USER.uid, 'Groceries', 'day-to-day', previousMonth)
   const tooOldId = await seedExpense(
     FIRST_USER.uid,
     'Old subscription',
     'recurring',
-    monthDate(-2, 15),
+    monthDate(-2, 15, 12),
   )
   const otherUserId = await seedExpense(
     SECOND_USER.uid,
@@ -45,7 +45,7 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
   await expect(dialog.expenses().locator).toHaveCount(2)
   await expect(dialog.expense('Coffee subscription').locator).not.toBeChecked()
   await expect(dialog.expense('Rent').locator).not.toBeChecked()
-  await expect(dialog.date().locator).toHaveValue(today())
+  await expect(dialog.locator.getByRole('textbox')).toHaveCount(0)
 
   await dialog.selectAll().locator.check()
 
@@ -63,9 +63,6 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
 
   await expenses.copyRecurringButton().locator.click()
   await dialog.expense('Coffee subscription').locator.check()
-
-  const targetDate = monthDate(0, 2).toISOString().slice(0, 10)
-  await dialog.date().locator.fill(targetDate)
 
   // create malicious hidden inputs for expense IDs, and verify that they don't
   // break anything
@@ -100,7 +97,7 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
     .selectFrom('expense')
     .select(['description', 'amount', 'category_id', 'expense_type', 'created_at'])
     .where('user_id', '=', FIRST_USER.uid)
-    .where('created_at', '=', new Date(`${targetDate}T00:00:00.000Z`))
+    .where('created_at', '=', monthDate(0, 7, 0))
     .execute()
 
   expect(copied).toEqual([
@@ -109,7 +106,7 @@ test('loads the dialog on demand and copies selected recurring expenses', async 
       amount: '12.50',
       category_id: 1,
       expense_type: 'recurring',
-      created_at: new Date(`${targetDate}T00:00:00.000Z`),
+      created_at: monthDate(0, 7, 0),
     },
   ])
 })
@@ -136,12 +133,8 @@ async function seedExpense(
   return expense.id
 }
 
-function monthDate(monthOffset: number, day: number): Date {
+function monthDate(monthOffset: number, day: number, hour: number): Date {
   const now = new Date()
 
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, day, 12))
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, day, hour))
 }

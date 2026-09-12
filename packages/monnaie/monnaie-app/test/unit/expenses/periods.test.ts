@@ -1,6 +1,7 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  dateInMonth,
   monthDateStrings,
   monthWeekendDays,
   periodDayCounts,
@@ -9,6 +10,28 @@ import {
   periodStartDate,
   previousPeriodName,
 } from '../../../src/domain/expenses/periods.ts'
+
+describe('dateInMonth', () => {
+  it('should preserve the local day in the target month', () => {
+    const date = dateInMonth(
+      new Date('2026-08-12T21:00:00Z'),
+      new Date('2026-09-15T12:00:00Z'),
+      'Asia/Jerusalem',
+    )
+
+    assert.strictEqual(date.toISOString(), '2026-09-12T21:00:00.000Z')
+  })
+
+  it('should clamp the day to the end of a shorter target month', () => {
+    const date = dateInMonth(
+      new Date('2025-01-31T12:00:00Z'),
+      new Date('2025-02-15T12:00:00Z'),
+      'UTC',
+    )
+
+    assert.strictEqual(date.toISOString(), '2025-02-28T00:00:00.000Z')
+  })
+})
 
 describe('monthDateStrings', () => {
   it('should return every day of the selected month, including a leap day', () => {

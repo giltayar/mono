@@ -56,7 +56,6 @@ const CopyRecurringBodySchema = z.object({
     .union([z.string(), z.array(z.string())])
     .default([])
     .transform((expenseId) => (Array.isArray(expenseId) ? expenseId : [expenseId])),
-  date: z.iso.date(),
 })
 
 const ExpenseParamsSchema = z.object({id: z.coerce.number().int()})
@@ -143,7 +142,6 @@ export default function expensesRoutes(
           authenticatedUser().uid,
           timeZone,
           parseExpenseIds(request.body.expenseId),
-          request.body.date,
         ),
       ),
   )

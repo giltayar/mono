@@ -3,7 +3,7 @@ import {currentLanguage, translator} from '../../../commons/i18n.ts'
 import {categoryById} from '../categories.ts'
 import type {Expense} from '../model.ts'
 
-export function renderCopyRecurringDialog(expenses: Expense[], date: string): string {
+export function renderCopyRecurringDialog(expenses: Expense[]): string {
   const t = translator('expenses')
 
   return html`
@@ -43,8 +43,6 @@ export function renderCopyRecurringDialog(expenses: Expense[], date: string): st
                 </fieldset>
               `
         }
-        <label for="copy-recurring-date">${t('copyRecurring.date')}</label>
-        <input id="copy-recurring-date" type="date" name="date" value=${date} required />
         <div class="copy-recurring-actions">
           <button type="submit">${t('copyRecurring.copy')}</button>
           <button

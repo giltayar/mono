@@ -186,7 +186,7 @@ export async function showCopyRecurringDialog(
     {categoryIds: [], expenseTypes: ['recurring'], title: ''},
   )
 
-  return {html: renderCopyRecurringDialog(expenses, timestampToDateString(now, timeZone))}
+  return {html: renderCopyRecurringDialog(expenses)}
 }
 
 export async function copyRecurring(
@@ -194,7 +194,6 @@ export async function copyRecurring(
   userId: string,
   timeZone: string,
   expenseIds: number[],
-  date: string,
 ): Promise<ControllerResult> {
   const now = new Date()
 
@@ -203,7 +202,8 @@ export async function copyRecurring(
     userId,
     periodRanges(now, timeZone).previousMonth,
     expenseIds,
-    dateStringToTimestamp(date, timeZone),
+    now,
+    timeZone,
   )
 
   return redirectToExpenses()
