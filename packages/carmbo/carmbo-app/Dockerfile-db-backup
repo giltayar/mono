@@ -9,7 +9,7 @@ RUN curl https://cli.sentry.dev/install -fsS | bash
 COPY <<'EOF' /usr/local/bin/db-backup
 #!/bin/bash
 # Needs the SENTRY_DSN environment variable to be set
-eval "$(sentry-cli bash-hook)"
+eval "$(sentry bash-hook)"
 
 pg_dump "$DB_CONNECTION_STRING" > "$DB_BACKUP_FILE"
 EOF
