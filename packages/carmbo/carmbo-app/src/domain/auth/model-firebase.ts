@@ -1,16 +1,19 @@
 import {makeError} from '@giltayar/functional-commons'
 import {initializeApp, cert, type App} from 'firebase-admin/app'
 import {getAuth, type Auth} from 'firebase-admin/auth'
+import {createSessionCookieVerifier, type SessionCookieVerifier} from './session-cookie-verifier.ts'
 
 const SESSION_COOKIE_EXPIRES_IN = 14 * 24 * 60 * 60 * 1000 // 14 days in ms
 
 let firebaseApp: App
 let firebaseAuth: Auth
+let sessionCookieVerifier: SessionCookieVerifier
 
-export function initializeFirebase(serviceAccountJson: string) {
+export function initializeFirebase(serviceAccountJson: string): void {
   const serviceAccount = JSON.parse(serviceAccountJson)
   firebaseApp = initializeApp({credential: cert(serviceAccount)})
   firebaseAuth = getAuth(firebaseApp)
+  sessionCookieVerifier = createSessionCookieVerifier(firebaseAuth)
 }
 
 export async function signInWithEmailPassword(
@@ -45,14 +48,10 @@ export async function createSessionCookie(idToken: string): Promise<string> {
 export async function verifySessionCookie(
   sessionCookie: string,
 ): Promise<{uid: string; email?: string} | undefined> {
-  try {
-    const decoded = await firebaseAuth.verifySessionCookie(sessionCookie, true)
-    return {uid: decoded.uid, email: decoded.email}
-  } catch {
-    return undefined
-  }
+  return sessionCookieVerifier.verify(sessionCookie)
 }
 
 export async function revokeRefreshTokens(uid: string): Promise<void> {
   await firebaseAuth.revokeRefreshTokens(uid)
+  sessionCookieVerifier.invalidate(uid)
 }
