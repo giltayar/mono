@@ -6,12 +6,19 @@ RUN apt update -y && apt upgrade -y
 RUN apt install curl postgresql-client -y
 RUN curl https://cli.sentry.dev/install -fsS | bash
 
+ENV PATH="/root/.local/bin:${PATH}"
+
 COPY <<'EOF' /usr/local/bin/db-backup
 #!/bin/bash
-# Needs the SENTRY_DSN environment variable to be set
+set -e
+
+: "${SENTRY_DSN:?SENTRY_DSN must be set}"
+: "${DB_CONNECTION_STRING:?DB_CONNECTION_STRING must be set}"
+: "${DB_BACKUP_FILE:?DB_BACKUP_FILE must be set}"
+
 eval "$(sentry bash-hook)"
 
-pg_dump "$DB_CONNECTION_STRING" > "$DB_BACKUP_FILE"
+p popg_dump "$DB_CONNECTION_STRING" > "$DB_BACKUP_FILE"
 EOF
 
 RUN chmod +x /usr/local/bin/db-backup
