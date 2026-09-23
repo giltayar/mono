@@ -1,4 +1,4 @@
-FROM node:26.2-slim
+FROM node:26.9-slim
 
 # Update system packages to patch vulnerabilities
 RUN apt update -y && apt upgrade -y
@@ -17,7 +17,7 @@ RUN pwd #
 # install dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=secret,id=npmrc,target=.npmrc pnpm install --frozen-lockfile --prod
-RUN pnpm cache clean
+RUN pnpm store prune && pnpm cache delete
 
 # Copy application files
 COPY . .
@@ -26,4 +26,4 @@ COPY dist ./
 # Run the job
 ENV NODE_ENV=production
 
-CMD ["node", "./src/app/index.ts"]
+CMD ["node", "--import", "./src/app/sentry-instrument.ts", "./src/app/index.ts"]

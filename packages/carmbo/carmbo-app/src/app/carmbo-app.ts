@@ -1,3 +1,4 @@
+import {setupFastifyErrorHandler} from '@sentry/node'
 import fastify, {type FastifyBaseLogger} from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
@@ -129,6 +130,7 @@ export function makeApp({
         ...postgresJsOptions,
       })
   initializeJobExecutor(sql, app.log)
+  setupFastifyErrorHandler(app)
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
   app.setValidatorCompiler(validatorCompiler)
@@ -225,6 +227,10 @@ export function makeApp({
   })
 
   app.get('/health', async () => ({status: 'ok', version}))
+  app.get('/bad-health', async (request) => {
+    request.log.info('bad-health-endpoint')
+    throw new Error('bad health')
+  })
 
   return {app, sql}
 }
