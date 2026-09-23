@@ -41,7 +41,8 @@
     "ztest:playwright-e2e": "NODE_ENV=test playwright test --config=test/e2e",
     "test:node": "node $INSPECT_APP $TEST_ONLY --test-force-exit --test 'test/unit/**/**.test.ts'",
     "postpublish": "run-p 'postpublish:*'",
-    "postpublish:docker": "docker push giltayar/carmbo-app:$npm_package_version"
+    "postpublish:docker": "docker push giltayar/carmbo-app:$npm_package_version",
+    "backup:browse": "railway volume browse --volume carmbo-app-db-backup-volume /"
   },
   "keywords": [
     "javascript",
