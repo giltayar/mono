@@ -20,6 +20,16 @@ export function renderSettingsPage(user: AuthenticatedUser): string {
           <h2>${t('language.heading')}</h2>
           <${LanguageSwitcher} />
         </section>
+        <section id="install-app" class="install-app" hidden>
+          <div class="install-copy">
+            <h2>${t('install.heading')}</h2>
+            <p id="install-ios-instructions" hidden>${t('install.iosInstructions')}</p>
+          </div>
+          <button id="install-app-button" type="button" hidden>
+            <span aria-hidden="true">⇩</span>
+            ${t('install.action')}
+          </button>
+        </section>
         <form method="post" action="/logout">
           <button type="submit">${t('account.logOut')}</button>
         </form>

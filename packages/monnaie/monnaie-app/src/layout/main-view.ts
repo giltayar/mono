@@ -47,10 +47,20 @@ export function MainLayout({
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta name="color-scheme" content="light" />
+          <meta name="theme-color" content="#19724c" />
+          <meta name="description" content="A mobile-first web app that tracks expenses" />
+          <meta name="application-name" content="Monnaie" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="apple-mobile-web-app-title" content="Monnaie" />
           <meta name="htmx-config" content=${HTMX_CONFIG} />
+          <link rel="manifest" href=${`/src/${version}/pwa/manifest.webmanifest`} />
+          <link rel="icon" href=${`/src/${version}/pwa/icons/icon.svg`} type="image/svg+xml" />
+          <link rel="apple-touch-icon" href=${`/src/${version}/pwa/icons/apple-touch-icon.png`} />
           <link rel="stylesheet" href=${`/src/${version}/layout/style/style.css`} />
           ${styleSheet && html`<link rel="stylesheet" href=${`/src/${version}/${styleSheet}`} />`}
           <script src=${`/dist/${version}/htmx.min.js`}></script>
+          <script type="module" src=${`/src/${version}/layout/client/pwa-install.js`}></script>
           ${script && html`<script type="module" src=${`/src/${version}/${script}`}></script>`}
           <title>${title}</title>
         </head>

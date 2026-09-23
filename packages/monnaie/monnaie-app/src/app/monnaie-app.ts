@@ -88,7 +88,13 @@ export async function makeApp({
     prefix: `/src/${version}/`,
     decorateReply: false,
     ...staticCache,
-    allowedPath: (pathName) => pathName.endsWith('.css') || pathName.endsWith('.js'),
+    allowedPath: (pathName) =>
+      pathName.endsWith('.css') ||
+      pathName.endsWith('.js') ||
+      (pathName.startsWith('/pwa/') &&
+        (pathName.endsWith('.webmanifest') ||
+          pathName.endsWith('.png') ||
+          pathName.endsWith('.svg'))),
   })
 
   app.get('/health', async () => ({status: 'ok', version}))

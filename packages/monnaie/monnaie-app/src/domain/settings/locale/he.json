@@ -5,6 +5,11 @@
   "language": {
     "heading": "שפה"
   },
+  "install": {
+    "heading": "התקנת Monnaie",
+    "action": "התקנת היישום",
+    "iosInstructions": "יש לפתוח את תפריט השיתוף ולבחור באפשרות הוספה למסך הבית."
+  },
   "account": {
     "noEmail": "אין כתובת דוא״ל",
     "logOut": "יציאה"

@@ -5,6 +5,11 @@
   "language": {
     "heading": "Language"
   },
+  "install": {
+    "heading": "Install Monnaie",
+    "action": "Install app",
+    "iosInstructions": "Open Share, then choose Add to Home Screen."
+  },
   "account": {
     "noEmail": "No email address",
     "logOut": "Log out"
