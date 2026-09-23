@@ -18,6 +18,7 @@ import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import smooveRoutes from '../domain/smoove/route.ts'
 import whatsappRoutes from '../domain/whatsapp/route.ts'
 import academyRoutes from '../domain/academy/route.ts'
+import backupRoutes from '../domain/backup/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {fastifyRequestContext} from '@fastify/request-context'
@@ -55,7 +56,7 @@ declare module '@fastify/request-context' {
 }
 
 export function makeApp({
-  db: {connectionString, database, host, port, username, password},
+  db: {connectionString, database, host, port, username, password, backupFile},
   services: {
     academyIntegration,
     academyAccountSubdomains,
@@ -78,6 +79,7 @@ export function makeApp({
     port: number
     username: string
     password: string
+    backupFile: string | undefined
   }
   services: {
     cardcomIntegration: CardcomIntegrationService
@@ -220,6 +222,13 @@ export function makeApp({
   app.register(jobsApiRoute, {
     prefix: '/api/jobs',
     secret: apiSecret,
+  })
+
+  app.register(backupRoutes, {
+    prefix: '/backup',
+    secret: apiSecret,
+    connectionString,
+    backupFile,
   })
 
   app.register(salesLandingPageApiRoute, {

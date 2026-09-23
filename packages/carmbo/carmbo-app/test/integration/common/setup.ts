@@ -37,6 +37,10 @@ export function setup(
     withAcademyIntegration?: boolean // default is true
     withSmooveIntegration?: boolean // default is true
     withSkoolIntegration?: boolean // default is true
+    databaseBackup?: {
+      backupFile: string
+      apiSecret: string
+    }
   },
 ): {
   url: () => URL
@@ -167,14 +171,17 @@ export function setup(
         },
       },
     })
+    const databaseConnectionString = `postgres://user:password@${host}/${databaseName}`
+
     ;({app, sql} = makeApp({
       db: {
-        connectionString: undefined,
+        connectionString: options?.databaseBackup ? databaseConnectionString : undefined,
         database: databaseName,
         host: host.split(':')[0],
         port: parseInt(host.split(':')[1]),
         username: 'user',
         password: 'password',
+        backupFile: options?.databaseBackup?.backupFile,
       },
       services: {
         academyIntegration: when(withAcademyIntegration, () => academyIntegration),
@@ -188,7 +195,7 @@ export function setup(
         nowService: () => (overridingDate ? overridingDate : new Date()),
       },
       firebase: undefined,
-      apiSecret: undefined,
+      apiSecret: options?.databaseBackup?.apiSecret,
       appBaseUrl: 'http://localhost:????',
       uiConfiguration: 'carmel',
       TEST_hooks,

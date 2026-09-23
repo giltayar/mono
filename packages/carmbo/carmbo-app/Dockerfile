@@ -3,9 +3,13 @@ FROM node:26.9-slim
 # Update system packages to patch vulnerabilities
 RUN apt update -y && apt upgrade -y
 
-# Add Tini
-RUN apt install tini -y
+# Add runtime tools
+RUN apt install curl postgresql-client tini -y
 ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Install Sentry CLI
+RUN curl https://cli.sentry.dev/install -fsS | bash
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -13,6 +17,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 RUN pwd #
+RUN mkdir -p /db-backup
 
 # install dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

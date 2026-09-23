@@ -13,6 +13,7 @@ import {createSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integr
 
 export const EnvironmentVariablesSchema = z.object({
   DB_CONNECTION_STRING: z.string().optional(),
+  DB_BACKUP_FILE: z.string().default('/db-backup/db-backup.sql'),
   DB_DATABASE: z.string().default('carmbo'),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.coerce.number().default(5432),
@@ -74,6 +75,7 @@ const {app, sql} = await makeApp({
     port: env.DB_PORT,
     username: env.DB_USERNAME,
     password: env.DB_PASSWORD,
+    backupFile: env.DB_BACKUP_FILE,
   },
   services: {
     academyIntegration: when(env.ACADEMY_ACCOUNTS_APIKEYS, (accounts) =>

@@ -18,6 +18,7 @@ const {app, sql} = await makeApp({
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
     username: 'user',
     password: 'password',
+    backupFile: process.env.DB_BACKUP_FILE,
   },
   services: {
     academyIntegration: when(process.env.ACADEMY_ACCOUNTS_APIKEYS, () =>

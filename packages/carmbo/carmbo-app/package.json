@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "9.24.2",
+  "version": "9.25.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -34,7 +34,6 @@
     "build:dockerignore": "cp .gitignore .dockerignore && sed -i '' '/dist/d' '.dockerignore'",
     "postbuild": "run-p 'postbuild:*'",
     "postbuild:docker": "docker build --platform linux/amd64 -t giltayar/carmbo-app:$npm_package_version . --secret id=npmrc,src=$HOME/.npmrc",
-    "postbuild:docker-db-backup": "docker build --platform linux/amd64 -t giltayar/carmbo-app-db-backup:$npm_package_version --file Dockerfile-db-backup .",
     "test": "FORCE_COLOR=1 run-p 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsgo",
@@ -42,8 +41,7 @@
     "ztest:playwright-e2e": "NODE_ENV=test playwright test --config=test/e2e",
     "test:node": "node $INSPECT_APP $TEST_ONLY --test-force-exit --test 'test/unit/**/**.test.ts'",
     "postpublish": "run-p 'postpublish:*'",
-    "postpublish:docker": "docker push giltayar/carmbo-app:$npm_package_version",
-    "postpublish:docker-db-backup": "docker push giltayar/carmbo-app-db-backup:$npm_package_version"
+    "postpublish:docker": "docker push giltayar/carmbo-app:$npm_package_version"
   },
   "keywords": [
     "javascript",
@@ -89,6 +87,7 @@
     "p-retry": "^8.0.1",
     "postgres": "3.4.7",
     "qs": "^6.16.0",
+    "tinyexec": "^1.3.1",
     "vhtml": "^2.2.0",
     "yargs": "^18.2.0",
     "zod": "^4.6.5"
