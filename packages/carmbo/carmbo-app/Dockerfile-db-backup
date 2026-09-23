@@ -1,0 +1,19 @@
+FROM ubuntu:latest
+
+# Update system packages to patch vulnerabilities
+RUN apt update -y && apt upgrade -y
+
+RUN apt install curl postgresql-client -y
+RUN curl https://cli.sentry.dev/install -fsS | bash
+
+COPY <<'EOF' /usr/local/bin/db-backup
+#!/bin/bash
+# Needs the SENTRY_DSN environment variable to be set
+eval "$(sentry-cli bash-hook)"
+
+pg_dump "$DB_CONNECTION_STRING" > "$DB_BACKUP_FILE"
+EOF
+
+RUN chmod +x /usr/local/bin/db-backup
+
+CMD ["/usr/local/bin/db-backup"]
