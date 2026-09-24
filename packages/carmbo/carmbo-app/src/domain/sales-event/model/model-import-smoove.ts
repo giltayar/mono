@@ -1,4 +1,5 @@
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {SmooveContactInList} from '@giltayar/carmel-tools-smoove-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql, TransactionSql} from 'postgres'
@@ -42,6 +43,7 @@ let submitImportSingleContactJob: JobSubmitter<ImportSingeContactFromSmooveListJ
 
 export async function initialzeImportSmooveJobHandlers(
   smooveIntegration: SmooveIntegrationService,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   academyIntegration: AcademyIntegrationService,
   whatsappIntegration: WhatsAppIntegrationService,
   sql: Sql,
@@ -78,6 +80,7 @@ export async function initialzeImportSmooveJobHandlers(
         sql,
         academyIntegration,
         smooveIntegration,
+        ravmesserIntegration,
         whatsappIntegration,
         logger.child({jobId, contactEmail: payload.contact.email}),
       )
@@ -175,6 +178,7 @@ async function importSingleContact(
   sql: Sql,
   academyIntegration: AcademyIntegrationService,
   smooveIntegration: SmooveIntegrationService,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   logger: FastifyBaseLogger,
 ): Promise<{description: string} | void> {
@@ -230,6 +234,7 @@ async function importSingleContact(
       {studentNumber: finalStudent.studentNumber, saleNumber},
       academyIntegration,
       smooveIntegration,
+      ravmesserIntegration,
       txSql,
       logger,
     )

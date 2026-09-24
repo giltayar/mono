@@ -1,14 +1,17 @@
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import {makeError, when} from '@giltayar/functional-commons'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import {
   subscribeStudentInSmooveLists,
+  subscribeStudentInRavmesserLists,
   connectStudentWithAcademyCourses,
   disconnectStudentFromAcademyCourses,
   moveStudentToSmooveRemovedSubscriptionList,
+  moveStudentToRavmesserRemovedSubscriptionList,
   removeStudentFromWhatsAppGroups,
 } from './model-external-providers.ts'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
@@ -34,6 +37,7 @@ export let submitSkoolInvitationJob: JobSubmitter<SaleConnectionToStudent>
 export async function initializeJobHandlers(
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   skoolIntegration: SkoolIntegrationService | undefined,
   sql: Sql,
@@ -46,7 +50,14 @@ export async function initializeJobHandlers(
     (payload) => `Connected cardcom sale ${payload.saleNumber} to external providers`,
     async ({payload}, _attempt, logger) => {
       await sql.begin((sql) =>
-        connectSaleToExternalProviders(payload, academyIntegration, smooveIntegration, sql, logger),
+        connectSaleToExternalProviders(
+          payload,
+          academyIntegration,
+          smooveIntegration,
+          ravmesserIntegration,
+          sql,
+          logger,
+        ),
       )
     },
   )
@@ -156,6 +167,7 @@ export async function disconnectSale(
   {saleNumber, reason}: DisconnectSalePayload,
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   now: Date,
   sql: Sql,
@@ -199,13 +211,31 @@ export async function disconnectSale(
       logger,
     ),
   )
+  const ravmesserConnectionP = when(ravmesserIntegration, (ravmesserIntegration) =>
+    moveStudentToRavmesserRemovedSubscriptionList(
+      student.studentNumber,
+      saleNumber,
+      ravmesserIntegration,
+      sql,
+      logger,
+    ),
+  )
 
   const whatsappConnectionP = when(student.phone, (phone) =>
     removeStudentFromWhatsAppGroups(student.studentNumber, phone, whatsappIntegration, sql, logger),
   )
 
-  const [academyConnectionResult, smooveConnectionResult, whatsappConnectionResult] =
-    await Promise.allSettled([academyConnectionP, smooveConnectionP, whatsappConnectionP])
+  const [
+    academyConnectionResult,
+    smooveConnectionResult,
+    ravmesserConnectionResult,
+    whatsappConnectionResult,
+  ] = await Promise.allSettled([
+    academyConnectionP,
+    smooveConnectionP,
+    ravmesserConnectionP,
+    whatsappConnectionP,
+  ])
 
   if (academyIntegration) {
     if (academyConnectionResult.status === 'rejected') {
@@ -226,6 +256,17 @@ export async function disconnectSale(
       )
     } else {
       logger.info('unsubscribing-student-from-smoove-lists-succeeded')
+    }
+  }
+
+  if (ravmesserIntegration) {
+    if (ravmesserConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: ravmesserConnectionResult.reason},
+        'unsubscribing-student-from-ravmesser-lists-failed',
+      )
+    } else {
+      logger.info('unsubscribing-student-from-ravmesser-lists-succeeded')
     }
   }
 
@@ -477,6 +518,7 @@ export async function connectSaleToExternalProviders(
   {studentNumber, saleNumber}: SaleConnectionToStudent,
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   sql: Sql,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -526,11 +568,12 @@ export async function connectSaleToExternalProviders(
   const smooveConnectionP = when(smooveIntegration, (smooveIntegration) =>
     subscribeStudentInSmooveLists(studentNumber, saleNumber, smooveIntegration, sql, logger),
   )
+  const ravmesserConnectionP = when(ravmesserIntegration, (ravmesserIntegration) =>
+    subscribeStudentInRavmesserLists(studentNumber, saleNumber, ravmesserIntegration, sql, logger),
+  )
 
-  const [academyConnectionResult, smooveConnectionResult] = await Promise.allSettled([
-    academyConnectionP,
-    smooveConnectionP,
-  ])
+  const [academyConnectionResult, smooveConnectionResult, ravmesserConnectionResult] =
+    await Promise.allSettled([academyConnectionP, smooveConnectionP, ravmesserConnectionP])
 
   if (academyConnectionResult) {
     if (academyConnectionResult.status === 'rejected') {
@@ -554,9 +597,21 @@ export async function connectSaleToExternalProviders(
     }
   }
 
+  if (ravmesserConnectionResult) {
+    if (ravmesserConnectionResult.status === 'rejected') {
+      logger.error(
+        {err: ravmesserConnectionResult.reason},
+        'subscribing-student-to-ravmesser-lists-failed',
+      )
+    } else {
+      logger.info('subscribing-student-to-ravmesser-lists-succeeded')
+    }
+  }
+
   if (
     academyConnectionResult.status === 'rejected' ||
-    smooveConnectionResult.status === 'rejected'
+    smooveConnectionResult.status === 'rejected' ||
+    ravmesserConnectionResult.status === 'rejected'
   ) {
     throw new Error('Connecting sale to external providers failed')
   }

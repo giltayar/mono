@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "9.25.0",
+  "version": "10.0.0",
   "description": "",
   "type": "module",
   "exports": {
@@ -63,6 +63,7 @@
     "@fastify/static": "^10.1.4",
     "@giltayar/carmel-tools-academy-integration": "^6.0.0",
     "@giltayar/carmel-tools-cardcom-integration": "^9.1.0",
+    "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
     "@giltayar/carmel-tools-skool-integration": "^1.1.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.3.1",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",

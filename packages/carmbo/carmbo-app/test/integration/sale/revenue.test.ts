@@ -8,7 +8,9 @@ import {createStudent} from '../../../src/domain/student/model.ts'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 import {cardcomWebhookUrl, cardcomRecurringPaymentWebhookUrl} from './common/cardcom-webhook.ts'
 
-const {url, sql, setTime, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, setTime, smooveIntegration, ravmesserIntegration, cardcomIntegration} = setup(
+  import.meta.url,
+)
 
 test.use({viewport: {width: 1024, height: 1024}})
 
@@ -36,6 +38,7 @@ async function createTestData() {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     now,
     sql(),
   )
@@ -49,6 +52,7 @@ async function createTestData() {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     now,
     sql(),
   )

@@ -3,6 +3,7 @@ import {createNewStudentPageModel} from '../../page-model/students/new-student-p
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
 import {setup} from '../common/setup.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
 const {url, academyIntegration} = setup(import.meta.url)
 
@@ -161,7 +162,7 @@ test('magic links will not appear for emails that have no enrolled courses', asy
   await newForm.phones().phoneInput(0).locator.fill('0541234567')
   await newForm.facebookNames().trashButton(0).locator.click()
 
-  await newForm.createButton().locator.click()
+  await waitForHtmx(page, newForm.createButton().locator.click())
   await page.waitForURL(updateStudentModel.urlRegex)
 
   // Update the student: replace the old email with two new enrolled emails

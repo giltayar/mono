@@ -25,11 +25,10 @@ test('create product then update it', async ({page}) => {
   const newForm = newProductModel.form()
   await newForm.nameInput().locator.fill('Test Product')
   await newForm.productTypeSelect().locator.selectOption('recorded')
+  await waitForHtmx(page, newForm.mailingListProviderSelect().locator.selectOption('smoove'))
 
   // Add and fill array fields
-  await waitForHtmx(page, async () => {
-    await newForm.academyCourses().addButton().locator.click()
-  })
+  await waitForHtmx(page, newForm.academyCourses().addButton().locator.click())
   await waitForHtmx(page, async () => {
     await newForm.academyCourses().academyCourseInput(0).locator.fill('1')
     await newForm.academyCourses().academyCourseInput(0).locator.blur()
@@ -135,6 +134,7 @@ test('create product then update it', async ({page}) => {
   // Save the product and verify data
 
   await updateForm.updateButton().locator.click()
+  await expect(updateProductModel.history().items().locator).toHaveCount(2)
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('club')
   await expect(updateForm.academyCourses().academyCourseInput(0).locator).toHaveValue(
@@ -183,12 +183,14 @@ test('discard button', async ({page}) => {
   const newForm = newProductModel.form()
   await newForm.nameInput().locator.fill('Test Product')
   await newForm.productTypeSelect().locator.selectOption('club')
+  await waitForHtmx(page, newForm.mailingListProviderSelect().locator.selectOption('smoove'))
 
   await newForm.discardButton().locator.click()
 
   await expect(newForm.nameInput().locator).toHaveValue('')
   await expect(newForm.productTypeSelect().locator).toHaveValue('recorded')
 
+  await waitForHtmx(page, newForm.mailingListProviderSelect().locator.selectOption('smoove'))
   await newForm.nameInput().locator.fill('Test Product')
   await newForm.productTypeSelect().locator.selectOption('bundle')
   await newForm.smooveListIdInput().locator.fill('2')
@@ -231,8 +233,16 @@ test('optional fields can be empty', async ({page}) => {
 
   await page.waitForURL(newProductModel.urlRegex)
 
+  await waitForHtmx(
+    page,
+    newProductModel.form().mailingListProviderSelect().locator.selectOption('smoove'),
+  )
   await expect(newProductModel.form().smooveListIdInput().locator).toHaveValue('')
 
+  await waitForHtmx(
+    page,
+    newProductModel.form().mailingListProviderSelect().locator.selectOption('smoove'),
+  )
   await newProductModel.form().nameInput().locator.fill('Minimal Product')
   await newProductModel.form().productTypeSelect().locator.selectOption('recorded')
 

@@ -4,6 +4,7 @@ import {createNewStudentPageModel} from '../../page-model/students/new-student-p
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {createViewStudentHistoryPageModel} from '../../page-model/students/view-student-history-page.model copy.ts'
 import {setup} from '../common/setup.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
 const {url} = setup(import.meta.url)
 
@@ -24,8 +25,8 @@ test('can view history', async ({page}) => {
   await newForm.names().lastNameInput(0).locator.fill('Doe')
   await newForm.emails().emailInput(0).locator.fill('1.doe@example.com')
 
-  await newForm.phones().trashButton(0).locator.click()
-  await newForm.facebookNames().trashButton(0).locator.click()
+  await waitForHtmx(page, newForm.phones().trashButton(0).locator.click())
+  await waitForHtmx(page, newForm.facebookNames().trashButton(0).locator.click())
 
   await newForm.createButton().locator.click()
 

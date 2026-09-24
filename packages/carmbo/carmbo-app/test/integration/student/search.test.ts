@@ -4,14 +4,15 @@ import {setup} from '../common/setup.ts'
 import {createStudent, type NewStudent} from '../../../src/domain/student/model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {Sql} from 'postgres'
 
-const {url, sql, smooveIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)
 
 test('searching students', async ({page}) => {
   test.slow()
 
-  const {notableNumbers} = await seedStudents(sql(), smooveIntegration())
+  const {notableNumbers} = await seedStudents(sql(), smooveIntegration(), ravmesserIntegration())
 
   await page.goto(new URL('/students', url()).href)
 
@@ -137,11 +138,19 @@ test('searching students', async ({page}) => {
 async function seedStudents(
   sql: Sql,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
 ): Promise<{notableNumbers: number[]}> {
   const notableNumbers: number[] = []
 
   for (const {student} of NOTABLE_STUDENTS) {
-    const num = await createStudent(student, undefined, smooveIntegration, new Date(), sql)
+    const num = await createStudent(
+      student,
+      undefined,
+      smooveIntegration,
+      ravmesserIntegration,
+      new Date(),
+      sql,
+    )
     notableNumbers.push(num)
   }
 
@@ -156,6 +165,7 @@ async function seedStudents(
       },
       undefined,
       smooveIntegration,
+      ravmesserIntegration,
       new Date(),
       sql,
     )
@@ -172,6 +182,7 @@ async function seedStudents(
       },
       undefined,
       smooveIntegration,
+      ravmesserIntegration,
       new Date(),
       sql,
     )

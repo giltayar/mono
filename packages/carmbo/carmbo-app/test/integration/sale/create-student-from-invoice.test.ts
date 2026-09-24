@@ -6,7 +6,8 @@ import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 
-const {url, sql, smooveIntegration, academyIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, academyIntegration, cardcomIntegration} =
+  setup(import.meta.url)
 
 test('create student from invoice and connect', async ({page}) => {
   const product1Number = await createProduct(
@@ -187,6 +188,7 @@ test('find existing student from invoice and connect', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

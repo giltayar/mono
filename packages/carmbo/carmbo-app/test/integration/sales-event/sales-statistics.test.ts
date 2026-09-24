@@ -9,7 +9,9 @@ import {cardcomWebhookUrl} from '../sale/common/cardcom-webhook.ts'
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
 import {fetchAsText} from '@giltayar/http-commons'
 
-const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, cardcomIntegration} = setup(
+  import.meta.url,
+)
 
 test.use({viewport: {width: 1280, height: 1000}})
 
@@ -25,6 +27,7 @@ test('sales event page shows sales statistics for manual, cardcom, and no-invoic
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

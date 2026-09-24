@@ -96,12 +96,14 @@ export async function showStudentInHistory(
 export async function createStudent(student: NewStudent, sql: Sql): Promise<ControllerResult> {
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')
+    const ravmesserIntegration = requestContext.get('ravmesserIntegration')
     const nowService = requestContext.get('nowService')!
 
     const studentNumber = await model_createStudent(
       student,
       undefined,
       smooveIntegration,
+      ravmesserIntegration,
       nowService(),
       sql,
     )
@@ -118,6 +120,7 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
   const logger = requestContext.get('logger')!
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')
+    const ravmesserIntegration = requestContext.get('ravmesserIntegration')
     const academyIntegration = requestContext.get('academyIntegration')
     const academyAccountSubdomains = requestContext.get('academyAccountSubdomains')
     const nowService = requestContext.get('nowService')!
@@ -126,6 +129,7 @@ export async function updateStudent(student: Student, sql: Sql): Promise<Control
       student,
       undefined,
       smooveIntegration,
+      ravmesserIntegration,
       academyIntegration,
       academyAccountSubdomains,
       nowService(),
@@ -150,6 +154,7 @@ export async function deleteStudent(
 ): Promise<ControllerResult> {
   try {
     const smooveIntegration = requestContext.get('smooveIntegration')
+    const ravmesserIntegration = requestContext.get('ravmesserIntegration')
     const nowService = requestContext.get('nowService')!
 
     const operationId = await model_deleteStudent(
@@ -157,6 +162,7 @@ export async function deleteStudent(
       undefined,
       deleteOperation,
       smooveIntegration,
+      ravmesserIntegration,
       nowService(),
       sql,
     )

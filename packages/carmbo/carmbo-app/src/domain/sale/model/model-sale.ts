@@ -1,4 +1,5 @@
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import {makeError, when} from '@giltayar/functional-commons'
 import type {Sql, TransactionSql} from 'postgres'
 import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
@@ -19,6 +20,7 @@ export async function addCardcomSale(
   cardcomSaleWebhookJson: CardcomSaleWebhookJson,
   now: Date,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   cardcomIntegration: CardcomIntegrationService,
   sql: Sql,
   loggerParent: FastifyBaseLogger,
@@ -60,6 +62,7 @@ export async function addCardcomSale(
         generateStudentInfoFromCardcomSale(cardcomSaleWebhookJson),
         now,
         smooveIntegration,
+        ravmesserIntegration,
         sql,
       ))
     logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
@@ -108,6 +111,7 @@ export async function addFreeSale(
   studentInfo: StudentInfoForASale,
   now: Date,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   sql: Sql,
   loggerParent: FastifyBaseLogger,
 ) {
@@ -139,7 +143,14 @@ export async function addFreeSale(
     }
 
     const finalStudent =
-      student ?? (await createStudentFromStudentInfo(studentInfo, now, smooveIntegration, sql))
+      student ??
+      (await createStudentFromStudentInfo(
+        studentInfo,
+        now,
+        smooveIntegration,
+        ravmesserIntegration,
+        sql,
+      ))
     logger.info({studentId: finalStudent.studentNumber}, 'final-student-determined')
 
     const saleNumber = await createNoInvoiceSale(
@@ -224,6 +235,7 @@ async function createStudentFromStudentInfo(
   studentInfo: StudentInfoForASale,
   now: Date,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   sql: Sql,
 ): Promise<{
   studentNumber: number
@@ -247,6 +259,16 @@ async function createStudentFromStudentInfo(
 
   const result = await when(smooveIntegration, (smooveIntegration) =>
     smooveIntegration.createSmooveContact({
+      email,
+      telephone: phone,
+      firstName: studentInfo.firstName ?? '',
+      lastName: studentInfo.lastName ?? '',
+      birthday: undefined,
+    }),
+  )
+
+  const ravmesserResult = await when(ravmesserIntegration, (ravmesserIntegration) =>
+    ravmesserIntegration.createRavmesserContact({
       email,
       telephone: phone,
       firstName: studentInfo.firstName ?? '',
@@ -290,6 +312,14 @@ async function createStudentFromStudentInfo(
     const {smooveId} = result
 
     ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+  }
+
+  if (typeof ravmesserResult === 'object') {
+    const {ravmesserId} = ravmesserResult
+
+    ops = ops.concat(
+      sql`INSERT INTO student_integration_ravmesser VALUES (${dataId}, ${ravmesserId})`,
+    )
   }
 
   await Promise.all(ops)
@@ -620,6 +650,7 @@ export async function findOrCreateStudentFromInvoice(
   now: Date,
   cardcomIntegration: CardcomIntegrationService,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   sql: Sql,
 ): Promise<StudentInfoFound> {
   const invoiceInfo = await cardcomIntegration.fetchInvoiceInformation(
@@ -650,6 +681,7 @@ export async function findOrCreateStudentFromInvoice(
     },
     now,
     smooveIntegration,
+    ravmesserIntegration,
     sql,
   )
 }

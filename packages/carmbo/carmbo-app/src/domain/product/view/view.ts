@@ -19,6 +19,7 @@ export function renderProductsCreatePage(
     academyAccountSubdomains,
     academyCoursesBySubdomain,
     withSmooveIntegration,
+    withRavmesserIntegration,
     withSkoolIntegration,
   }: {
     banner: Banner | undefined
@@ -26,6 +27,7 @@ export function renderProductsCreatePage(
     academyAccountSubdomains: string[]
     academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
     withSmooveIntegration: boolean
+    withRavmesserIntegration: boolean
     withSkoolIntegration: boolean
   },
 ) {
@@ -34,18 +36,22 @@ export function renderProductsCreatePage(
     : {
         name: '',
         productType: 'recorded',
+        mailingListProvider: 'ravmesser',
         academyCourses: [],
         whatsappGroups: [],
         facebookGroups: [],
         smooveListId: undefined,
         smooveCancelledListId: undefined,
         smooveRemovedListId: undefined,
+        ravmesserListId: undefined,
+        ravmesserCancelledListId: undefined,
+        ravmesserRemovedListId: undefined,
       }
 
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
-        <${ProductCreateView} product=${finalProduct} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} />
+        <${ProductCreateView} product=${finalProduct} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withRavmesserIntegration=${withRavmesserIntegration} withSkoolIntegration=${withSkoolIntegration} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -60,6 +66,7 @@ export function renderProductUpdatePage(
     academyAccountSubdomains,
     academyCoursesBySubdomain,
     withSmooveIntegration,
+    withRavmesserIntegration,
     withSkoolIntegration,
     appBaseUrl,
   }: {
@@ -68,6 +75,7 @@ export function renderProductUpdatePage(
     academyAccountSubdomains: string[]
     academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
     withSmooveIntegration: boolean
+    withRavmesserIntegration: boolean
     withSkoolIntegration: boolean
     appBaseUrl: string
   },
@@ -75,7 +83,7 @@ export function renderProductUpdatePage(
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products" banner=${banner}>
       <${Layout}>
-        <${ProductUpdateView} product=${product} history=${history} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} appBaseUrl=${appBaseUrl} />
+        <${ProductUpdateView} product=${product} history=${history} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withRavmesserIntegration=${withRavmesserIntegration} withSkoolIntegration=${withSkoolIntegration} appBaseUrl=${appBaseUrl} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -89,19 +97,21 @@ export function renderProductViewInHistoryPage(
     academyAccountSubdomains,
     academyCoursesBySubdomain,
     withSmooveIntegration,
+    withRavmesserIntegration,
     withSkoolIntegration,
   }: {
     withAcademyIntegration: boolean
     academyAccountSubdomains: string[]
     academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
     withSmooveIntegration: boolean
+    withRavmesserIntegration: boolean
     withSkoolIntegration: boolean
   },
 ) {
   return html`
     <${MainLayout} title=${t('list.products')} activeNavItem="products">
       <${Layout}>
-        <${ProductHistoryView} product=${product} history=${history} operationId=${product.id} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withSkoolIntegration=${withSkoolIntegration} />
+        <${ProductHistoryView} product=${product} history=${history} operationId=${product.id} withAcademyIntegration=${withAcademyIntegration} academyAccountSubdomains=${academyAccountSubdomains} academyCoursesBySubdomain=${academyCoursesBySubdomain} withSmooveIntegration=${withSmooveIntegration} withRavmesserIntegration=${withRavmesserIntegration} withSkoolIntegration=${withSkoolIntegration} />
       </${Layout}>
     </${MainLayout}>
   `
@@ -116,12 +126,14 @@ export function renderProductFormFields(
     academyAccountSubdomains,
     academyCoursesBySubdomain,
     withSmooveIntegration,
+    withRavmesserIntegration,
     withSkoolIntegration,
   }: {
     withAcademyIntegration: boolean
     academyAccountSubdomains: string[]
     academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
     withSmooveIntegration: boolean
+    withRavmesserIntegration: boolean
     withSkoolIntegration: boolean
   },
 ) {
@@ -133,6 +145,7 @@ export function renderProductFormFields(
       academyAccountSubdomains=${academyAccountSubdomains}
       academyCoursesBySubdomain=${academyCoursesBySubdomain}
       withSmooveIntegration=${withSmooveIntegration}
+      withRavmesserIntegration=${withRavmesserIntegration}
       withSkoolIntegration=${withSkoolIntegration}
     />
   `

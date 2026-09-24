@@ -6,6 +6,10 @@ import type {
   SmooveIntegrationService,
   SmooveList,
 } from '@giltayar/carmel-tools-smoove-integration/service'
+import type {
+  RavmesserIntegrationService,
+  RavmesserList,
+} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
@@ -38,6 +42,16 @@ export type SaleWithProviders = {
           removedListName: string
         }
       | undefined
+    ravmesserLists:
+      | {
+          isListConnected: boolean
+          listName: string
+          isCancelledListConnected: boolean
+          cancelledListName: string
+          isRemovedListConnected: boolean
+          removedListName: string
+        }
+      | undefined
     whatsAppGroups: {groupId: string; name: string; isConnected: boolean}[]
   }[]
 }
@@ -46,15 +60,21 @@ export async function querySaleWithProviders(
   saleNumber: number,
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   now: Date,
   smooveLists: SmooveList[] | undefined,
+  ravmesserLists: RavmesserList[] | undefined,
   whatsappGroups: WhatsAppGroup[],
   sql: Sql,
 ): Promise<SaleWithProviders | undefined> {
   const smooveListsMap = when(
     smooveLists,
     (smooveLists) => new Map<number, SmooveList>(smooveLists.map((l) => [l.id, l])),
+  )
+  const ravmesserListsMap = when(
+    ravmesserLists,
+    (ravmesserLists) => new Map<number, RavmesserList>(ravmesserLists.map((l) => [l.id, l])),
   )
   const whatsappGroupsMap = new Map<string, WhatsAppGroup>(whatsappGroups.map((g) => [g.id, g]))
 
@@ -64,12 +84,14 @@ export async function querySaleWithProviders(
       ste.email,
       stp.phone,
       sis.smoove_contact_id,
+      sir.ravmesser_contact_id,
       (
         json_agg(
           json_build_object(
             'product_number', p.product_number,
             'product_name', pd.name,
             'product_type', pd.product_type,
+            'mailing_list_provider', pd.mailing_list_provider,
             'academy_courses',
               (
                 SELECT json_agg(json_build_object('courseId', pac.workshop_id, 'accountSubdomain', pac.account_subdomain))
@@ -80,6 +102,11 @@ export async function querySaleWithProviders(
               'list_id', pis.list_id,
               'cancelled_list_id', pis.cancelled_list_id,
               'removed_list_id', pis.removed_list_id
+            ),
+            'ravmesser_lists', json_build_object(
+              'list_id', pir.list_id,
+              'cancelled_list_id', pir.cancelled_list_id,
+              'removed_list_id', pir.removed_list_id
             ),
             'whatsAppGroups',
               (
@@ -100,16 +127,18 @@ export async function querySaleWithProviders(
     LEFT JOIN student_email ste ON ste.data_id = sth.data_id AND ste.item_order = 0
     LEFT JOIN student_phone stp ON stp.data_id = sth.data_id AND stp.item_order = 0
     LEFT JOIN student_integration_smoove sis ON sis.data_id = sth.data_id
+    LEFT JOIN student_integration_ravmesser sir ON sir.data_id = sth.data_id
 
     JOIN product p ON p.product_number = sdp.product_number
     JOIN product_history ph ON ph.id = p.last_history_id
     JOIN product_data pd ON pd.data_id = ph.data_id
 
     LEFT JOIN product_integration_smoove pis ON pis.data_id = ph.data_id
+    LEFT JOIN product_integration_ravmesser pir ON pir.data_id = ph.data_id
 
     WHERE s.sale_number = ${saleNumber}
 
-    GROUP BY s.sale_number, ste.email, stp.phone, sis.smoove_contact_id
+    GROUP BY s.sale_number, ste.email, stp.phone, sis.smoove_contact_id, sir.ravmesser_contact_id
   `) as SaleWithProvidersResult[]
 
   if (saleResult.length === 0) {
@@ -149,19 +178,30 @@ export async function querySaleWithProviders(
       ? smooveIntegration.fetchSmooveContact(saleRow.smooveContactId)
       : undefined,
   )
+  const ravmesserContactP = when(ravmesserIntegration, (ravmesserIntegration) =>
+    saleRow.ravmesserContactId
+      ? ravmesserIntegration.fetchRavmesserContact(parseInt(saleRow.ravmesserContactId))
+      : undefined,
+  )
   const whatsappGroupParticipantsP = Promise.all(
     whatsAppGroupsInSale.map(async (groupId) =>
       whatsappIntegration.listParticipantsInGroup(groupId as WhatsAppGroupId),
     ),
   )
 
-  const [academyConnnections, smooveContact, whatsappGroupParticipants, coursesMap] =
-    await Promise.all([
-      academyConnnectionsP,
-      smooveContactP,
-      whatsappGroupParticipantsP,
-      coursesMapP,
-    ])
+  const [
+    academyConnnections,
+    smooveContact,
+    ravmesserContact,
+    whatsappGroupParticipants,
+    coursesMap,
+  ] = await Promise.all([
+    academyConnnectionsP,
+    smooveContactP,
+    ravmesserContactP,
+    whatsappGroupParticipantsP,
+    coursesMapP,
+  ])
   const phone = saleRow.phone
   const whatsappContactId = phone ? humanIsraeliPhoneNumberToWhatsAppId(phone) : undefined
 
@@ -188,22 +228,47 @@ export async function querySaleWithProviders(
               ?.find((c) => c.id === parseInt(course.courseId))?.name ?? '',
         })),
       ),
-      smooveLists: when(smooveContact, (smooveContact) => ({
-        isListConnected: !!smooveContact.lists_Linked.includes(
-          parseInt(product.smooveLists.listId ?? '0'),
-        ),
-        listName: smooveListsMap!.get(parseInt(product.smooveLists.listId ?? '0'))?.name ?? '',
-        isCancelledListConnected: !!smooveContact.lists_Linked.includes(
-          parseInt(product.smooveLists.cancelledListId ?? '0'),
-        ),
-        cancelledListName:
-          smooveListsMap!.get(parseInt(product.smooveLists.cancelledListId ?? '0'))?.name ?? '',
-        isRemovedListConnected: !!smooveContact.lists_Linked.includes(
-          parseInt(product.smooveLists.removedListId ?? '0'),
-        ),
-        removedListName:
-          smooveListsMap!.get(parseInt(product.smooveLists.removedListId ?? '0'))?.name ?? '',
-      })),
+      smooveLists: when(
+        product.mailingListProvider === 'smoove' ? smooveContact : undefined,
+        (smooveContact) => ({
+          isListConnected: !!smooveContact.lists_Linked.includes(
+            parseInt(product.smooveLists.listId ?? '0'),
+          ),
+          listName: smooveListsMap!.get(parseInt(product.smooveLists.listId ?? '0'))?.name ?? '',
+          isCancelledListConnected: !!smooveContact.lists_Linked.includes(
+            parseInt(product.smooveLists.cancelledListId ?? '0'),
+          ),
+          cancelledListName:
+            smooveListsMap!.get(parseInt(product.smooveLists.cancelledListId ?? '0'))?.name ?? '',
+          isRemovedListConnected: !!smooveContact.lists_Linked.includes(
+            parseInt(product.smooveLists.removedListId ?? '0'),
+          ),
+          removedListName:
+            smooveListsMap!.get(parseInt(product.smooveLists.removedListId ?? '0'))?.name ?? '',
+        }),
+      ),
+      ravmesserLists: when(
+        product.mailingListProvider === 'ravmesser' ? ravmesserContact : undefined,
+        (ravmesserContact) => ({
+          isListConnected: !!ravmesserContact.lists_Linked.includes(
+            parseInt(product.ravmesserLists.listId ?? '0'),
+          ),
+          listName:
+            ravmesserListsMap!.get(parseInt(product.ravmesserLists.listId ?? '0'))?.name ?? '',
+          isCancelledListConnected: !!ravmesserContact.lists_Linked.includes(
+            parseInt(product.ravmesserLists.cancelledListId ?? '0'),
+          ),
+          cancelledListName:
+            ravmesserListsMap!.get(parseInt(product.ravmesserLists.cancelledListId ?? '0'))?.name ??
+            '',
+          isRemovedListConnected: !!ravmesserContact.lists_Linked.includes(
+            parseInt(product.ravmesserLists.removedListId ?? '0'),
+          ),
+          removedListName:
+            ravmesserListsMap!.get(parseInt(product.ravmesserLists.removedListId ?? '0'))?.name ??
+            '',
+        }),
+      ),
       whatsAppGroups: phone
         ? (product.whatsAppGroups ?? []).map((groupId) => ({
             groupId,
@@ -241,8 +306,9 @@ export async function moveStudentToSmooveCancelledSubscriptionList(
     FROM sale_data_product sip
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number
+    JOIN product_data pd ON pd.data_id = p.last_data_id
     JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
-    WHERE s.sale_number = ${saleNumber};
+    WHERE s.sale_number = ${saleNumber} AND pd.mailing_list_provider = 'smoove';
   `
 
   const smooveContactIdResult = await sql<{smooveContactId: string}[]>`
@@ -338,8 +404,9 @@ export async function moveStudentToSmooveRemovedSubscriptionList(
     FROM sale_data_product sip
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number
+    JOIN product_data pd ON pd.data_id = p.last_data_id
     JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
-    WHERE s.sale_number = ${saleNumber};
+    WHERE s.sale_number = ${saleNumber} AND pd.mailing_list_provider = 'smoove';
   `
 
   const smooveContactIdResult = await sql<{smooveContactId: string}[]>`
@@ -517,8 +584,9 @@ export async function subscribeStudentInSmooveLists(
     FROM sale_data_product sip
     JOIN sale s ON s.last_data_product_id = sip.data_product_id
     JOIN product p ON p.product_number = sip.product_number
+    JOIN product_data pd ON pd.data_id = p.last_data_id
     JOIN product_integration_smoove pis ON pis.data_id = p.last_data_id
-    WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0;
+    WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0 AND pd.mailing_list_provider = 'smoove';
   `
 
   const smooveContactIdResult = await sql<{smooveContactId: string}[]>`
@@ -559,6 +627,214 @@ export async function subscribeStudentInSmooveLists(
       logger.info(
         {courseId: smooveProductsLists[i].listId, i, studentNumber},
         'adding-student-to-smoove-list-succeeded',
+      )
+    }
+  }
+}
+
+export async function subscribeStudentInRavmesserLists(
+  studentNumber: number,
+  saleNumber: number,
+  ravmesserIntegration: RavmesserIntegrationService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+) {
+  const ravmesserProductsLists = await sql<
+    {
+      listId: string
+      cancelledListId: string
+      removedListId: string
+    }[]
+  >`
+    SELECT
+      pir.list_id as list_id,
+      pir.cancelled_list_id,
+      pir.removed_list_id
+    FROM sale_data_product sip
+    JOIN sale s ON s.last_data_product_id = sip.data_product_id
+    JOIN product p ON p.product_number = sip.product_number
+    JOIN product_data pd ON pd.data_id = p.last_data_id
+    JOIN product_integration_ravmesser pir ON pir.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber} AND sip.quantity > 0 AND pd.mailing_list_provider = 'ravmesser';
+  `
+
+  const ravmesserContactId = await queryRavmesserContactId(studentNumber, sql)
+
+  if (!ravmesserContactId) {
+    return
+  }
+
+  const result = await Promise.allSettled(
+    ravmesserProductsLists.map((ravmesserProductLists) =>
+      ravmesserIntegration.changeContactLinkedLists(parseInt(ravmesserContactId), {
+        subscribeTo: [parseInt(ravmesserProductLists.listId)],
+        unsubscribeFrom: [
+          parseInt(ravmesserProductLists.cancelledListId),
+          parseInt(ravmesserProductLists.removedListId),
+        ],
+      }),
+    ),
+  )
+
+  logRavmesserListResults(result, ravmesserProductsLists, studentNumber, logger, 'subscribe')
+}
+
+export async function moveStudentToRavmesserCancelledSubscriptionList(
+  studentNumber: number,
+  saleNumber: number,
+  ravmesserIntegration: RavmesserIntegrationService,
+  disconnectTime: Date,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+) {
+  const ravmesserProductsLists = await sql<
+    {
+      listId: string
+      cancelledListId: string
+      removedListId: string
+      removedDateCustomField: number | null
+    }[]
+  >`
+    SELECT
+      pir.list_id as list_id,
+      pir.cancelled_list_id,
+      pir.removed_list_id,
+      pir.removed_date_custom_field
+    FROM sale_data_product sip
+    JOIN sale s ON s.last_data_product_id = sip.data_product_id
+    JOIN product p ON p.product_number = sip.product_number
+    JOIN product_data pd ON pd.data_id = p.last_data_id
+    JOIN product_integration_ravmesser pir ON pir.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber} AND pd.mailing_list_provider = 'ravmesser';
+  `
+
+  const ravmesserContactId = await queryRavmesserContactId(studentNumber, sql)
+
+  if (!ravmesserContactId) {
+    logger.info('ravmesser-contact-id-not-found-skipping-move')
+    return
+  }
+
+  const result = await Promise.allSettled(
+    ravmesserProductsLists.map((ravmesserProductLists) =>
+      ravmesserIntegration.changeContactLinkedLists(parseInt(ravmesserContactId), {
+        subscribeTo: [parseInt(ravmesserProductLists.cancelledListId)],
+        unsubscribeFrom: [
+          parseInt(ravmesserProductLists.listId),
+          parseInt(ravmesserProductLists.removedListId),
+        ],
+      }),
+    ),
+  )
+
+  logRavmesserListResults(result, ravmesserProductsLists, studentNumber, logger, 'move-cancelled')
+
+  // RavMesser custom fields are keyed by the numeric field id, unlike Smoove's `i<id>` names
+  const customFieldUpdates = new Set(
+    ravmesserProductsLists
+      .filter((p) => p.removedDateCustomField != null)
+      .map((p) => p.removedDateCustomField!),
+  )
+    .values()
+    .map((cf) =>
+      ravmesserIntegration.updateRavmesserContactCustomFields(parseInt(ravmesserContactId), {
+        [cf]: disconnectTime,
+      }),
+    )
+
+  const customFieldResults = await Promise.allSettled(customFieldUpdates)
+  for (const [i, res] of customFieldResults.entries()) {
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, studentNumber, i, disconnectTime},
+        'updating-ravmesser-removed-date-custom-field-failed',
+      )
+    } else {
+      logger.info(
+        {studentNumber, i, disconnectTime},
+        'updating-ravmesser-removed-date-custom-field-succeeded',
+      )
+    }
+  }
+}
+
+export async function moveStudentToRavmesserRemovedSubscriptionList(
+  studentNumber: number,
+  saleNumber: number,
+  ravmesserIntegration: RavmesserIntegrationService,
+  sql: Sql,
+  logger: FastifyBaseLogger,
+) {
+  const ravmesserProductsLists = await sql<
+    {
+      listId: string
+      cancelledListId: string
+      removedListId: string
+    }[]
+  >`
+    SELECT
+      pir.list_id as list_id,
+      pir.cancelled_list_id,
+      pir.removed_list_id
+    FROM sale_data_product sip
+    JOIN sale s ON s.last_data_product_id = sip.data_product_id
+    JOIN product p ON p.product_number = sip.product_number
+    JOIN product_data pd ON pd.data_id = p.last_data_id
+    JOIN product_integration_ravmesser pir ON pir.data_id = p.last_data_id
+    WHERE s.sale_number = ${saleNumber} AND pd.mailing_list_provider = 'ravmesser';
+  `
+
+  const ravmesserContactId = await queryRavmesserContactId(studentNumber, sql)
+
+  if (!ravmesserContactId) {
+    logger.info('ravmesser-contact-id-not-found-skipping-move')
+    return
+  }
+
+  const result = await Promise.allSettled(
+    ravmesserProductsLists.map((ravmesserProductLists) =>
+      ravmesserIntegration.changeContactLinkedLists(parseInt(ravmesserContactId), {
+        subscribeTo: [parseInt(ravmesserProductLists.removedListId)],
+        unsubscribeFrom: [
+          parseInt(ravmesserProductLists.listId),
+          parseInt(ravmesserProductLists.cancelledListId),
+        ],
+      }),
+    ),
+  )
+
+  logRavmesserListResults(result, ravmesserProductsLists, studentNumber, logger, 'move-removed')
+}
+
+async function queryRavmesserContactId(studentNumber: number, sql: Sql) {
+  const result = await sql<{ravmesserContactId: string}[]>`
+    SELECT
+      ravmesser_contact_id
+    FROM student
+    INNER JOIN student_integration_ravmesser sir ON sir.data_id = student.last_data_id
+    WHERE student_number = ${studentNumber}
+  `
+
+  return result.length > 0 ? result[0].ravmesserContactId : undefined
+}
+
+function logRavmesserListResults(
+  results: PromiseSettledResult<unknown>[],
+  lists: {listId: string}[],
+  studentNumber: number,
+  logger: FastifyBaseLogger,
+  operation: string,
+) {
+  for (const [i, res] of results.entries()) {
+    if (res.status === 'rejected') {
+      logger.error(
+        {err: res.reason, listId: lists[i].listId, i, studentNumber, operation},
+        'changing-student-ravmesser-lists-failed',
+      )
+    } else {
+      logger.info(
+        {listId: lists[i].listId, i, studentNumber, operation},
+        'changing-student-ravmesser-lists-succeeded',
       )
     }
   }
@@ -622,12 +898,19 @@ type SaleWithProvidersResult = {
   email: string | null
   phone: string | null
   smooveContactId: string | null
+  ravmesserContactId: string | null
   products: {
     productNumber: number
     productName: string
     productType: string
+    mailingListProvider: 'smoove' | 'ravmesser'
     academyCourses: {courseId: string; accountSubdomain: string}[] | null
     smooveLists: {
+      listId: string | null
+      cancelledListId: string | null
+      removedListId: string | null
+    }
+    ravmesserLists: {
       listId: string | null
       cancelledListId: string | null
       removedListId: string | null

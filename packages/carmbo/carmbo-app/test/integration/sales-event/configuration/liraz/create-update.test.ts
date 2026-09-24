@@ -5,10 +5,12 @@ import {createNewSalesEventPageModel} from '../../../../page-model/sales-events/
 import {createUpdateSalesEventPageModel} from '../../../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createProduct} from '../../../../../src/domain/product/model.ts'
 import {waitForAllJobsToBeDone} from '../../../common/wait-for-all-jobs-to-be-done.ts'
+import {waitForHtmx} from '../../../common/wait-for-htmx.ts'
 
 const {url, sql} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 
@@ -73,16 +75,18 @@ test('create sales event then update it', async ({page}) => {
   await newForm.landingPageUrlInput().locator.fill('https://example.com/test-sale')
 
   // Add products for sale
-  await newForm.productsForSale().addButton().locator.click()
-  await newForm.productsForSale().productInput(0).locator.fill('1')
-  await newForm.productsForSale().productInput(0).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await waitForHtmx(page, newForm.productsForSale().addButton().locator.click())
+  await waitForHtmx(page, async () => {
+    await newForm.productsForSale().productInput(0).locator.fill('1')
+    await newForm.productsForSale().productInput(0).locator.blur()
+  })
   await expect(newForm.productsForSale().productInput(0).locator).toHaveValue(/1/)
-  await newForm.productsForSale().addButton().locator.click()
+  await waitForHtmx(page, newForm.productsForSale().addButton().locator.click())
 
-  await newForm.productsForSale().productInput(1).locator.fill('2')
-  await newForm.productsForSale().productInput(1).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await waitForHtmx(page, async () => {
+    await newForm.productsForSale().productInput(1).locator.fill('2')
+    await newForm.productsForSale().productInput(1).locator.blur()
+  })
   await expect(newForm.productsForSale().productInput(1).locator).toHaveValue(/2/)
   await newForm.notesInput().locator.fill('Initial sales event notes')
 
@@ -123,17 +127,19 @@ test('create sales event then update it', async ({page}) => {
   await updateForm.fromDateInput().locator.fill('2025-02-01')
   await updateForm.toDateInput().locator.fill('2025-02-28')
   await updateForm.landingPageUrlInput().locator.fill('https://example.com/updated-sale')
-  await updateForm.productsForSale().productInput(0).locator.fill('3')
-  await updateForm.productsForSale().productInput(0).locator.blur()
-  await page.waitForLoadState('networkidle')
-  await updateForm.productsForSale().productInput(1).locator.fill('4')
-  await updateForm.productsForSale().productInput(1).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await waitForHtmx(page, async () => {
+    await updateForm.productsForSale().productInput(0).locator.fill('3')
+    await updateForm.productsForSale().productInput(0).locator.blur()
+  })
+  await waitForHtmx(page, async () => {
+    await updateForm.productsForSale().productInput(1).locator.fill('4')
+    await updateForm.productsForSale().productInput(1).locator.blur()
+  })
   await updateForm.notesInput().locator.clear()
   await updateForm.notesInput().locator.fill('Updated sales event notes')
 
   // Save the sales event and verify data
-  await updateForm.updateButton().locator.click()
+  await waitForHtmx(page, updateForm.updateButton().locator.click())
 
   await waitForAllJobsToBeDone(page, url())
   await page.goto(new URL(`/sales-events/${salesEventNumber}`, url()).href)

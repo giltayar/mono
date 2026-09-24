@@ -10,6 +10,7 @@ import {createNewSalePageModel} from '../../../../page-model/sales/new-sale-page
 const {url, sql, cardcomIntegration} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 
@@ -112,6 +113,7 @@ test('disconnect manual sale removes disconnect button and disconnects from exte
       phones: ['0501111111'],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),

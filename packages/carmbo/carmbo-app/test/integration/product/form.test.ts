@@ -224,9 +224,8 @@ test('form validations', async ({page}) => {
   await expect(page.url()).toMatch(newProductModel.urlRegex)
 
   await newForm.nameInput().locator.fill('Valid Product')
-  await waitForHtmx(page, async () => {
-    await newForm.productTypeSelect().locator.selectOption('club')
-  })
+  await waitForHtmx(page, newForm.productTypeSelect().locator.selectOption('club'))
+  await waitForHtmx(page, newForm.mailingListProviderSelect().locator.selectOption('smoove'))
 
   // Add invalid WhatsApp group (must be in the list)
   await waitForHtmx(page, async () => {
@@ -421,6 +420,7 @@ test('create smoove list from product form', async ({page}) => {
   await page.waitForURL(newProductModel.urlRegex)
 
   const newForm = newProductModel.form()
+  await waitForHtmx(page, newForm.mailingListProviderSelect().locator.selectOption('smoove'))
   await newForm.nameInput().locator.fill('Product With Created Smoove Lists')
 
   // Click the Create button for smooveListId

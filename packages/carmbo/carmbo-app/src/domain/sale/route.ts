@@ -48,6 +48,7 @@ import {initializeJobHandlers as initializeSaleJobHandlers} from './model/model-
 import {initializeJobHandlers as initializeStandingOrderJobHandlers} from './model/model-standing-order.ts'
 import {initializePropagateAcademyCourseChangesJobHandlers} from './model/model-external-providers.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '../../commons/now-service.ts'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
@@ -59,6 +60,7 @@ export function apiRoute(
     secret,
     sql,
     smooveIntegration,
+    ravmesserIntegration,
     academyIntegration,
     whatsappIntegration,
     skoolIntegration,
@@ -67,6 +69,7 @@ export function apiRoute(
     secret: string | undefined
     sql: Sql
     smooveIntegration: SmooveIntegrationService | undefined
+    ravmesserIntegration: RavmesserIntegrationService | undefined
     academyIntegration: AcademyIntegrationService | undefined
     whatsappIntegration: WhatsAppIntegrationService
     skoolIntegration: SkoolIntegrationService | undefined
@@ -78,6 +81,7 @@ export function apiRoute(
   initializeSaleJobHandlers(
     academyIntegration,
     smooveIntegration,
+    ravmesserIntegration,
     whatsappIntegration,
     skoolIntegration,
     sql,
@@ -88,6 +92,7 @@ export function apiRoute(
     sql,
     academyIntegration,
     smooveIntegration,
+    ravmesserIntegration,
     whatsappIntegration,
     nowService,
   )

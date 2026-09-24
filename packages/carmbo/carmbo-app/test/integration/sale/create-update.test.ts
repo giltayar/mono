@@ -10,7 +10,7 @@ import {createUpdateStudentPageModel} from '../../page-model/students/update-stu
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 
-const {url, sql, TEST_hooks, smooveIntegration} = setup(import.meta.url)
+const {url, sql, TEST_hooks, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)
 
 test.use({viewport: {width: 1024, height: 1024}})
 
@@ -25,6 +25,7 @@ test('create sale then update it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -176,6 +177,7 @@ test('discard button', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -257,6 +259,7 @@ test('optional fields', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -324,6 +327,7 @@ test('transaction description field', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -396,6 +400,7 @@ test('creation/update error shows alert', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

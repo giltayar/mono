@@ -20,6 +20,7 @@ import {createCancelSubscriptionPageModel} from '../../../../page-model/sales/ca
 const {url, sql, cardcomIntegration, whatsappIntegration} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 

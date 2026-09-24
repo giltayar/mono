@@ -6,8 +6,11 @@ import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
-const {url, sql, smooveIntegration, cardcomIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, cardcomIntegration} = setup(
+  import.meta.url,
+)
 
 test('create sale with delivery address then update it', async ({page}) => {
   // Setup: Create a student, sales event, and products
@@ -20,6 +23,7 @@ test('create sale with delivery address then update it', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -67,11 +71,15 @@ test('create sale with delivery address then update it', async ({page}) => {
 
   // Fill the new sale form
   const newForm = newSaleModel.form()
-  await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
-  await newForm.salesEventInput().locator.blur()
-  await page.waitForLoadState('networkidle')
-  await newForm.studentInput().locator.fill(`${studentNumber}`)
-  await newForm.studentInput().locator.blur()
+  await waitForHtmx(page, async () => {
+    await newForm.salesEventInput().locator.fill(`${salesEventNumber}`)
+    await newForm.salesEventInput().locator.blur()
+  })
+
+  await waitForHtmx(page, async () => {
+    await newForm.studentInput().locator.fill(`${studentNumber}`)
+    await newForm.studentInput().locator.blur()
+  })
   await expect(newForm.studentInput().locator).toHaveValue(`${studentNumber}: John Doe`)
 
   await expect(newForm.deliveryAddress().locator).toBeHidden()

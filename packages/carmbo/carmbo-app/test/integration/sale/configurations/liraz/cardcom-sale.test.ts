@@ -13,6 +13,7 @@ import {createSaleProvidersPageModel} from '../../../../page-model/sales/sale-pr
 const {url, sql, cardcomIntegration} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 

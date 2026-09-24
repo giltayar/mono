@@ -13,6 +13,7 @@ import {createUpdateProductPageModel} from '../../../../page-model/products/upda
 const {url, sql, TEST_hooks} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 
@@ -27,6 +28,7 @@ test('create sale then update it', async ({page}) => {
       phones: [],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),
@@ -180,6 +182,7 @@ test('discard button', async ({page}) => {
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )
@@ -261,6 +264,7 @@ test('optional fields', async ({page}) => {
     },
     undefined,
     undefined,
+    undefined,
     new Date(),
     sql(),
   )
@@ -326,6 +330,7 @@ test('transaction description field', async ({page}) => {
       phones: [],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),
@@ -398,6 +403,7 @@ test('creation/update error shows alert', async ({page}) => {
       phones: [],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),

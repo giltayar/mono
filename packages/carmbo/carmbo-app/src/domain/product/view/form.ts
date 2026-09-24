@@ -17,6 +17,7 @@ export function ProductCreateOrUpdateFormFields({
   academyAccountSubdomains,
   academyCoursesBySubdomain,
   withSmooveIntegration,
+  withRavmesserIntegration,
   withSkoolIntegration,
 }: {
   product: Product | OngoingProduct | NewProduct
@@ -25,11 +26,19 @@ export function ProductCreateOrUpdateFormFields({
   academyAccountSubdomains: string[]
   academyCoursesBySubdomain: Map<string, {id: number; name: string}[]> | undefined
   withSmooveIntegration: boolean
+  withRavmesserIntegration: boolean
   withSkoolIntegration: boolean
 }) {
   const whatsappGroups = requestContext.get('whatsappGroups')!
-  const smooveLists = requestContext.get('smooveLists')!
+  const smooveLists = requestContext.get('smooveLists') ?? []
+  const ravmesserLists = requestContext.get('ravmesserLists') ?? []
   const isReadOnly = operation === 'read'
+  // With only one provider configured, that provider wins regardless of what is stored
+  const mailingListProvider = !withRavmesserIntegration
+    ? 'smoove'
+    : !withSmooveIntegration
+      ? 'ravmesser'
+      : (product.mailingListProvider ?? 'ravmesser')
 
   return html`
     <div class="products-view_form-fields card">
@@ -295,7 +304,34 @@ export function ProductCreateOrUpdateFormFields({
         </fieldset>
 
         ${
+          withSmooveIntegration && withRavmesserIntegration
+            ? html`
+                <div class="mt-3 form-floating">
+                  <select
+                    name="mailingListProvider"
+                    class="form-select"
+                    id="mailingListProvider"
+                    readonly=${isReadOnly}
+                    required
+                    hx-post=""
+                    hx-target="closest .products-view_form-fields"
+                    hx-swap="innerHTML"
+                  >
+                    <option value="ravmesser" selected=${mailingListProvider === 'ravmesser'}>
+                      ${t('form.ravmesser')}
+                    </option>
+                    <option value="smoove" selected=${mailingListProvider === 'smoove'}>
+                      ${t('form.smoove')}
+                    </option>
+                  </select>
+                  <label for="mailingListProvider">${t('form.mailingListProvider')}</label>
+                </div>
+              `
+            : html`<input name="mailingListProvider" type="hidden" value=${mailingListProvider} />`
+        }
+        ${
           withSmooveIntegration &&
+          mailingListProvider === 'smoove' &&
           html`
             <div class="mt-3 row">
               <div class="col form-floating">
@@ -347,7 +383,7 @@ export function ProductCreateOrUpdateFormFields({
                         type="button"
                         class="btn btn-outline-secondary btn-sm"
                         hx-get="/smoove/list-create-dialog?targetFieldId=smooveListId"
-                        hx-target="#smoove-list-create-dialog-container"
+                        hx-target="#list-create-dialog-container"
                         hx-swap="innerHTML"
                       >
                         ${t('form.createSmooveList')}
@@ -410,7 +446,7 @@ export function ProductCreateOrUpdateFormFields({
                           type="button"
                           class="btn btn-outline-secondary btn-sm"
                           hx-get="/smoove/list-create-dialog?targetFieldId=smooveCancelledListId"
-                          hx-target="#smoove-list-create-dialog-container"
+                          hx-target="#list-create-dialog-container"
                           hx-swap="innerHTML"
                         >
                           ${t('form.createSmooveList')}
@@ -487,10 +523,219 @@ export function ProductCreateOrUpdateFormFields({
                         type="button"
                         class="btn btn-outline-secondary btn-sm"
                         hx-get="/smoove/list-create-dialog?targetFieldId=smooveRemovedListId"
-                        hx-target="#smoove-list-create-dialog-container"
+                        hx-target="#list-create-dialog-container"
                         hx-swap="innerHTML"
                       >
                         ${t('form.createSmooveList')}
+                      </button>
+                    </div>`
+                  : ''
+              }
+            </div>
+          `
+        }
+        ${
+          withRavmesserIntegration &&
+          mailingListProvider === 'ravmesser' &&
+          html`
+            <div class="mt-3 row">
+              <div class="col form-floating">
+                <input
+                  name="ravmesserListId"
+                  type="text"
+                  list="ravmesser-lists-list-main"
+                  placeholder=" "
+                  class="form-control"
+                  id="ravmesserListId"
+                  spellcheck="false"
+                  autocorrect="off"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  hx-post=""
+                  hx-target="closest .products-view_form-fields"
+                  hx-swap="outerHTML"
+                  hx-trigger="change delay:1ms"
+                  value=${
+                    product.ravmesserListId
+                      ? generateItemTitle(
+                          product.ravmesserListId,
+                          ravmesserLists.find((g) => g.id === product.ravmesserListId)?.name,
+                        )
+                      : ''
+                  }
+                  readonly=${isReadOnly}
+                />
+                <${ValidityError}
+                  valid=${
+                    !product.ravmesserListId ||
+                    ravmesserLists.find((g) => g.id === product.ravmesserListId)
+                  }
+                  elementId="ravmesserListId"
+                  errorMessage=${tCommon('form.invalidListItem')}
+                />
+                <label for="ravmesserListId">${t('form.ravmesserListId')}</label>
+              </div>
+              <datalist
+                id="ravmesser-lists-list-main"
+                hx-trigger="input changed from:#ravmesserListId"
+                hx-target="this"
+                hx-vals='js:{q: document.getElementById("ravmesserListId").value}'
+                hx-get="/ravmesser/query/datalist"
+              ></datalist>
+              ${
+                !isReadOnly
+                  ? html`<div class="col-auto ravmesser-list-create-btn-ravmesserListId">
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        hx-get="/ravmesser/list-create-dialog?targetFieldId=ravmesserListId"
+                        hx-target="#list-create-dialog-container"
+                        hx-swap="innerHTML"
+                      >
+                        ${t('form.createRavmesserList')}
+                      </button>
+                    </div>`
+                  : ''
+              }
+            </div>
+
+            ${
+              product.productType === 'club' &&
+              html`<div class="mt-3 row">
+                <div class="col form-floating">
+                  <input
+                    name="ravmesserCancelledListId"
+                    type="text"
+                    list="ravmesser-lists-list-cancelled"
+                    placeholder=" "
+                    class="form-control"
+                    id="ravmesserCancelledListId"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    hx-post=""
+                    hx-target="closest .products-view_form-fields"
+                    hx-swap="outerHTML"
+                    hx-trigger="change delay:1ms"
+                    value=${
+                      product.ravmesserCancelledListId
+                        ? generateItemTitle(
+                            product.ravmesserCancelledListId,
+                            ravmesserLists.find((g) => g.id === product.ravmesserCancelledListId)
+                              ?.name,
+                          )
+                        : ''
+                    }
+                    readonly=${isReadOnly}
+                  />
+                  <${ValidityError}
+                    valid=${
+                      !product.ravmesserCancelledListId ||
+                      ravmesserLists.find((g) => g.id === product.ravmesserCancelledListId)
+                    }
+                    elementId="ravmesserCancelledListId"
+                    errorMessage=${tCommon('form.invalidListItem')}
+                  />
+                  <label for="ravmesserCancelledListId"
+                    >${t('form.ravmesserCancelledListId')}</label
+                  >
+                </div>
+                <datalist
+                  id="ravmesser-lists-list-cancelled"
+                  hx-trigger="input changed from:#ravmesserCancelledListId"
+                  hx-target="this"
+                  hx-vals='js:{q: document.getElementById("ravmesserCancelledListId").value}'
+                  hx-get="/ravmesser/query/datalist"
+                ></datalist>
+                ${
+                  !isReadOnly
+                    ? html`<div class="col-auto ravmesser-list-create-btn-ravmesserCancelledListId">
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary btn-sm"
+                          hx-get="/ravmesser/list-create-dialog?targetFieldId=ravmesserCancelledListId"
+                          hx-target="#list-create-dialog-container"
+                          hx-swap="innerHTML"
+                        >
+                          ${t('form.createRavmesserList')}
+                        </button>
+                      </div>`
+                    : ''
+                }
+                <div class="col-auto form-floating">
+                  <input
+                    name="ravmesserRemovedDateCustomField"
+                    type="number"
+                    placeholder=" "
+                    class="form-control form-control-sm"
+                    id="ravmesserRemovedDateCustomField"
+                    value=${product.ravmesserRemovedDateCustomField ?? ''}
+                    readonly=${isReadOnly}
+                    style="max-width: 180px; font-size: 0.8rem; height: 2.5rem"
+                  />
+                  <label for="ravmesserRemovedDateCustomField" style="font-size: 0.75rem"
+                    >${t('form.ravmesserRemovedDateCustomField')}</label
+                  >
+                </div>
+              </div>`
+            }
+
+            <div class="mt-3 row">
+              <div class="col form-floating">
+                <input
+                  name="ravmesserRemovedListId"
+                  type="text"
+                  list="ravmesser-lists-list-removed"
+                  placeholder=" "
+                  class="form-control"
+                  id="ravmesserRemovedListId"
+                  spellcheck="false"
+                  autocorrect="off"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  hx-post=""
+                  hx-target="closest .products-view_form-fields"
+                  hx-swap="outerHTML"
+                  hx-trigger="change delay:1ms"
+                  value=${
+                    product.ravmesserRemovedListId
+                      ? generateItemTitle(
+                          product.ravmesserRemovedListId,
+                          ravmesserLists.find((g) => g.id === product.ravmesserRemovedListId)?.name,
+                        )
+                      : ''
+                  }
+                  readonly=${isReadOnly}
+                />
+                <${ValidityError}
+                  valid=${
+                    !product.ravmesserRemovedListId ||
+                    ravmesserLists.find((g) => g.id === product.ravmesserRemovedListId)
+                  }
+                  elementId="ravmesserRemovedListId"
+                  errorMessage=${tCommon('form.invalidListItem')}
+                />
+                <label for="ravmesserRemovedListId">${t('form.ravmesserRemovedListId')}</label>
+              </div>
+              <datalist
+                id="ravmesser-lists-list-removed"
+                hx-trigger="input changed from:#ravmesserRemovedListId"
+                hx-target="this"
+                hx-vals='js:{q: document.getElementById("ravmesserRemovedListId").value}'
+                hx-get="/ravmesser/query/datalist"
+              ></datalist>
+              ${
+                !isReadOnly
+                  ? html`<div class="col-auto ravmesser-list-create-btn-ravmesserRemovedListId">
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        hx-get="/ravmesser/list-create-dialog?targetFieldId=ravmesserRemovedListId"
+                        hx-target="#list-create-dialog-container"
+                        hx-swap="innerHTML"
+                      >
+                        ${t('form.createRavmesserList')}
                       </button>
                     </div>`
                   : ''

@@ -6,9 +6,13 @@ import type {
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import {type StandingOrderPaymentResolution} from './model-sale.ts'
-import {moveStudentToSmooveCancelledSubscriptionList} from './model-external-providers.ts'
+import {
+  moveStudentToSmooveCancelledSubscriptionList,
+  moveStudentToRavmesserCancelledSubscriptionList,
+} from './model-external-providers.ts'
 import {disconnectSale, type DisconnectSalePayload} from './model-connect.ts'
 import {type SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import {type RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import {Temporal} from '@js-temporal/polyfill'
@@ -21,6 +25,7 @@ export async function initializeJobHandlers(
   sql: Sql,
   academyIntegration: AcademyIntegrationService | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   whatsappIntegration: WhatsAppIntegrationService,
   nowService: NowService,
 ) {
@@ -36,6 +41,7 @@ export async function initializeJobHandlers(
           payload,
           academyIntegration,
           smooveIntegration,
+          ravmesserIntegration,
           whatsappIntegration,
           nowService(),
           sql,
@@ -141,6 +147,7 @@ export async function cancelSubscription(
   sql: Sql,
   cardcomIntegration: CardcomIntegrationService,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   now: Date,
   parentLogger: FastifyBaseLogger,
 ) {
@@ -191,6 +198,17 @@ export async function cancelSubscription(
         studentNumber,
         saleNumber,
         smooveIntegration,
+        disconnectTime,
+        sql,
+        logger,
+      )
+    }
+
+    if (ravmesserIntegration) {
+      await moveStudentToRavmesserCancelledSubscriptionList(
+        studentNumber,
+        saleNumber,
+        ravmesserIntegration,
         disconnectTime,
         sql,
         logger,

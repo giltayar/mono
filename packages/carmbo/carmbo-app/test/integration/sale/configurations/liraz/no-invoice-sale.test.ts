@@ -14,6 +14,7 @@ import {cardcomWebhookUrl} from '../../common/cardcom-webhook.ts'
 const {url, sql, cardcomIntegration} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 

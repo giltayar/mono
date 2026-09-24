@@ -8,6 +8,7 @@ import {waitForHtmx} from '../../../common/wait-for-htmx.ts'
 const {url} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 
@@ -25,6 +26,9 @@ test('create product then update it', async ({page}) => {
   await expect(newProductModel.pageTitle().locator).toHaveText('New Product')
   // Fill the new product form
   const newForm = newProductModel.form()
+
+  await expect(newForm.mailingListProviderSelect().locator).not.toBeVisible()
+
   await newForm.nameInput().locator.fill('Test Product')
   await waitForHtmx(page, () => newForm.productTypeSelect().locator.selectOption('recorded'))
 
@@ -91,6 +95,7 @@ test('create product then update it', async ({page}) => {
   // Save the product and verify data
 
   await updateForm.updateButton().locator.click()
+  await expect(updateProductModel.history().items().locator).toHaveCount(2)
   await expect(updateForm.nameInput().locator).toHaveValue('Updated Product')
   await expect(updateForm.productTypeSelect().locator).toHaveValue('challenge')
   await expect(updateForm.whatsappGroups().whatsappGroupInput(0).locator).toHaveValue(

@@ -42,6 +42,9 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
       }),
       ...addAndTrashButtons(facebookLocator),
     }),
+    mailingListProviderSelect: (selectLocator = locator.getByLabel('Mailing List Provider')) => ({
+      locator: selectLocator,
+    }),
     smooveListIdInput: (inputLocator = locator.getByLabel('Smoove List ID')) => ({
       locator: inputLocator,
     }),
@@ -80,6 +83,50 @@ export function productFormPageModel(page: Page, locator = page.locator('form'))
       locator: inputLocator,
     }),
     smooveListCreateDialog: (dialogLocator = page.locator('#smoove-list-create-dialog')) => ({
+      locator: dialogLocator,
+      listNameInput: (inputLocator = dialogLocator.getByLabel('List Name')) => ({
+        locator: inputLocator,
+      }),
+      createButton: (btnLocator = dialogLocator.getByRole('button', {name: 'Create'})) => ({
+        locator: btnLocator,
+      }),
+      cancelButton: (btnLocator = dialogLocator.getByRole('button', {name: 'Cancel'})) => ({
+        locator: btnLocator,
+      }),
+    }),
+    ravmesserListIdInput: (inputLocator = locator.getByLabel('RavMesser List ID')) => ({
+      locator: inputLocator,
+    }),
+    ravmesserListIdCreateButton: (
+      btnLocator = locator
+        .locator('.row', {has: page.getByLabel('RavMesser List ID')})
+        .getByRole('button', {name: 'Create'}),
+    ) => ({
+      locator: btnLocator,
+    }),
+    ravmesserCancelledListIdInput: (
+      inputLocator = locator.getByLabel('RavMesser Cancelled Club List ID'),
+    ) => ({
+      locator: inputLocator,
+    }),
+    ravmesserRemovedListIdInput: (
+      inputLocator = locator.getByLabel('RavMesser Removed List ID'),
+    ) => ({
+      locator: inputLocator,
+    }),
+    ravmesserRemovedListIdCreateButton: (
+      btnLocator = locator
+        .locator('.row', {has: page.getByLabel('RavMesser Removed List ID')})
+        .getByRole('button', {name: 'Create'}),
+    ) => ({
+      locator: btnLocator,
+    }),
+    ravmesserRemovedDateCustomFieldInput: (
+      inputLocator = locator.getByLabel('RavMesser Removed Date Custom Field'),
+    ) => ({
+      locator: inputLocator,
+    }),
+    ravmesserListCreateDialog: (dialogLocator = page.locator('#ravmesser-list-create-dialog')) => ({
       locator: dialogLocator,
       listNameInput: (inputLocator = dialogLocator.getByLabel('List Name')) => ({
         locator: inputLocator,

@@ -3,6 +3,7 @@ import {createStudentListPageModel} from '../../page-model/students/student-list
 import {createNewStudentPageModel} from '../../page-model/students/new-student-page.model.ts'
 import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
 import {setup} from '../common/setup.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
 const {url} = setup(import.meta.url)
 
@@ -113,8 +114,7 @@ test('create student and update multiple fields', async ({page}) => {
   await updateForm.facebookNames().facebookNameInput(2).locator.fill('fb4')
   await updateForm.facebookNames().trashButton(0).locator.click()
 
-  await updateForm.updateButton().locator.click()
-  await page.waitForLoadState('networkidle')
+  await waitForHtmx(page, updateForm.updateButton().locator.click())
 
   await expect(updateForm.names().firstNameInput(0).locator).toHaveValue('first3')
   await expect(updateForm.names().lastNameInput(0).locator).toHaveValue('last3')

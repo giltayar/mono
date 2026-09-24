@@ -7,7 +7,7 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 
-const {url, sql, smooveIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)
 
 test('student page shows sales tab with student sales', async ({page}) => {
   // Setup: Create student, products, sales event, and sales
@@ -20,6 +20,7 @@ test('student page shows sales tab with student sales', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -121,6 +122,7 @@ test('student sales page shows empty table when student has no sales', async ({p
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -149,6 +151,7 @@ test('navigating between details and sales tabs', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

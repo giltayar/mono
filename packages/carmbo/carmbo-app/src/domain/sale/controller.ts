@@ -69,6 +69,7 @@ import {
 import {querySaleWithProviders} from './model/model-external-providers.ts'
 import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
 import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {listRavmesserLists} from '../../commons/external-provider/ravmesser-lists.ts'
 import {when} from '@giltayar/functional-commons'
 import {executeDirectJob} from '../job/job-executor.ts'
 
@@ -91,6 +92,7 @@ export async function createStudentFromInvoice(sale: NewSale): Promise<Controlle
   const sql = requestContext.get('sql')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
 
@@ -106,6 +108,7 @@ export async function createStudentFromInvoice(sale: NewSale): Promise<Controlle
       nowService(),
       cardcomIntegration,
       smooveIntegration,
+      ravmesserIntegration,
       sql,
     )
 
@@ -166,6 +169,7 @@ export async function quickCreateStudent(body: {
 }): Promise<ControllerResult> {
   const sql = requestContext.get('sql')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
 
@@ -178,6 +182,7 @@ export async function quickCreateStudent(body: {
       },
       'quick-create from sale form',
       smooveIntegration,
+      ravmesserIntegration,
       nowService(),
       sql,
     )
@@ -244,6 +249,7 @@ export async function dealWithCardcomOneTimeSale(
   const now = nowService()
   const sql = requestContext.get('sql')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const logger = requestContext.get('logger')!
 
@@ -254,6 +260,7 @@ export async function dealWithCardcomOneTimeSale(
         cardcomSaleWebhookJson,
         now,
         smooveIntegration,
+        ravmesserIntegration,
         cardcomIntegration,
         sql,
         logger,
@@ -287,6 +294,7 @@ export async function dealWithNoInvoiceSale({
 }): Promise<ControllerResult> {
   const nowService = requestContext.get('nowService')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const now = nowService()
   const sql = requestContext.get('sql')!
   const logger = requestContext.get('logger')!
@@ -298,6 +306,7 @@ export async function dealWithNoInvoiceSale({
         {email, phone, cellPhone, firstName, lastName},
         now,
         smooveIntegration,
+        ravmesserIntegration,
         sql,
         logger,
       ),
@@ -411,22 +420,28 @@ export async function showSalePayments(saleNumber: number, sql: Sql): Promise<Co
 export async function showSaleProviders(saleNumber: number, sql: Sql): Promise<ControllerResult> {
   const academyIntegration = requestContext.get('academyIntegration')
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const whatsappIntegration = requestContext.get('whatsappIntegration')!
   const nowService = requestContext.get('nowService')!
   const now = nowService()
 
-  const [whatsappGroups, smooveLists] = await Promise.all([
+  const [whatsappGroups, smooveLists, ravmesserLists] = await Promise.all([
     listWhatsAppGroups(whatsappIntegration, now),
     when(smooveIntegration, (smooveIntegration) => listSmooveLists(smooveIntegration, now)),
+    when(ravmesserIntegration, (ravmesserIntegration) =>
+      listRavmesserLists(ravmesserIntegration, now),
+    ),
   ])
 
   const saleWithProviders = await querySaleWithProviders(
     saleNumber,
     academyIntegration,
     smooveIntegration,
+    ravmesserIntegration,
     whatsappIntegration,
     now,
     smooveLists,
+    ravmesserLists,
     whatsappGroups,
     sql,
   )
@@ -591,6 +606,7 @@ export async function disconnectSale(saleNumber: number): Promise<ControllerResu
     const sql = requestContext.get('sql')!
     const academyIntegration = requestContext.get('academyIntegration')
     const smooveIntegration = requestContext.get('smooveIntegration')
+    const ravmesserIntegration = requestContext.get('ravmesserIntegration')
     const whatsappIntegration = requestContext.get('whatsappIntegration')!
     const nowService = requestContext.get('nowService')!
     const logger = requestContext.get('logger')!
@@ -600,6 +616,7 @@ export async function disconnectSale(saleNumber: number): Promise<ControllerResu
       {saleNumber, reason: 'disconnected-manually'},
       academyIntegration,
       smooveIntegration,
+      ravmesserIntegration,
       whatsappIntegration,
       now,
       sql,
@@ -622,6 +639,7 @@ export async function cancelSubscriptionByProduct(
   const sql = requestContext.get('sql')!
   const cardcomIntegration = requestContext.get('cardcomIntegration')!
   const smooveIntegration = requestContext.get('smooveIntegration')
+  const ravmesserIntegration = requestContext.get('ravmesserIntegration')
   const nowService = requestContext.get('nowService')!
   const logger = requestContext.get('logger')!
   const now = nowService()
@@ -650,6 +668,7 @@ export async function cancelSubscriptionByProduct(
       sql,
       cardcomIntegration,
       smooveIntegration,
+      ravmesserIntegration,
       now,
       logger,
     )

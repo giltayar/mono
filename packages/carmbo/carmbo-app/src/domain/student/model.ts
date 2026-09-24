@@ -4,6 +4,7 @@ import {assert} from 'node:console'
 import {z} from 'zod'
 import {sqlTextSearch} from '../../commons/sql-commons.ts'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import {assertNever} from '@giltayar/functional-commons'
 import {normalizeEmail, normalizePhoneNumber, normalizeName} from '../../commons/normalize-input.ts'
 import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
@@ -116,6 +117,7 @@ export async function createStudent(
   student: NewStudent,
   reason: string | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   now: Date,
   sql: Sql,
 ) {
@@ -146,6 +148,14 @@ export async function createStudent(
       birthday: normalizedStudent.birthday,
     })
 
+    const ravmesserResult = await ravmesserIntegration?.createRavmesserContact({
+      email: normalizedStudent.emails[0],
+      firstName: normalizedStudent.names[0].firstName,
+      lastName: normalizedStudent.names[0].lastName,
+      telephone: normalizedStudent.phones?.[0],
+      birthday: normalizedStudent.birthday,
+    })
+
     await sql`
       INSERT INTO student VALUES
         (${studentNumber}, ${historyId}, ${dataId})
@@ -155,6 +165,9 @@ export async function createStudent(
       studentNumber,
       normalizedStudent,
       typeof result === 'object' || typeof result === 'undefined' ? result?.smooveId : undefined,
+      typeof ravmesserResult === 'object' || typeof ravmesserResult === 'undefined'
+        ? ravmesserResult?.ravmesserId
+        : undefined,
       dataId,
       sql,
     )
@@ -167,6 +180,7 @@ export async function updateStudent(
   student: Student,
   reason: string | undefined,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   academyIntegration: AcademyIntegrationService | undefined,
   academyAccountSubdomains: string[] | undefined,
   now: Date,
@@ -177,10 +191,11 @@ export async function updateStudent(
   const normalizedStudent = normalizeStudent(student)
 
   return await sql.begin(async (sql) => {
-    const {smooveId, email: originalEmail} = await getStudentInfo(
-      normalizedStudent.studentNumber,
-      sql,
-    )
+    const {
+      smooveId,
+      ravmesserId,
+      email: originalEmail,
+    } = await getStudentInfo(normalizedStudent.studentNumber, sql)
 
     const historyId = crypto.randomUUID()
     const dataId = crypto.randomUUID()
@@ -207,10 +222,27 @@ export async function updateStudent(
       `More than one student with ID ${normalizedStudent.studentNumber}`,
     )
 
-    await addStudentStuff(normalizedStudent.studentNumber, normalizedStudent, smooveId, dataId, sql)
+    await addStudentStuff(
+      normalizedStudent.studentNumber,
+      normalizedStudent,
+      smooveId,
+      ravmesserId,
+      dataId,
+      sql,
+    )
 
-    if (smooveIntegration && smooveId > 0) {
+    if (smooveIntegration && smooveId && smooveId > 0) {
       await smooveIntegration.updateSmooveContact(smooveId, {
+        email: normalizedStudent.emails[0],
+        birthday: normalizedStudent.birthday,
+        firstName: normalizedStudent.names?.[0].firstName ?? '',
+        lastName: normalizedStudent.names?.[0].lastName ?? '',
+        telephone: normalizedStudent.phones?.[0] ?? '',
+      })
+    }
+
+    if (ravmesserIntegration && ravmesserId && ravmesserId > 0) {
+      await ravmesserIntegration.updateRavmesserContact(ravmesserId, {
         email: normalizedStudent.emails[0],
         birthday: normalizedStudent.birthday,
         firstName: normalizedStudent.names?.[0].firstName ?? '',
@@ -234,18 +266,26 @@ export async function updateStudent(
 }
 
 async function getStudentInfo(studentNumber: number, sql: Sql) {
-  const smooveIdResult = await sql<{smooveContactId: string; email: string}[]>`
+  const result = await sql<
+    {smooveContactId: string | null; ravmesserContactId: string | null; email: string}[]
+  >`
     SELECT
-      smoove_contact_id,
-      email
-    FROM student_integration_smoove sis
-    JOIN student s ON s.last_data_id = sis.data_id
+      sis.smoove_contact_id,
+      sir.ravmesser_contact_id,
+      se.email
+    FROM student s
     JOIN student_history sh ON sh.id = s.last_history_id
     JOIN student_email se ON se.data_id = sh.data_id AND se.item_order = 0
+    LEFT JOIN student_integration_smoove sis ON sis.data_id = s.last_data_id
+    LEFT JOIN student_integration_ravmesser sir ON sir.data_id = s.last_data_id
     WHERE s.student_number = ${studentNumber}
   `
 
-  return {smooveId: parseInt(smooveIdResult[0].smooveContactId), email: smooveIdResult[0].email}
+  return {
+    smooveId: result[0].smooveContactId ? parseInt(result[0].smooveContactId) : undefined,
+    ravmesserId: result[0].ravmesserContactId ? parseInt(result[0].ravmesserContactId) : undefined,
+    email: result[0].email,
+  }
 }
 
 export async function deleteStudent(
@@ -253,6 +293,7 @@ export async function deleteStudent(
   reason: string | undefined,
   deleteOperation: Extract<HistoryOperation, 'delete' | 'restore'>,
   smooveIntegration: SmooveIntegrationService | undefined,
+  ravmesserIntegration: RavmesserIntegrationService | undefined,
   now: Date,
   sql: Sql,
 ): Promise<string | undefined> {
@@ -276,7 +317,7 @@ export async function deleteStudent(
     if (dataIdResult.length > 1) {
       throw new Error(`More than one student with ID ${studentNumber}`)
     }
-    const {smooveId} = await getStudentInfo(studentNumber, sql)
+    const {smooveId, ravmesserId} = await getStudentInfo(studentNumber, sql)
 
     await sql`
         UPDATE student SET
@@ -286,11 +327,21 @@ export async function deleteStudent(
         WHERE student_number = ${studentNumber}
      `
 
-    if (smooveIntegration) {
+    if (smooveIntegration && smooveId) {
       if (deleteOperation === 'delete') {
         await smooveIntegration.deleteSmooveContact(smooveId)
       } else if (deleteOperation === 'restore') {
         await smooveIntegration.restoreSmooveContact(smooveId)
+      } else {
+        assertNever(deleteOperation)
+      }
+    }
+
+    if (ravmesserIntegration && ravmesserId && ravmesserId > 0) {
+      if (deleteOperation === 'delete') {
+        await ravmesserIntegration.deleteRavmesserContact(ravmesserId)
+      } else if (deleteOperation === 'restore') {
+        await ravmesserIntegration.restoreRavmesserContact(ravmesserId)
       } else {
         assertNever(deleteOperation)
       }
@@ -461,6 +512,7 @@ async function addStudentStuff(
   studentNumber: number,
   student: Student | NewStudent,
   smooveId: number | undefined,
+  ravmesserId: number | undefined,
   dataId: string,
   sql: Sql,
 ) {
@@ -512,6 +564,12 @@ async function addStudentStuff(
 
   if (smooveId !== undefined) {
     ops = ops.concat(sql`INSERT INTO student_integration_smoove VALUES (${dataId}, ${smooveId})`)
+  }
+
+  if (ravmesserId !== undefined) {
+    ops = ops.concat(
+      sql`INSERT INTO student_integration_ravmesser VALUES (${dataId}, ${ravmesserId})`,
+    )
   }
 
   await Promise.all(ops)

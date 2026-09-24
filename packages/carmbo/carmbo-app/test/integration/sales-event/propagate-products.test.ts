@@ -7,8 +7,11 @@ import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
+import {waitForHtmx} from '../common/wait-for-htmx.ts'
 
-const {url, sql, smooveIntegration, academyIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration, academyIntegration} = setup(
+  import.meta.url,
+)
 
 test('adding product to sales event enrolls students from connected sales', async ({page}) => {
   const newSaleModel = createNewSalePageModel(page)
@@ -25,6 +28,7 @@ test('adding product to sales event enrolls students from connected sales', asyn
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -117,13 +121,14 @@ test('adding product to sales event enrolls students from connected sales', asyn
   await page.waitForURL(updateSalesEventModel.urlRegex)
 
   const updateForm = updateSalesEventModel.form()
-  await updateForm.productsForSale().addButton().locator.click()
-  await updateForm.productsForSale().productInput(1).locator.fill(`${product2Number}`)
-  await updateForm.productsForSale().productInput(1).locator.blur()
-  await page.waitForLoadState('networkidle')
+  await waitForHtmx(page, updateForm.productsForSale().addButton().locator.click())
+  await waitForHtmx(page, async () => {
+    await updateForm.productsForSale().productInput(1).locator.fill(`${product2Number}`)
+    await updateForm.productsForSale().productInput(1).locator.blur()
+  })
 
   // Save the sales event update (this triggers propagation)
-  await updateForm.updateButton().locator.click()
+  await waitForHtmx(page, updateForm.updateButton().locator.click())
 
   // Wait for the update to complete by checking the form reflects the new values
   await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue(
@@ -163,6 +168,7 @@ test('removing product from sales event does NOT unenroll students (they already
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -296,6 +302,7 @@ test('disconnected sales are not affected by sales event product updates', async
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

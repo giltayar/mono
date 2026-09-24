@@ -11,6 +11,7 @@ import {createNewSalePageModel} from '../../../../page-model/sales/new-sale-page
 const {url, sql, cardcomIntegration} = setup(import.meta.url, {
   withAcademyIntegration: false,
   withSmooveIntegration: false,
+  withRavmesserIntegration: false,
   withSkoolIntegration: true,
 })
 
@@ -130,6 +131,7 @@ test('refund manual sale allows full refund only', async ({page}) => {
       phones: ['0501111111'],
       facebookNames: [],
     },
+    undefined,
     undefined,
     undefined,
     new Date(),

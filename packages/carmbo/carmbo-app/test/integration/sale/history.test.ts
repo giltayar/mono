@@ -7,7 +7,7 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 
-const {url, sql, smooveIntegration} = setup(import.meta.url)
+const {url, sql, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)
 
 test('can view history', async ({page}) => {
   // Setup: Create student, sales event, products, and sale
@@ -20,6 +20,7 @@ test('can view history', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -115,6 +116,7 @@ test('multiple sales have different histories', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
@@ -128,6 +130,7 @@ test('multiple sales have different histories', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )

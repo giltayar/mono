@@ -1,4 +1,4 @@
-import type {Page} from '@playwright/test'
+import type {Locator, Page} from '@playwright/test'
 import {createAllPagesPageModel} from '../common/all-pages.model.ts'
 
 export function createSaleProvidersPageModel(page: Page) {
@@ -30,26 +30,11 @@ export function createSaleProvidersPageModel(page: Page) {
             locator: nameLocator,
           }),
         }),
-        smooveLists: () => ({
-          mainListCheckbox: (
-            locator = cardLocator.getByRole('checkbox', {name: /^Main list \(.*\)/i}),
-          ) => ({
-            locator,
-          }),
-          mainListName: (locator = cardLocator.getByText(/^Main list \(.*\)/i)) => ({locator}),
-          cancelledListCheckbox: (
-            locator = cardLocator.getByRole('checkbox', {name: /^Cancelled list \(.*\)/i}),
-          ) => ({locator}),
-          cancelledListName: (locator = cardLocator.getByText(/^Cancelled list \(.*\)/i)) => ({
-            locator,
-          }),
-          removedListCheckbox: (
-            locator = cardLocator.getByRole('checkbox', {name: /^Removed list \(.*\)/i}),
-          ) => ({locator}),
-          removedListName: (locator = cardLocator.getByText(/^Removed list \(.*\)/i)) => ({
-            locator,
-          }),
-        }),
+        smooveLists: (listLocator = cardLocator.locator('[aria-labelledby=smoove-lists-header]')) =>
+          mailingListCheckboxes(listLocator),
+        ravmesserLists: (
+          listLocator = cardLocator.locator('[aria-labelledby=ravmesser-lists-header]'),
+        ) => mailingListCheckboxes(listLocator),
         whatsAppGroups: () => ({
           groupCheckbox: (
             groupId: string,
@@ -69,3 +54,27 @@ export function createSaleProvidersPageModel(page: Page) {
 }
 
 export type SaleProvidersPageModel = ReturnType<typeof createSaleProvidersPageModel>
+
+function mailingListCheckboxes(listLocator: Locator) {
+  return {
+    locator: listLocator,
+    mainListCheckbox: (
+      locator = listLocator.getByRole('checkbox', {name: /^Main list \(.*\)/i}),
+    ) => ({
+      locator,
+    }),
+    mainListName: (locator = listLocator.getByText(/^Main list \(.*\)/i)) => ({locator}),
+    cancelledListCheckbox: (
+      locator = listLocator.getByRole('checkbox', {name: /^Cancelled list \(.*\)/i}),
+    ) => ({locator}),
+    cancelledListName: (locator = listLocator.getByText(/^Cancelled list \(.*\)/i)) => ({
+      locator,
+    }),
+    removedListCheckbox: (
+      locator = listLocator.getByRole('checkbox', {name: /^Removed list \(.*\)/i}),
+    ) => ({locator}),
+    removedListName: (locator = listLocator.getByText(/^Removed list \(.*\)/i)) => ({
+      locator,
+    }),
+  }
+}

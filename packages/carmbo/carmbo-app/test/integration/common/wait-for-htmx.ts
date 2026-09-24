@@ -21,7 +21,7 @@ const MAX_WAIT_MS = 6000
  * `afterRequest` events. This also tolerates actions that trigger no request at
  * all (e.g. a submit that htmx halts because the form is invalid).
  */
-export async function waitForHtmx<T>(page: Page, f: () => Promise<T>): Promise<T> {
+export async function waitForHtmx<T>(page: Page, f: (() => Promise<T>) | Promise<T>): Promise<T> {
   let inFlight = 0
   let lastActivity = Date.now()
 
@@ -44,7 +44,7 @@ export async function waitForHtmx<T>(page: Page, f: () => Promise<T>): Promise<T
   page.on('requestfailed', onRequestDone)
 
   try {
-    const ret = await f()
+    const ret = await (typeof f === 'function' ? f() : f)
 
     // Measure the quiet window from *after* the action, so a request triggered
     // with a small `delay` still resets the window before we give up.

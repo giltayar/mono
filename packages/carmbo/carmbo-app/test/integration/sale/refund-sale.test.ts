@@ -8,7 +8,9 @@ import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
 import {createStudent} from '../../../src/domain/student/model.ts'
 import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model.ts'
 
-const {url, sql, cardcomIntegration, smooveIntegration} = setup(import.meta.url)
+const {url, sql, cardcomIntegration, smooveIntegration, ravmesserIntegration} = setup(
+  import.meta.url,
+)
 
 test.use({viewport: {width: 1024, height: 1024}})
 
@@ -221,6 +223,7 @@ test('refund manual sale allows full refund only', async ({page}) => {
     },
     undefined,
     smooveIntegration(),
+    ravmesserIntegration(),
     new Date(),
     sql(),
   )
