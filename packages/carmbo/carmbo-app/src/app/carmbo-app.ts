@@ -13,7 +13,7 @@ import salesRoutes, {
   landingPageApiRoute as salesLandingPageApiRoute,
   apiRoute as salesApiRoute,
 } from '../domain/sale/route.ts'
-import authRoutes, {useFirebaseAuth} from '../domain/auth/route.ts'
+import {routes as authRoutes, useFirebaseAuth} from '@giltayar/carmbo-pages-auth'
 import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
 import smooveRoutes from '../domain/smoove/route.ts'
 import ravmesserRoutes from '../domain/ravmesser/route.ts'
@@ -103,6 +103,7 @@ export function makeApp({
   firebase:
     | {
         apiKey: string
+        serviceAccountJson: string
       }
     | undefined
   apiSecret: string | undefined

@@ -9,7 +9,6 @@ import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
 import {initializeAppI18next} from './i18next.ts'
-import {initializeFirebase} from '../domain/auth/model-firebase.ts'
 import {createSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 
 export const EnvironmentVariablesSchema = z.object({
@@ -68,10 +67,6 @@ const appBaseUrl = env.APP_BASE_URL
   ? env.APP_BASE_URL
   : `http://${env.HOST.includes(':') ? `[${env.HOST}]` : env.HOST}:${env.PORT}`
 
-if (!env.FORCE_NO_AUTH) {
-  initializeFirebase(env.CARMBO_FIREBASE_SERVICE_ACCOUNT_JSON)
-}
-
 const {app, sql} = await makeApp({
   db: {
     connectionString: env.DB_CONNECTION_STRING,
@@ -126,6 +121,7 @@ const {app, sql} = await makeApp({
     ? undefined
     : {
         apiKey: env.CARMBO_FIREBASE_API_KEY,
+        serviceAccountJson: env.CARMBO_FIREBASE_SERVICE_ACCOUNT_JSON,
       },
   apiSecret: env.CARMBO_API_SECRET,
   appBaseUrl: appBaseUrl,
