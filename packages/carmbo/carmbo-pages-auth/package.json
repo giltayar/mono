@@ -1,0 +1,71 @@
+{
+  "name": "@giltayar/carmbo-pages-auth",
+  "version": "1.0.0",
+  "description": "Firebase authentication pages and route protection for Carmbo applications",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=26.9.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsc --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsc",
+    "test:node": "node --test 'test/unit/**/*.test.ts'",
+    "test:playwright": "NODE_ENV=test playwright test --config=test/integration"
+  },
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmbo/carmbo-pages-auth",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "peerDependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/formbody": "^9.0.0",
+    "fastify": "^5.12.5",
+    "i18next": "^26.4.2"
+  },
+  "dependencies": {
+    "@giltayar/carmbo-common": "^2.0.0",
+    "@giltayar/functional-commons": "^2.2.1",
+    "firebase-admin": "^14.5.0",
+    "lru-cache": "^11.5.3"
+  },
+  "devDependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/formbody": "^9.0.0",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^10.12.0",
+    "eslint-plugin-n": "^18.4.1",
+    "eslint-plugin-prettier": "^5.5.6",
+    "fastify": "^5.12.5",
+    "globals": "^17.13.0",
+    "htmx.org": "^2.0.10",
+    "i18next": "^26.4.2",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.9.9",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.71.0"
+  },
+  "packageManager": "pnpm@12.9.1"
+}

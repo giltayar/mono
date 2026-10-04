@@ -1,0 +1,16 @@
+{
+  "login": {
+    "pageTitle": "Login",
+    "dialogTitle": "Login to your account",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login",
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "loginFailed": "Login failed"
+    }
+  },
+  "logout": {
+    "pageTitle": "Logout"
+  }
+}

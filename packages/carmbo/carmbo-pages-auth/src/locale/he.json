@@ -1,0 +1,16 @@
+{
+  "login": {
+    "pageTitle": "התחברות",
+    "dialogTitle": "התחברות לחשבון שלך",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "submit": "התחברות",
+    "errors": {
+      "invalidCredentials": "אימייל או סיסמה לא נכונים",
+      "loginFailed": "התחברות נכשלה"
+    }
+  },
+  "logout": {
+    "pageTitle": "התנתקות"
+  }
+}
