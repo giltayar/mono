@@ -1,4 +1,4 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
 import type {Sale, SaleHistory, SaleWithHistoryInfo} from '../model/model.ts'
 import {SalesFormFields} from './form.ts'

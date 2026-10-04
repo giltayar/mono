@@ -19,10 +19,14 @@ import {
 } from './view/view.ts'
 import {renderStudentsPage} from './view/list.ts'
 import {renderStudentSalesPage} from './view/student-sales.ts'
-import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
+import {
+  finalHtml,
+  retarget,
+  type ControllerResult,
+} from '@giltayar/carmbo-common/commons/controller-result'
 import type {StudentManipulations} from './view/student-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner, exceptionToBannerHtml} from '../../layout/banner.ts'
+import {exceptionToBanner, exceptionToBannerHtml} from '@giltayar/carmbo-common/layout/banner'
 
 export async function showStudents(
   {

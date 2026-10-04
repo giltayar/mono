@@ -1,11 +1,11 @@
-import {html} from '../../../commons/html-templates.ts'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 import {getFixedT} from 'i18next'
-import {ValidityError} from '../../../commons/validity-error.ts'
+import {ValidityError} from '@giltayar/carmbo-common/commons/validity-error'
 
 const t = getFixedT(null, 'product')
 const tCommon = getFixedT(null, 'layout')
@@ -822,7 +822,7 @@ function AddButton({
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data=${`/src/${version}/layout/style/plus-circle.svg`}
+        data=${`/src/${getVersion()}/layout/style/plus-circle.svg`}
       ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -842,7 +842,7 @@ function RemoveButton() {
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data=${`/src/${version}/layout/style/minus-circle.svg`}
+        data=${`/src/${getVersion()}/layout/style/minus-circle.svg`}
       ></object>
     </button>
   `

@@ -1,1 +1,0 @@
-ALTER TYPE SALE_HISTORY_OPERATION ADD VALUE 'cancel-subscription';

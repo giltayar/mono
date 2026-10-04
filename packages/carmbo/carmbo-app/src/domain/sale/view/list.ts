@@ -1,9 +1,9 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '../../../layout/main-view.ts'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import {Layout} from './layout.ts'
 import type {SaleForGrid} from '../model/model.ts'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 
 export function renderSalesPage(
   flash: string | undefined,
@@ -163,7 +163,7 @@ function SalesView({
           <object
             type="image/svg+xml"
             class="feather feather-large"
-            data=${`/src/${version}/layout/style/plus-circle.svg`}
+            data=${`/src/${getVersion()}/layout/style/plus-circle.svg`}
           ></object>
         </a>
       </section>

@@ -1,7 +1,7 @@
-import {html} from '../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '../../layout/main-view.ts'
-import type {Banner} from '../../layout/banner.ts'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
+import type {Banner} from '@giltayar/carmbo-common/layout/banner'
 
 const t = getFixedT(null, 'auth')
 

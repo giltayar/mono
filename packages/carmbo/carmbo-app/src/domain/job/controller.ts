@@ -1,5 +1,5 @@
 import type {Sql} from 'postgres'
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import {finalHtml, type ControllerResult} from '@giltayar/carmbo-common/commons/controller-result'
 import {listJobs, queryJobById} from './model.ts'
 import {renderJobPage, renderJobsPage} from './view/view.ts'
 

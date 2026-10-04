@@ -17,13 +17,17 @@ import {
   renderProductViewInHistoryPage,
 } from './view/view.ts'
 import {renderProductsPage} from './view/list.ts'
-import {finalHtml, type ControllerResult, retarget} from '../../commons/controller-result.ts'
+import {
+  finalHtml,
+  type ControllerResult,
+  retarget,
+} from '@giltayar/carmbo-common/commons/controller-result'
 import type {ProductManipulations} from './view/product-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner} from '../../layout/banner.ts'
-import {listWhatsAppGroups} from '../../commons/external-provider/whatsapp-groups.ts'
-import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
-import {listRavmesserLists} from '../../commons/external-provider/ravmesser-lists.ts'
+import {exceptionToBanner} from '@giltayar/carmbo-common/layout/banner'
+import {listWhatsAppGroups} from '@giltayar/carmbo-common/commons/external-provider/whatsapp-groups'
+import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
+import {listRavmesserLists} from '@giltayar/carmbo-common/commons/external-provider/ravmesser-lists'
 import {submitPropagateAcademyCourseChangesJob} from '../sale/model/model-external-providers.ts'
 import {searchProducts} from '../sale/model/model.ts'
 import {when} from '@giltayar/functional-commons'

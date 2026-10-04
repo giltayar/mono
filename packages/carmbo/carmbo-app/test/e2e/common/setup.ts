@@ -6,8 +6,7 @@ import {
   createSmooveIntegrationService,
   type SmooveIntegrationService,
 } from '@giltayar/carmel-tools-smoove-integration/service'
-import {migrate} from '../../../src/sql/migration.ts'
-import {fileURLToPath} from 'node:url'
+import {migrate} from '@giltayar/carmbo-common/sql/migration'
 
 export function setup(testUrl: string): {
   url: () => URL
@@ -46,7 +45,7 @@ export function setup(testUrl: string): {
       transform: {...postgres.camel},
     })
 
-    await migrate({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
+    await migrate({sql})
   })
 
   test.beforeEach(async () => {

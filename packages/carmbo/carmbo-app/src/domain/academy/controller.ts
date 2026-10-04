@@ -1,10 +1,10 @@
 import {requestContext} from '@fastify/request-context'
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
+import {finalHtml, type ControllerResult} from '@giltayar/carmbo-common/commons/controller-result'
 import {listAcademyCourses} from './model.ts'
 import {renderAcademyCourseOptions} from './view/list-searches.ts'
 import {AcademyCoursesDatalist} from './view/form.ts'
-import {html} from '../../commons/html-templates.ts'
-import {generateItemTitle} from '../../commons/view-commons.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
 
 export async function showAcademyCourseDatalist(
   subdomain: string,

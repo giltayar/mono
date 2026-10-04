@@ -20,7 +20,7 @@ import type {
 } from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import type {WhatsAppGroupId} from '@giltayar/carmel-tools-whatsapp-integration/types'
-import type {NowService} from '../../../commons/now-service.ts'
+import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
 import {when} from '@giltayar/functional-commons'
 import {listAcademyCourses} from '../../academy/model.ts'
 

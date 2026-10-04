@@ -1,7 +1,7 @@
 import type {FastifyInstance} from 'fastify'
 import {LoginPage} from './view-login.ts'
 import {login, logout} from './controller.ts'
-import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {dealWithControllerResult} from '@giltayar/carmbo-common/commons/routes-commons'
 import {verifySessionCookie} from './model-firebase.ts'
 
 export default function (app: FastifyInstance, {firebase}: {firebase: {apiKey: string}}) {

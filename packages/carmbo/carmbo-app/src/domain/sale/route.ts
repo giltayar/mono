@@ -37,7 +37,7 @@ import {
 import {
   dealWithControllerResult,
   dealWithControllerResultAsync,
-} from '../../commons/routes-commons.ts'
+} from '@giltayar/carmbo-common/commons/routes-commons'
 import {NewSaleSchema, RefundSaleSchema, SaleSchema} from './model/model.ts'
 import assert from 'node:assert'
 import {
@@ -50,7 +50,7 @@ import {initializePropagateAcademyCourseChangesJobHandlers} from './model/model-
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
-import type {NowService} from '../../commons/now-service.ts'
+import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 

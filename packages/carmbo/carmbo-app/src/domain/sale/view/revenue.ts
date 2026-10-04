@@ -1,6 +1,6 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '../../../layout/main-view.ts'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import {Layout} from './layout.ts'
 import type {RevenueSummary} from '../model/model.ts'
 

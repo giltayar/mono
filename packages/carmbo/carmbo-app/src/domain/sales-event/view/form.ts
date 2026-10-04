@@ -1,9 +1,9 @@
 import {requestContext} from '@fastify/request-context'
-import {html} from '../../../commons/html-templates.ts'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
 import type {SalesEvent} from '../model/model.ts'
 import type {OngoingSalesEvent} from './model.ts'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'sales-event')
@@ -125,7 +125,7 @@ export function SalesEventCreateOrUpdateFormFields({
                         ><object
                           type="image/svg+xml"
                           class="feather feather-small pe-none"
-                          data=${`/src/${version}/layout/style/link.svg`}
+                          data=${`/src/${getVersion()}/layout/style/link.svg`}
                         ></object>
                       </a>`
                     : ''
@@ -186,7 +186,7 @@ function AddButton({
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data=${`/src/${version}/layout/style/plus-circle.svg`}
+        data=${`/src/${getVersion()}/layout/style/plus-circle.svg`}
       ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -206,7 +206,7 @@ function RemoveButton() {
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data=${`/src/${version}/layout/style/minus-circle.svg`}
+        data=${`/src/${getVersion()}/layout/style/minus-circle.svg`}
       ></object>
     </button>
   `

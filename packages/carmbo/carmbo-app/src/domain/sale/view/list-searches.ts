@@ -1,5 +1,5 @@
-import {html} from '../../../commons/html-templates.ts'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
 
 export function renderSalesEventListPage(salesEvents: {salesEventNumber: number; name: string}[]) {
   return html`${salesEvents.map(

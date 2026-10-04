@@ -17,7 +17,7 @@ import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
-import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {dealWithControllerResult} from '@giltayar/carmbo-common/commons/routes-commons'
 
 export default function (app: FastifyInstance, {sql}: {sql: Sql}) {
   const appWithTypes = app.withTypeProvider<ZodTypeProvider>()

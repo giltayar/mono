@@ -1,8 +1,8 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
+import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
 import type {NewSale, Sale} from '../model/model.ts'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 
 export function SalesFormFields({
   sale,
@@ -52,7 +52,7 @@ export function SalesFormFields({
                     ><object
                       type="image/svg+xml"
                       class="feather feather-small pe-none"
-                      data=${`/src/${version}/layout/style/link.svg`}
+                      data=${`/src/${getVersion()}/layout/style/link.svg`}
                     ></object>
                   </a>`
                 : ''
@@ -82,7 +82,7 @@ export function SalesFormFields({
                       ><object
                         type="image/svg+xml"
                         class="feather feather-small pe-none"
-                        data=${`/src/${version}/layout/style/link.svg`}
+                        data=${`/src/${getVersion()}/layout/style/link.svg`}
                       ></object>
                     </a>`
                   : ''
@@ -144,7 +144,7 @@ export function SalesFormFields({
                                 ><object
                                   type="image/svg+xml"
                                   class="feather feather-small pe-none"
-                                  data=${`/src/${version}/layout/style/link.svg`}
+                                  data=${`/src/${getVersion()}/layout/style/link.svg`}
                                 ></object>
                               </a>
                             </h6>
@@ -416,7 +416,7 @@ function InvoiceDocumentUrlLink({url}: {url: string}) {
     ><object
       type="image/svg+xml"
       class="feather feather-small pe-none"
-      data=${`/src/${version}/layout/style/external-link.svg`}
+      data=${`/src/${getVersion()}/layout/style/external-link.svg`}
     ></object>`
 }
 

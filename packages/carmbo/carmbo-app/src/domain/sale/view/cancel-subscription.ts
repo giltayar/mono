@@ -1,7 +1,7 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '../../../layout/main-view.ts'
-import {version} from '../../../commons/version.ts'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 
 const t = getFixedT(null, 'sale')
 
@@ -115,7 +115,7 @@ export function showCancelSubscriptionForm(email: string | undefined, _productNu
   return html`
     <${MainLayout} title=${t('cancelSubscription.pageTitle')} activeNavItem="no-nav-bar">
       <script
-        src=${`/src/${version}/domain/sale/view/js/cancel-subscription.js`}
+        src=${`/src/${getVersion()}/domain/sale/view/js/cancel-subscription.js`}
         type="module"
       ></script>
       <div class="container">

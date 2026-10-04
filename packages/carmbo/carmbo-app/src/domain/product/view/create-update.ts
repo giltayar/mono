@@ -1,4 +1,4 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import type {Product, ProductHistory, ProductWithHistoryInfo} from '../model.ts'
 import {ProductCreateOrUpdateFormFields} from './form.ts'
 import {ProductHistoryList, historyOperationToText} from './history.ts'

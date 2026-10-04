@@ -1,13 +1,20 @@
 import type {PendingQuery, Row, Sql} from 'postgres'
-import {HistoryOperationEnumSchema, type HistoryOperation} from '../../commons/operation-type.ts'
+import {
+  HistoryOperationEnumSchema,
+  type HistoryOperation,
+} from '@giltayar/carmbo-common/commons/operation-type'
 import {assert} from 'node:console'
 import {z} from 'zod'
-import {sqlTextSearch} from '../../commons/sql-commons.ts'
+import {sqlTextSearch} from '@giltayar/carmbo-common/commons/sql-commons'
 import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
 import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import {assertNever} from '@giltayar/functional-commons'
-import {normalizeEmail, normalizePhoneNumber, normalizeName} from '../../commons/normalize-input.ts'
-import {TEST_executeHook} from '../../commons/TEST_hooks.ts'
+import {
+  normalizeEmail,
+  normalizePhoneNumber,
+  normalizeName,
+} from '@giltayar/carmbo-common/commons/normalize-input'
+import {TEST_executeHook} from '@giltayar/carmbo-common/commons/TEST_hooks'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import pMapSeries from 'p-map-series'
 

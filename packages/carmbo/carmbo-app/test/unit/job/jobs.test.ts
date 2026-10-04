@@ -12,7 +12,7 @@ import {
 import {registerJobHandler, jobHandlers} from '../../../src/domain/job/job-handlers.ts'
 import type {FastifyBaseLogger} from 'fastify'
 import {setTimeout} from 'node:timers/promises'
-import {migrate} from '../../../src/sql/migration.ts'
+import {migrate} from '@giltayar/carmbo-common/sql/migration'
 
 // Create a simple logger for testing
 function createTestLogger(): FastifyBaseLogger {
@@ -78,7 +78,7 @@ describe('Job Executor', () => {
       transform: {...postgres.camel},
     })
 
-    await migrate({sql, path: new URL('../../../src/sql', import.meta.url)})
+    await migrate({sql})
 
     initializeJobExecutor(sql, logger)
   })

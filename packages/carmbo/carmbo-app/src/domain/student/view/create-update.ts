@@ -1,4 +1,4 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import type {Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import {StudentCreateOrUpdateFormFields} from './form.ts'
 import {StudentHistoryList, historyOperationToText} from './history.ts'

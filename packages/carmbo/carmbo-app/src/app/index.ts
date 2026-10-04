@@ -8,7 +8,7 @@ import {createRavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesse
 import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
-import {initializei18next} from '../commons/i18next-utils.ts'
+import {initializeAppI18next} from './i18next.ts'
 import {initializeFirebase} from '../domain/auth/model-firebase.ts'
 import {createSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 
@@ -134,6 +134,6 @@ const {app, sql} = await makeApp({
 
 await prepareDatabase(sql)
 
-await initializei18next(process.env.LANGUAGE)
+await initializeAppI18next(process.env.LANGUAGE)
 
 await app.listen({port: env.PORT, host: env.HOST})

@@ -1,12 +1,12 @@
-import {html} from '../../../commons/html-templates.ts'
-import {MainLayout} from '../../../layout/main-view.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import type {NewStudent, Student, StudentHistory, StudentWithHistoryInfo} from '../model.ts'
 import type {OngoingStudent} from './model.ts'
 import {manipulateStudent, type StudentManipulations} from './student-manipulations.ts'
 import {StudentCreateOrUpdateFormFields} from './form.ts'
 import {StudentCreateView, StudentHistoryView, StudentUpdateView} from './create-update.ts'
 import {Layout} from './layout.ts'
-import type {Banner} from '../../../layout/banner.ts'
+import type {Banner} from '@giltayar/carmbo-common/layout/banner'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'student')

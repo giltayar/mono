@@ -1,6 +1,6 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '../../../layout/main-view.ts'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import {
   type NewSale,
   type SaleHistory,
@@ -11,7 +11,7 @@ import {SaleUpdateView} from './sale.ts'
 import {Layout} from './layout.ts'
 import {SaleCreateView} from './create-update.ts'
 import {SalesFormFields, StudentInput} from './form.ts'
-import type {Banner} from '../../../layout/banner.ts'
+import type {Banner} from '@giltayar/carmbo-common/layout/banner'
 import {SalePaymentsView} from './sale-payment.ts'
 import type {SaleWithProviders} from '../model/model-external-providers.ts'
 import {SaleProvidersView} from './sale-providers.ts'

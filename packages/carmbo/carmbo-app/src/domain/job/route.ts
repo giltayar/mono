@@ -2,7 +2,7 @@ import type {FastifyInstance} from 'fastify'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import z from 'zod'
 import {triggerJobsExecution} from './job-executor.ts'
-import {dealWithControllerResult} from '../../commons/routes-commons.ts'
+import {dealWithControllerResult} from '@giltayar/carmbo-common/commons/routes-commons'
 import {showJob, showJobs} from './controller.ts'
 import type {Sql} from 'postgres'
 

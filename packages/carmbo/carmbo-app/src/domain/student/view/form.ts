@@ -1,7 +1,7 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import type {Student} from '../model.ts'
 import type {OngoingStudent} from './model.ts'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'student')
@@ -246,7 +246,7 @@ function AddButton({
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data=${`/src/${version}/layout/style/plus-circle.svg`}
+        data=${`/src/${getVersion()}/layout/style/plus-circle.svg`}
       ></object>
       ${isOnItsOwn ? html`<span class="ms-1">${humanName}</span>` : ''}
     </button>
@@ -266,7 +266,7 @@ function RemoveButton() {
       <object
         type="image/svg+xml"
         class="feather pe-none"
-        data=${`/src/${version}/layout/style/minus-circle.svg`}
+        data=${`/src/${getVersion()}/layout/style/minus-circle.svg`}
       ></object>
     </button>
   `

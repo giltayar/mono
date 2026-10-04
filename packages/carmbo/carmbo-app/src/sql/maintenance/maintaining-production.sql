@@ -1,1 +1,0 @@
-# DELETE FROM sale WHERE sale_number in (34, 33, 32, 28)

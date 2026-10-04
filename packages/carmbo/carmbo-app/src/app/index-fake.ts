@@ -6,7 +6,7 @@ import {createFakeRavmesserIntegrationService} from '@giltayar/carmel-tools-ravm
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {prepareDatabase} from './prepare-database.ts'
 import {range, when} from '@giltayar/functional-commons'
-import {initializei18next} from '../commons/i18next-utils.ts'
+import {initializeAppI18next} from './i18next.ts'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
 
 const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
@@ -110,7 +110,7 @@ const {app, sql} = await makeApp({
 
 await prepareDatabase(sql)
 
-await initializei18next(process.env.LANGUAGE)
+await initializeAppI18next(process.env.LANGUAGE)
 
 await app.listen({port: 3000, host: 'localhost'})
 

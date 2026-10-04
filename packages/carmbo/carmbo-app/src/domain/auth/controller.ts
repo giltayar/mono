@@ -1,5 +1,5 @@
-import {finalHtml, type ControllerResult} from '../../commons/controller-result.ts'
-import {exceptionToBanner} from '../../layout/banner.ts'
+import {finalHtml, type ControllerResult} from '@giltayar/carmbo-common/commons/controller-result'
+import {exceptionToBanner} from '@giltayar/carmbo-common/layout/banner'
 import {
   createSessionCookie,
   revokeRefreshTokens,

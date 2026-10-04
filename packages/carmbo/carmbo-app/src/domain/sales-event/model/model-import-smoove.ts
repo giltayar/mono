@@ -3,7 +3,7 @@ import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser
 import type {SmooveContactInList} from '@giltayar/carmel-tools-smoove-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql, TransactionSql} from 'postgres'
-import {normalizeEmail, normalizePhoneNumber} from '../../../commons/normalize-input.ts'
+import {normalizeEmail, normalizePhoneNumber} from '@giltayar/carmbo-common/commons/normalize-input'
 import {
   connectSaleToExternalProviders,
   sendPersonalMessagesWhenJoining,
@@ -12,7 +12,7 @@ import {
 import {createNoInvoiceSale} from '../../sale/model/model-sale.ts'
 import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
-import type {NowService} from '../../../commons/now-service.ts'
+import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 export type ImportResult = {

@@ -1,1 +1,0 @@
-ALTER TABLE product_integration_smoove ADD COLUMN removed_date_custom_field INTEGER;

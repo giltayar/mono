@@ -1,11 +1,11 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 
 export function Layout({children}: {children: string | string[]}) {
   return html`
-    <script src=${`/src/${version}/domain/sale/view/js/scripts.js`} type="module"></script>
-    <link rel="stylesheet" href=${`/src/${version}/domain/sale/view/style/style.css`} />
+    <script src=${`/src/${getVersion()}/domain/sale/view/js/scripts.js`} type="module"></script>
+    <link rel="stylesheet" href=${`/src/${getVersion()}/domain/sale/view/style/style.css`} />
     <div class="sales-view">${children}</div>
   `
 }

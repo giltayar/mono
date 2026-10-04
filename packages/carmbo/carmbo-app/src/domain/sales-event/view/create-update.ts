@@ -1,5 +1,5 @@
 import {addQueryParamsToUrl} from '@giltayar/url-commons'
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import type {
   SalesEvent,
   SalesEventHistory,

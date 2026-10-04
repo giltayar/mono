@@ -35,12 +35,14 @@ import type {
   RavmesserList,
   RavmesserIntegrationService,
 } from '@giltayar/carmel-tools-ravmesser-integration/service'
-import type {TEST_HookFunction} from '../commons/TEST_hooks.ts'
+import type {TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 import {initializeJobExecutor} from '../domain/job/job-executor.ts'
-import {version} from '../commons/version.ts'
-import {setUiConfiguration} from '../commons/ui-configuration.ts'
+import {setVersion} from '@giltayar/carmbo-common/commons/version'
+import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
+import {layoutScriptRoot, layoutStyleRoot} from '@giltayar/carmbo-common/layout/assets'
+import packageJson from '../../package.json' with {type: 'json'}
 
 declare module '@fastify/request-context' {
   interface RequestContextData {
@@ -58,7 +60,6 @@ declare module '@fastify/request-context' {
     smooveLists: SmooveList[] | undefined
     ravmesserLists: RavmesserList[] | undefined
     products: {id: number; name: string}[] | undefined
-    TEST_hooks: Record<string, TEST_HookFunction> | undefined
   }
 }
 
@@ -109,6 +110,8 @@ export function makeApp({
   uiConfiguration: string
   TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
+  const version = packageJson.version
+  setVersion(version)
   setUiConfiguration(uiConfiguration)
 
   const app = fastify({
@@ -177,18 +180,24 @@ export function makeApp({
     immutable: true,
     maxAge: '1y',
   })
-  app.register(fastifyStatic, {
-    root: new URL('../../src', import.meta.url),
-    prefix: '/src/' + version + '/',
-    decorateReply: false,
-    immutable: true,
-    maxAge: '1y',
-    allowedPath: (pathName) =>
-      pathName.endsWith('.js') ||
-      pathName.endsWith('.css') ||
-      pathName.endsWith('.png') ||
-      pathName.endsWith('.svg'),
-  })
+  for (const [root, prefix] of [
+    [new URL('../../src', import.meta.url), `/src/${version}/`],
+    [layoutStyleRoot, `/src/${version}/layout/style/`],
+    [layoutScriptRoot, `/src/${version}/layout/js/`],
+  ] as const) {
+    app.register(fastifyStatic, {
+      root,
+      prefix,
+      decorateReply: false,
+      immutable: true,
+      maxAge: '1y',
+      allowedPath: (pathName) =>
+        pathName.endsWith('.js') ||
+        pathName.endsWith('.css') ||
+        pathName.endsWith('.png') ||
+        pathName.endsWith('.svg'),
+    })
+  }
 
   if (firebase) {
     app.register(authRoutes, {prefix: '/auth', firebase})

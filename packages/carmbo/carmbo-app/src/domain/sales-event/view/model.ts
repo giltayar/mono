@@ -1,5 +1,5 @@
 import {z} from 'zod'
-import {itemPickerSchema} from '../../../commons/schema-commons.ts'
+import {itemPickerSchema} from '@giltayar/carmbo-common/commons/schema-commons'
 
 export const OngoingSalesEventSchema = z.object({
   name: z.string().optional(),

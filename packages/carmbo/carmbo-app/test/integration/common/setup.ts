@@ -10,12 +10,11 @@ import {createFakeAcademyIntegrationService} from '@giltayar/carmel-tools-academ
 import {createFakeWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/testkit'
 import {createFakeSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/testkit'
 import {createFakeRavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/testkit'
-import {migrate} from '../../../src/sql/migration.ts'
-import {fileURLToPath} from 'node:url'
-import {resetHooks, type TEST_HookFunction} from '../../../src/commons/TEST_hooks.ts'
+import {migrate} from '@giltayar/carmbo-common/sql/migration'
+import {resetHooks, type TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
 import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
-import {initializei18next} from '../../../src/commons/i18next-utils.ts'
+import {initializeAppI18next} from '../../../src/app/i18next.ts'
 import {when} from '@giltayar/functional-commons'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
 
@@ -52,6 +51,8 @@ export function setup(
     withSmooveIntegration?: boolean // default is true
     withRavmesserIntegration?: boolean // default is true
     withSkoolIntegration?: boolean // default is true
+    uiConfiguration?: 'carmel' | 'liraz'
+    language?: string
     databaseBackup?: {
       backupFile: string
       apiSecret: string
@@ -229,13 +230,13 @@ export function setup(
       firebase: undefined,
       apiSecret: options?.databaseBackup?.apiSecret,
       appBaseUrl: 'http://localhost:????',
-      uiConfiguration: 'carmel',
+      uiConfiguration: options?.uiConfiguration ?? 'carmel',
       TEST_hooks,
     }))
 
-    await migrate({sql, path: fileURLToPath(new URL('../../../src/sql', import.meta.url))})
+    await migrate({sql})
 
-    await initializei18next('en')
+    await initializeAppI18next(options?.language ?? 'en')
 
     await app.listen()
     app.server.unref()

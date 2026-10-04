@@ -1,5 +1,5 @@
-import {html} from '../../../commons/html-templates.ts'
-import {MainLayout} from '../../../layout/main-view.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import type {StudentSaleForGrid} from '../model.ts'
 import {Layout, Tabs} from './layout.ts'
 import {getFixedT, default as i18next} from 'i18next'

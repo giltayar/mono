@@ -2,6 +2,10 @@ import type {Page} from '@playwright/test'
 
 export function createAllPagesPageModel(page: Page) {
   return {
+    documentElement: () => ({locator: page.locator('html')}),
+    assets: () => ({
+      locator: page.locator('link[rel="stylesheet"][href], script[src], img[src], object[data]'),
+    }),
     header: () => ({
       errorBanner: (locator = page.getByRole('alert')) => ({locator}),
       menu: (menuLocator = page.getByRole('navigation')) => ({

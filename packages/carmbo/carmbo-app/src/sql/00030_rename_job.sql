@@ -1,1 +1,0 @@
-ALTER TABLE jobs RENAME TO job;

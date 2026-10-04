@@ -1,8 +1,8 @@
-import {html} from '../../../commons/html-templates.ts'
-import {MainLayout} from '../../../layout/main-view.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import {Layout} from './layout.ts'
 import type {StudentForGrid} from '../model.ts'
-import {version} from '../../../commons/version.ts'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'student')
@@ -121,7 +121,7 @@ function StudentsView({
           <object
             type="image/svg+xml"
             class="feather feather-large"
-            data=${`/src/${version}/layout/style/plus-circle.svg`}
+            data=${`/src/${getVersion()}/layout/style/plus-circle.svg`}
           ></object>
         </a>
       </section>

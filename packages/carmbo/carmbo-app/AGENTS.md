@@ -17,13 +17,19 @@
 - `carmbo-app` is a web app that uses HTMX for the web pages and interactivity, so there is very little
   frontend javascript.
 
-- For server-side rendering of the HTML, it uses the `htm` and `vhtml` package
+- For server-side rendering of the HTML, it uses helpers from `@giltayar/carmbo-common`,
+  which use `htm` and `vhtml`.
+
+- Shared helpers, layout, branding assets, and layout translations come from the published
+  `@giltayar/carmbo-common` package. The app supplies its version, UI configuration, and domain
+  locale location. Shared changes must be tested and published before installing them here.
 
 - It uses TypeScript natively in Node.js without the need to transpile
 
 - For CSS and components, it uses bootstrap.
 
-- What little JS there is can be found in the `src` folder, and the HTML references it directly there.
+- Domain JS is in the `src` folder; layout JS and CSS come from carmbo-common. Both are served
+  at the existing `/src/<app-version>/` URLs.
 
 - It uses postgres as the backend database
 
@@ -65,10 +71,10 @@
 
 ## The database schema
 
-- The database schema can be found in `src/sql`. It is a set of sql migration files and Typescript migration files,
-  which the app uses to migrate the database from its current schema to the latest schema.
+- The database schema and migration runner are owned by `@giltayar/carmbo-common`.
+  Its `sql/migration` export runs the installed SQL and compiled data migrations.
 
-- The code for this can be found in `sq/migration.ts`
+- App database preparation is in `src/app/prepare-database.ts` and calls `migrate({sql})`.
 
 ## The tests
 

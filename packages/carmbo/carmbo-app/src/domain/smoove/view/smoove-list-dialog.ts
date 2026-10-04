@@ -1,6 +1,6 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {generateItemTitle} from '../../../commons/view-commons.ts'
+import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
 
 export function renderSmooveListCreateDialog(targetFieldId: string) {
   const t = getFixedT(null, 'product')

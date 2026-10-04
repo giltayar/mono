@@ -1,13 +1,13 @@
-import {html} from '../../../commons/html-templates.ts'
-import {version} from '../../../commons/version.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {getVersion} from '@giltayar/carmbo-common/commons/version'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'student')
 
 export function Layout({children}: {children: string | string[]}) {
   return html`
-    <script src=${`/src/${version}/domain/student/view/js/scripts.js`} defer></script>
-    <link rel="stylesheet" href=${`/src/${version}/domain/student/view/style/style.css`} />
+    <script src=${`/src/${getVersion()}/domain/student/view/js/scripts.js`} defer></script>
+    <link rel="stylesheet" href=${`/src/${getVersion()}/domain/student/view/style/style.css`} />
     <div class="students-view">${children}</div>
   `
 }

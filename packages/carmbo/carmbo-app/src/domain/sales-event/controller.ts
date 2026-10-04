@@ -20,11 +20,15 @@ import {
   renderSalesEventViewInHistoryPage,
 } from './view/view.ts'
 import {renderSalesEventsPage} from './view/list.ts'
-import {finalHtml, retarget, type ControllerResult} from '../../commons/controller-result.ts'
+import {
+  finalHtml,
+  retarget,
+  type ControllerResult,
+} from '@giltayar/carmbo-common/commons/controller-result'
 import type {SalesEventManipulations} from './view/sales-event-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner, type Banner} from '../../layout/banner.ts'
-import {listSmooveLists} from '../../commons/external-provider/smoove-lists.ts'
+import {exceptionToBanner, type Banner} from '@giltayar/carmbo-common/layout/banner'
+import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
 import {renderImportSmooveDialog, renderImportJob} from './view/import-smoove.ts'
 import {submitImportFromSmooveListJob} from './model/model-import-smoove.ts'
 import {triggerJobsExecution} from '../job/job-executor.ts'

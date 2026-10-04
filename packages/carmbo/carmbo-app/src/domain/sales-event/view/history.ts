@@ -1,6 +1,6 @@
-import {html} from '../../../commons/html-templates.ts'
+import {html} from '@giltayar/carmbo-common/commons/html-templates'
 import type {SalesEventHistory, SalesEventWithHistoryInfo} from '../model/model.ts'
-import type {HistoryOperation} from '../../../commons/operation-type.ts'
+import type {HistoryOperation} from '@giltayar/carmbo-common/commons/operation-type'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'sales-event')
