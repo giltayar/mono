@@ -33,7 +33,9 @@
 - For CSS and components, it uses bootstrap.
 
 - Domain JS is in the `src` folder; layout JS and CSS come from carmbo-common. Both are served
-  at the existing `/src/<app-version>/` URLs.
+  at the existing `/src/<app-version>/` URLs. Register `layoutAssetRoutes` from
+  `@giltayar/carmbo-common/layout/assets` after configuring the app version to serve the shared
+  assets; their filesystem roots are internal to carmbo-common.
 
 - It uses postgres as the backend database
 

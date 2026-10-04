@@ -41,7 +41,7 @@ import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integra
 import {initializeJobExecutor} from '../domain/job/job-executor.ts'
 import {setVersion} from '@giltayar/carmbo-common/commons/version'
 import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
-import {layoutScriptRoot, layoutStyleRoot} from '@giltayar/carmbo-common/layout/assets'
+import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
 import packageJson from '../../package.json' with {type: 'json'}
 
 declare module '@fastify/request-context' {
@@ -180,24 +180,19 @@ export function makeApp({
     immutable: true,
     maxAge: '1y',
   })
-  for (const [root, prefix] of [
-    [new URL('../../src', import.meta.url), `/src/${version}/`],
-    [layoutStyleRoot, `/src/${version}/layout/style/`],
-    [layoutScriptRoot, `/src/${version}/layout/js/`],
-  ] as const) {
-    app.register(fastifyStatic, {
-      root,
-      prefix,
-      decorateReply: false,
-      immutable: true,
-      maxAge: '1y',
-      allowedPath: (pathName) =>
-        pathName.endsWith('.js') ||
-        pathName.endsWith('.css') ||
-        pathName.endsWith('.png') ||
-        pathName.endsWith('.svg'),
-    })
-  }
+  app.register(fastifyStatic, {
+    root: new URL('../../src', import.meta.url),
+    prefix: `/src/${version}/`,
+    decorateReply: false,
+    immutable: true,
+    maxAge: '1y',
+    allowedPath: (pathName) =>
+      pathName.endsWith('.js') ||
+      pathName.endsWith('.css') ||
+      pathName.endsWith('.png') ||
+      pathName.endsWith('.svg'),
+  })
+  app.register(layoutAssetRoutes)
 
   if (firebase) {
     app.register(authRoutes, {prefix: '/auth', firebase})

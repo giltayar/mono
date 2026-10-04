@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "10.0.3",
+  "version": "10.0.4",
   "description": "",
   "type": "module",
   "exports": {
@@ -61,7 +61,7 @@
     "@fastify/formbody": "^9.0.0",
     "@fastify/request-context": "^7.0.0",
     "@fastify/static": "^10.1.5",
-    "@giltayar/carmbo-common": "^1.0.0",
+    "@giltayar/carmbo-common": "^2.0.0",
     "@giltayar/carmel-tools-academy-integration": "^6.0.0",
     "@giltayar/carmel-tools-cardcom-integration": "^9.1.0",
     "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",

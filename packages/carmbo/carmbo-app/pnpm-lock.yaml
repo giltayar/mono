@@ -182,8 +182,8 @@ importers:
         specifier: ^10.1.5
         version: 10.1.5
       '@giltayar/carmbo-common':
-        specifier: ^1.0.0
-        version: 1.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+        specifier: ^2.0.0
+        version: 2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
       '@giltayar/carmel-tools-academy-integration':
         specifier: ^6.0.0
         version: 6.0.0
@@ -467,8 +467,8 @@ packages:
     resolution: {integrity: sha512-c/z/gaIlaaLZEuGbE6sLUuJ61tskg1JghvhcNQzW948ASBinbVBBRnZTC4b4yt4LaEtJQkYlyzqLHcutFwEIvA==}
     engines: {node: '>=20.0.0'}
 
-  '@giltayar/carmbo-common@1.0.0':
-    resolution: {integrity: sha512-9CKQbCWAXNcJaVUlyvByRxrA358b7XMl6p84i4P+iyJndUGYItaDAkE3ivmeHEjpZuG65Gk2taGZAFkf98HwRQ==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-common/1.0.0/786944685a276056d4a86a3c13a97d1c36c1bda0}
+  '@giltayar/carmbo-common@2.0.0':
+    resolution: {integrity: sha512-PLuBgn9Ysc3MoxZ4OZX72uuYEeQxbLyE15wTYm4Bs8pIApTZk4xIyCO+ZrhIiv8cKHZKc6Tc4IzNFJgkLIGFbw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-common/2.0.0/d8feb744326df129b67e7ffd4fa8b26a48dee35b}
     engines: {node: '>=26.9.0'}
     peerDependencies:
       '@fastify/request-context': ^7.0.0
@@ -3225,9 +3225,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@giltayar/carmbo-common@1.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))':
+  '@giltayar/carmbo-common@2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))':
     dependencies:
       '@fastify/request-context': 7.0.0
+      '@fastify/static': 10.1.5
       '@giltayar/carmel-tools-ravmesser-integration': 1.0.0
       '@giltayar/carmel-tools-smoove-integration': 5.3.1
       '@giltayar/carmel-tools-whatsapp-integration': 2.6.1

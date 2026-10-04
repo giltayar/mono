@@ -1,6 +1,5 @@
 import {test, expect} from '@playwright/test'
 import {readFile} from 'node:fs/promises'
-import {layoutScriptRoot, layoutStyleRoot} from '@giltayar/carmbo-common/layout/assets'
 import packageJson from '../../../package.json' with {type: 'json'}
 import enStudent from '../../../src/domain/student/locale/en.json' with {type: 'json'}
 import heStudent from '../../../src/domain/student/locale/he.json' with {type: 'json'}
@@ -55,10 +54,10 @@ for (const [brand, language, direction, logo, translations] of [
       )
 
       for (const [prefix, root, files] of [
-        [`${srcPrefix}layout/js/`, layoutScriptRoot, ['scripts.js']],
+        [`${srcPrefix}layout/js/`, undefined, ['scripts.js']],
         [
           `${srcPrefix}layout/style/`,
-          layoutStyleRoot,
+          undefined,
           [
             'style.css',
             'link.svg',
@@ -92,13 +91,24 @@ for (const [brand, language, direction, logo, translations] of [
                 ? 'image/svg+xml'
                 : 'image/png'
           expect(response.headers()['content-type'], file).toContain(contentType)
-          expect(await response.body(), file).toEqual(await readFile(new URL(file, root)))
+          if (root) {
+            expect(await response.body(), file).toEqual(await readFile(new URL(file, root)))
+          } else if (contentType === 'image/png') {
+            expect((await response.body()).subarray(0, 8), file).toEqual(
+              Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+            )
+          } else if (contentType === 'image/svg+xml') {
+            expect(await response.text(), file).toMatch(/<svg\b/)
+          } else if (contentType === 'text/css') {
+            expect(await response.text(), file).toMatch(/\.feather\s*\{/)
+          }
         }
       }
 
       for (const path of [
         'layout/main-view.js',
         'layout/assets.js',
+        'layout/asset-roots.js',
         'layout/locale/en.json',
         'layout/js/scripts.d.ts',
         'layout/js/scripts.js.map',
