@@ -166,6 +166,9 @@ importers:
 
   .:
     dependencies:
+      '@fastify/static':
+        specifier: ^10.1.4
+        version: 10.1.5
       '@giltayar/carmel-tools-ravmesser-integration':
         specifier: ^1.0.0
         version: 1.0.0
@@ -200,9 +203,6 @@ importers:
       '@fastify/request-context':
         specifier: ^7.0.0
         version: 7.0.0
-      '@fastify/static':
-        specifier: ^10.1.4
-        version: 10.1.5
       '@giltayar/docker-compose-testkit':
         specifier: ^2.1.0
         version: 2.1.0

@@ -83,28 +83,22 @@ for its own database/services, but remove its duplicate declaration of this fiel
 ## Serving assets
 
 The app continues to build/serve Bootstrap and HTMX under `/dist/<app-version>/` and its own
-domain assets under `/src/<app-version>/domain/`. Register the package's public directories
-at the existing layout URLs using `@fastify/static`:
+domain assets under `/src/<app-version>/domain/`. Register the shared asset routes at the
+existing layout URLs after calling `setVersion`:
 
 ```ts
-import fastifyStatic from '@fastify/static'
-import {layoutScriptRoot, layoutStyleRoot} from '@giltayar/carmbo-common/layout/assets'
-import {getVersion} from '@giltayar/carmbo-common/commons/version'
+import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
 
-for (const [directory, root] of [
-  ['style', layoutStyleRoot],
-  ['js', layoutScriptRoot],
-] as const) {
-  app.register(fastifyStatic, {
-    root,
-    prefix: `/src/${getVersion()}/layout/${directory}/`,
-    decorateReply: false,
-    immutable: true,
-    maxAge: '1y',
-    allowedPath: (path) => /\.(js|css|png|svg)$/.test(path),
-  })
-}
+app.register(layoutAssetRoutes)
 ```
+
+The plugin serves `/src/<app-version>/layout/style/` and `/src/<app-version>/layout/js/`
+with immutable, one-year caching and allows only JS, CSS, PNG, and SVG files. It does not
+decorate replies, so it can coexist with the app's own static routes. `@fastify/static`
+is included as a runtime dependency. Asset roots are internal implementation details and
+are not exported through the package API. Consumers of the former `layoutStyleRoot` and
+`layoutScriptRoot` exports must switch to `layoutAssetRoutes`; removing those exports is
+a breaking change.
 
 Do not serve the entire package or its compiled layout directory: those also contain server
 modules and translations. The two public roots contain only the browser assets; the filter
@@ -152,7 +146,8 @@ typescript-eslint can load the compiler API version it supports.
 
 For an isolated packaging check, use `pnpm pack`, install the tarball into a temporary consumer
 outside this package, and copy/run `test/unit/consumer.test.ts` there. That consumer needs
-the peer dependencies and `@fastify/static`; type-checking also needs `@types/node` and TypeScript.
+the peer dependencies and `@fastify/static` (used to test coexistence with app-owned static routes);
+type-checking also needs `@types/node` and TypeScript.
 Run the consumer test from that directory to verify installed imports, shared runtime state,
 translations, branding, static asset contents, and cache headers without source-tree access.
 To verify installed migrations against PostgreSQL too, copy the files from `test/integration/sql/`

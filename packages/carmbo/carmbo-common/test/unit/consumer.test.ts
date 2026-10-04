@@ -1,6 +1,8 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
-import {readdir, readFile} from 'node:fs/promises'
+import {mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises'
+import {tmpdir} from 'node:os'
+import {join} from 'node:path'
 import fastify from 'fastify'
 import fastifyStatic from '@fastify/static'
 import {fastifyRequestContext} from '@fastify/request-context'
@@ -10,12 +12,20 @@ import {initializei18next} from '@giltayar/carmbo-common/commons/i18next-utils'
 import {setVersion} from '@giltayar/carmbo-common/commons/version'
 import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
 import {TEST_executeHook, type TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
-import {layoutScriptRoot, layoutStyleRoot} from '@giltayar/carmbo-common/layout/assets'
+import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
 import type {LayoutResources} from '@giltayar/carmbo-common/layout/resources'
 import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
 import {migrate, migrationsRoot} from '@giltayar/carmbo-common/sql/migration'
 
 describe('compiled package consumer', () => {
+  it('exposes asset routes without exposing internal asset roots', async () => {
+    const assets = await import('@giltayar/carmbo-common/layout/assets')
+    assert.deepEqual(Object.keys(assets), ['layoutAssetRoutes'])
+    assert.throws(() => import.meta.resolve('@giltayar/carmbo-common/layout/asset-roots'), {
+      code: 'ERR_PACKAGE_PATH_NOT_EXPORTED',
+    })
+  })
+
   it('includes all SQL migrations, compiled data migration, and maintenance SQL', async () => {
     assert.ok(import.meta.resolve('@giltayar/carmbo-common/sql/migration').endsWith('.js'))
     assert.equal(typeof migrate, 'function')
@@ -78,6 +88,10 @@ describe('compiled package consumer', () => {
 
     const app = fastify()
     t.after(() => app.close())
+    const appAssetRoot = await mkdtemp(join(tmpdir(), 'carmbo-consumer-assets-'))
+    t.after(() => rm(appAssetRoot, {recursive: true, force: true}))
+    const appScript = 'console.log("app-owned asset")'
+    await writeFile(join(appAssetRoot, 'app.js'), appScript)
     const calls: unknown[][] = []
     const hooks: Record<string, TEST_HookFunction> = {
       render: async (...args) => {
@@ -85,19 +99,12 @@ describe('compiled package consumer', () => {
       },
     }
     app.register(fastifyRequestContext, {defaultStoreValues: {TEST_hooks: hooks}})
-    for (const [directory, root] of [
-      ['style', layoutStyleRoot],
-      ['js', layoutScriptRoot],
-    ] as const) {
-      app.register(fastifyStatic, {
-        root,
-        prefix: `/src/10.0.1/layout/${directory}/`,
-        decorateReply: false,
-        immutable: true,
-        maxAge: '1y',
-        allowedPath: (path) => /\.(js|css|png|svg)$/.test(path),
-      })
-    }
+    app.register(fastifyStatic, {
+      root: appAssetRoot,
+      prefix: '/src/10.0.1/',
+      decorateReply: false,
+    })
+    app.register(layoutAssetRoutes)
     app.get('/', async () => {
       await TEST_executeHook('render', 'consumer')
       return MainLayout({title: 'Consumer', children: [], activeNavItem: 'students'})
@@ -108,43 +115,52 @@ describe('compiled package consumer', () => {
     assert.match(page.body, /Students/)
     assert.match(page.body, /\/src\/10\.0\.1\/layout\/style\/configurations\/carmel\/logo\.png/)
     assert.deepEqual(calls, [['consumer']])
+    const appAsset = await app.inject('/src/10.0.1/app.js')
+    assert.equal(appAsset.statusCode, 200)
+    assert.equal(appAsset.body, appScript)
+    assert.equal((await app.inject('/src/other-version/layout/js/scripts.js')).statusCode, 404)
 
-    for (const [path, root, file, contentType] of [
-      ['style/style.css', layoutStyleRoot, 'style.css', 'text/css'],
-      ['js/scripts.js', layoutScriptRoot, 'scripts.js', 'application/javascript'],
-      ['style/link.svg', layoutStyleRoot, 'link.svg', 'image/svg+xml'],
-      ['style/external-link.svg', layoutStyleRoot, 'external-link.svg', 'image/svg+xml'],
-      ['style/plus-circle.svg', layoutStyleRoot, 'plus-circle.svg', 'image/svg+xml'],
-      ['style/minus-circle.svg', layoutStyleRoot, 'minus-circle.svg', 'image/svg+xml'],
-      [
-        'style/configurations/carmel/logo.png',
-        layoutStyleRoot,
-        'configurations/carmel/logo.png',
-        'image/png',
-      ],
-      [
-        'style/configurations/liraz/logo.svg',
-        layoutStyleRoot,
-        'configurations/liraz/logo.svg',
-        'image/svg+xml',
-      ],
+    for (const [path, contentType] of [
+      ['style/style.css', 'text/css'],
+      ['js/scripts.js', 'application/javascript'],
+      ['style/link.svg', 'image/svg+xml'],
+      ['style/external-link.svg', 'image/svg+xml'],
+      ['style/plus-circle.svg', 'image/svg+xml'],
+      ['style/minus-circle.svg', 'image/svg+xml'],
+      ['style/configurations/carmel/logo.png', 'image/png'],
+      ['style/configurations/liraz/logo.svg', 'image/svg+xml'],
     ] as const) {
       const response = await app.inject(`/src/10.0.1/layout/${path}`)
       assert.equal(response.statusCode, 200, path)
       assert.ok(response.headers['content-type']?.startsWith(contentType), path)
       assert.match(response.headers['cache-control'] ?? '', /max-age=31536000, immutable/)
-      assert.deepEqual(response.rawPayload, await readFile(new URL(file, root)))
+      if (contentType === 'image/png') {
+        assert.deepEqual(
+          response.rawPayload.subarray(0, 8),
+          Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+          path,
+        )
+      } else if (contentType === 'image/svg+xml') {
+        assert.match(response.body, /<svg\b/, path)
+      } else if (contentType === 'text/css') {
+        assert.match(response.body, /\.feather\s*\{/, path)
+      }
     }
     for (const path of [
       'main-view.js',
       'assets.js',
+      'asset-roots.js',
+      'style/../main-view.js',
       'locale/en.json',
       'js/scripts.d.ts',
       'js/scripts.js.map',
     ]) {
       assert.equal((await app.inject(`/src/10.0.1/layout/${path}`)).statusCode, 404, path)
     }
-    assert.ok((await readdir(layoutScriptRoot)).includes('scripts.js'))
+    const head = await app.inject({method: 'HEAD', url: '/src/10.0.1/layout/js/scripts.js'})
+    assert.equal(head.statusCode, 200)
+    assert.equal(head.body, '')
+    assert.match(head.headers['cache-control'] ?? '', /max-age=31536000, immutable/)
 
     setUiConfiguration('liraz')
     await initializei18next('he')

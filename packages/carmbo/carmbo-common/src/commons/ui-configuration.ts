@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import {layoutStyleRoot} from '../layout/assets.ts'
+import {layoutStyleRoot} from '../layout/asset-roots.ts'
 
 export let uiConfiguration: {name: string; logoFile: string}
 
