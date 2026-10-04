@@ -26,6 +26,10 @@
 
 - It uses TypeScript natively in Node.js without the need to transpile
 
+- The TypeScript dependency aliases are deliberate: `@typescript/native` provides the TypeScript 7
+  `tsc` binary used for type-checking, while `typescript` resolves to TypeScript 6 so
+  typescript-eslint can load the compiler API version it supports.
+
 - For CSS and components, it uses bootstrap.
 
 - Domain JS is in the `src` folder; layout JS and CSS come from carmbo-common. Both are served

@@ -82,7 +82,6 @@ export function setup(
   let teardown: (() => Promise<void>) | undefined
   let app: FastifyInstance
   let sql: Sql
-  let globalSql: ReturnType<typeof postgres>
   let url: URL
   let overridingDate: Date | undefined
   let smooveIntegration: ReturnType<typeof createFakeSmooveIntegrationService>
@@ -97,23 +96,27 @@ export function setup(
       new URL('../docker-compose.yaml', import.meta.url),
     ))
     const host = await findAddress('carmbo-postgres', 5432, {healthCheck: postgresHealthCheck})
-    globalSql = postgres({
+    const globalSql = postgres({
       host: host.split(':')[0],
       port: parseInt(host.split(':')[1], 10),
       database: 'postgres',
       user: 'user',
       password: 'password',
     })
-    if (process.env.CI) {
-      await globalSql`DROP DATABASE IF EXISTS ${globalSql(databaseName)}`
-    }
-    await globalSql`CREATE DATABASE ${globalSql(databaseName)}`.catch((error) => {
-      if (error.code === '42P04') {
-        // Database already exists
-        return
+    try {
+      if (process.env.CI) {
+        await globalSql`DROP DATABASE IF EXISTS ${globalSql(databaseName)}`
       }
-      throw error
-    })
+      await globalSql`CREATE DATABASE ${globalSql(databaseName)}`.catch((error) => {
+        if (error.code === '42P04') {
+          // Database already exists
+          return
+        }
+        throw error
+      })
+    } finally {
+      await globalSql.end()
+    }
 
     smooveIntegration = createFakeSmooveIntegrationService({
       lists: [
@@ -280,7 +283,11 @@ export function setup(
     await sql`TRUNCATE TABLE sale_standing_order_cardcom_recurring_payment RESTART IDENTITY CASCADE`
   })
 
-  test.afterAll(async () => teardown?.())
+  test.afterAll(async () => {
+    await app?.close()
+    await sql?.end()
+    await teardown?.()
+  })
 
   return {
     url: () => url,
@@ -308,5 +315,9 @@ async function postgresHealthCheck(address: string) {
     password: 'password',
   })
 
-  await sql`SELECT 1`
+  try {
+    await sql`SELECT 1`
+  } finally {
+    await sql.end()
+  }
 }

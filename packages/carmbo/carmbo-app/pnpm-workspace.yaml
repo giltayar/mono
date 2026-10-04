@@ -8,6 +8,7 @@ allowBuilds:
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - '@giltayar/*'
+  - '@typescript/*'
 
 updateConfig:
   ignoreDependencies:
