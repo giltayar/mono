@@ -140,15 +140,19 @@ pnpm build
 pnpm test
 ```
 
-The build emits JavaScript/declarations with tsgo and copies layout translations, CSS, icons,
+The build emits JavaScript/declarations with TypeScript 7 and copies layout translations, CSS, icons,
 logos, and SQL files into `dist`. Tests include the extracted phone-normalization suite,
 source-level runtime-boundary tests, and a consumer test importing the compiled package through
 its exports. Build before running tests. `test:integration` requires Docker and runs PostgreSQL
 17 in an isolated container to test schema creation, upgrades, idempotency, and migration discovery.
 
+The TypeScript dependency aliases are deliberate: `@typescript/native` provides the TypeScript 7
+`tsc` binary used by builds and type-checking, while `typescript` resolves to TypeScript 6 so
+typescript-eslint can load the compiler API version it supports.
+
 For an isolated packaging check, use `pnpm pack`, install the tarball into a temporary consumer
 outside this package, and copy/run `test/unit/consumer.test.ts` there. That consumer needs
-the peer dependencies and `@fastify/static`; type-checking also needs `@types/node` and tsgo.
+the peer dependencies and `@fastify/static`; type-checking also needs `@types/node` and TypeScript.
 Run the consumer test from that directory to verify installed imports, shared runtime state,
 translations, branding, static asset contents, and cache headers without source-tree access.
 To verify installed migrations against PostgreSQL too, copy the files from `test/integration/sql/`

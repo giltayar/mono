@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared helpers, layout, assets, and database migrations for Carmbo applications",
   "type": "module",
   "exports": {
@@ -40,12 +40,12 @@
   "scripts": {
     "build": "pnpm clean && run-p 'build:*'",
     "clean": "rm -rf dist",
-    "build:typescript": "tsgo --project tsconfig.build.json",
+    "build:typescript": "tsc --project tsconfig.build.json",
     "build:assets": "mkdir -p dist/src/layout && cp -R src/layout/locale src/layout/style dist/src/layout/",
     "build:sql": "mkdir -p dist/src/sql && cp src/sql/*.sql dist/src/sql/ && cp -R src/sql/maintenance dist/src/sql/",
     "test": "run-p --aggregate-output 'test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
-    "test:typescript": "tsgo",
+    "test:typescript": "tsc",
     "test:node": "node --test 'test/unit/**/*.test.ts'",
     "test:integration": "NODE_ENV=test node --test 'test/integration/**/*.test.ts'"
   },
@@ -83,7 +83,7 @@
     "@giltayar/docker-compose-testkit": "^2.1.0",
     "@types/node": "^26.6.2",
     "@types/vhtml": "^2.2.9",
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.11.0",
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-prettier": "^5.5.6",
@@ -92,6 +92,7 @@
     "i18next": "^26.4.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.9.8",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.70.1"
   },
   "packageManager": "pnpm@12.9.1"
