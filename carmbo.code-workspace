@@ -73,6 +73,10 @@
       "path": "packages/carmbo/carmbo-common",
     },
     {
+      "name": "carmbo-pages-auth",
+      "path": "packages/carmbo/carmbo-pages-auth",
+    },
+    {
       "name": "carmbo-app",
       "path": "packages/carmbo/carmbo-app",
     },
