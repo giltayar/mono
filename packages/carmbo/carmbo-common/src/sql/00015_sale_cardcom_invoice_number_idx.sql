@@ -1,0 +1,1 @@
+CREATE INDEX sale_data_cardcom_invoice_number_idx ON sale_data_cardcom (invoice_number);

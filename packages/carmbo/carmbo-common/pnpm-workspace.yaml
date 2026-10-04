@@ -1,0 +1,7 @@
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@giltayar/*'
+
+updateConfig:
+  ignoreDependencies:
+    - postgres

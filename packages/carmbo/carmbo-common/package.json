@@ -1,0 +1,98 @@
+{
+  "name": "@giltayar/carmbo-common",
+  "version": "1.0.0",
+  "description": "Shared helpers, layout, assets, and database migrations for Carmbo applications",
+  "type": "module",
+  "exports": {
+    "./commons/*": {
+      "types": "./dist/src/commons/*.d.ts",
+      "import": "./dist/src/commons/*.js"
+    },
+    "./layout/assets": {
+      "types": "./dist/src/layout/assets.d.ts",
+      "import": "./dist/src/layout/assets.js"
+    },
+    "./layout/banner": {
+      "types": "./dist/src/layout/banner.d.ts",
+      "import": "./dist/src/layout/banner.js"
+    },
+    "./layout/main-view": {
+      "types": "./dist/src/layout/main-view.d.ts",
+      "import": "./dist/src/layout/main-view.js"
+    },
+    "./layout/resources": {
+      "types": "./dist/src/layout/resources.d.ts",
+      "import": "./dist/src/layout/resources.js"
+    },
+    "./sql/migration": {
+      "types": "./dist/src/sql/migration.d.ts",
+      "import": "./dist/src/sql/migration.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=26.9.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm clean && run-p 'build:*'",
+    "clean": "rm -rf dist",
+    "build:typescript": "tsgo --project tsconfig.build.json",
+    "build:assets": "mkdir -p dist/src/layout && cp -R src/layout/locale src/layout/style dist/src/layout/",
+    "build:sql": "mkdir -p dist/src/sql && cp src/sql/*.sql dist/src/sql/ && cp -R src/sql/maintenance dist/src/sql/",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsgo",
+    "test:node": "node --test 'test/unit/**/*.test.ts'",
+    "test:integration": "NODE_ENV=test node --test 'test/integration/**/*.test.ts'"
+  },
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmbo/carmbo-common",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "peerDependencies": {
+    "@fastify/request-context": "^7.0.0",
+    "fastify": "^5.12.5",
+    "i18next": "^26.4.2"
+  },
+  "dependencies": {
+    "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
+    "@giltayar/carmel-tools-smoove-integration": "^5.3.1",
+    "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",
+    "@giltayar/functional-commons": "^2.2.1",
+    "htm": "^3.1.1",
+    "i18next-fs-backend": "^2.6.8",
+    "p-retry": "^8.0.1",
+    "postgres": "3.4.7",
+    "vhtml": "^2.2.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@fastify/request-context": "^7.0.0",
+    "@fastify/static": "^10.1.4",
+    "@giltayar/docker-compose-testkit": "^2.1.0",
+    "@types/node": "^26.6.2",
+    "@types/vhtml": "^2.2.9",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "eslint": "^10.11.0",
+    "eslint-plugin-n": "^18.3.0",
+    "eslint-plugin-prettier": "^5.5.6",
+    "fastify": "^5.12.5",
+    "globals": "^17.12.0",
+    "i18next": "^26.4.2",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.9.8",
+    "typescript-eslint": "^8.70.1"
+  },
+  "packageManager": "pnpm@12.9.1"
+}
