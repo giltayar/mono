@@ -63,8 +63,12 @@
 - Every package is written in **TypeScript** and is a native **ESM** package (`"type": "module"`).
 - Target the Node.js version declared in each package's `engines` field (currently `>=24.0.0`). Use
   modern Node built-ins and the `node:` import prefix for them (e.g. `import test from 'node:test'`).
-- Type-checking and building use `tsgo` (the `@typescript/native-preview` compiler), _not_ `tsc`.
-  Do not assume plain `tsc` behavior or add `tsc` to scripts.
+- Type-checking and building use the native **TypeScript 7** `tsc` binary from
+  `"@typescript/native": "npm:typescript@^7.0.2"`.
+- typescript-eslint still requires the TypeScript 6 compiler API, so every new package must also
+  install `"typescript": "npm:@typescript/typescript6@^6.0.2"`. These aliases are deliberately
+  arranged so TS7 provides `tsc` and TS6 provides the non-conflicting `tsc6`; never replace them
+  with a plain `typescript` dependency, invoke `tsc6`, or add `tsgo`/`@typescript/native-preview`.
 
 ## TypeScript conventions
 
@@ -116,9 +120,10 @@
 ## package.json conventions
 
 - `scripts` follow a fixed pattern driven by `npm-run-all`:
-  - `build` runs `run-p 'build:*'`; `build:typescript` does `rm -rf dist && tsgo --project tsconfig.build.json`.
+  - `build` runs `run-p 'build:*'`; `build:typescript` does
+    `rm -rf dist && tsc --project tsconfig.build.json`.
   - `test` runs `run-p --aggregate-output 'test:*'`; typical members are `test:eslint`
-    (`eslint --max-warnings=0 .`), `test:typescript` (`tsgo`), and `test:node` (`node --test`).
+    (`eslint --max-warnings=0 .`), `test:typescript` (`tsc`), and `test:node` (`node --test`).
   - Add new checks as additional `build:*` / `test:*` scripts so they are picked up automatically.
 - `exports` map the public entry to the built output in `dist` (`types` -> `./dist/src/*.d.ts`,
   `import` -> `./dist/src/*.js`). The `files` array publishes `src` and `dist`.
