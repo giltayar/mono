@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config([
   {
-    files: ['src/**/*.[jt]s', 'test/**/*.[jt]s'],
+    files: ['src/**/*.[jt]s', 'testkit/**/*.[jt]s', 'test/**/*.[jt]s'],
     ignores: ['./.db-data/'],
     plugins: {prettier, n},
     extends: [n.configs['flat/recommended'], ...tseslint.configs.recommended],

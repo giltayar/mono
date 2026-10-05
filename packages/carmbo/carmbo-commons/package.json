@@ -1,6 +1,6 @@
 {
-  "name": "@giltayar/carmbo-common",
-  "version": "2.0.0",
+  "name": "@giltayar/carmbo-commons",
+  "version": "2.1.0",
   "description": "Shared helpers, layout, assets, and database migrations for Carmbo applications",
   "type": "module",
   "exports": {
@@ -28,6 +28,10 @@
       "types": "./dist/src/sql/migration.d.ts",
       "import": "./dist/src/sql/migration.js"
     },
+    "./testkit/page-model/*": {
+      "types": "./dist/testkit/page-model/*.d.ts",
+      "import": "./dist/testkit/page-model/*.js"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
@@ -35,6 +39,7 @@
   },
   "files": [
     "src",
+    "testkit",
     "dist"
   ],
   "scripts": {
@@ -53,7 +58,7 @@
   "license": "MIT",
   "repository": {
     "url": "https://github.com/giltayar/mono",
-    "directory": "packages/carmbo/carmbo-common",
+    "directory": "packages/carmbo/carmbo-commons",
     "type": "git"
   },
   "publishConfig": {
@@ -62,6 +67,7 @@
   },
   "peerDependencies": {
     "@fastify/request-context": "^7.0.0",
+    "@playwright/test": "^1.63.0",
     "fastify": "^5.12.5",
     "i18next": "^26.4.2"
   },
@@ -81,6 +87,7 @@
   "devDependencies": {
     "@fastify/request-context": "^7.0.0",
     "@giltayar/docker-compose-testkit": "^2.1.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.2",
     "@types/vhtml": "^2.2.9",
     "@typescript/native": "npm:typescript@^7.0.2",

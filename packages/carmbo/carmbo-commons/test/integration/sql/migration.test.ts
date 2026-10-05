@@ -7,7 +7,7 @@ import {tmpdir} from 'node:os'
 import {pathToFileURL} from 'node:url'
 import postgres, {type Sql} from 'postgres'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
-import {migrate, migrationsRoot} from '@giltayar/carmbo-common/sql/migration'
+import {migrate, migrationsRoot} from '@giltayar/carmbo-commons/sql/migration'
 
 describe('packaged database migrations', () => {
   let host: string
@@ -60,7 +60,7 @@ describe('packaged database migrations', () => {
   }
 
   async function createMigrationDirectory(t: TestContext): Promise<string> {
-    const directory = await mkdtemp(join(tmpdir(), 'carmbo-common-migrations #'))
+    const directory = await mkdtemp(join(tmpdir(), 'carmbo-commons-migrations #'))
     t.after(() => rm(directory, {recursive: true, force: true}))
     return directory
   }

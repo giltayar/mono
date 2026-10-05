@@ -7,27 +7,32 @@ import fastify from 'fastify'
 import fastifyStatic from '@fastify/static'
 import {fastifyRequestContext} from '@fastify/request-context'
 import i18next from 'i18next'
-import {normalizePhoneNumber} from '@giltayar/carmbo-common/commons/normalize-input'
-import {initializei18next} from '@giltayar/carmbo-common/commons/i18next-utils'
-import {setVersion} from '@giltayar/carmbo-common/commons/version'
-import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
-import {TEST_executeHook, type TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
-import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
-import type {LayoutResources} from '@giltayar/carmbo-common/layout/resources'
-import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
-import {migrate, migrationsRoot} from '@giltayar/carmbo-common/sql/migration'
+import {normalizePhoneNumber} from '@giltayar/carmbo-commons/commons/normalize-input'
+import {initializei18next} from '@giltayar/carmbo-commons/commons/i18next-utils'
+import {setVersion} from '@giltayar/carmbo-commons/commons/version'
+import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configuration'
+import {TEST_executeHook, type TEST_HookFunction} from '@giltayar/carmbo-commons/commons/TEST_hooks'
+import {layoutAssetRoutes} from '@giltayar/carmbo-commons/layout/assets'
+import type {LayoutResources} from '@giltayar/carmbo-commons/layout/resources'
+import {MainLayout} from '@giltayar/carmbo-commons/layout/main-view'
+import {migrate, migrationsRoot} from '@giltayar/carmbo-commons/sql/migration'
+import {createAllPagesPageModel} from '@giltayar/carmbo-commons/testkit/page-model/all-pages.model'
 
 describe('compiled package consumer', () => {
+  it('exports the shared page model through the testkit', () => {
+    assert.equal(typeof createAllPagesPageModel, 'function')
+  })
+
   it('exposes asset routes without exposing internal asset roots', async () => {
-    const assets = await import('@giltayar/carmbo-common/layout/assets')
+    const assets = await import('@giltayar/carmbo-commons/layout/assets')
     assert.deepEqual(Object.keys(assets), ['layoutAssetRoutes'])
-    assert.throws(() => import.meta.resolve('@giltayar/carmbo-common/layout/asset-roots'), {
+    assert.throws(() => import.meta.resolve('@giltayar/carmbo-commons/layout/asset-roots'), {
       code: 'ERR_PACKAGE_PATH_NOT_EXPORTED',
     })
   })
 
   it('includes all SQL migrations, compiled data migration, and maintenance SQL', async () => {
-    assert.ok(import.meta.resolve('@giltayar/carmbo-common/sql/migration').endsWith('.js'))
+    assert.ok(import.meta.resolve('@giltayar/carmbo-commons/sql/migration').endsWith('.js'))
     assert.equal(typeof migrate, 'function')
     const files = await readdir(migrationsRoot)
     const migrations = files.filter((name) => /^\d{5}_.*\.(sql|js)$/.test(name)).sort()
@@ -70,7 +75,7 @@ describe('compiled package consumer', () => {
       'view-commons',
     ]
     for (const helper of helpers) {
-      const specifier = `@giltayar/carmbo-common/commons/${helper}`
+      const specifier = `@giltayar/carmbo-commons/commons/${helper}`
       assert.ok(import.meta.resolve(specifier).endsWith(`/dist/src/commons/${helper}.js`))
       await import(specifier)
     }

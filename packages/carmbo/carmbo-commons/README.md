@@ -1,4 +1,4 @@
-# carmbo-common
+# carmbo-commons
 
 Shared Carmbo helpers, provider caches, test hooks, layout rendering, translations, assets,
 and the complete database migration history.
@@ -10,7 +10,7 @@ general-purpose layout framework.
 Install the published package from the authenticated GitHub Packages registry:
 
 ```sh
-pnpm add @giltayar/carmbo-common
+pnpm add @giltayar/carmbo-commons
 ```
 
 The app must also install compatible versions of the `fastify`, `@fastify/request-context`,
@@ -20,10 +20,10 @@ the layout uses the app's translation state, and test hooks use its active reque
 Import individual modules, without file extensions:
 
 ```ts
-import {normalizePhoneNumber} from '@giltayar/carmbo-common/commons/normalize-input'
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
-import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
-import {exceptionToBanner} from '@giltayar/carmbo-common/layout/banner'
+import {normalizePhoneNumber} from '@giltayar/carmbo-commons/commons/normalize-input'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
+import {MainLayout} from '@giltayar/carmbo-commons/layout/main-view'
+import {exceptionToBanner} from '@giltayar/carmbo-commons/layout/banner'
 ```
 
 All existing `commons` modules retain their module names, including
@@ -35,9 +35,9 @@ Exports resolve to compiled JavaScript and declarations, not TypeScript inside n
 Initialize the app version, branding, and translation state before rendering:
 
 ```ts
-import {initializei18next} from '@giltayar/carmbo-common/commons/i18next-utils'
-import {setVersion} from '@giltayar/carmbo-common/commons/version'
-import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
+import {initializei18next} from '@giltayar/carmbo-commons/commons/i18next-utils'
+import {setVersion} from '@giltayar/carmbo-commons/commons/version'
+import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configuration'
 import appPackage from '../../package.json' with {type: 'json'}
 
 setVersion(appPackage.version)
@@ -63,7 +63,7 @@ For app translation typing, compose the exported layout resource type into the a
 i18next declaration rather than declaring another competing resource map:
 
 ```ts
-import type {LayoutResources} from '@giltayar/carmbo-common/layout/resources'
+import type {LayoutResources} from '@giltayar/carmbo-commons/layout/resources'
 import type enStudent from '../domain/student/locale/en.json'
 
 declare module 'i18next' {
@@ -87,7 +87,7 @@ domain assets under `/src/<app-version>/domain/`. Register the shared asset rout
 existing layout URLs after calling `setVersion`:
 
 ```ts
-import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
+import {layoutAssetRoutes} from '@giltayar/carmbo-commons/layout/assets'
 
 app.register(layoutAssetRoutes)
 ```
@@ -110,7 +110,7 @@ The package owns all 44 existing schema/data migrations, the migration runner, a
 maintenance SQL. Run the packaged migrations against an app-provided postgres client:
 
 ```ts
-import {migrate, migrationsRoot} from '@giltayar/carmbo-common/sql/migration'
+import {migrate, migrationsRoot} from '@giltayar/carmbo-commons/sql/migration'
 
 await migrate({sql})
 // Equivalent explicit location:

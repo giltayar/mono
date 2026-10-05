@@ -22,6 +22,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js", "testkit/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
