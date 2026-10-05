@@ -1,7 +1,7 @@
 import type {FastifyBaseLogger} from 'fastify'
 import {setTimeout} from 'node:timers/promises'
 import type {Sql} from 'postgres'
-import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
+import type {NowService} from '@giltayar/carmbo-commons/commons/now-service'
 import {presult, unwrapPresult} from '@giltayar/promise-commons'
 import {Mutex} from 'async-mutex'
 import {globalLogger, globalSql, jobHandlers, setJobExecutorState} from './job-state.ts'

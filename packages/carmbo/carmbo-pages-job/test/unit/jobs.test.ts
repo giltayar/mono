@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {runDockerCompose} from '@giltayar/docker-compose-testkit'
 import postgres, {type Sql} from 'postgres'
 import type {FastifyBaseLogger} from 'fastify'
-import {migrate} from '@giltayar/carmbo-common/sql/migration'
+import {migrate} from '@giltayar/carmbo-commons/sql/migration'
 import {
   executeDirectJob,
   initializeJobExecutor,

@@ -1,5 +1,5 @@
 import {expect, test} from '@playwright/test'
-import {initializei18next} from '@giltayar/carmbo-common/commons/i18next-utils'
+import {initializei18next} from '@giltayar/carmbo-commons/commons/i18next-utils'
 import {registerJobHandler} from '@giltayar/carmbo-pages-job/jobs/handler'
 import {registerJobLocaleResources} from '../../src/locale-resources.ts'
 import {baseNow, executionNow, setupJobRoutes} from './setup.ts'

@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-pages-job",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Job pages and background job execution for Carmbo applications",
   "type": "module",
   "exports": {
@@ -58,7 +58,7 @@
     "zod": "^4.6.5"
   },
   "dependencies": {
-    "@giltayar/carmbo-common": "^2.0.0",
+    "@giltayar/carmbo-commons": "2.1.0",
     "@giltayar/promise-commons": "^2.0.0",
     "async-mutex": "^0.5.0"
   },

@@ -1,4 +1,4 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 
 export function Layout({children}: {children: string | string[]}): string | string[] {
   return html`
