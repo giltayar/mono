@@ -5,7 +5,7 @@ import {hideBin} from 'yargs/helpers'
 import {
   cardcomRecurringPaymentWebhookUrl,
   cardcomWebhookUrl,
-} from '../integration/sale/common/cardcom-webhook.ts'
+} from '../integration/common/cardcom-webhook.ts'
 
 const argv = await yargs(hideBin(process.argv))
   .option('sales-event', {

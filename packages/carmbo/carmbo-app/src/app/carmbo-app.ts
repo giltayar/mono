@@ -1,40 +1,26 @@
 import {setupFastifyErrorHandler} from '@sentry/node'
-import fastify, {type FastifyBaseLogger} from 'fastify'
+import fastify from 'fastify'
 import formbody from '@fastify/formbody'
 import fastifyStatic from '@fastify/static'
 import qs from 'qs'
 import fastifyCookie from '@fastify/cookie'
 import fastifyCompress from '@fastify/compress'
-import postgres, {type Sql} from 'postgres'
+import postgres from 'postgres'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
-import productRoutes from '../domain/product/route.ts'
-import salesEvents from '../domain/sales-event/route.ts'
-import salesRoutes, {
-  landingPageApiRoute as salesLandingPageApiRoute,
-  apiRoute as salesApiRoute,
-} from '../domain/sale/route.ts'
+import {
+  apiRoutes as saleApiRoutes,
+  landingPageRoutes as saleLandingPageRoutes,
+  pageRoutes as salePageRoutes,
+} from '@giltayar/carmbo-pages-sale/routes'
 import {routes as authRoutes, useFirebaseAuth} from '@giltayar/carmbo-pages-auth'
 import {apiRoutes as jobsApiRoutes, routes as jobsRoutes} from '@giltayar/carmbo-pages-job/routes'
-import smooveRoutes from '../domain/smoove/route.ts'
-import ravmesserRoutes from '../domain/ravmesser/route.ts'
-import whatsappRoutes from '../domain/whatsapp/route.ts'
-import academyRoutes from '../domain/academy/route.ts'
 import backupRoutes from '../domain/backup/route.ts'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {fastifyRequestContext} from '@fastify/request-context'
-import type {
-  WhatsAppGroup,
-  WhatsAppIntegrationService,
-} from '@giltayar/carmel-tools-whatsapp-integration/service'
-import type {
-  SmooveList,
-  SmooveIntegrationService,
-} from '@giltayar/carmel-tools-smoove-integration/service'
-import type {
-  RavmesserList,
-  RavmesserIntegrationService,
-} from '@giltayar/carmel-tools-ravmesser-integration/service'
+import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
+import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
+import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import type {TEST_HookFunction} from '@giltayar/carmbo-commons/commons/TEST_hooks'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
@@ -43,25 +29,6 @@ import {setVersion} from '@giltayar/carmbo-commons/commons/version'
 import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configuration'
 import {layoutAssetRoutes} from '@giltayar/carmbo-commons/layout/assets'
 import packageJson from '../../package.json' with {type: 'json'}
-
-declare module '@fastify/request-context' {
-  interface RequestContextData {
-    cardcomIntegration: CardcomIntegrationService
-    whatsappIntegration: WhatsAppIntegrationService
-    academyIntegration: AcademyIntegrationService | undefined
-    academyAccountSubdomains: string[] | undefined
-    smooveIntegration: SmooveIntegrationService | undefined
-    ravmesserIntegration: RavmesserIntegrationService | undefined
-    skoolIntegration: SkoolIntegrationService | undefined
-    nowService: () => Date
-    logger: FastifyBaseLogger
-    sql: Sql
-    whatsappGroups: WhatsAppGroup[] | undefined
-    smooveLists: SmooveList[] | undefined
-    ravmesserLists: RavmesserList[] | undefined
-    products: {id: number; name: string}[] | undefined
-  }
-}
 
 export function makeApp({
   db: {connectionString, database, host, port, username, password, backupFile},
@@ -144,6 +111,20 @@ export function makeApp({
         ssl: process.env.NODE_ENV === 'production' ? 'require' : undefined,
         ...postgresJsOptions,
       })
+  const saleRouteOptions = {
+    sql,
+    appBaseUrl,
+    apiSecret,
+    academyIntegration,
+    academyAccountSubdomains,
+    whatsappIntegration,
+    smooveIntegration,
+    ravmesserIntegration,
+    cardcomIntegration,
+    skoolIntegration,
+    nowService,
+    TEST_hooks,
+  }
   initializeJobExecutor(sql, app.log)
   setupFastifyErrorHandler(app)
 
@@ -181,18 +162,6 @@ export function makeApp({
     immutable: true,
     maxAge: '1y',
   })
-  app.register(fastifyStatic, {
-    root: new URL('../../src', import.meta.url),
-    prefix: `/src/${version}/`,
-    decorateReply: false,
-    immutable: true,
-    maxAge: '1y',
-    allowedPath: (pathName) =>
-      pathName.endsWith('.js') ||
-      pathName.endsWith('.css') ||
-      pathName.endsWith('.png') ||
-      pathName.endsWith('.svg'),
-  })
   app.register(layoutAssetRoutes)
 
   if (firebase) {
@@ -215,37 +184,11 @@ export function makeApp({
       ravmesserIntegration,
       nowService,
     })
-    app.register(productRoutes, {prefix: '/products', sql, appBaseUrl})
-    app.register(salesEvents, {
-      prefix: '/sales-events',
-      sql,
-      smooveIntegration,
-      ravmesserIntegration,
-      academyIntegration,
-      whatsappIntegration,
-      appBaseUrl,
-      apiSecret,
-      nowService,
-    })
-    app.register(salesRoutes, {prefix: '/sales', sql})
+    app.register(salePageRoutes, saleRouteOptions)
     app.register(jobsRoutes, {prefix: '/jobs', sql})
-    app.register(smooveRoutes, {prefix: '/smoove'})
-    app.register(ravmesserRoutes, {prefix: '/ravmesser'})
-    app.register(whatsappRoutes, {prefix: '/whatsapp'})
-    app.register(academyRoutes, {prefix: '/academy'})
   })
 
-  app.register(salesApiRoute, {
-    prefix: '/api/sales',
-    secret: apiSecret,
-    sql,
-    academyIntegration,
-    smooveIntegration,
-    ravmesserIntegration,
-    whatsappIntegration,
-    skoolIntegration,
-    nowService,
-  })
+  app.register(saleApiRoutes, saleRouteOptions)
   app.register(jobsApiRoutes, {
     prefix: '/api/jobs',
     secret: apiSecret,
@@ -259,9 +202,7 @@ export function makeApp({
     backupFile,
   })
 
-  app.register(salesLandingPageApiRoute, {
-    prefix: '/landing-page/sales',
-  })
+  app.register(saleLandingPageRoutes, saleRouteOptions)
 
   app.get('/health', async () => ({status: 'ok', version}))
   app.get('/bad-health', async (request) => {

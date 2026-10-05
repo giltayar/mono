@@ -114,7 +114,7 @@ for (const [brand, language, direction, logo, title] of [
         'layout/locale/en.json',
         'layout/js/scripts.d.ts',
         'layout/js/scripts.js.map',
-        'domain/student/route.ts',
+        'domain/product/route.ts',
         'sql/migration.js',
       ]) {
         const response = await request.get(new URL(srcPrefix + path, url()).href)

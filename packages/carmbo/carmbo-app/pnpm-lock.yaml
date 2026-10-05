@@ -190,6 +190,9 @@ importers:
       '@giltayar/carmbo-pages-job':
         specifier: 1.0.1
         version: 1.0.1(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
+      '@giltayar/carmbo-pages-sale':
+        specifier: 1.0.0
+        version: 1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-cardcom-integration@9.1.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-skool-integration@1.1.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@giltayar/carmel-tools-whatsapp-integration@2.6.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
       '@giltayar/carmbo-pages-student':
         specifier: 1.0.0
         version: 1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
@@ -220,9 +223,6 @@ importers:
       '@giltayar/url-commons':
         specifier: ^2.2.0
         version: 2.2.0
-      '@js-temporal/polyfill':
-        specifier: ^0.5.1
-        version: 0.5.1
       '@sentry/node':
         specifier: ^11.4.0
         version: 11.4.0
@@ -250,9 +250,6 @@ importers:
       p-map-series:
         specifier: ^3.0.0
         version: 3.0.0
-      p-retry:
-        specifier: ^8.0.1
-        version: 8.0.1
       postgres:
         specifier: 3.4.7
         version: 3.4.7
@@ -489,6 +486,24 @@ packages:
     resolution: {integrity: sha512-8mPSmyWUzpWHxIgs77uX6qHzYzAH1xWtWPxadg7SuIHQhLlP8+3S7I647d0BxZpHhQVwYXo0tBmOuWT4rPEi2w==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-job/1.0.1/ef35f70720b44075a48d3117040e425e9a341d8c}
     engines: {node: '>=26.9.0'}
     peerDependencies:
+      fastify: ^5.12.5
+      fastify-type-provider-zod: ^7.0.0
+      i18next: ^26.4.2
+      postgres: ^3.4.7
+      zod: ^4.6.5
+
+  '@giltayar/carmbo-pages-sale@1.0.0':
+    resolution: {integrity: sha512-FcJlU1zWIFOo5V/JHK2j7Hr3sG9Ep7nwzBbcunGDlTQrAF91Q8PDOgEALhW57CTu1ezPW2OOr+lLX/8emFtulA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-sale/1.0.0/8e9355563b61493663172520cf20e82f0a21ae81}
+    engines: {node: '>=26.9.0'}
+    peerDependencies:
+      '@fastify/request-context': ^7.0.0
+      '@giltayar/carmel-tools-academy-integration': ^6.0.0
+      '@giltayar/carmel-tools-cardcom-integration': ^9.1.0
+      '@giltayar/carmel-tools-ravmesser-integration': ^1.0.0
+      '@giltayar/carmel-tools-skool-integration': ^1.1.0
+      '@giltayar/carmel-tools-smoove-integration': ^5.3.1
+      '@giltayar/carmel-tools-whatsapp-integration': ^2.6.1
+      '@playwright/test': ^1.63.0
       fastify: ^5.12.5
       fastify-type-provider-zod: ^7.0.0
       i18next: ^26.4.2
@@ -3316,6 +3331,32 @@ snapshots:
     transitivePeerDependencies:
       - '@fastify/request-context'
       - '@playwright/test'
+
+  '@giltayar/carmbo-pages-sale@1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-cardcom-integration@9.1.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-skool-integration@1.1.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@giltayar/carmel-tools-whatsapp-integration@2.6.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)':
+    dependencies:
+      '@fastify/request-context': 7.0.0
+      '@fastify/static': 10.1.5
+      '@giltayar/carmbo-commons': 2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+      '@giltayar/carmbo-pages-job': 1.0.1(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
+      '@giltayar/carmbo-pages-student': 1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
+      '@giltayar/carmel-tools-academy-integration': 6.0.0
+      '@giltayar/carmel-tools-cardcom-integration': 9.1.0
+      '@giltayar/carmel-tools-ravmesser-integration': 1.0.0
+      '@giltayar/carmel-tools-skool-integration': 1.1.0
+      '@giltayar/carmel-tools-smoove-integration': 5.3.1
+      '@giltayar/carmel-tools-whatsapp-integration': 2.6.1
+      '@giltayar/functional-commons': 2.2.1
+      '@giltayar/url-commons': 2.2.0
+      '@js-temporal/polyfill': 0.5.1
+      '@playwright/test': 1.63.0
+      fastify: 5.12.5
+      fastify-type-provider-zod: 7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5)
+      i18next: 26.4.2(@typescript/typescript6@6.0.2)
+      p-retry: 8.0.1
+      postgres: 3.4.7
+      zod: 4.6.5
+    transitivePeerDependencies:
+      - '@fastify/formbody'
 
   '@giltayar/carmbo-pages-student@1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)':
     dependencies:
