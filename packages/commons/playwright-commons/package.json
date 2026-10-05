@@ -1,0 +1,61 @@
+{
+  "name": "@giltayar/playwright-commons",
+  "version": "1.0.0",
+  "description": "Shared Playwright helpers",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/playwright-commons.d.ts",
+      "import": "./dist/src/playwright-commons.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "run-p 'build:*'",
+    "build:typescript": "rm -rf dist && tsc --project tsconfig.build.json",
+    "test": "run-p --aggregate-output 'test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsc",
+    "test:node": "node --test 'test/unit/**/*.test.ts'",
+    "test:playwright": "playwright test --config=test/playwright"
+  },
+  "keywords": [
+    "playwright",
+    "testing"
+  ],
+  "author": "Gil Tayar <gil@tayars.org>",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/commons/playwright-commons",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.63.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^10.12.0",
+    "eslint-plugin-n": "^18.4.1",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.13.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.9.9",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.71.0"
+  },
+  "packageManager": "pnpm@12.9.1"
+}
