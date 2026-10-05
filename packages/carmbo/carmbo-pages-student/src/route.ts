@@ -1,0 +1,186 @@
+import {
+  showMagicLink,
+  showStudentCreate,
+  showStudentInHistory,
+  showStudents,
+  showStudentUpdate,
+  showStudentSales,
+  createStudent,
+  updateStudent,
+  showOngoingStudent,
+  deleteStudent,
+} from './controller.ts'
+import {NewStudentSchema, StudentSchema} from './model.ts'
+import {OngoingStudentSchema} from './view/model.ts'
+import assert from 'node:assert'
+import type {FastifyInstance} from 'fastify'
+import type {ZodTypeProvider} from 'fastify-type-provider-zod'
+import z from 'zod'
+import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-commons'
+import {registerStudentLocaleResources} from './locale-resources.ts'
+import {studentScripts, studentStyles} from './assets.ts'
+import type {StudentRouteOptions} from './student-route-options.ts'
+
+export type {StudentRouteOptions} from './student-route-options.ts'
+
+export function routes(app: FastifyInstance, options: StudentRouteOptions): void {
+  const {sql} = options
+  registerStudentLocaleResources()
+
+  app.get('/style.css', async (_request, reply) =>
+    reply.type('text/css; charset=utf-8').send(studentStyles),
+  )
+  app.get('/scripts.js', async (_request, reply) =>
+    reply.type('application/javascript; charset=utf-8').send(studentScripts),
+  )
+
+  const appWithTypes = app.withTypeProvider<ZodTypeProvider>()
+
+  // List students
+  appWithTypes.get(
+    '/',
+    {
+      schema: {
+        querystring: z
+          .object({
+            flash: z.string(),
+            'with-archived': z.string(),
+            q: z.string(),
+            page: z.coerce.number().int().min(0).default(0).optional(),
+          })
+          .partial(),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showStudents(
+          {
+            flash: request.query.flash,
+            withArchived: 'with-archived' in request.query,
+            query: request.query.q,
+            page: request.query.page ?? 0,
+          },
+          sql,
+        ),
+      ),
+  )
+
+  // Create new student
+  app.get('/new', async (_request, reply) =>
+    dealWithControllerResult(reply, showStudentCreate(undefined)),
+  )
+
+  appWithTypes.post('/new', {schema: {body: OngoingStudentSchema}}, async (request, reply) =>
+    dealWithControllerResult(
+      reply,
+      showOngoingStudent(request.body, {manipulations: {addItem: request.headers['x-add-item']}}),
+    ),
+  )
+
+  appWithTypes.post('/', {schema: {body: NewStudentSchema}}, async (request, reply) =>
+    dealWithControllerResult(
+      reply,
+      await createStudent(request.body, sql, {...options, logger: request.log}),
+    ),
+  )
+
+  // Edit existing student
+  appWithTypes.get(
+    '/:number',
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        await showStudentUpdate(request.params.number, undefined, sql),
+      )
+    },
+  )
+
+  appWithTypes.post(
+    '/:number',
+    {schema: {body: OngoingStudentSchema, params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        showOngoingStudent(request.body, {manipulations: {addItem: request.headers['x-add-item']}}),
+      )
+    },
+  )
+
+  appWithTypes.put(
+    '/:number',
+    {schema: {body: StudentSchema, params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      const studentNumber = request.params.number
+
+      assert(
+        studentNumber === request.body.studentNumber,
+        'student number in URL must match ID in body',
+      )
+
+      return dealWithControllerResult(
+        reply,
+        await updateStudent(request.body, sql, {...options, logger: request.log}),
+      )
+    },
+  )
+
+  appWithTypes.get(
+    '/:number/academy-magic-link',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int()}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showMagicLink(request.params.number, sql, {...options, logger: request.log}),
+      ),
+  )
+
+  // View student in history
+  appWithTypes.get(
+    '/:number/by-history/:operationId',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int(), operationId: z.uuid()}),
+      },
+    },
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        await showStudentInHistory(request.params.number, request.params.operationId, sql),
+      )
+    },
+  )
+
+  // View student sales
+  appWithTypes.get(
+    '/:number/sales',
+    {schema: {params: z.object({number: z.coerce.number().int()})}},
+    async (request, reply) => {
+      return dealWithControllerResult(reply, await showStudentSales(request.params.number, sql))
+    },
+  )
+
+  // Delete (Archive) student
+  appWithTypes.delete(
+    '/:number',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int()}),
+        querystring: z.object({'delete-operation': z.enum(['delete', 'restore'])}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await deleteStudent(request.params.number, request.query['delete-operation'], sql, {
+          ...options,
+          logger: request.log,
+        }),
+      ),
+  )
+}

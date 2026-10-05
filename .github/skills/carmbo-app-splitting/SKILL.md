@@ -58,7 +58,8 @@ Create `packages/carmbo/carmbo-pages-<domain>` with its own:
 - `tsconfig.json` and `tsconfig.build.json`
 - `eslint.config.mjs`
 - `.prettierrc`, `.gitignore`, and `AGENTS.md`
-- `src/`, `test/`, and, when needed, top-level `testkit/`
+- `src/`, `test/`, `start/`, and, when needed, top-level `testkit/`
+- `README.md` with local-start instructions
 
 Use the current TypeScript setup:
 
@@ -146,7 +147,7 @@ Expose reset functions and fakes only through `./testkit`.
 
 ### 3. Make dependency direction explicit
 
-The new package may depend on `@giltayar/carmbo-common`, but it must not depend on `carmbo-app`.
+The new package may depend on `@giltayar/carmbo-commons`, but it must not depend on `carmbo-app`.
 
 Replace hidden app coupling with explicit plugin or initialization options:
 
@@ -226,13 +227,63 @@ Do not leave links pointing into `carmbo-app/src/domain/<domain>`.
 Use one of these patterns:
 
 - Add a Fastify asset plugin backed by package-owned files, following
-  `@giltayar/carmbo-common/layout/assets`.
+  `@giltayar/carmbo-commons/layout/assets`.
 - For a small stylesheet, serve a package-owned CSS string from the domain route plugin.
 
 Keep URLs stable where practical and test the response content type and a representative asset
 payload. A package is not independent if its HTML still relies on the app serving its source tree.
 
-### 6. Move tests with behavior ownership
+### 6. Add a package-local `pnpm start` workflow
+
+Every extracted pages package must be runnable independently for interactive browser testing. Add:
+
+- `start/start.ts`: a Fastify host for the package routes.
+- `start/docker-compose.yaml`: package-local PostgreSQL with a non-production default host port.
+- `start/dist/`: generated static assets, ignored by Git and ESLint.
+- `pnpm start` and `pnpm stop` instructions in the package README.
+
+Use lifecycle scripts that keep asset staging extensible:
+
+```json
+{
+  "scripts": {
+    "prestart": "rm -rf start/dist && mkdir -p start/dist && run-p 'prestart:*'",
+    "prestart:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css node_modules/bootstrap/dist/css/bootstrap.rtl.min.css node_modules/bootstrap/dist/js/bootstrap.bundle.min.js start/dist/",
+    "prestart:htmx": "cp node_modules/htmx.org/dist/htmx.min.js start/dist/",
+    "start": "run-p --race 'start:*'",
+    "start:app": "node --watch start/start.ts",
+    "start:postgres": "docker compose --file start/docker-compose.yaml up",
+    "stop": "docker compose --file start/docker-compose.yaml down"
+  }
+}
+```
+
+The top-level `prestart` owns recreating `start/dist`; individual `prestart:*` scripts only copy
+one asset group into it. Add another `prestart:*` script when a package needs more generated or
+third-party assets.
+
+The start Fastify host should:
+
+- Wait for PostgreSQL and run the shared migrations.
+- Initialize i18next, the package version, and UI configuration.
+- Register the same body parser, validators, serializers, and request context required in
+  production.
+- Register `@giltayar/carmbo-commons` layout assets.
+- Serve `start/dist` through one `@fastify/static` registration at the versioned `/dist/` prefix;
+  do not add one explicit route per asset.
+- Create fake external integrations with safe example data and pass all route dependencies through
+  explicit plugin options. Never require real credentials.
+- Register the package routes at their production prefix and redirect `/` to the primary page.
+- Log the stable local URL and close Fastify/PostgreSQL on termination signals.
+
+Include `start/**/*.ts` in type-checking and ESLint, but normally exclude it from the production
+TypeScript build and published `files`. Add `@fastify/static`, Bootstrap, HTMX, and fake-integration
+testkits as development dependencies when the start host needs them.
+
+Validate the workflow itself: run `pnpm start`, request the primary page and representative CSS/JS
+assets, verify their content types, run `pnpm stop`, and confirm that no Compose service remains.
+
+### 7. Move tests with behavior ownership
 
 Copy and adapt all domain-focused tests into the new package before deleting anything from the app.
 Do not replace ten behavior tests with one smoke test.
@@ -264,7 +315,7 @@ SQL ordering by a tied timestamp is undefined.
 Add a consumer test that imports only published subpaths and asserts the intended runtime export
 keys. This catches accidental public exports and broken export-map targets.
 
-### 7. Install and validate in the package directory
+### 8. Install and validate in the package directory
 
 Run commands from the new package directory:
 
@@ -280,6 +331,7 @@ package-manager launcher, but still run it with the new package as the working d
 
 Validation must cover:
 
+- Package-local `pnpm start`/`pnpm stop`, the primary page, and staged static assets.
 - TypeScript.
 - ESLint with zero warnings.
 - Unit tests.
@@ -294,14 +346,12 @@ At the end of phase 1, `carmbo-app` and its existing tests remain unchanged.
 
 ## Publish boundary
 
-Publish the new package only after phase 1 passes:
+Only the user publishes packages. Never run `pnpm publish` or ask whether to publish. After phase 1
+passes, report that the package is ready and stop at the publish boundary. Resume only after the
+user provides the exact published version.
 
-```bash
-pnpm publish
-```
-
-Record the exact published version. Do not update `carmbo-app` to a version that has not been
-published; local source changes are not visible across these independent packages.
+Do not update `carmbo-app` to a version that has not been published; local source changes are not
+visible across these independent packages.
 
 ## Phase 2: adopt the published package in `carmbo-app`
 
@@ -365,6 +415,10 @@ prefixes, auth behavior, localization, and one real cross-domain use of the extr
 - Depending on unpublished local paths across packages.
 - Leaving locale loading in `carmbo-app`.
 - Leaving CSS/JS/image URLs pointing at `carmbo-app/src`.
+- Omitting a package-local `pnpm start` workflow for interactive browser testing.
+- Adding explicit start-server routes for each Bootstrap/HTMX file instead of staging
+  `start/dist` and mounting it once with `@fastify/static`.
+- Letting generated `start/dist` assets enter Git, ESLint, or the production TypeScript build.
 - Putting test reset functions in a production entry point.
 - Putting the published testkit under `src/` instead of top-level `testkit/`.
 - Exporting mutable registries rather than a narrow reset helper.
@@ -384,10 +438,11 @@ prefixes, auth behavior, localization, and one real cross-domain use of the extr
 - [ ] Test-only API lives in top-level `testkit/`.
 - [ ] Locales and i18next typing are package-owned.
 - [ ] Assets are package-owned.
+- [ ] `pnpm start` serves the real package routes and staged static assets; `pnpm stop` cleans up.
 - [ ] All domain unit and integration scenarios are present.
 - [ ] Tests retain singular/plural/wiring file organization.
 - [ ] Build, full tests, and pack dry-run pass.
-- [ ] Package published.
+- [ ] Package published by the user and exact version provided.
 
 ### `carmbo-app`
 

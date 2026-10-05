@@ -17,6 +17,10 @@
       "path": "packages/commons/functional-commons",
     },
     {
+      "name": "playwright-commons",
+      "path": "packages/commons/playwright-commons",
+    },
+    {
       "name": "service-commons",
       "path": "packages/commons/service-commons",
     },
@@ -79,6 +83,10 @@
     {
       "name": "carmbo-pages-job",
       "path": "packages/carmbo/carmbo-pages-job",
+    },
+    {
+      "name": "carmbo-pages-student",
+      "path": "packages/carmbo/carmbo-pages-student",
     },
     {
       "name": "carmbo-app",

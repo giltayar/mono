@@ -29,14 +29,13 @@
 
 - All packages use pnpm
 - To install, use `pnpm install`
-- To publish a change in a package, you:
+- To prepare a change in a package for publishing, you:
   - Edit the source code
   - Write the tests
   - Then build the package
   - Then test what you wrote using the tests (or manually if you cannot write a test)
   - Continue iterating till the tests pass
-  - Publish the package
-- Note that you can never
+  - Report that the package is ready for the user to publish
 
 ## Building a package
 
@@ -56,7 +55,11 @@
 
 ## Publishing a package
 
-- To publish a package, run`pnpm publish`
+- Only the user publishes packages.
+- Never run `pnpm publish` or ask the user whether you should publish a package.
+- After validating a package, report that it is ready to publish and stop at that boundary.
+- Continue with work that depends on the published artifact only after the user provides the exact
+  published version.
 
 ## Language, runtime, and module system
 
