@@ -75,7 +75,7 @@ import {listWhatsAppGroups} from '@giltayar/carmbo-common/commons/external-provi
 import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
 import {listRavmesserLists} from '@giltayar/carmbo-common/commons/external-provider/ravmesser-lists'
 import {when} from '@giltayar/functional-commons'
-import {executeDirectJob} from '../job/job-executor.ts'
+import {executeDirectJob} from '@giltayar/carmbo-pages-job/jobs/executor'
 
 export async function showSaleCreate(
   sale: NewSale | undefined,

@@ -31,7 +31,7 @@ import {exceptionToBanner, type Banner} from '@giltayar/carmbo-common/layout/ban
 import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
 import {renderImportSmooveDialog, renderImportJob} from './view/import-smoove.ts'
 import {submitImportFromSmooveListJob} from './model/model-import-smoove.ts'
-import {triggerJobsExecution} from '../job/job-executor.ts'
+import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 
 export async function showSalesEvents(
   {

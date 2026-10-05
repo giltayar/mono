@@ -6,7 +6,7 @@ import {normalizeEmail, normalizePhoneNumber} from '@giltayar/carmbo-common/comm
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'
-import {triggerJobsExecution} from '../../job/job-executor.ts'
+import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {
   submitConnectionJob,
   submitPersonalMessageJob,

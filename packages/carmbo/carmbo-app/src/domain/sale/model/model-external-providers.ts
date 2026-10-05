@@ -13,7 +13,7 @@ import type {
 import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 import retry from 'p-retry'
-import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
+import {registerJobHandler, type JobSubmitter} from '@giltayar/carmbo-pages-job/jobs/handler'
 import type {
   WhatsAppGroup,
   WhatsAppIntegrationService,

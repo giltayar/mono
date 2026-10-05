@@ -10,7 +10,7 @@ import {
   submitConnectionJob,
 } from '../../sale/model/model-connect.ts'
 import {createNoInvoiceSale} from '../../sale/model/model-sale.ts'
-import {registerJobHandler, type JobSubmitter} from '../../job/job-handlers.ts'
+import {registerJobHandler, type JobSubmitter} from '@giltayar/carmbo-pages-job/jobs/handler'
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'

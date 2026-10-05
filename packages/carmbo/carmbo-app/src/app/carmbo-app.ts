@@ -14,7 +14,7 @@ import salesRoutes, {
   apiRoute as salesApiRoute,
 } from '../domain/sale/route.ts'
 import {routes as authRoutes, useFirebaseAuth} from '@giltayar/carmbo-pages-auth'
-import jobsRoute, {apiRoute as jobsApiRoute} from '../domain/job/route.ts'
+import {apiRoutes as jobsApiRoutes, routes as jobsRoutes} from '@giltayar/carmbo-pages-job/routes'
 import smooveRoutes from '../domain/smoove/route.ts'
 import ravmesserRoutes from '../domain/ravmesser/route.ts'
 import whatsappRoutes from '../domain/whatsapp/route.ts'
@@ -38,7 +38,7 @@ import type {
 import type {TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
-import {initializeJobExecutor} from '../domain/job/job-executor.ts'
+import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {setVersion} from '@giltayar/carmbo-common/commons/version'
 import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
 import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
@@ -220,7 +220,7 @@ export function makeApp({
       nowService,
     })
     app.register(salesRoutes, {prefix: '/sales', sql})
-    app.register(jobsRoute, {prefix: '/jobs', sql})
+    app.register(jobsRoutes, {prefix: '/jobs', sql})
     app.register(smooveRoutes, {prefix: '/smoove'})
     app.register(ravmesserRoutes, {prefix: '/ravmesser'})
     app.register(whatsappRoutes, {prefix: '/whatsapp'})
@@ -238,9 +238,10 @@ export function makeApp({
     skoolIntegration,
     nowService,
   })
-  app.register(jobsApiRoute, {
+  app.register(jobsApiRoutes, {
     prefix: '/api/jobs',
     secret: apiSecret,
+    nowService,
   })
 
   app.register(backupRoutes, {

@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-app",
-  "version": "10.0.5",
+  "version": "10.0.7",
   "description": "",
   "type": "module",
   "exports": {
@@ -63,6 +63,7 @@
     "@fastify/static": "^10.1.5",
     "@giltayar/carmbo-common": "^2.0.0",
     "@giltayar/carmbo-pages-auth": "^1.0.0",
+    "@giltayar/carmbo-pages-job": "^1.0.0",
     "@giltayar/carmel-tools-academy-integration": "^6.0.0",
     "@giltayar/carmel-tools-cardcom-integration": "^9.1.0",
     "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
@@ -71,12 +72,10 @@
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",
     "@giltayar/functional-commons": "^2.2.1",
     "@giltayar/http-commons": "^3.3.0",
-    "@giltayar/promise-commons": "^2.0.0",
     "@giltayar/url-commons": "^2.2.0",
     "@js-temporal/polyfill": "^0.5.1",
     "@sentry/node": "^11.4.0",
     "@types/yargs": "^17.0.35",
-    "async-mutex": "^0.5.0",
     "bootstrap": "^5.3.8",
     "chance": "^1.1.13",
     "fastify": "^5.12.5",

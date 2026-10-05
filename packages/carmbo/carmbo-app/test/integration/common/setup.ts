@@ -13,7 +13,7 @@ import {createFakeRavmesserIntegrationService} from '@giltayar/carmel-tools-ravm
 import {migrate} from '@giltayar/carmbo-common/sql/migration'
 import {resetHooks, type TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
 import {createFakeCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/testkit'
-import {TEST_resetJobHandlers} from '../../../src/domain/job/job-executor.ts'
+import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
 import {initializeAppI18next} from '../../../src/app/i18next.ts'
 import {when} from '@giltayar/functional-commons'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
