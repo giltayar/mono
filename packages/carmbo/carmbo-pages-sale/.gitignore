@@ -1,0 +1,5 @@
+node_modules
+dist
+start/dist
+*.tgz
+.test-results

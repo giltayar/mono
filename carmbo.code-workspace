@@ -89,6 +89,10 @@
       "path": "packages/carmbo/carmbo-pages-student",
     },
     {
+      "name": "carmbo-pages-sale",
+      "path": "packages/carmbo/carmbo-pages-sale",
+    },
+    {
       "name": "carmbo-app",
       "path": "packages/carmbo/carmbo-app",
     },

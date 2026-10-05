@@ -1,0 +1,166 @@
+import {
+  showProductCreate,
+  showProductInHistory,
+  showProducts,
+  showProductUpdate,
+  createProduct,
+  updateProduct,
+  showOngoingProduct,
+  deleteProduct,
+  showProductDatalist,
+} from './controller.ts'
+import {NewProductSchema, ProductSchema} from './model.ts'
+import {OngoingProductSchema} from './view/model.ts'
+import assert from 'node:assert'
+import type {FastifyInstance} from 'fastify'
+import type {Sql} from 'postgres'
+import type {ZodTypeProvider} from 'fastify-type-provider-zod'
+import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-commons'
+import {z} from 'zod'
+
+export default function (app: FastifyInstance, {sql, appBaseUrl}: {sql: Sql; appBaseUrl: string}) {
+  // List products
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/',
+    {
+      schema: {
+        querystring: z
+          .object({
+            flash: z.string(),
+            'with-archived': z.string(),
+            q: z.string(),
+            page: z.coerce.number().int().min(0).default(0).optional(),
+          })
+          .partial(),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showProducts(
+          {
+            flash: request.query.flash,
+            withArchived: 'with-archived' in request.query,
+            query: request.query.q,
+            page: request.query.page ?? 0,
+          },
+          sql,
+        ),
+      ),
+  )
+
+  // Product datalist (HTMX endpoint for dynamic datalist search)
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .get(
+      '/query/datalist',
+      {schema: {querystring: z.object({q: z.string().optional()})}},
+      async (request, reply) =>
+        dealWithControllerResult(reply, await showProductDatalist(request.query.q)),
+    )
+
+  // Create new product
+  app.get('/new', async (_request, reply) =>
+    dealWithControllerResult(reply, await showProductCreate(undefined, {})),
+  )
+
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .post('/new', {schema: {body: OngoingProductSchema}}, async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showOngoingProduct(request.body, {
+          manipulations: {addItem: request.headers['x-add-item']},
+        }),
+      ),
+    )
+
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .post('/', {schema: {body: NewProductSchema}}, async (request, reply) => {
+      return dealWithControllerResult(reply, await createProduct(request.body, sql))
+    })
+
+  // Edit existing product
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .get(
+      '/:number',
+      {schema: {params: z.object({number: z.coerce.number().int()})}},
+      async (request, reply) => {
+        return dealWithControllerResult(
+          reply,
+          await showProductUpdate(request.params.number, undefined, sql, appBaseUrl),
+        )
+      },
+    )
+
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .post(
+      '/:number',
+      {schema: {body: OngoingProductSchema, params: z.object({number: z.coerce.number().int()})}},
+      async (request, reply) => {
+        return dealWithControllerResult(
+          reply,
+          await showOngoingProduct(request.body, {
+            manipulations: {addItem: request.headers['x-add-item']},
+          }),
+        )
+      },
+    )
+
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .put(
+      '/:number',
+      {schema: {body: ProductSchema, params: z.object({number: z.coerce.number().int()})}},
+      async (request, reply) => {
+        const productNumber = request.params.number
+
+        assert(
+          productNumber === request.body.productNumber,
+          'product number in URL must match ID in body',
+        )
+
+        return dealWithControllerResult(reply, await updateProduct(request.body, sql, appBaseUrl))
+      },
+    )
+
+  // View product in history
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/:number/by-history/:operationId',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int(), operationId: z.uuid()}),
+      },
+    },
+    async (request, reply) => {
+      return dealWithControllerResult(
+        reply,
+        await showProductInHistory(request.params.number, request.params.operationId, sql),
+      )
+    },
+  )
+
+  // Delete (Archive) product
+  app.withTypeProvider<ZodTypeProvider>().delete(
+    '/:number',
+    {
+      schema: {
+        params: z.object({number: z.coerce.number().int()}),
+        querystring: z.object({'delete-operation': z.enum(['delete', 'restore'])}),
+      },
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await deleteProduct(
+          request.params.number,
+          request.query['delete-operation'],
+          sql,
+          appBaseUrl,
+        ),
+      ),
+  )
+}

@@ -1,0 +1,230 @@
+import {test, expect} from '@playwright/test'
+import {setup} from '../common/setup.ts'
+import {createSalesEventListPageModel} from '../../page-model/sales-events/sales-event-list-page.model.ts'
+import {createNewSalesEventPageModel} from '../../page-model/sales-events/new-sales-event-page.model.ts'
+import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
+import {createProduct} from '../../../src/domain/product/model.ts'
+import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
+
+const {url, sql, TEST_hooks} = setup(import.meta.url)
+
+test.use({viewport: {width: 1280, height: 1000}})
+
+test.beforeEach(async () => {
+  await createProduct(
+    {
+      name: 'abc',
+      productType: 'bundle',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'def',
+      productType: 'bundle',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'ghi',
+      productType: 'bundle',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+  await createProduct(
+    {
+      name: 'jkl',
+      productType: 'bundle',
+    },
+    undefined,
+    new Date(),
+    sql(),
+  )
+})
+
+test('create sales event then update it', async ({page}) => {
+  await page.goto(new URL('/sales-events', url()).href)
+
+  const salesEventListModel = createSalesEventListPageModel(page)
+  const newSalesEventModel = createNewSalesEventPageModel(page)
+  const updateSalesEventModel = createUpdateSalesEventPageModel(page)
+
+  await salesEventListModel.createNewSalesEventButton().locator.click()
+
+  await page.waitForURL(newSalesEventModel.urlRegex)
+
+  await expect(newSalesEventModel.pageTitle().locator).toHaveText('New Sales Event')
+  // Fill the new sales event form
+  const newForm = newSalesEventModel.form()
+  await newForm.nameInput().locator.fill('Test Sale')
+  await newForm.fromDateInput().locator.fill('2025-01-01')
+  await newForm.toDateInput().locator.fill('2025-01-31')
+  await newForm.landingPageUrlInput().locator.fill('https://example.com/test-sale')
+
+  // Add products for sale
+  await newForm.productsForSale().addButton().locator.click()
+  await newForm.productsForSale().productInput(0).locator.fill('1')
+  await newForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await expect(newForm.productsForSale().productInput(0).locator).toHaveValue(/1/)
+  await newForm.productsForSale().addButton().locator.click()
+
+  await newForm.productsForSale().productInput(1).locator.fill('2')
+  await newForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await expect(newForm.productsForSale().productInput(1).locator).toHaveValue(/2/)
+  await newForm.notesInput().locator.fill('Initial sales event notes')
+
+  // Save the sales event
+  await newForm.createButton().locator.click()
+
+  // Wait for navigation to update page
+  await page.waitForURL(updateSalesEventModel.urlRegex)
+
+  const salesEventNumber = new URL(await page.url()).pathname.split('/').at(-1)
+
+  await expect(updateSalesEventModel.pageTitle().locator).toHaveText(
+    `Update Sales Event ${salesEventNumber}`,
+  )
+
+  const updateForm = updateSalesEventModel.form()
+  await expect(updateForm.nameInput().locator).toHaveValue('Test Sale')
+  await expect(updateForm.fromDateInput().locator).toHaveValue('2025-01-01')
+  await expect(updateForm.toDateInput().locator).toHaveValue('2025-01-31')
+  await expect(updateForm.landingPageUrlInput().locator).toHaveValue(
+    'https://example.com/test-sale',
+  )
+  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('1: abc')
+  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('2: def')
+  await expect(updateForm.notesInput().locator).toHaveValue('Initial sales event notes')
+
+  await expect(updateSalesEventModel.cardcomInformation().webhookUrlInput().locator).toHaveValue(
+    'http://localhost/api/sales/cardcom/sale?sales-event=1',
+  )
+
+  await expect(updateSalesEventModel.smooveInformation().webhookUrlInput().locator).toHaveValue(
+    'http://localhost/api/sales/no-invoice-sale?sales-event=1&email=%5B%5Bemail%5D%5D&phone=%5B%5Bphone%5D%5D&cellPhone=%5B%5Bmobile%5D%5D&firstName=%5B%5Bfirst_name%5D%5D&lastName=%5B%5Blast_name%5D%5D',
+  )
+
+  // Update the sales event data
+  await updateForm.nameInput().locator.fill('Updated Sale')
+  await updateForm.fromDateInput().locator.fill('2025-02-01')
+  await updateForm.toDateInput().locator.fill('2025-02-28')
+  await updateForm.landingPageUrlInput().locator.fill('https://example.com/updated-sale')
+  await updateForm.productsForSale().productInput(0).locator.fill('3')
+  await updateForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await updateForm.productsForSale().productInput(1).locator.fill('4')
+  await updateForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await updateForm.notesInput().locator.clear()
+  await updateForm.notesInput().locator.fill('Updated sales event notes')
+
+  // Save the sales event and verify data
+  await updateForm.updateButton().locator.click()
+
+  await waitForAllJobsToBeDone(page, url())
+  await page.goto(new URL(`/sales-events/${salesEventNumber}`, url()).href)
+
+  await expect(updateForm.nameInput().locator).toHaveValue('Updated Sale')
+  await expect(updateForm.fromDateInput().locator).toHaveValue('2025-02-01')
+  await expect(updateForm.toDateInput().locator).toHaveValue('2025-02-28')
+  await expect(updateForm.landingPageUrlInput().locator).toHaveValue(
+    'https://example.com/updated-sale',
+  )
+  await expect(updateForm.productsForSale().productInput(0).locator).toHaveValue('3: ghi')
+  await expect(updateForm.productsForSale().productInput(1).locator).toHaveValue('4: jkl')
+  await expect(updateForm.notesInput().locator).toHaveValue('Updated sales event notes')
+
+  // Back to list
+  await page.goto(new URL('/sales-events', url()).href)
+
+  // Check that the sales event appears in the list
+  const rows = salesEventListModel.list().rows()
+  await expect(rows.locator).toHaveCount(1)
+  const firstRow = salesEventListModel.list().rows().row(0)
+  await expect(firstRow.nameCell().locator).toHaveText('Updated Sale')
+})
+
+test('discard button', async ({page}) => {
+  await page.goto(new URL('/sales-events', url()).href)
+
+  const salesEventListModel = createSalesEventListPageModel(page)
+  const newSalesEventModel = createNewSalesEventPageModel(page)
+
+  await salesEventListModel.createNewSalesEventButton().locator.click()
+  await page.waitForURL(newSalesEventModel.urlRegex)
+  await expect(newSalesEventModel.pageTitle().locator).toHaveText('New Sales Event')
+
+  const newForm = newSalesEventModel.form()
+  await newForm.nameInput().locator.fill('Test Sale')
+  await newForm.fromDateInput().locator.fill('2025-03-01')
+
+  // Click discard - form should reset
+  await newForm.discardButton().locator.click()
+
+  await expect(newForm.nameInput().locator).toHaveValue('')
+})
+
+test('creation/update error shows alert', async ({page}) => {
+  await page.goto(new URL('/sales-events', url()).href)
+
+  const salesEventListModel = createSalesEventListPageModel(page)
+  const newSalesEventModel = createNewSalesEventPageModel(page)
+  const updateSalesEventModel = createUpdateSalesEventPageModel(page)
+
+  await salesEventListModel.createNewSalesEventButton().locator.click()
+
+  await page.waitForURL(newSalesEventModel.urlRegex)
+
+  await expect(newSalesEventModel.pageTitle().locator).toHaveText('New Sales Event')
+  // Fill the new sales event form
+  const newForm = newSalesEventModel.form()
+  await newForm.nameInput().locator.fill('Test Event')
+  await newForm.fromDateInput().locator.fill('2025-01-01')
+  await newForm.toDateInput().locator.fill('2025-01-31')
+  await newForm.landingPageUrlInput().locator.fill('https://example.com/test-event')
+  await newForm.productsForSale().addButton().locator.click()
+  await newForm.productsForSale().productInput(0).locator.fill('1')
+  await newForm.productsForSale().productInput(0).locator.blur()
+  await page.waitForLoadState('networkidle')
+  await newForm.productsForSale().addButton().locator.click()
+  await page.waitForLoadState('networkidle')
+  await newForm.productsForSale().productInput(1).locator.fill('2')
+  await newForm.productsForSale().productInput(1).locator.blur()
+  await page.waitForLoadState('networkidle')
+
+  TEST_hooks['createSalesEvent'] = () => {
+    throw new Error('ouch!')
+  }
+
+  await newForm.createButton().locator.click()
+
+  await expect(newSalesEventModel.header().errorBanner().locator).toHaveText(
+    'Creating sales event error: ouch!',
+  )
+  delete TEST_hooks['createSalesEvent']
+
+  await newForm.createButton().locator.click()
+
+  await page.waitForURL(updateSalesEventModel.urlRegex)
+
+  await updateSalesEventModel.form().nameInput().locator.fill('Updated Event')
+
+  TEST_hooks['updateSalesEvent'] = () => {
+    throw new Error('double ouch!')
+  }
+
+  await updateSalesEventModel.form().updateButton().locator.click()
+
+  await expect(updateSalesEventModel.header().errorBanner().locator).toHaveText(
+    'Updating sales event error: double ouch!',
+  )
+})
