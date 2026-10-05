@@ -166,9 +166,9 @@ importers:
 
   .:
     dependencies:
-      '@giltayar/carmbo-common':
-        specifier: ^2.0.0
-        version: 2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+      '@giltayar/carmbo-commons':
+        specifier: 2.1.0
+        version: 2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
       '@giltayar/functional-commons':
         specifier: ^2.2.1
         version: 2.2.1
@@ -345,11 +345,12 @@ packages:
     resolution: {integrity: sha512-c/z/gaIlaaLZEuGbE6sLUuJ61tskg1JghvhcNQzW948ASBinbVBBRnZTC4b4yt4LaEtJQkYlyzqLHcutFwEIvA==}
     engines: {node: '>=20.0.0'}
 
-  '@giltayar/carmbo-common@2.0.0':
-    resolution: {integrity: sha512-PLuBgn9Ysc3MoxZ4OZX72uuYEeQxbLyE15wTYm4Bs8pIApTZk4xIyCO+ZrhIiv8cKHZKc6Tc4IzNFJgkLIGFbw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-common/2.0.0/d8feb744326df129b67e7ffd4fa8b26a48dee35b}
+  '@giltayar/carmbo-commons@2.1.0':
+    resolution: {integrity: sha512-yLnUgNvk1+P9GdujSk133W3JANFzzSn3JYtYdiJ8q9TEE0KR7PbpAk/9GDRmcquIA2MKAc8KLmChLGlisRFsxA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-commons/2.1.0/3ce77787310cbc40e37cb00edbcc04fd2b27f3b4}
     engines: {node: '>=26.9.0'}
     peerDependencies:
       '@fastify/request-context': ^7.0.0
+      '@playwright/test': ^1.63.0
       fastify: ^5.12.5
       i18next: ^26.4.2
 
@@ -2457,7 +2458,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@giltayar/carmbo-common@2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))':
+  '@giltayar/carmbo-commons@2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))':
     dependencies:
       '@fastify/request-context': 7.0.0
       '@fastify/static': 10.1.5
@@ -2465,6 +2466,7 @@ snapshots:
       '@giltayar/carmel-tools-smoove-integration': 5.3.1
       '@giltayar/carmel-tools-whatsapp-integration': 2.6.1
       '@giltayar/functional-commons': 2.2.1
+      '@playwright/test': 1.63.0
       fastify: 5.12.5
       htm: 3.1.1
       i18next: 26.4.2(@typescript/typescript6@6.0.2)

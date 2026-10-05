@@ -1,6 +1,6 @@
 import type {FastifyInstance} from 'fastify'
 import '@fastify/cookie'
-import {dealWithControllerResult} from '@giltayar/carmbo-common/commons/routes-commons'
+import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-commons'
 import {login, logout} from './controller.ts'
 import {registerAuthLocaleResources} from './locale-resources.ts'
 import {initializeFirebase, verifySessionCookie} from './model-firebase.ts'

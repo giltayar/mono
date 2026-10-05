@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-pages-auth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Firebase authentication pages and route protection for Carmbo applications",
   "type": "module",
   "exports": {
@@ -44,7 +44,7 @@
     "i18next": "^26.4.2"
   },
   "dependencies": {
-    "@giltayar/carmbo-common": "^2.0.0",
+    "@giltayar/carmbo-commons": "2.1.0",
     "@giltayar/functional-commons": "^2.2.1",
     "firebase-admin": "^14.5.0",
     "lru-cache": "^11.5.3"
