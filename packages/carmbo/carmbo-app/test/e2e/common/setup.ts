@@ -6,7 +6,7 @@ import {
   createSmooveIntegrationService,
   type SmooveIntegrationService,
 } from '@giltayar/carmel-tools-smoove-integration/service'
-import {migrate} from '@giltayar/carmbo-common/sql/migration'
+import {migrate} from '@giltayar/carmbo-commons/sql/migration'
 
 export function setup(testUrl: string): {
   url: () => URL

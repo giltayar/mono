@@ -2,15 +2,15 @@ import type {PendingQuery, Row, Sql} from 'postgres'
 import {
   HistoryOperationEnumSchema,
   type HistoryOperation,
-} from '@giltayar/carmbo-common/commons/operation-type'
+} from '@giltayar/carmbo-commons/commons/operation-type'
 import {assert} from 'node:console'
 import {z} from 'zod'
-import {sqlTextSearch} from '@giltayar/carmbo-common/commons/sql-commons'
-import {TEST_executeHook} from '@giltayar/carmbo-common/commons/TEST_hooks'
+import {sqlTextSearch} from '@giltayar/carmbo-commons/commons/sql-commons'
+import {TEST_executeHook} from '@giltayar/carmbo-commons/commons/TEST_hooks'
 import {
   itemPickerSchema,
   stringItemPickerSchema,
-} from '@giltayar/carmbo-common/commons/schema-commons'
+} from '@giltayar/carmbo-commons/commons/schema-commons'
 import type {SmooveList} from '@giltayar/carmel-tools-smoove-integration/types'
 import type {RavmesserList} from '@giltayar/carmel-tools-ravmesser-integration/types'
 import type {WhatsAppGroup} from '@giltayar/carmel-tools-whatsapp-integration/service'

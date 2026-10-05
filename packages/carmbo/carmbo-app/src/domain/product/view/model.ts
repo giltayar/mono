@@ -3,7 +3,7 @@ import {MailingListProviderSchema, ProductTypeSchema} from '../model.ts'
 import {
   itemPickerSchema,
   stringItemPickerSchema,
-} from '@giltayar/carmbo-common/commons/schema-commons'
+} from '@giltayar/carmbo-commons/commons/schema-commons'
 
 export const OngoingProductSchema = z.object({
   name: z.string().optional(),

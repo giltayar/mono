@@ -15,7 +15,7 @@ import assert from 'node:assert'
 import type {FastifyInstance} from 'fastify'
 import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
-import {dealWithControllerResult} from '@giltayar/carmbo-common/commons/routes-commons'
+import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-commons'
 import {z} from 'zod'
 
 export default function (app: FastifyInstance, {sql, appBaseUrl}: {sql: Sql; appBaseUrl: string}) {

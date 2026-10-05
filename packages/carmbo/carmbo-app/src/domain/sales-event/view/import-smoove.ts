@@ -1,7 +1,7 @@
 import {requestContext} from '@fastify/request-context'
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
+import {generateItemTitle} from '@giltayar/carmbo-commons/commons/view-commons'
 
 const t = getFixedT(null, 'sales-event')
 

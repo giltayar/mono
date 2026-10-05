@@ -21,13 +21,13 @@ import {
   finalHtml,
   type ControllerResult,
   retarget,
-} from '@giltayar/carmbo-common/commons/controller-result'
+} from '@giltayar/carmbo-commons/commons/controller-result'
 import type {ProductManipulations} from './view/product-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner} from '@giltayar/carmbo-common/layout/banner'
-import {listWhatsAppGroups} from '@giltayar/carmbo-common/commons/external-provider/whatsapp-groups'
-import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
-import {listRavmesserLists} from '@giltayar/carmbo-common/commons/external-provider/ravmesser-lists'
+import {exceptionToBanner} from '@giltayar/carmbo-commons/layout/banner'
+import {listWhatsAppGroups} from '@giltayar/carmbo-commons/commons/external-provider/whatsapp-groups'
+import {listSmooveLists} from '@giltayar/carmbo-commons/commons/external-provider/smoove-lists'
+import {listRavmesserLists} from '@giltayar/carmbo-commons/commons/external-provider/ravmesser-lists'
 import {submitPropagateAcademyCourseChangesJob} from '../sale/model/model-external-providers.ts'
 import {searchProducts} from '../sale/model/model.ts'
 import {when} from '@giltayar/functional-commons'

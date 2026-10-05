@@ -5,7 +5,7 @@ import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/upd
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
-import {waitForHtmx} from '../common/wait-for-htmx.ts'
+import {waitForHtmx} from '@giltayar/playwright-commons'
 
 const {url, sql} = setup(import.meta.url)
 

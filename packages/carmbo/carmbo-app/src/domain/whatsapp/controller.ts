@@ -1,8 +1,8 @@
 import {requestContext} from '@fastify/request-context'
-import {finalHtml, type ControllerResult} from '@giltayar/carmbo-common/commons/controller-result'
-import {listWhatsAppGroups} from '@giltayar/carmbo-common/commons/external-provider/whatsapp-groups'
+import {finalHtml, type ControllerResult} from '@giltayar/carmbo-commons/commons/controller-result'
+import {listWhatsAppGroups} from '@giltayar/carmbo-commons/commons/external-provider/whatsapp-groups'
 import {renderWhatsappGroupOptions} from './view/list-searches.ts'
-import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
+import {generateItemTitle} from '@giltayar/carmbo-commons/commons/view-commons'
 
 export async function showWhatsappGroupDatalist(q: string | undefined): Promise<ControllerResult> {
   const whatsappIntegration = requestContext.get('whatsappIntegration')!

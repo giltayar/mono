@@ -1,13 +1,13 @@
 import type {Sql} from 'postgres'
 import z from 'zod'
-import {type HistoryOperation} from '@giltayar/carmbo-common/commons/operation-type'
+import {type HistoryOperation} from '@giltayar/carmbo-commons/commons/operation-type'
 import type {PendingQuery, Row} from 'postgres'
-import {sqlTextSearch} from '@giltayar/carmbo-common/commons/sql-commons'
+import {sqlTextSearch} from '@giltayar/carmbo-commons/commons/sql-commons'
 import assert from 'node:assert'
-import {TEST_executeHook} from '@giltayar/carmbo-common/commons/TEST_hooks'
+import {TEST_executeHook} from '@giltayar/carmbo-commons/commons/TEST_hooks'
 import type {StandingOrderPaymentResolution} from './model-sale.ts'
 import {makeError} from '@giltayar/functional-commons'
-import {itemPickerSchema} from '@giltayar/carmbo-common/commons/schema-commons'
+import {itemPickerSchema} from '@giltayar/carmbo-commons/commons/schema-commons'
 
 export const SaleSchema = z.object({
   saleNumber: z.coerce.number().int().positive(),

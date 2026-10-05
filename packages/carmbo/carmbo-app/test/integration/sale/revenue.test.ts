@@ -4,7 +4,7 @@ import {createRevenuePageModel} from '../../page-model/sales/revenue-page.model.
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 import {cardcomWebhookUrl, cardcomRecurringPaymentWebhookUrl} from './common/cardcom-webhook.ts'
 

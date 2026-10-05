@@ -17,7 +17,7 @@ import {
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {humanIsraeliPhoneNumberToWhatsAppId} from '@giltayar/carmel-tools-whatsapp-integration/utils'
 import {registerJobHandler, type JobSubmitter} from '@giltayar/carmbo-pages-job/jobs/handler'
-import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
+import type {NowService} from '@giltayar/carmbo-commons/commons/now-service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 
 export type SaleConnectionToStudent = {

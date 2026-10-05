@@ -1,11 +1,11 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
-import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-commons/commons/view-commons'
 import type {NewProduct, Product} from '../model.ts'
 import type {OngoingProduct} from './model.ts'
 import {requestContext} from '@fastify/request-context'
-import {getVersion} from '@giltayar/carmbo-common/commons/version'
+import {getVersion} from '@giltayar/carmbo-commons/commons/version'
 import {getFixedT} from 'i18next'
-import {ValidityError} from '@giltayar/carmbo-common/commons/validity-error'
+import {ValidityError} from '@giltayar/carmbo-commons/commons/validity-error'
 
 const t = getFixedT(null, 'product')
 const tCommon = getFixedT(null, 'layout')

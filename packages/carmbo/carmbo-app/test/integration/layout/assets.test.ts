@@ -1,14 +1,12 @@
 import {test, expect} from '@playwright/test'
 import {readFile} from 'node:fs/promises'
 import packageJson from '../../../package.json' with {type: 'json'}
-import enStudent from '../../../src/domain/student/locale/en.json' with {type: 'json'}
-import heStudent from '../../../src/domain/student/locale/he.json' with {type: 'json'}
-import {createAllPagesPageModel} from '../../page-model/common/all-pages.model.ts'
+import {createAllPagesPageModel} from '@giltayar/carmbo-commons/testkit/page-model/all-pages.model'
 import {setup} from '../common/setup.ts'
 
-for (const [brand, language, direction, logo, translations] of [
-  ['carmel', 'en', 'ltr', 'logo.png', enStudent],
-  ['liraz', 'he', 'rtl', 'logo.svg', heStudent],
+for (const [brand, language, direction, logo, title] of [
+  ['carmel', 'en', 'ltr', 'logo.png', 'Students'],
+  ['liraz', 'he', 'rtl', 'logo.svg', 'תלמידות'],
 ] as const) {
   test.describe(`${brand} shared assets`, () => {
     const {url} = setup(`${import.meta.url}/${brand}`, {uiConfiguration: brand, language})
@@ -28,7 +26,7 @@ for (const [brand, language, direction, logo, translations] of [
       await page.goto(new URL('/students', url()).href)
       await expect(model.documentElement().locator).toHaveAttribute('lang', language)
       await expect(model.documentElement().locator).toHaveAttribute('dir', direction)
-      await expect(page).toHaveTitle(translations.list.students)
+      await expect(page).toHaveTitle(title)
 
       const renderedAssets = await model
         .assets()
@@ -48,8 +46,8 @@ for (const [brand, language, direction, logo, translations] of [
           `${srcPrefix}layout/style/style.css`,
           `${srcPrefix}layout/js/scripts.js`,
           `${srcPrefix}layout/style/configurations/${brand}/${logo}`,
-          `${srcPrefix}domain/student/view/js/scripts.js`,
-          `${srcPrefix}domain/student/view/style/style.css`,
+          '/students/scripts.js',
+          '/students/style.css',
         ]),
       )
 
@@ -67,11 +65,6 @@ for (const [brand, language, direction, logo, translations] of [
             'configurations/carmel/logo.png',
             'configurations/liraz/logo.svg',
           ],
-        ],
-        [
-          `${srcPrefix}domain/`,
-          new URL('../../../src/domain/', import.meta.url),
-          ['student/view/js/scripts.js', 'student/view/style/style.css'],
         ],
         [
           distPrefix,
@@ -103,6 +96,15 @@ for (const [brand, language, direction, logo, translations] of [
             expect(await response.text(), file).toMatch(/\.feather\s*\{/)
           }
         }
+      }
+
+      for (const [path, contentType] of [
+        ['/students/style.css', 'text/css'],
+        ['/students/scripts.js', 'application/javascript'],
+      ] as const) {
+        const response = await request.get(new URL(path, url()).href)
+        expect(response.status(), path).toBe(200)
+        expect(response.headers()['content-type'], path).toContain(contentType)
       }
 
       for (const path of [

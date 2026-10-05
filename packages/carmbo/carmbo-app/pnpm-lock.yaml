@@ -181,15 +181,18 @@ importers:
       '@fastify/static':
         specifier: ^10.1.5
         version: 10.1.5
-      '@giltayar/carmbo-common':
-        specifier: ^2.0.0
-        version: 2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+      '@giltayar/carmbo-commons':
+        specifier: 2.1.0
+        version: 2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
       '@giltayar/carmbo-pages-auth':
-        specifier: ^1.0.0
-        version: 1.0.0(@fastify/cookie@11.1.2)(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(supports-color@5.5.0)
+        specifier: 1.0.1
+        version: 1.0.1(@fastify/cookie@11.1.2)(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(supports-color@5.5.0)
       '@giltayar/carmbo-pages-job':
-        specifier: ^1.0.0
-        version: 1.0.0(@fastify/request-context@7.0.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
+        specifier: 1.0.1
+        version: 1.0.1(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
+      '@giltayar/carmbo-pages-student':
+        specifier: 1.0.0
+        version: 1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)
       '@giltayar/carmel-tools-academy-integration':
         specifier: ^6.0.0
         version: 6.0.0
@@ -275,6 +278,9 @@ importers:
       '@giltayar/docker-compose-testkit':
         specifier: ^2.1.0
         version: 2.1.0
+      '@giltayar/playwright-commons':
+        specifier: 1.0.0
+        version: 1.0.0(@playwright/test@1.63.0)
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.63.0
@@ -461,16 +467,17 @@ packages:
     resolution: {integrity: sha512-c/z/gaIlaaLZEuGbE6sLUuJ61tskg1JghvhcNQzW948ASBinbVBBRnZTC4b4yt4LaEtJQkYlyzqLHcutFwEIvA==}
     engines: {node: '>=20.0.0'}
 
-  '@giltayar/carmbo-common@2.0.0':
-    resolution: {integrity: sha512-PLuBgn9Ysc3MoxZ4OZX72uuYEeQxbLyE15wTYm4Bs8pIApTZk4xIyCO+ZrhIiv8cKHZKc6Tc4IzNFJgkLIGFbw==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-common/2.0.0/d8feb744326df129b67e7ffd4fa8b26a48dee35b}
+  '@giltayar/carmbo-commons@2.1.0':
+    resolution: {integrity: sha512-yLnUgNvk1+P9GdujSk133W3JANFzzSn3JYtYdiJ8q9TEE0KR7PbpAk/9GDRmcquIA2MKAc8KLmChLGlisRFsxA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-commons/2.1.0/3ce77787310cbc40e37cb00edbcc04fd2b27f3b4}
     engines: {node: '>=26.9.0'}
     peerDependencies:
       '@fastify/request-context': ^7.0.0
+      '@playwright/test': ^1.63.0
       fastify: ^5.12.5
       i18next: ^26.4.2
 
-  '@giltayar/carmbo-pages-auth@1.0.0':
-    resolution: {integrity: sha512-2wdwAW3pb58RouAZTtZJlSm0h/VGF8vkmqz0VLM1u3pKt+T7LkpUNAOZzUj4Anw6QgpnYa4myGIvlrxKvZzq7Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-auth/1.0.0/6054c7cd4f711b2c8999ba15b7e210ee3fe48ed1}
+  '@giltayar/carmbo-pages-auth@1.0.1':
+    resolution: {integrity: sha512-eo0Tl3w6lwvB92XtqH2ikJDDMR2ajsf9oq2CokzK+QuBE9BbdP+feTg0w5u4WcnpZ58IpxFRKwK5Zr23gFrB5Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-auth/1.0.1/526b221237e46830c5c94e40d8f99183d6a68df3}
     engines: {node: '>=26.9.0'}
     peerDependencies:
       '@fastify/cookie': ^11.1.2
@@ -478,10 +485,26 @@ packages:
       fastify: ^5.12.5
       i18next: ^26.4.2
 
-  '@giltayar/carmbo-pages-job@1.0.0':
-    resolution: {integrity: sha512-XiKKMZi29QqijNW5La2zi2yDXEW+Ln0Wc4u2aQCF+VBEJRe3DBv5XCD/TvVQfopVTlI5TShvbofK1dUU6fEHOA==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-job/1.0.0/b1d22b320bc9ff4537b8f4b0a2014f04cb30bdbc}
+  '@giltayar/carmbo-pages-job@1.0.1':
+    resolution: {integrity: sha512-8mPSmyWUzpWHxIgs77uX6qHzYzAH1xWtWPxadg7SuIHQhLlP8+3S7I647d0BxZpHhQVwYXo0tBmOuWT4rPEi2w==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-job/1.0.1/ef35f70720b44075a48d3117040e425e9a341d8c}
     engines: {node: '>=26.9.0'}
     peerDependencies:
+      fastify: ^5.12.5
+      fastify-type-provider-zod: ^7.0.0
+      i18next: ^26.4.2
+      postgres: ^3.4.7
+      zod: ^4.6.5
+
+  '@giltayar/carmbo-pages-student@1.0.0':
+    resolution: {integrity: sha512-IVA8THTOVMfFFfbvNEM4JaufHKo/DXPkezOvp8m5FKkzsy0OuAT3PHAaU8jkTohFiJhz+oovaytXE6mkkwqP4Q==, tarball: https://npm.pkg.github.com/download/@giltayar/carmbo-pages-student/1.0.0/ccd42472ecdcc755cda5cae5b3705513790c5c44}
+    engines: {node: '>=26.9.0'}
+    peerDependencies:
+      '@fastify/formbody': ^9.0.0
+      '@fastify/request-context': ^7.0.0
+      '@giltayar/carmel-tools-academy-integration': ^6.0.0
+      '@giltayar/carmel-tools-ravmesser-integration': ^1.0.0
+      '@giltayar/carmel-tools-smoove-integration': ^5.3.1
+      '@playwright/test': ^1.63.0
       fastify: ^5.12.5
       fastify-type-provider-zod: ^7.0.0
       i18next: ^26.4.2
@@ -532,6 +555,12 @@ packages:
   '@giltayar/http-commons@3.3.0':
     resolution: {integrity: sha512-R5WyqOb6ibXyqs4c6SR95lIkULo+jxglpszHyI1uBbp3lrwbPVtZ6NgiIYuTz/8o0ZGudDBtqrze75zkUURDUQ==, tarball: https://npm.pkg.github.com/download/@giltayar/http-commons/3.3.0/6641772f5c87d47b7a2930d770eef584957f6ef5}
     engines: {node: '>=24.0.0'}
+
+  '@giltayar/playwright-commons@1.0.0':
+    resolution: {integrity: sha512-sXstfZEV4F/TLqb6kXfPGH76+LChISCSwMIx8Kf29UFz+he49Q7xip3JhOjbZkzn2BgaPD68IuuVA+G3aaPtYw==, tarball: https://npm.pkg.github.com/download/@giltayar/playwright-commons/1.0.0/5b4aadd63430921621b6d752667cf775636b1fb3}
+    engines: {node: '>=24.0.0'}
+    peerDependencies:
+      '@playwright/test': ^1.63.0
 
   '@giltayar/promise-commons@2.0.0':
     resolution: {integrity: sha512-oWL/jGRJ/lzcX5aAQDgTG9VxLXKBkLMDEaxVaz8lWhgtYQbXMSufCCbu6ue0oNxx+UxKUPMmyPVfcNJHludDdQ==, tarball: https://npm.pkg.github.com/download/@giltayar/promise-commons/2.0.0/0f2089186fb5a11c834ff88401830991f8953dd9}
@@ -3238,7 +3267,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@giltayar/carmbo-common@2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))':
+  '@giltayar/carmbo-commons@2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))':
     dependencies:
       '@fastify/request-context': 7.0.0
       '@fastify/static': 10.1.5
@@ -3246,6 +3275,7 @@ snapshots:
       '@giltayar/carmel-tools-smoove-integration': 5.3.1
       '@giltayar/carmel-tools-whatsapp-integration': 2.6.1
       '@giltayar/functional-commons': 2.2.1
+      '@playwright/test': 1.63.0
       fastify: 5.12.5
       htm: 3.1.1
       i18next: 26.4.2(@typescript/typescript6@6.0.2)
@@ -3255,11 +3285,11 @@ snapshots:
       vhtml: 2.2.0
       zod: 4.6.5
 
-  '@giltayar/carmbo-pages-auth@1.0.0(@fastify/cookie@11.1.2)(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(supports-color@5.5.0)':
+  '@giltayar/carmbo-pages-auth@1.0.1(@fastify/cookie@11.1.2)(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(supports-color@5.5.0)':
     dependencies:
       '@fastify/cookie': 11.1.2
       '@fastify/formbody': 9.0.0
-      '@giltayar/carmbo-common': 2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+      '@giltayar/carmbo-commons': 2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
       '@giltayar/functional-commons': 2.2.1
       fastify: 5.12.5
       firebase-admin: 14.5.0(supports-color@5.5.0)
@@ -3269,12 +3299,13 @@ snapshots:
       - '@fastify/request-context'
       - '@firebase/app'
       - '@firebase/app-compat'
+      - '@playwright/test'
       - encoding
       - supports-color
 
-  '@giltayar/carmbo-pages-job@1.0.0(@fastify/request-context@7.0.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)':
+  '@giltayar/carmbo-pages-job@1.0.1(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)':
     dependencies:
-      '@giltayar/carmbo-common': 2.0.0(@fastify/request-context@7.0.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+      '@giltayar/carmbo-commons': 2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
       '@giltayar/promise-commons': 2.0.0
       async-mutex: 0.5.0
       fastify: 5.12.5
@@ -3284,6 +3315,24 @@ snapshots:
       zod: 4.6.5
     transitivePeerDependencies:
       - '@fastify/request-context'
+      - '@playwright/test'
+
+  '@giltayar/carmbo-pages-student@1.0.0(@fastify/formbody@9.0.0)(@fastify/request-context@7.0.0)(@giltayar/carmel-tools-academy-integration@6.0.0)(@giltayar/carmel-tools-ravmesser-integration@1.0.0)(@giltayar/carmel-tools-smoove-integration@5.3.1)(@playwright/test@1.63.0)(fastify-type-provider-zod@7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5))(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))(postgres@3.4.7)(zod@4.6.5)':
+    dependencies:
+      '@fastify/formbody': 9.0.0
+      '@fastify/request-context': 7.0.0
+      '@giltayar/carmbo-commons': 2.1.0(@fastify/request-context@7.0.0)(@playwright/test@1.63.0)(fastify@5.12.5)(i18next@26.4.2(@typescript/typescript6@6.0.2))
+      '@giltayar/carmel-tools-academy-integration': 6.0.0
+      '@giltayar/carmel-tools-ravmesser-integration': 1.0.0
+      '@giltayar/carmel-tools-smoove-integration': 5.3.1
+      '@giltayar/functional-commons': 2.2.1
+      '@playwright/test': 1.63.0
+      fastify: 5.12.5
+      fastify-type-provider-zod: 7.0.0(@fastify/swagger@9.9.0(supports-color@5.5.0))(fastify@5.12.5)(openapi-types@12.1.3)(zod@4.6.5)
+      i18next: 26.4.2(@typescript/typescript6@6.0.2)
+      p-map-series: 3.0.0
+      postgres: 3.4.7
+      zod: 4.6.5
 
   '@giltayar/carmel-tools-academy-integration@6.0.0':
     dependencies:
@@ -3347,6 +3396,10 @@ snapshots:
       agentkeepalive: 4.6.0
       lodash.merge: 4.6.2
       type-fest: 5.8.0
+
+  '@giltayar/playwright-commons@1.0.0(@playwright/test@1.63.0)':
+    dependencies:
+      '@playwright/test': 1.63.0
 
   '@giltayar/promise-commons@2.0.0': {}
 

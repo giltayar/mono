@@ -387,12 +387,25 @@ After imports compile against the published package:
 - Remove unit tests now owned by the package.
 - Remove duplicated behavior integration tests only after the package suite and app adoption pass.
 
-Retain a small app-level integration smoke test when useful to prove:
+Retain one small app-level integration smoke test per adopted package route to prove:
 
 - The published package is installed.
 - Routes are mounted under the correct prefixes.
 - Authentication boundaries are correct.
 - Required app services/options are wired.
+
+Keep these tests under `test/integration/package-routes/`. Related route-package smokes may share a
+`package-routes.test.ts` file, but keep each package to one simple scenario rather than copying its
+behavior suite back into the app.
+
+Use the published package APIs and testkits:
+
+- Import page models from the package's `testkit/page-model/*` exports, not app-local copies.
+- For a page package, create the record through the mounted page UI and then verify it appears in
+  the package's list page. Do not seed the record by calling the domain model directly; the smoke
+  test should cover the app-mounted create route as well as the list route.
+- For a job/listing package, submit one job through its public handler API and verify it appears on
+  the mounted jobs page.
 
 Do not retain the full behavioral suite in both packages after adoption.
 
@@ -425,6 +438,9 @@ prefixes, auth behavior, localization, and one real cross-domain use of the extr
 - Keeping app-specific request-context access when explicit route options are sufficient.
 - Moving only a representative test instead of every owned behavior scenario.
 - Combining singular detail tests, plural list tests, and package wiring tests into one large file.
+- Keeping app-local page models instead of consuming the package's published page-model testkit.
+- Seeding a page-route smoke test through the model or database instead of exercising the mounted
+  create UI.
 - Assuming row order when test timestamps are tied.
 - Removing the old app implementation before the published package has been consumed and tested.
 
@@ -451,5 +467,7 @@ prefixes, auth behavior, localization, and one real cross-domain use of the extr
 - [ ] Route/auth/API prefixes preserved.
 - [ ] App locale and asset ownership removed.
 - [ ] Old domain source removed.
-- [ ] Duplicate behavior tests removed; app smoke wiring retained if useful.
+- [ ] Duplicate behavior tests removed.
+- [ ] One simple smoke test per adopted package route lives under `test/integration/package-routes/`
+      and consumes published page models/test APIs.
 - [ ] App build and full tests pass.

@@ -1,7 +1,7 @@
 import type {Page} from '@playwright/test'
 import {saleFormPageModel} from './sale-form.model.ts'
 import {createSaleHistoryPageModel} from './sale-history.model.ts'
-import {createAllPagesPageModel} from '../common/all-pages.model.ts'
+import {createAllPagesPageModel} from '@giltayar/carmbo-commons/testkit/page-model/all-pages.model'
 
 export function createUpdateSalePageModel(page: Page) {
   return {

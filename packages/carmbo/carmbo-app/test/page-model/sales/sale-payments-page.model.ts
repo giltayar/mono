@@ -1,5 +1,5 @@
 import type {Page} from '@playwright/test'
-import {createAllPagesPageModel} from '../common/all-pages.model.ts'
+import {createAllPagesPageModel} from '@giltayar/carmbo-commons/testkit/page-model/all-pages.model'
 
 export function createSalePaymentsPageModel(page: Page) {
   return {

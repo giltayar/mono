@@ -2,12 +2,12 @@ import {test, expect} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {waitForAllJobsToBeDone} from '../common/wait-for-all-jobs-to-be-done.ts'
-import {waitForHtmx} from '../common/wait-for-htmx.ts'
+import {waitForHtmx} from '@giltayar/playwright-commons'
 
 const {url, sql, smooveIntegration, ravmesserIntegration, academyIntegration} = setup(
   import.meta.url,

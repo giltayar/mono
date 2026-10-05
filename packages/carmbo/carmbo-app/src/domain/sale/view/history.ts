@@ -1,7 +1,7 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {getFixedT} from 'i18next'
 import type {SaleHistory, SaleWithHistoryInfo} from '../model/model.ts'
-import type {HistoryOperation} from '@giltayar/carmbo-common/commons/operation-type'
+import type {HistoryOperation} from '@giltayar/carmbo-commons/commons/operation-type'
 import {saleHistoryOperationToText} from './history-operation-to-text.ts'
 
 export function SaleHistoryList({

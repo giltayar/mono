@@ -5,8 +5,8 @@ import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
-import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
+import {createUpdateStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/update-student-page.model'
 import {createUpdateSalesEventPageModel} from '../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createUpdateProductPageModel} from '../../page-model/products/update-product-page.model.ts'
 

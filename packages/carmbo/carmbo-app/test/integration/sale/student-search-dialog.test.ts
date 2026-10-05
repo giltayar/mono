@@ -5,8 +5,8 @@ import {studentSearchDialogPageModel} from '../../page-model/sales/student-searc
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
-import {waitForHtmx} from '../common/wait-for-htmx.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
+import {waitForHtmx} from '@giltayar/playwright-commons'
 
 const {url, sql, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)
 

@@ -24,11 +24,11 @@ import {
   finalHtml,
   retarget,
   type ControllerResult,
-} from '@giltayar/carmbo-common/commons/controller-result'
+} from '@giltayar/carmbo-commons/commons/controller-result'
 import type {SalesEventManipulations} from './view/sales-event-manipulations.ts'
 import {requestContext} from '@fastify/request-context'
-import {exceptionToBanner, type Banner} from '@giltayar/carmbo-common/layout/banner'
-import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
+import {exceptionToBanner, type Banner} from '@giltayar/carmbo-commons/layout/banner'
+import {listSmooveLists} from '@giltayar/carmbo-commons/commons/external-provider/smoove-lists'
 import {renderImportSmooveDialog, renderImportJob} from './view/import-smoove.ts'
 import {submitImportFromSmooveListJob} from './model/model-import-smoove.ts'
 import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'

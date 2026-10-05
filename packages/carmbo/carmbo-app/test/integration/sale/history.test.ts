@@ -4,7 +4,7 @@ import {createViewSaleHistoryPageModel} from '../../page-model/sales/view-sale-h
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {createSale} from '../../../src/domain/sale/model/model.ts'
 
 const {url, sql, smooveIntegration, ravmesserIntegration} = setup(import.meta.url)

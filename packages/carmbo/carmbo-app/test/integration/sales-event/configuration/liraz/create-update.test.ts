@@ -5,7 +5,7 @@ import {createNewSalesEventPageModel} from '../../../../page-model/sales-events/
 import {createUpdateSalesEventPageModel} from '../../../../page-model/sales-events/update-sales-event-page.model.ts'
 import {createProduct} from '../../../../../src/domain/product/model.ts'
 import {waitForAllJobsToBeDone} from '../../../common/wait-for-all-jobs-to-be-done.ts'
-import {waitForHtmx} from '../../../common/wait-for-htmx.ts'
+import {waitForHtmx} from '@giltayar/playwright-commons'
 
 const {url, sql} = setup(import.meta.url, {
   withAcademyIntegration: false,

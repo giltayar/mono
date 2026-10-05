@@ -6,7 +6,7 @@ import qs from 'qs'
 import fastifyCookie from '@fastify/cookie'
 import fastifyCompress from '@fastify/compress'
 import postgres, {type Sql} from 'postgres'
-import studentRoutes from '../domain/student/route.ts'
+import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import productRoutes from '../domain/product/route.ts'
 import salesEvents from '../domain/sales-event/route.ts'
 import salesRoutes, {
@@ -35,13 +35,13 @@ import type {
   RavmesserList,
   RavmesserIntegrationService,
 } from '@giltayar/carmel-tools-ravmesser-integration/service'
-import type {TEST_HookFunction} from '@giltayar/carmbo-common/commons/TEST_hooks'
+import type {TEST_HookFunction} from '@giltayar/carmbo-commons/commons/TEST_hooks'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {SkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
 import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
-import {setVersion} from '@giltayar/carmbo-common/commons/version'
-import {setUiConfiguration} from '@giltayar/carmbo-common/commons/ui-configuration'
-import {layoutAssetRoutes} from '@giltayar/carmbo-common/layout/assets'
+import {setVersion} from '@giltayar/carmbo-commons/commons/version'
+import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configuration'
+import {layoutAssetRoutes} from '@giltayar/carmbo-commons/layout/assets'
 import packageJson from '../../package.json' with {type: 'json'}
 
 declare module '@fastify/request-context' {
@@ -206,7 +206,15 @@ export function makeApp({
       useFirebaseAuth(app)
     }
 
-    app.register(studentRoutes, {prefix: '/students', sql})
+    app.register(studentRoutes, {
+      prefix: '/students',
+      sql,
+      academyIntegration,
+      academyAccountSubdomains,
+      smooveIntegration,
+      ravmesserIntegration,
+      nowService,
+    })
     app.register(productRoutes, {prefix: '/products', sql, appBaseUrl})
     app.register(salesEvents, {
       prefix: '/sales-events',

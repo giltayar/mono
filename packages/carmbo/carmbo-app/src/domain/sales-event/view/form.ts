@@ -1,9 +1,9 @@
 import {requestContext} from '@fastify/request-context'
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
-import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-commons/commons/view-commons'
 import type {SalesEvent} from '../model/model.ts'
 import type {OngoingSalesEvent} from './model.ts'
-import {getVersion} from '@giltayar/carmbo-common/commons/version'
+import {getVersion} from '@giltayar/carmbo-commons/commons/version'
 import {getFixedT} from 'i18next'
 
 const t = getFixedT(null, 'sales-event')

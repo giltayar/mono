@@ -1,7 +1,7 @@
 import type {FastifyInstance} from 'fastify'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import {z} from 'zod'
-import {dealWithControllerResult} from '@giltayar/carmbo-common/commons/routes-commons'
+import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-commons'
 import {
   showRavmesserListDatalist,
   showRavmesserListCreateDialog,

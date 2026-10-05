@@ -1,7 +1,7 @@
 import {test, expect} from '@playwright/test'
-import {createNewStudentPageModel} from '../../page-model/students/new-student-page.model.ts'
-import {createStudentListPageModel} from '../../page-model/students/student-list-page.model.ts'
-import {createUpdateStudentPageModel} from '../../page-model/students/update-student-page.model.ts'
+import {createNewStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/new-student-page.model'
+import {createStudentListPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/student-list-page.model'
+import {createUpdateStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/update-student-page.model'
 import {setup} from '../common/setup.ts'
 
 const {url, smooveIntegration} = setup(import.meta.url)

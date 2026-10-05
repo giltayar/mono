@@ -35,7 +35,7 @@ import {
   finalHtml,
   retarget,
   type ControllerResult,
-} from '@giltayar/carmbo-common/commons/controller-result'
+} from '@giltayar/carmbo-commons/commons/controller-result'
 import {renderSalesPage} from './view/list.ts'
 import {renderRevenuePage} from './view/revenue.ts'
 import {
@@ -56,8 +56,8 @@ import {
   renderStudentListPage,
   renderProductListPage,
 } from './view/list-searches.ts'
-import {createStudent as model_createStudent} from '../student/model.ts'
-import {exceptionToBanner, exceptionToBannerHtml} from '@giltayar/carmbo-common/layout/banner'
+import {createStudent as model_createStudent} from '@giltayar/carmbo-pages-student/students'
+import {exceptionToBanner, exceptionToBannerHtml} from '@giltayar/carmbo-commons/layout/banner'
 import type {
   CardcomRecurringOrderWebHookJson,
   CardcomSaleWebhookJson,
@@ -71,9 +71,9 @@ import {
   showSubscriptionCancelled,
 } from './view/cancel-subscription.ts'
 import {querySaleWithProviders} from './model/model-external-providers.ts'
-import {listWhatsAppGroups} from '@giltayar/carmbo-common/commons/external-provider/whatsapp-groups'
-import {listSmooveLists} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
-import {listRavmesserLists} from '@giltayar/carmbo-common/commons/external-provider/ravmesser-lists'
+import {listWhatsAppGroups} from '@giltayar/carmbo-commons/commons/external-provider/whatsapp-groups'
+import {listSmooveLists} from '@giltayar/carmbo-commons/commons/external-provider/smoove-lists'
+import {listRavmesserLists} from '@giltayar/carmbo-commons/commons/external-provider/ravmesser-lists'
 import {when} from '@giltayar/functional-commons'
 import {executeDirectJob} from '@giltayar/carmbo-pages-job/jobs/executor'
 

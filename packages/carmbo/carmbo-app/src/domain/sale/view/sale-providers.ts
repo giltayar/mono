@@ -1,4 +1,4 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {getFixedT} from 'i18next'
 import {Tabs} from './layout.ts'
 import type {SaleWithProviders} from '../model/model-external-providers.ts'

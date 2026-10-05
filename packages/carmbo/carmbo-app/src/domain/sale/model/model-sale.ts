@@ -2,7 +2,10 @@ import type {SmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integ
 import type {RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser-integration/service'
 import {makeError, when} from '@giltayar/functional-commons'
 import type {Sql, TransactionSql} from 'postgres'
-import {normalizeEmail, normalizePhoneNumber} from '@giltayar/carmbo-common/commons/normalize-input'
+import {
+  normalizeEmail,
+  normalizePhoneNumber,
+} from '@giltayar/carmbo-commons/commons/normalize-input'
 import type {CardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import type {CardcomSaleWebhookJson} from '@giltayar/carmel-tools-cardcom-integration/types'
 import type {FastifyBaseLogger} from 'fastify'

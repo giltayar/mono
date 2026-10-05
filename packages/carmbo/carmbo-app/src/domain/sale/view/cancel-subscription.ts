@@ -1,7 +1,7 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
-import {getVersion} from '@giltayar/carmbo-common/commons/version'
+import {MainLayout} from '@giltayar/carmbo-commons/layout/main-view'
+import {getVersion} from '@giltayar/carmbo-commons/commons/version'
 
 const t = getFixedT(null, 'sale')
 

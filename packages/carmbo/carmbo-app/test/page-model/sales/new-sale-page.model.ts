@@ -1,6 +1,6 @@
 import type {Page} from '@playwright/test'
 import {saleFormPageModel} from './sale-form.model.ts'
-import {createAllPagesPageModel} from '../common/all-pages.model.ts'
+import {createAllPagesPageModel} from '@giltayar/carmbo-commons/testkit/page-model/all-pages.model'
 
 export type NewSalePageModel = ReturnType<typeof createNewSalePageModel>
 

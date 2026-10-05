@@ -16,7 +16,7 @@ import {type RavmesserIntegrationService} from '@giltayar/carmel-tools-ravmesser
 import type {AcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {registerJobHandler, type JobSubmitter} from '@giltayar/carmbo-pages-job/jobs/handler'
 import {Temporal} from '@js-temporal/polyfill'
-import type {NowService} from '@giltayar/carmbo-common/commons/now-service'
+import type {NowService} from '@giltayar/carmbo-commons/commons/now-service'
 import type {WhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 
 let createDisconnectSaleFromExternalProvidersJob: JobSubmitter<DisconnectSalePayload> | undefined

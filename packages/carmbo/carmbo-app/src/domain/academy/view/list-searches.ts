@@ -1,5 +1,5 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
-import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
+import {generateItemTitle} from '@giltayar/carmbo-commons/commons/view-commons'
 
 export function renderAcademyCourseOptions(courses: {id: number; name: string}[]) {
   return html`${courses.map(

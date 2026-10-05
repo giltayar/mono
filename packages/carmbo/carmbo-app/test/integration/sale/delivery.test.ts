@@ -4,9 +4,9 @@ import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
-import {waitForHtmx} from '../common/wait-for-htmx.ts'
+import {waitForHtmx} from '@giltayar/playwright-commons'
 
 const {url, sql, smooveIntegration, ravmesserIntegration, cardcomIntegration} = setup(
   import.meta.url,

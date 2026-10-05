@@ -1,16 +1,16 @@
 import {requestContext} from '@fastify/request-context'
-import {finalHtml, type ControllerResult} from '@giltayar/carmbo-common/commons/controller-result'
+import {finalHtml, type ControllerResult} from '@giltayar/carmbo-commons/commons/controller-result'
 import {
   listSmooveLists,
   invalidateSmooveListsCache,
-} from '@giltayar/carmbo-common/commons/external-provider/smoove-lists'
+} from '@giltayar/carmbo-commons/commons/external-provider/smoove-lists'
 import {renderSmooveListOptions} from './view/list-searches.ts'
 import {
   renderSmooveListCreateDialog,
   renderSmooveListCreateResult,
   renderSmooveListCreateError,
 } from './view/smoove-list-dialog.ts'
-import {generateItemTitle} from '@giltayar/carmbo-common/commons/view-commons'
+import {generateItemTitle} from '@giltayar/carmbo-commons/commons/view-commons'
 
 export async function showSmooveListDatalist(q: string | undefined): Promise<ControllerResult> {
   const smooveIntegration = requestContext.get('smooveIntegration')

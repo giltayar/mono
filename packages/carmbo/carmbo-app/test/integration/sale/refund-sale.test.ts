@@ -5,7 +5,7 @@ import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'
 import {createUpdateSalePageModel} from '../../page-model/sales/update-sale-page.model.ts'
 import {createSaleListPageModel} from '../../page-model/sales/sale-list-page.model.ts'
 import {cardcomWebhookUrl} from './common/cardcom-webhook.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {createNewSalePageModel} from '../../page-model/sales/new-sale-page.model.ts'
 
 const {url, sql, cardcomIntegration, smooveIntegration, ravmesserIntegration} = setup(

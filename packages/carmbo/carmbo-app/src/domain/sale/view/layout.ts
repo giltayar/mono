@@ -1,6 +1,6 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {getVersion} from '@giltayar/carmbo-common/commons/version'
+import {getVersion} from '@giltayar/carmbo-commons/commons/version'
 
 export function Layout({children}: {children: string | string[]}) {
   return html`

@@ -1,7 +1,7 @@
 import {test, expect} from '@playwright/test'
 import {setup} from '../common/setup.ts'
 import {createProduct} from '../../../src/domain/product/model.ts'
-import {createStudent} from '../../../src/domain/student/model.ts'
+import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {cancelSubscription} from '../common/cancel-subscription.ts'
 import {createCancelSubscriptionPageModel} from '../../page-model/sales/cancel-subscription-page.model.ts'
 import {createSalesEvent} from '../../../src/domain/sales-event/model/model.ts'

@@ -1,9 +1,9 @@
-import {html} from '@giltayar/carmbo-common/commons/html-templates'
+import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {getFixedT} from 'i18next'
-import {MainLayout} from '@giltayar/carmbo-common/layout/main-view'
+import {MainLayout} from '@giltayar/carmbo-commons/layout/main-view'
 import {Layout} from './layout.ts'
 import type {SaleForGrid} from '../model/model.ts'
-import {getVersion} from '@giltayar/carmbo-common/commons/version'
+import {getVersion} from '@giltayar/carmbo-commons/commons/version'
 
 export function renderSalesPage(
   flash: string | undefined,
