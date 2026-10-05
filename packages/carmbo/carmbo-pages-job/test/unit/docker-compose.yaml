@@ -1,0 +1,15 @@
+services:
+  job-test-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: job_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - 5432
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U test_user -d job_test']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
