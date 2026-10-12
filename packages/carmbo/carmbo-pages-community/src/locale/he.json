@@ -1,0 +1,45 @@
+{
+  "form": {
+    "newCommunity": "קהילה חדשה",
+    "name": "שם",
+    "description": "תיאור"
+  },
+  "createUpdate": {
+    "updateCommunity": "עדכון קהילה",
+    "viewCommunity": "צפייה בקהילה",
+    "archived": "(בארכיון)",
+    "discard": "ביטול",
+    "restore": "שחזור",
+    "archive": "העברה לארכיון",
+    "update": "עדכון",
+    "create": "יצירה"
+  },
+  "history": {
+    "history": "היסטוריה",
+    "created": "נוצרה",
+    "updated": "עודכנה",
+    "archived": "הועברה לארכיון",
+    "restored": "שוחזרה"
+  },
+  "list": {
+    "communities": "קהילות",
+    "showArchived": "הצגת ארכיון",
+    "search": "חיפוש:",
+    "searchPlaceholder": "חיפוש",
+    "id": "מספר",
+    "name": "שם",
+    "description": "תיאור",
+    "newCommunity": "קהילה חדשה"
+  },
+  "errors": {
+    "creating": "שגיאה ביצירת הקהילה: ",
+    "updating": "שגיאה בעדכון הקהילה: ",
+    "archiving": "שגיאה בהעברת הקהילה לארכיון: ",
+    "restoring": "שגיאה בשחזור הקהילה: ",
+    "notFound": "הקהילה לא נמצאה"
+  },
+  "validation": {
+    "name": "שם הוא שדה חובה",
+    "description": "התיאור אינו תקין"
+  }
+}

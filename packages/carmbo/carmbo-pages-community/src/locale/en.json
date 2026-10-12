@@ -1,0 +1,45 @@
+{
+  "form": {
+    "newCommunity": "New Community",
+    "name": "Name",
+    "description": "Description"
+  },
+  "createUpdate": {
+    "updateCommunity": "Update Community",
+    "viewCommunity": "View Community",
+    "archived": "(archived)",
+    "discard": "Discard",
+    "restore": "Restore",
+    "archive": "Archive",
+    "update": "Update",
+    "create": "Create"
+  },
+  "history": {
+    "history": "History",
+    "created": "created",
+    "updated": "updated",
+    "archived": "archived",
+    "restored": "restored"
+  },
+  "list": {
+    "communities": "Communities",
+    "showArchived": "Show archived",
+    "search": "Search:",
+    "searchPlaceholder": "Search",
+    "id": "ID",
+    "name": "Name",
+    "description": "Description",
+    "newCommunity": "new community"
+  },
+  "errors": {
+    "creating": "Creating community error: ",
+    "updating": "Updating community error: ",
+    "archiving": "Archiving community error: ",
+    "restoring": "Restoring community error: ",
+    "notFound": "Community not found"
+  },
+  "validation": {
+    "name": "Name is required",
+    "description": "Description is invalid"
+  }
+}

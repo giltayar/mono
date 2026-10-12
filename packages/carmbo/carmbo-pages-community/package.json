@@ -1,0 +1,90 @@
+{
+  "name": "@giltayar/carmbo-pages-community",
+  "version": "1.0.0",
+  "description": "Community pages for Carmbo applications",
+  "type": "module",
+  "exports": {
+    "./routes": {
+      "types": "./dist/src/route.d.ts",
+      "import": "./dist/src/route.js"
+    },
+    "./testkit/page-model/*": {
+      "types": "./dist/testkit/page-model/*.d.ts",
+      "import": "./dist/testkit/page-model/*.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=26.9.0"
+  },
+  "files": [
+    "src",
+    "testkit",
+    "dist"
+  ],
+  "scripts": {
+    "prestart": "rm -rf start/dist && mkdir -p start/dist && concurrently 'node:prestart:*'",
+    "prestart:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css node_modules/bootstrap/dist/css/bootstrap.rtl.min.css node_modules/bootstrap/dist/js/bootstrap.bundle.min.js start/dist/",
+    "prestart:htmx": "cp node_modules/htmx.org/dist/htmx.min.js start/dist/",
+    "start": "concurrently --kill-others 'node:start:*'",
+    "start:app": "node --watch start/start.ts",
+    "start:postgres": "docker compose --file start/docker-compose.yaml up",
+    "stop": "docker compose --file start/docker-compose.yaml down",
+    "build": "pnpm clean && concurrently 'node:build:*'",
+    "clean": "rm -rf dist",
+    "build:typescript": "tsc --project tsconfig.build.json",
+    "test": "concurrently 'node:test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsc",
+    "test:node": "node --test 'test/unit/**/*.test.ts'",
+    "test:playwright": "NODE_ENV=test playwright test --config=test/integration"
+  },
+  "author": "Gil Tayar <gil@tayar.org>",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/giltayar/mono",
+    "directory": "packages/carmbo/carmbo-pages-community",
+    "type": "git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "peerDependencies": {
+    "@fastify/request-context": "^7.0.0",
+    "@playwright/test": "^1.63.0",
+    "fastify": "^5.12.5",
+    "fastify-type-provider-zod": "^7.0.0",
+    "i18next": "^26.4.2",
+    "postgres": "^3.4.7",
+    "zod": "^4.6.5"
+  },
+  "dependencies": {
+    "@giltayar/carmbo-commons": "2.2.0"
+  },
+  "devDependencies": {
+    "@fastify/formbody": "^9.0.1",
+    "@fastify/request-context": "^7.0.2",
+    "@fastify/static": "10.1.6",
+    "@giltayar/docker-compose-testkit": "^2.1.0",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "bootstrap": "^5.3.8",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.12.0",
+    "eslint-plugin-n": "^18.4.1",
+    "eslint-plugin-prettier": "^5.5.6",
+    "fastify": "^5.12.5",
+    "fastify-type-provider-zod": "^7.0.0",
+    "globals": "^17.13.0",
+    "htmx.org": "^2.0.11",
+    "i18next": "^26.4.3",
+    "postgres": "3.4.7",
+    "prettier": "^3.9.10",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.71.1",
+    "zod": "^4.6.5"
+  },
+  "packageManager": "pnpm@12.11.2"
+}

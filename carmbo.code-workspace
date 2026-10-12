@@ -93,6 +93,10 @@
       "path": "packages/carmbo/carmbo-pages-sale",
     },
     {
+      "name": "carmbo-pages-community",
+      "path": "packages/carmbo/carmbo-pages-community",
+    },
+    {
       "name": "carmbo-app",
       "path": "packages/carmbo/carmbo-app",
     },

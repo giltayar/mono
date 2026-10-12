@@ -41,7 +41,7 @@ import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configurat
 import appPackage from '../../package.json' with {type: 'json'}
 
 setVersion(appPackage.version)
-setUiConfiguration('carmel', {showCommunities: true}) // or 'liraz'
+setUiConfiguration('carmel', {withCommunities: true}) // or 'liraz'
 await initializei18next(process.env.LANGUAGE, {
   root: new URL('../domain/', import.meta.url),
   namespaces: ['student', 'product', 'sales-event', 'sale', 'job', 'auth'],
@@ -55,7 +55,7 @@ Layout translations and logos are resolved relative to this package, not the wor
 
 `getVersion()` returns the configured **application** version, not this package's version.
 Use it for app-specific asset links too. It throws if the version was not configured.
-`showCommunities` (default `false`) controls whether the navigation bar links to `/communities`.
+`withCommunities` (required) controls whether the navigation bar links to `/communities`.
 Unknown brands throw rather than silently choosing a different logo. Version, branding,
 translations, and provider caches retain their existing process-global behavior; apps needing
 different configurations must run in separate processes.
