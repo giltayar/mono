@@ -2,6 +2,8 @@ import {expect, test} from '@playwright/test'
 import {registerJobHandler} from '@giltayar/carmbo-pages-job/jobs/handler'
 import {createNewStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/new-student-page.model'
 import {createStudentListPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/student-list-page.model'
+import {createCommunityListPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/community-list-page.model'
+import {createNewCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-page.model'
 import {createNewProductPageModel} from '@giltayar/carmbo-pages-sale/testkit/page-model/products/new-product-page.model'
 import {createProductListPageModel} from '@giltayar/carmbo-pages-sale/testkit/page-model/products/product-list-page.model'
 import {createNewSalesEventPageModel} from '@giltayar/carmbo-pages-sale/testkit/page-model/sales-events/new-sales-event-page.model'
@@ -13,6 +15,28 @@ import {setup} from '../common/setup.ts'
 import {cardcomWebhookUrl} from '../common/cardcom-webhook.ts'
 
 const {url, cardcomIntegration} = setup(import.meta.url)
+
+test('community route lists a created community', async ({page}) => {
+  await page.goto(new URL('/communities', url()).href)
+  await expect(page.getByRole('navigation').getByRole('link', {name: 'Communities'})).toBeVisible()
+
+  const communityList = createCommunityListPageModel(page)
+  await communityList.createNewCommunityButton().locator.click()
+
+  const newCommunity = createNewCommunityPageModel(page)
+  await page.waitForURL(newCommunity.urlRegex)
+  const form = newCommunity.form()
+  await form.nameInput().locator.fill('Mounted Community')
+  await form.descriptionInput().locator.fill('Community package smoke test')
+  await form.createButton().locator.click()
+  await page.waitForURL(/\/communities\/\d+$/)
+
+  await page.goto(new URL('/communities', url()).href)
+  const rows = communityList.list().rows()
+  await expect(rows.locator).toHaveCount(1)
+  await expect(rows.row(0).nameCell().locator).toHaveText('Mounted Community')
+  await expect(rows.row(0).descriptionCell().locator).toHaveText('Community package smoke test')
+})
 
 test('student route lists a created student', async ({page}) => {
   await page.goto(new URL('/students', url()).href)

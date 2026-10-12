@@ -53,6 +53,10 @@ export function setup(
     withSkoolIntegration?: boolean // default is true
     uiConfiguration?: 'carmel' | 'liraz'
     language?: string
+    firebase?: {
+      apiKey: string
+      serviceAccountJson: string
+    }
     databaseBackup?: {
       backupFile: string
       apiSecret: string
@@ -230,7 +234,7 @@ export function setup(
         skoolIntegration: when(withSkoolIntegration, () => skoolIntegration),
         nowService: () => (overridingDate ? overridingDate : new Date()),
       },
-      firebase: undefined,
+      firebase: options?.firebase,
       apiSecret: options?.databaseBackup?.apiSecret,
       appBaseUrl: 'http://localhost:????',
       uiConfiguration: options?.uiConfiguration ?? 'carmel',
@@ -259,6 +263,10 @@ export function setup(
     whatsappIntegration._test_reset()
     skoolIntegration._test_reset()
     overridingDate = undefined
+    await sql`
+      TRUNCATE TABLE community, community_history, community_data, community_search
+      RESTART IDENTITY CASCADE
+    `
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_history RESTART IDENTITY CASCADE`
     await sql`TRUNCATE TABLE student_email RESTART IDENTITY CASCADE`

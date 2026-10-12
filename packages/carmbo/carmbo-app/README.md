@@ -23,6 +23,14 @@ The integration tests require Docker/PostgreSQL and Playwright Chromium.
 The Docker image installs the exact pnpm version declared in `package.json` before installing
 dependencies, so package-manager upgrades invalidate the cached installer layer.
 
+## Community pages
+
+The published `@giltayar/carmbo-pages-community` package owns the community list, create/update
+forms, archive/restore actions, history, translations, and assets. Its routes are mounted at
+`/communities` in the same Firebase-authenticated scope as students. App initialization enables the
+Communities navigation item with `setUiConfiguration(uiConfiguration, {withCommunities: true})`.
+The community tables are created by the installed `@giltayar/carmbo-commons@2.2.0` migrations.
+
 ## Database backup
 
 Send a `POST` request to `/backup/db-backup?secret=<CARMBO_API_SECRET>` to create a PostgreSQL

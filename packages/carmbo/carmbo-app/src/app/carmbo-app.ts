@@ -7,6 +7,7 @@ import fastifyCookie from '@fastify/cookie'
 import fastifyCompress from '@fastify/compress'
 import postgres from 'postgres'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
+import {routes as communityRoutes} from '@giltayar/carmbo-pages-community/routes'
 import {
   apiRoutes as saleApiRoutes,
   landingPageRoutes as saleLandingPageRoutes,
@@ -80,7 +81,7 @@ export function makeApp({
 }) {
   const version = packageJson.version
   setVersion(version)
-  setUiConfiguration(uiConfiguration)
+  setUiConfiguration(uiConfiguration, {withCommunities: true})
 
   const app = fastify({
     logger:
@@ -184,6 +185,7 @@ export function makeApp({
       ravmesserIntegration,
       nowService,
     })
+    app.register(communityRoutes, {prefix: '/communities', sql, nowService})
     app.register(salePageRoutes, saleRouteOptions)
     app.register(jobsRoutes, {prefix: '/jobs', sql})
   })
