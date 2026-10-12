@@ -119,13 +119,20 @@
   (e.g. `import {...} from '../../src/scripting-commons.ts'`).
 - Reference other packages by their published name (`@giltayar/promise-commons`), never by relative
   path across package boundaries.
+- Do not write tests for database migration scripts (e.g. the SQL migrations in
+  `carmbo-commons`): no migration test suites and no assertions on migration counts or contents.
+  Adding a migration should not require changing any test.
 
 ## package.json conventions
 
-- `scripts` follow a fixed pattern driven by `npm-run-all`:
-  - `build` runs `run-p 'build:*'`; `build:typescript` does
-    `rm -rf dist && tsc --project tsconfig.build.json`.
-  - `test` runs `run-p --aggregate-output 'test:*'`; typical members are `test:eslint`
+- `scripts` follow a fixed pattern of parallel `build:*` and `test:*` scripts run by
+  `concurrently` (a `devDependency`). `carmbo-commons` already uses it; the other packages still use
+  `npm-run-all` (`run-p`). When editing a package that still uses `run-p`, migrate its scripts to
+  `concurrently` and remove the `npm-run-all` dependency. New packages use `concurrently`.
+  - `build` runs `pnpm clean && concurrently 'pnpm:build:*'`, where `clean` is `rm -rf dist`.
+    Cleaning happens once up front because the `build:*` scripts run in parallel and must not
+    delete each other's output; `build:typescript` is `tsc --project tsconfig.build.json`.
+  - `test` runs `concurrently 'pnpm:test:*'`; typical members are `test:eslint`
     (`eslint --max-warnings=0 .`), `test:typescript` (`tsc`), and `test:node` (`node --test`).
   - Add new checks as additional `build:*` / `test:*` scripts so they are picked up automatically.
 - `exports` map the public entry to the built output in `dist` (`types` -> `./dist/src/*.d.ts`,

@@ -1,12 +1,16 @@
 import fs from 'node:fs'
 import {layoutStyleRoot} from '../layout/asset-roots.ts'
 
-export let uiConfiguration: {name: string; logoFile: string}
+export let uiConfiguration: {name: string; logoFile: string; withCommunities: boolean}
 
-export function setUiConfiguration(configurationName: string): void {
+export function setUiConfiguration(
+  configurationName: string,
+  {withCommunities}: {withCommunities: boolean},
+): void {
   uiConfiguration = {
     name: configurationName,
     logoFile: determineLogoFile(`configurations/${configurationName}`),
+    withCommunities: withCommunities,
   }
 }
 

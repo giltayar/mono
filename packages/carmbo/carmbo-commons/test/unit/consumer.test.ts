@@ -1,6 +1,6 @@
 import {describe, it} from 'node:test'
 import assert from 'node:assert/strict'
-import {mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises'
+import {mkdtemp, readdir, rm, writeFile} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import fastify from 'fastify'
@@ -31,26 +31,11 @@ describe('compiled package consumer', () => {
     })
   })
 
-  it('includes all SQL migrations, compiled data migration, and maintenance SQL', async () => {
+  it('exports the migration runner with packaged SQL files', async () => {
     assert.ok(import.meta.resolve('@giltayar/carmbo-commons/sql/migration').endsWith('.js'))
     assert.equal(typeof migrate, 'function')
     const files = await readdir(migrationsRoot)
-    const migrations = files.filter((name) => /^\d{5}_.*\.(sql|js)$/.test(name)).sort()
-    assert.equal(migrations.length, 44)
-    assert.deepEqual(
-      migrations.map((name) => Number(name.slice(0, 5))),
-      Array.from({length: 44}, (_, index) => index + 1),
-    )
-    assert.ok(migrations.includes('00027_add_connected_and_active_statuses.js'))
-    assert.equal(
-      typeof (
-        await import(new URL('00027_add_connected_and_active_statuses.js', migrationsRoot).href)
-      ).default,
-      'function',
-    )
-    assert.ok(
-      (await readFile(new URL('maintenance/maintaining-production.sql', migrationsRoot))).length,
-    )
+    assert.ok(files.some((name) => /^\d{5}_.*\.sql$/.test(name)))
   })
 
   it('loads all helper exports from compiled JavaScript', async () => {
@@ -84,7 +69,7 @@ describe('compiled package consumer', () => {
 
   it('renders and serves installed assets at the app-version URLs', async (t) => {
     setVersion('10.0.1')
-    setUiConfiguration('carmel')
+    setUiConfiguration('carmel', {withCommunities: true})
     await initializei18next('en')
     const translated: LayoutResources['nav']['students'] = i18next.t('nav.students', {
       ns: 'layout',
@@ -167,12 +152,17 @@ describe('compiled package consumer', () => {
     assert.equal(head.body, '')
     assert.match(head.headers['cache-control'] ?? '', /max-age=31536000, immutable/)
 
-    setUiConfiguration('liraz')
+    setUiConfiguration('liraz', {withCommunities: false})
     await initializei18next('he')
     const hebrewPage = await app.inject('/')
     assert.equal(hebrewPage.statusCode, 200, hebrewPage.body)
     assert.match(hebrewPage.body, /lang="he" dir="rtl"/)
     assert.match(hebrewPage.body, /bootstrap\.rtl\.min\.css/)
     assert.match(hebrewPage.body, /configurations\/liraz\/logo\.svg/)
+    assert.doesNotMatch(hebrewPage.body, /href="\/communities"/)
+
+    setUiConfiguration('liraz', {withCommunities: true})
+    const communitiesPage = await app.inject('/')
+    assert.match(communitiesPage.body, /href="\/communities"/)
   })
 })

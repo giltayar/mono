@@ -15,7 +15,8 @@ export function MainLayout({
   title: string
   banner?: Banner
   children: string[]
-  activeNavItem: 'no-nav-bar' | 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
+  activeNavItem:
+    'no-nav-bar' | 'students' | 'communities' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }): string {
   const version = getVersion()
   const dir = i18next.dir()
@@ -62,7 +63,7 @@ export function MainLayout({
 function NavBar({
   activeNavItem,
 }: {
-  activeNavItem: 'students' | 'products' | 'sales-events' | 'sales' | 'jobs'
+  activeNavItem: 'students' | 'communities' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }) {
   const version = getVersion()
   const uiConfiguration = getUiConfiguration()
@@ -97,6 +98,18 @@ function NavBar({
                 >${t('nav.students')}</a
               >
             </li>
+            ${
+              uiConfiguration.withCommunities &&
+              html`
+                <li class="nav-item" role="menuitem">
+                  <a
+                    class="nav-link ${activeNavItem === 'communities' ? 'active' : ''}"
+                    href="/communities"
+                    >${t('nav.communities')}</a
+                  >
+                </li>
+              `
+            }
             <li class="nav-item" role="menuitem">
               <a class="nav-link ${activeNavItem === 'products' ? 'active' : ''}" href="/products"
                 >${t('nav.products')}</a

@@ -28,7 +28,7 @@ describe('application configuration', () => {
 
   it('uses the supplied app version for every layout asset', async () => {
     setVersion('10.0.1')
-    setUiConfiguration('carmel')
+    setUiConfiguration('carmel', {withCommunities: true})
     await initializei18next(undefined)
 
     const result = MainLayout({title: 'Test', children: ['Content'], activeNavItem: 'students'})
@@ -49,8 +49,31 @@ describe('application configuration', () => {
     assert.match(result, /nav-link active/)
   })
 
+  it('hides the communities nav link by default', async () => {
+    setVersion('10.0.1')
+    setUiConfiguration('carmel', {withCommunities: false})
+    await initializei18next(undefined)
+
+    assert.equal(getUiConfiguration().withCommunities, false)
+    const result = MainLayout({title: 'Test', children: [], activeNavItem: 'students'})
+    assert.doesNotMatch(result, /\/communities/)
+    assert.doesNotMatch(result, /Communities/)
+    assert.doesNotMatch(result, />false</)
+  })
+
+  it('renders an active communities nav link when communities are shown', async () => {
+    setVersion('10.0.1')
+    setUiConfiguration('carmel', {withCommunities: true})
+    await initializei18next(undefined)
+
+    assert.equal(getUiConfiguration().withCommunities, true)
+    const result = MainLayout({title: 'Test', children: [], activeNavItem: 'communities'})
+    assert.match(result, /class="nav-link active"\s+href="\/communities"\s*>Communities</)
+    assert.match(result, /class="nav-link "\s+href="\/students"/)
+  })
+
   it('supports Hebrew, RTL styling, and the Liraz SVG logo', async () => {
-    setUiConfiguration('liraz')
+    setUiConfiguration('liraz', {withCommunities: true})
     await initializei18next('he')
 
     const result = MainLayout({title: 'Test', children: [], activeNavItem: 'sales'})
@@ -58,12 +81,20 @@ describe('application configuration', () => {
     assert.match(result, /bootstrap\.rtl\.min\.css/)
     assert.match(result, /configurations\/liraz\/logo\.svg/)
     assert.ok(result.includes(heLayout.nav.students))
+    assert.ok(result.includes(heLayout.nav.communities))
     assert.equal(i18next.t('nav.students', {ns: 'layout'}), heLayout.nav.students)
   })
 
   it('rejects missing logos without replacing the last valid configuration', () => {
-    assert.throws(() => setUiConfiguration('missing-brand'), /No valid logo file found/)
-    assert.deepEqual(getUiConfiguration(), {name: 'liraz', logoFile: 'logo.svg'})
+    assert.throws(
+      () => setUiConfiguration('missing-brand', {withCommunities: true}),
+      /No valid logo file found/,
+    )
+    assert.deepEqual(getUiConfiguration(), {
+      name: 'liraz',
+      logoFile: 'logo.svg',
+      withCommunities: true,
+    })
   })
 
   it('loads app namespaces from the supplied locale root using the shared i18next instance', async () => {

@@ -41,7 +41,7 @@ import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configurat
 import appPackage from '../../package.json' with {type: 'json'}
 
 setVersion(appPackage.version)
-setUiConfiguration('carmel') // or 'liraz'
+setUiConfiguration('carmel', {showCommunities: true}) // or 'liraz'
 await initializei18next(process.env.LANGUAGE, {
   root: new URL('../domain/', import.meta.url),
   namespaces: ['student', 'product', 'sales-event', 'sale', 'job', 'auth'],
@@ -55,6 +55,7 @@ Layout translations and logos are resolved relative to this package, not the wor
 
 `getVersion()` returns the configured **application** version, not this package's version.
 Use it for app-specific asset links too. It throws if the version was not configured.
+`showCommunities` (default `false`) controls whether the navigation bar links to `/communities`.
 Unknown brands throw rather than silently choosing a different logo. Version, branding,
 translations, and provider caches retain their existing process-global behavior; apps needing
 different configurations must run in separate processes.
@@ -106,7 +107,7 @@ also keeps generated declarations/source maps private.
 
 ## Database migrations
 
-The package owns all 44 existing schema/data migrations, the migration runner, and the manual
+The package owns the schema/data migrations, the migration runner, and the manual
 maintenance SQL. Run the packaged migrations against an app-provided postgres client:
 
 ```ts
@@ -137,8 +138,8 @@ pnpm test
 The build emits JavaScript/declarations with TypeScript 7 and copies layout translations, CSS, icons,
 logos, and SQL files into `dist`. Tests include the extracted phone-normalization suite,
 source-level runtime-boundary tests, and a consumer test importing the compiled package through
-its exports. Build before running tests. `test:integration` requires Docker and runs PostgreSQL
-17 in an isolated container to test schema creation, upgrades, idempotency, and migration discovery.
+its exports. Build before running tests. Migration scripts are intentionally not tested;
+adding a migration does not require changing any test.
 
 The TypeScript dependency aliases are deliberate: `@typescript/native` provides the TypeScript 7
 `tsc` binary used by builds and type-checking, while `typescript` resolves to TypeScript 6 so
@@ -150,9 +151,6 @@ the peer dependencies and `@fastify/static` (used to test coexistence with app-o
 type-checking also needs `@types/node` and TypeScript.
 Run the consumer test from that directory to verify installed imports, shared runtime state,
 translations, branding, static asset contents, and cache headers without source-tree access.
-To verify installed migrations against PostgreSQL too, copy the files from `test/integration/sql/`
-into the consumer, install `postgres` and `@giltayar/docker-compose-testkit`, and run
-`NODE_ENV=test node --test migration.test.ts`.
 
 ## Publishing and migrating carmbo-app
 

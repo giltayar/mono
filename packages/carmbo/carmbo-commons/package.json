@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-commons",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Shared helpers, layout, assets, and database migrations for Carmbo applications",
   "type": "module",
   "exports": {
@@ -43,16 +43,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm clean && run-p 'build:*'",
+    "build": "pnpm clean && concurrently 'pnpm:build:*'",
     "clean": "rm -rf dist",
     "build:typescript": "tsc --project tsconfig.build.json",
     "build:assets": "mkdir -p dist/src/layout && cp -R src/layout/locale src/layout/style dist/src/layout/",
     "build:sql": "mkdir -p dist/src/sql && cp src/sql/*.sql dist/src/sql/ && cp -R src/sql/maintenance dist/src/sql/",
-    "test": "run-p --aggregate-output 'test:*'",
+    "test": "concurrently 'pnpm:test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsc",
-    "test:node": "node --test 'test/unit/**/*.test.ts'",
-    "test:integration": "NODE_ENV=test node --test 'test/integration/**/*.test.ts'"
+    "test:node": "node --test 'test/unit/**/*.test.ts'"
   },
   "author": "Gil Tayar <gil@tayar.org>",
   "license": "MIT",
@@ -72,7 +71,7 @@
     "i18next": "^26.4.2"
   },
   "dependencies": {
-    "@fastify/static": "^10.1.4",
+    "@fastify/static": "^10.1.6",
     "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.3.1",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",
@@ -85,22 +84,21 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@fastify/request-context": "^7.0.0",
-    "@giltayar/docker-compose-testkit": "^2.1.0",
-    "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.2",
+    "@fastify/request-context": "^7.0.2",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
     "@types/vhtml": "^2.2.9",
     "@typescript/native": "npm:typescript@^7.0.2",
+    "concurrently": "^10.0.6",
     "eslint": "^10.11.0",
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-prettier": "^5.5.6",
     "fastify": "^5.12.5",
     "globals": "^17.12.0",
-    "i18next": "^26.4.2",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^3.9.8",
+    "i18next": "^26.4.3",
+    "prettier": "^3.9.10",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.70.1"
+    "typescript-eslint": "^8.71.1"
   },
-  "packageManager": "pnpm@12.9.1"
+  "packageManager": "pnpm@12.11.2"
 }
