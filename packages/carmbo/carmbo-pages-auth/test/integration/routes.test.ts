@@ -30,7 +30,7 @@ let fakeFirebaseSignInUrl: URL
 
 test.beforeAll(async () => {
   setVersion('1.0.0')
-  setUiConfiguration('carmel')
+  setUiConfiguration('carmel', {withCommunities: true})
   await initializei18next('en')
 
   const htmx = await readFile(
