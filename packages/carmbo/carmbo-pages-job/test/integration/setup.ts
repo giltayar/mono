@@ -57,7 +57,7 @@ export function setupJobRoutes(testUrl: string): {url: () => URL; sql: () => Sql
     await migrate({sql: database})
     await initializei18next('en')
     setVersion('1.0.0')
-    setUiConfiguration('carmel')
+    setUiConfiguration('carmel', {withCommunities: true})
 
     app = fastify()
     app.setValidatorCompiler(validatorCompiler)
