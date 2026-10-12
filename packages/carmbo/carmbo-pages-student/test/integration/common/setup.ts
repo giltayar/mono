@@ -120,7 +120,7 @@ export function setup(
 
     await initializei18next(language)
     setVersion('1.0.0')
-    setUiConfiguration(language === 'he' ? 'liraz' : 'carmel')
+    setUiConfiguration(language === 'he' ? 'liraz' : 'carmel', {withCommunities: true})
 
     app = fastify()
     app.register(formbody, {parser: (body) => qs.parse(body)})

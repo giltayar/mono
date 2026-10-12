@@ -21,7 +21,7 @@ export async function createApp(
 
   await initializei18next(language)
   setVersion(packageJson.version)
-  setUiConfiguration(language === 'he' ? 'liraz' : 'carmel')
+  setUiConfiguration(language === 'he' ? 'liraz' : 'carmel', {withCommunities: true})
 
   const app = fastify({logger: true})
   app.register(formbody, {parser: (body) => qs.parse(body)})
