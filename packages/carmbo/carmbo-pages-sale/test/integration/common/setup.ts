@@ -216,7 +216,7 @@ export function setup(
     await migrate({sql})
     await initializei18next(options?.language ?? 'en')
     setVersion('1.0.0')
-    setUiConfiguration(options?.uiConfiguration ?? 'carmel')
+    setUiConfiguration(options?.uiConfiguration ?? 'carmel', {withCommunities: true})
 
     app = createTestApp({
       sql,

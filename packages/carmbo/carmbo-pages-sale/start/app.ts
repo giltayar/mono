@@ -23,7 +23,7 @@ export async function createApp(
   const language = process.env.LANGUAGE === 'he' ? 'he' : 'en'
   await initializei18next(language)
   setVersion(packageJson.version)
-  setUiConfiguration(language === 'he' ? 'liraz' : 'carmel')
+  setUiConfiguration(language === 'he' ? 'liraz' : 'carmel', {withCommunities: true})
 
   const app = fastify({logger: true})
   const options: SaleRouteOptions = {
