@@ -274,6 +274,8 @@ The start Fastify host should:
 - Create fake external integrations with safe example data and pass all route dependencies through
   explicit plugin options. Never require real credentials.
 - Register the package routes at their production prefix and redirect `/` to the primary page.
+- Listen on `127.0.0.1:3000`. Every `carmbo-pages-*` package uses port 3000; it does not need to
+  be unique across packages.
 - Log the stable local URL and close Fastify/PostgreSQL on termination signals.
 
 Include `start/**/*.ts` in type-checking and ESLint, but normally exclude it from the production

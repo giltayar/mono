@@ -51,6 +51,7 @@ export const EnvironmentVariablesSchema = z.object({
   CARDCOM_TERMINAL_NUMBER: z.coerce.number().default(150067),
   SKOOL_API_UNIQUE_INVITE_LINK_URL: z.url().optional(),
   UI_CONFIGURATION: z.string().optional().default('carmel'),
+  WITH_COMMUNITIES: z.stringbool().default(false),
 })
 
 const env = EnvironmentVariablesSchema.parse(
@@ -126,6 +127,7 @@ const {app, sql} = await makeApp({
   apiSecret: env.CARMBO_API_SECRET,
   appBaseUrl: appBaseUrl,
   uiConfiguration: env.UI_CONFIGURATION,
+  withCommunities: env.WITH_COMMUNITIES,
 })
 
 await prepareDatabase(sql)

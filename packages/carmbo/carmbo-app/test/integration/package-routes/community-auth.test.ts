@@ -9,6 +9,7 @@ const {privateKey} = generateKeyPairSync('rsa', {
 })
 
 const {url} = setup(import.meta.url, {
+  withCommunities: true,
   firebase: {
     apiKey: 'community-auth-test',
     serviceAccountJson: JSON.stringify({

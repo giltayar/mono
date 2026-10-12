@@ -8,6 +8,9 @@ import {prepareDatabase} from './prepare-database.ts'
 import {range, when} from '@giltayar/functional-commons'
 import {initializeAppI18next} from './i18next.ts'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
+import {z} from 'zod'
+
+const withCommunities = z.stringbool().default(false).parse(process.env.WITH_COMMUNITIES)
 
 const fakeCardcomIntegrationService = createFakeCardcomIntegrationService({accounts: {}})
 
@@ -106,6 +109,7 @@ const {app, sql} = await makeApp({
   apiSecret: undefined,
   appBaseUrl: 'http://localhost:3000',
   uiConfiguration: process.env.UI_CONFIGURATION || 'carmel',
+  withCommunities,
 })
 
 await prepareDatabase(sql)

@@ -27,8 +27,14 @@ dependencies, so package-manager upgrades invalidate the cached installer layer.
 
 The published `@giltayar/carmbo-pages-community` package owns the community list, create/update
 forms, archive/restore actions, history, translations, and assets. Its routes are mounted at
-`/communities` in the same Firebase-authenticated scope as students. App initialization enables the
-Communities navigation item with `setUiConfiguration(uiConfiguration, {withCommunities: true})`.
+`/communities` in the same Firebase-authenticated scope as students when `WITH_COMMUNITIES=true`.
+Communities are disabled by default: unset or `WITH_COMMUNITIES=false` omits both the routes
+(including their assets) and the Communities navigation item. Values are parsed with Zod
+`stringbool`: `true`, `1`, `yes`, `on`, `y`, and `enabled` enable communities; `false`, `0`, `no`,
+`off`, `n`, and `disabled` disable them. Matching is case-insensitive; other values fail startup
+validation. This also applies to fake-mode startup.
+Set `WITH_COMMUNITIES=true` in the deployed service's environment to enable them, or start locally
+with `WITH_COMMUNITIES=true pnpm start`.
 The community tables are created by the installed `@giltayar/carmbo-commons@2.2.0` migrations.
 
 ## Database backup

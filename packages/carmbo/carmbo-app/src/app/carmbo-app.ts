@@ -47,6 +47,7 @@ export function makeApp({
   apiSecret,
   appBaseUrl,
   uiConfiguration,
+  withCommunities,
   TEST_hooks,
 }: {
   db: {
@@ -77,11 +78,12 @@ export function makeApp({
   apiSecret: string | undefined
   appBaseUrl: string
   uiConfiguration: string
+  withCommunities: boolean
   TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
   const version = packageJson.version
   setVersion(version)
-  setUiConfiguration(uiConfiguration, {withCommunities: true})
+  setUiConfiguration(uiConfiguration, {withCommunities})
 
   const app = fastify({
     logger:
@@ -185,7 +187,9 @@ export function makeApp({
       ravmesserIntegration,
       nowService,
     })
-    app.register(communityRoutes, {prefix: '/communities', sql, nowService})
+    if (withCommunities) {
+      app.register(communityRoutes, {prefix: '/communities', sql, nowService})
+    }
     app.register(salePageRoutes, saleRouteOptions)
     app.register(jobsRoutes, {prefix: '/jobs', sql})
   })

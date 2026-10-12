@@ -52,6 +52,7 @@ export function setup(
     withRavmesserIntegration?: boolean // default is true
     withSkoolIntegration?: boolean // default is true
     uiConfiguration?: 'carmel' | 'liraz'
+    withCommunities?: boolean
     language?: string
     firebase?: {
       apiKey: string
@@ -238,6 +239,7 @@ export function setup(
       apiSecret: options?.databaseBackup?.apiSecret,
       appBaseUrl: 'http://localhost:????',
       uiConfiguration: options?.uiConfiguration ?? 'carmel',
+      withCommunities: options?.withCommunities ?? false,
       TEST_hooks,
     }))
 
