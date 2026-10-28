@@ -10,6 +10,8 @@ import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import packageJson from '../package.json' with {type: 'json'}
 import {routes} from '../src/route.ts'
+import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
+import qs from 'qs'
 
 export async function createApp(database: Sql): Promise<FastifyInstance> {
   const language = process.env.LANGUAGE === 'he' ? 'he' : 'en'
@@ -19,7 +21,7 @@ export async function createApp(database: Sql): Promise<FastifyInstance> {
   setUiConfiguration(language === 'he' ? 'liraz' : 'carmel', {withCommunities: true})
 
   const app = fastify({logger: true})
-  app.register(formbody)
+  app.register(formbody, {parser: (body) => qs.parse(body)})
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.register(fastifyRequestContext, {
@@ -37,6 +39,15 @@ export async function createApp(database: Sql): Promise<FastifyInstance> {
     prefix: '/communities',
     sql: database,
     nowService: () => new Date(),
+  })
+  app.register(studentRoutes, {
+    prefix: '/students',
+    sql: database,
+    nowService: () => new Date(),
+    academyIntegration: undefined,
+    academyAccountSubdomains: undefined,
+    smooveIntegration: undefined,
+    ravmesserIntegration: undefined,
   })
   app.get('/', async (_request, reply) => reply.redirect('/communities'))
 

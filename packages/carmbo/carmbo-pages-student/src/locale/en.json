@@ -55,6 +55,25 @@
     "products": "Products",
     "date": "Date"
   },
+  "picker": {
+    "searchCreate": "Search / create student",
+    "search": "Search students",
+    "searchPlaceholder": "Search by name, email or phone",
+    "results": "Student search results",
+    "createStudent": "Create a student",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "createAndSelect": "Create and select",
+    "select": "Select",
+    "cancel": "Cancel",
+    "noResults": "No students found",
+    "unavailable": "This student no longer exists or is archived. Search again.",
+    "invalidInput": "Please check the student details",
+    "duplicate": "Email or phone already belongs to another student",
+    "creatingError": "Error creating student: "
+  },
   "view": {
     "noMagicLinksFound": "No magic links found for this student."
   }

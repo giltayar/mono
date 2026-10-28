@@ -12,6 +12,10 @@
       "types": "./dist/src/students.d.ts",
       "import": "./dist/src/students.js"
     },
+    "./student-picker": {
+      "types": "./dist/src/student-picker.d.ts",
+      "import": "./dist/src/student-picker.js"
+    },
     "./testkit/page-model/*": {
       "types": "./dist/testkit/page-model/*.d.ts",
       "import": "./dist/testkit/page-model/*.js"

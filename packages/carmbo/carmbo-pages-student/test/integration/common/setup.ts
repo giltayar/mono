@@ -18,10 +18,17 @@ import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
 import qs from 'qs'
 import {routes} from '../../../src/route.ts'
+import type {StudentRouteOptions} from '../../../src/student-route-options.ts'
 
 export function setup(
   testUrl: string,
-  {language = 'en'}: {language?: 'en' | 'he'} = {},
+  {
+    language = 'en',
+    registerRoutes,
+  }: {
+    language?: 'en' | 'he'
+    registerRoutes?: (app: FastifyInstance, options: StudentRouteOptions) => void
+  } = {},
 ): {
   url: () => URL
   sql: () => Sql
@@ -166,16 +173,17 @@ export function setup(
 
       return reply.type(asset.contentType).send(await readFile(asset.url))
     })
-    app.register(routes, {
-      prefix: '/students',
+    const routeOptions: StudentRouteOptions = {
       sql: database,
       academyIntegration,
       academyAccountSubdomains: ['carmel', 'inspiredlivingdaily'],
       smooveIntegration,
       ravmesserIntegration,
       nowService: () => new Date(),
-    })
+    }
+    app.register(routes, {prefix: '/students', ...routeOptions})
 
+    registerRoutes?.(app, routeOptions)
     await app.listen({host: '127.0.0.1', port: 0})
     const {address: serverAddress, port: serverPort} = app.server.address() as AddressInfo
     baseUrl = new URL(`http://${serverAddress}:${serverPort}`)

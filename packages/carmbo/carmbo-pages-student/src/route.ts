@@ -20,12 +20,14 @@ import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-
 import {registerStudentLocaleResources} from './locale-resources.ts'
 import {studentScripts, studentStyles} from './assets.ts'
 import type {StudentRouteOptions} from './student-route-options.ts'
+import {registerStudentPickerRoutes} from './student-picker-route.ts'
 
 export type {StudentRouteOptions} from './student-route-options.ts'
 
 export function routes(app: FastifyInstance, options: StudentRouteOptions): void {
   const {sql} = options
   registerStudentLocaleResources()
+  registerStudentPickerRoutes(app, options)
 
   app.get('/style.css', async (_request, reply) =>
     reply.type('text/css; charset=utf-8').send(studentStyles),

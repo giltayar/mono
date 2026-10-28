@@ -7,6 +7,7 @@ import * as communityListPageModel from '@giltayar/carmbo-pages-community/testki
 import * as newCommunityPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-page.model'
 import * as updateCommunityPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/update-community-page.model'
 import * as viewCommunityHistoryPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/view-community-history-page.model'
+import * as memberPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 
 test('publishes the intended package entry points', () => {
   assert.deepEqual(Object.keys(communityRoutes), ['routes'])
@@ -17,6 +18,10 @@ test('publishes the intended package entry points', () => {
   assert.deepEqual(Object.keys(updateCommunityPageModel), ['createUpdateCommunityPageModel'])
   assert.deepEqual(Object.keys(viewCommunityHistoryPageModel), [
     'createViewCommunityHistoryPageModel',
+  ])
+  assert.deepEqual(Object.keys(memberPageModel), [
+    'createCommunityMemberPageModel',
+    'createCommunityMembersPageModel',
   ])
 })
 

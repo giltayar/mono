@@ -55,6 +55,25 @@
     "products": "מוצרים",
     "date": "תאריך"
   },
+  "picker": {
+    "searchCreate": "חיפוש / יצירת תלמיד",
+    "search": "חיפוש תלמידים",
+    "searchPlaceholder": "חיפוש לפי שם, דוא״ל או טלפון",
+    "results": "תוצאות חיפוש תלמידים",
+    "createStudent": "יצירת תלמיד",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה",
+    "email": "דוא״ל",
+    "phone": "טלפון (רשות)",
+    "createAndSelect": "יצירה ובחירה",
+    "select": "בחירה",
+    "cancel": "ביטול",
+    "noResults": "לא נמצאו תלמידים",
+    "unavailable": "התלמיד לא קיים או הועבר לארכיון. יש לחפש שוב.",
+    "invalidInput": "יש לבדוק את פרטי התלמיד",
+    "duplicate": "הדוא״ל או הטלפון כבר שייכים לתלמיד אחר",
+    "creatingError": "שגיאה ביצירת תלמיד: "
+  },
   "view": {
     "noMagicLinksFound": "לא נמצאו קישורי קסם עבור תלמידה זו."
   }
