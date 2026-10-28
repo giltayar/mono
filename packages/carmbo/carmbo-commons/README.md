@@ -125,7 +125,95 @@ a filesystem path or URL for custom migration directories.
 Migration 27 is compiled from TypeScript to JavaScript for execution inside node_modules.
 Discovery ignores declarations and source maps, preserves the numbered migration order, and
 uses the existing database migration records to avoid rerunning applied migrations.
+Migrations that commit newly added enum values use `COMMIT AND CHAIN` to keep the runner's
+transaction active.
 Maintenance SQL is included under `maintenance/` but is never run automatically.
+
+### Community student memberships
+
+Migration 46 adds the membership schema. It does not add pages, send registration emails, or run
+registration timeouts. Community pages and host integration are separate, later package changes.
+
+- `community_member` gives each community/student pair one stable `community_member_number` and
+  points to its current history entry through `last_history_id`. The history entry's `data_id`
+  identifies the current data snapshot; there is no denormalized current-data pointer.
+- `community_member_data` stores snapshots of entry date/order, roles, registration status,
+  reason code/text, and the optional registration-email-sent timestamp.
+- `community_member_history` records the snapshot for each operation, its timestamp, and optional
+  operation reason.
+
+Use the existing append-only history/data convention: create a new UUID for each history entry and
+data snapshot, then update the membership's `last_history_id` in the same transaction. The schema
+does not install triggers to prevent snapshot updates; writers must preserve earlier snapshots.
+Primary keys, `NOT NULL`, and `UNIQUE` constraints are retained, but there are no `CHECK` constraints
+or foreign keys. Writers must validate community/student existence, membership ownership, history
+and data references, and the lifecycle rules below.
+
+List current memberships, including inactive ones, by `entered_at DESC, entry_order DESC`, joining
+`community_member.last_history_id` to `community_member_history.id`, then the history entry's
+`data_id` to `community_member_data.data_id`. The unique community/student index supports
+community membership lookup; the data entry-order index supports ordering. Sort a membership's
+history by `timestamp DESC`. Timestamps need not be unique; history entries with the same timestamp
+have no defined relative order.
+`entry_order` is allocated from `community_member_entry_order_seq` on first entry and re-entry:
+copy the existing value on ordinary snapshot writes, and allocate a new value when re-adding.
+
+#### Roles
+
+Viewer is implicit and cannot be removed. Five independent boolean snapshot columns store the
+additional roles, defaulting to false:
+
+| Column | Capability |
+|---|---|
+| `poster` | Post in the community |
+| `live_streamer` | Live stream |
+| `moderator` | Delete comments and posts |
+| `user_blocker` | Block users from participating |
+| `user_approver` | Approve or reject registration requests |
+
+These are community-specific capabilities, not backoffice authorization rules. Blocking prevents
+participation without erasing stored roles; capability enforcement belongs to the community-facing
+application.
+
+#### Registration lifecycle
+
+| Status | Required reason code |
+|---|---|
+| `requested-registration` | none |
+| `started-registration` | none |
+| `registration-email-sent` | none |
+| `registration-failed` | `email-sending-failed` or `timeout` |
+| `registered` | none |
+| `cancelled` | none |
+| `unregistered` | `self`, `removed`, `blocked`, or `rejected` |
+
+Other statuses require a null reason code. `reason_text` is optional diagnostic/context text;
+`operation_reason` explains the history operation rather than the resulting status.
+`registration-email-sent` and a `registration-failed`/`timeout` snapshot require
+`registration_email_sent_at`. Requested/started registration must not have a sent timestamp, and a
+sent timestamp cannot precede the current entry date. The future timeout policy is seven days after
+sending the email, not seven days after adding the student. No timer is implemented by this migration.
+
+Membership writers will enforce the action transitions:
+
+- Add: `started-registration`; a user request starts at `requested-registration`.
+- Approve/reject a request: `started-registration` or `unregistered`/`rejected`, respectively.
+- Mark registration complete: `registered`, from started/email-sent/failed registration.
+- Cancel an in-progress registration: `cancelled`.
+- Unregister a registered student: `unregistered`/`self` or `unregistered`/`removed`.
+- Block: `unregistered`/`blocked`. Normal re-add is not allowed while blocked.
+- Re-add a cancelled/unregistered student, or explicitly unblock and re-add a blocked student:
+  reuse the same membership identity, preserve roles and other membership data, and change status
+  to `started-registration`. Refresh `entered_at` and `entry_order` so the membership moves to the
+  top. Clear obsolete reason/error text and the previous attempt's email-sent timestamp in the new
+  snapshot; earlier values remain in history.
+- Role edits preserve the lifecycle state and entry order.
+
+History operation codes are `add`, `request-registration`, `update-roles`, `approve`, `reject`,
+`registration-email-sent`, `registration-failed`, `register`, `cancel`, `unregister`, `block`,
+`re-add`, and `unblock-and-re-add`. Valid statuses, operations, status/reason combinations, email
+timestamps, transitions, concurrency handling, and archived-community restrictions are enforced by
+the membership model in the later community-pages stage, not by database checks or foreign keys.
 
 ## Development and verification
 
@@ -138,8 +226,11 @@ pnpm test
 The build emits JavaScript/declarations with TypeScript 7 and copies layout translations, CSS, icons,
 logos, and SQL files into `dist`. Tests include the extracted phone-normalization suite,
 source-level runtime-boundary tests, and a consumer test importing the compiled package through
-its exports. Build before running tests. Migration scripts are intentionally not tested;
-adding a migration does not require changing any test.
+its exports. Build before running tests. The migration smoke test runs all SQL migrations against
+a fresh PostgreSQL 17 database, checks for errors and warnings, and removes its Docker containers
+and volumes afterward.
+Docker must be running for `pnpm test`; use `pnpm test:integration` to run only the migration
+smoke test. Adding a migration does not require changing any test.
 
 The TypeScript dependency aliases are deliberate: `@typescript/native` provides the TypeScript 7
 `tsc` binary used by builds and type-checking, while `typescript` resolves to TypeScript 6 so

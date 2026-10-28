@@ -1,6 +1,6 @@
 ALTER TYPE SALE_HISTORY_OPERATION ADD VALUE 'connect-manual-sale';
 
-COMMIT;
+COMMIT AND CHAIN;
 
 UPDATE sale_history
 SET

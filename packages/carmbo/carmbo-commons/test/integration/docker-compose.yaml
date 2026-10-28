@@ -1,0 +1,9 @@
+services:
+  migration-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: migration_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - '127.0.0.1::5432'

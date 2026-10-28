@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-commons",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Shared helpers, layout, assets, and database migrations for Carmbo applications",
   "type": "module",
   "exports": {
@@ -51,6 +51,7 @@
     "test": "concurrently 'pnpm:test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsc",
+    "test:integration": "node --test 'test/integration/**/*.test.ts'",
     "test:node": "node --test 'test/unit/**/*.test.ts'"
   },
   "author": "Gil Tayar <gil@tayar.org>",
@@ -71,34 +72,35 @@
     "i18next": "^26.4.2"
   },
   "dependencies": {
-    "@fastify/static": "^10.1.6",
+    "@fastify/static": "^10.1.8",
     "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
     "@giltayar/carmel-tools-smoove-integration": "^5.3.1",
     "@giltayar/carmel-tools-whatsapp-integration": "^2.6.1",
     "@giltayar/functional-commons": "^2.2.1",
     "htm": "^3.1.1",
-    "i18next-fs-backend": "^2.6.8",
+    "i18next-fs-backend": "^2.6.9",
     "p-retry": "^8.0.1",
     "postgres": "3.4.7",
     "vhtml": "^2.2.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@fastify/request-context": "^7.0.2",
-    "@playwright/test": "^1.64.0",
+    "@fastify/request-context": "^7.0.5",
+    "@giltayar/docker-compose-testkit": "^2.1.0",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
     "@types/vhtml": "^2.2.9",
     "@typescript/native": "npm:typescript@^7.0.2",
     "concurrently": "^10.0.6",
-    "eslint": "^10.11.0",
-    "eslint-plugin-n": "^18.3.0",
-    "eslint-plugin-prettier": "^5.5.6",
-    "fastify": "^5.12.5",
+    "eslint": "^10.13.0",
+    "eslint-plugin-n": "^18.5.0",
+    "eslint-plugin-prettier": "^5.5.7",
+    "fastify": "^5.12.7",
     "globals": "^17.12.0",
-    "i18next": "^26.4.3",
+    "i18next": "^26.5.11",
     "prettier": "^3.9.10",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.71.1"
+    "typescript-eslint": "^8.72.1"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.16.1"
 }
