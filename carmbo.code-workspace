@@ -73,8 +73,8 @@
       "path": "packages/carmel-tools/skool-integration",
     },
     {
-      "name": "carmbo-common",
-      "path": "packages/carmbo/carmbo-common",
+      "name": "carmbo-commons",
+      "path": "packages/carmbo/carmbo-commons",
     },
     {
       "name": "carmbo-pages-auth",
