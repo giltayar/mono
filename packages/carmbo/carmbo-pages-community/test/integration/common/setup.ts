@@ -14,10 +14,18 @@ import type {AddressInfo} from 'node:net'
 import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
 import {routes} from '../../../src/route.ts'
+import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
+import qs from 'qs'
 
 export function setup(
   testUrl: string,
-  {language = 'en'}: {language?: 'en' | 'he'} = {},
+  {
+    language = 'en',
+    nowService = () => new Date(),
+  }: {
+    language?: 'en' | 'he'
+    nowService?: () => Date
+  } = {},
 ): {
   url: () => URL
   sql: () => Sql
@@ -67,7 +75,7 @@ export function setup(
     setUiConfiguration(language === 'he' ? 'liraz' : 'carmel', {withCommunities: true})
 
     app = fastify()
-    app.register(formbody)
+    app.register(formbody, {parser: (body) => qs.parse(body)})
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
     app.register(fastifyRequestContext, {
@@ -106,7 +114,16 @@ export function setup(
     app.register(routes, {
       prefix: '/communities',
       sql: database,
-      nowService: () => new Date(),
+      nowService,
+    })
+    app.register(studentRoutes, {
+      prefix: '/students',
+      sql: database,
+      nowService,
+      academyIntegration: undefined,
+      academyAccountSubdomains: undefined,
+      smooveIntegration: undefined,
+      ravmesserIntegration: undefined,
     })
 
     await app.listen({host: '127.0.0.1', port: 0})
@@ -123,7 +140,20 @@ export function setup(
         community,
         community_history,
         community_data,
-        community_search
+        community_search,
+        community_member,
+        community_member_data,
+        community_member_history,
+        student,
+        student_history,
+        student_data,
+        student_search,
+        student_name,
+        student_email,
+        student_phone,
+        student_facebook_name,
+        student_integration_smoove,
+        student_integration_ravmesser
       RESTART IDENTITY CASCADE
     `
   })

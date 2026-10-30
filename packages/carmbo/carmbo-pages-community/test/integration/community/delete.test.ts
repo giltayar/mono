@@ -2,6 +2,7 @@ import {test, expect, type Page} from '@playwright/test'
 import {createCommunityListPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/community-list-page.model'
 import {createNewCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-page.model'
 import {createUpdateCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/update-community-page.model'
+import {createCommunityMembersPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 import {setup} from '../common/setup.ts'
 
 const {url, TEST_hooks} = setup(import.meta.url)
@@ -42,6 +43,11 @@ test('archiving a community', async ({page}) => {
   await expect(updateForm.discardButton().locator).not.toBeVisible()
   await expect(updateForm.deleteButton().locator).not.toBeVisible()
   await expect(updateForm.restoreButton().locator).toBeVisible()
+
+  const members = createCommunityMembersPageModel(page)
+  await members.tabs().members().locator.click()
+  await expect(members.list().locator).toBeVisible()
+  await expect(members.add().locator).toHaveCount(0)
 
   await page.goto(new URL('/communities', url()).href)
 

@@ -5,6 +5,9 @@ export function createCommunityListPageModel(page: Page) {
     urlRegex: /\/communities$/,
     list: (locator = page.locator('table')) => ({
       locator,
+      communityNumber: (communityNumber: number) => ({
+        locator: locator.getByRole('button', {name: String(communityNumber), exact: true}),
+      }),
       rows: (rowLocator = locator.locator('tbody tr')) => ({
         locator: rowLocator,
         row: (index: number, locator = rowLocator.nth(index)) => ({

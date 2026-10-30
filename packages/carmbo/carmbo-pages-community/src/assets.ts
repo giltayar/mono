@@ -20,6 +20,20 @@ export const communityStyles = `.communities-view {
     bottom: 1rem;
     right: 1rem;
   }
+
+  .member-student-dialog {
+    width: min(38rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    border: 0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1rem 3rem rgb(0 0 0 / 20%);
+  }
+
+  .member-student-dialog::backdrop {
+    background: rgb(0 0 0 / 40%);
+  }
 }
 `
 

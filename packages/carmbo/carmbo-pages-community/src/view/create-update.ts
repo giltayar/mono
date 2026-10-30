@@ -3,6 +3,7 @@ import {getFixedT} from 'i18next'
 import {CommunityFormFields} from './form.ts'
 import {CommunityHistoryList, historyOperationToText} from './history.ts'
 import type {CommunityPageView, CommunityView} from './model.ts'
+import {CommunityTabs} from './layout.ts'
 
 const t = getFixedT(null, 'community')
 
@@ -44,6 +45,7 @@ export function CommunityUpdateView({page}: {page: CommunityPageView}) {
       ${isArchived ? html` <small class="text-body-secondary">${t('createUpdate.archived')}</small>` : ''}
       <div class="operation-spinner spinner-border" role="status"></div>
     </h2>
+    <${CommunityTabs} communityNumber=${page.communityNumber} activeTab="details" />
     <form
       hx-put="/communities/${page.communityNumber}"
       hx-target="body"
