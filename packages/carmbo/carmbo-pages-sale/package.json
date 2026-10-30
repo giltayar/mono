@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-pages-sale",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Product, sales event, sale, and external-provider pages for Carmbo applications",
   "type": "module",
   "exports": {
@@ -65,10 +65,10 @@
     "zod": "^4.6.5"
   },
   "dependencies": {
-    "@fastify/static": "^10.1.6",
-    "@giltayar/carmbo-commons": "2.2.0",
-    "@giltayar/carmbo-pages-job": "1.0.2",
-    "@giltayar/carmbo-pages-student": "1.0.1",
+    "@fastify/static": "^10.1.8",
+    "@giltayar/carmbo-commons": "2.3.0",
+    "@giltayar/carmbo-pages-job": "1.0.3",
+    "@giltayar/carmbo-pages-student": "1.1.0",
     "@giltayar/functional-commons": "^2.2.1",
     "@giltayar/url-commons": "^2.2.0",
     "@js-temporal/polyfill": "^0.5.1",
@@ -76,7 +76,7 @@
   },
   "devDependencies": {
     "@fastify/formbody": "^9.0.1",
-    "@fastify/request-context": "^7.0.2",
+    "@fastify/request-context": "^7.0.5",
     "@giltayar/carmel-tools-academy-integration": "^6.0.0",
     "@giltayar/carmel-tools-cardcom-integration": "^9.1.0",
     "@giltayar/carmel-tools-ravmesser-integration": "^1.0.0",
@@ -86,26 +86,26 @@
     "@giltayar/docker-compose-testkit": "^2.1.0",
     "@giltayar/http-commons": "^3.3.0",
     "@giltayar/playwright-commons": "1.0.0",
-    "@playwright/test": "^1.64.0",
-    "@types/node": "^26.6.5",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.6",
     "@types/qs": "^6.15.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "bootstrap": "^5.3.8",
     "concurrently": "^10.0.6",
-    "eslint": "^10.12.0",
-    "eslint-plugin-n": "^18.4.1",
-    "eslint-plugin-prettier": "^5.5.6",
-    "fastify": "^5.12.5",
+    "eslint": "^10.13.0",
+    "eslint-plugin-n": "^18.5.0",
+    "eslint-plugin-prettier": "^5.5.7",
+    "fastify": "^5.12.7",
     "fastify-type-provider-zod": "^7.0.0",
     "globals": "^17.13.0",
     "htmx.org": "^2.0.10",
-    "i18next": "^26.4.3",
+    "i18next": "^26.5.11",
     "postgres": "3.4.7",
     "prettier": "^3.9.10",
-    "qs": "^6.16.0",
+    "qs": "^6.17.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.71.1",
-    "zod": "^4.6.6"
+    "typescript-eslint": "^8.72.1",
+    "zod": "^4.6.7"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.16.1"
 }

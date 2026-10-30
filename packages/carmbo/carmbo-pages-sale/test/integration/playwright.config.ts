@@ -7,7 +7,7 @@ export default defineConfig({
   expect: {timeout: 5000},
   timeout: process.env.CI ? 10000 : 7000,
   retries: process.env.CI ? 3 : 0,
-  workers: 1,
+  workers: process.env.CI ? 2 : undefined,
   use: {
     screenshot: 'only-on-failure',
   },
