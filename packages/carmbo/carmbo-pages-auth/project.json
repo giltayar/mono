@@ -1,0 +1,7 @@
+{
+  "name": "carmbo-pages-auth",
+  "targets": {
+    "start-btp": {},
+    "btp": {}
+  }
+}

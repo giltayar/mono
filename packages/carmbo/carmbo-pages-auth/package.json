@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-pages-auth",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Firebase authentication pages and route protection for Carmbo applications",
   "type": "module",
   "exports": {
@@ -17,6 +17,17 @@
     "src",
     "dist"
   ],
+  "btp": {
+    "exclude": [
+      "test/**",
+      "start/**",
+      "AGENTS.md",
+      "project.json",
+      "eslint.config.mjs",
+      ".prettierrc",
+      ".gitignore"
+    ]
+  },
   "scripts": {
     "build": "concurrently 'node:build:*'",
     "build:typescript": "rm -rf dist && tsc --project tsconfig.build.json",
@@ -44,7 +55,7 @@
     "i18next": "^26.4.2"
   },
   "dependencies": {
-    "@giltayar/carmbo-commons": "2.3.0",
+    "@giltayar/carmbo-commons": "^2.3.0",
     "@giltayar/functional-commons": "^2.2.1",
     "firebase-admin": "^14.5.0",
     "lru-cache": "^11.5.3"
@@ -56,13 +67,13 @@
     "@types/node": "^26.6.6",
     "@typescript/native": "npm:typescript@^7.0.2",
     "concurrently": "^10.0.6",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "eslint-plugin-n": "^18.5.0",
     "eslint-plugin-prettier": "^5.5.7",
     "fastify": "^5.12.7",
     "globals": "^17.13.0",
-    "htmx.org": "^2.0.10",
-    "i18next": "^26.5.11",
+    "htmx.org": "^2.0.11",
+    "i18next": "^26.6.0",
     "prettier": "^3.9.10",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.72.1"
