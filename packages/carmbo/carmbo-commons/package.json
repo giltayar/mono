@@ -42,6 +42,17 @@
     "testkit",
     "dist"
   ],
+  "btp": {
+    "exclude": [
+      "test/**",
+      "start/**",
+      "AGENTS.md",
+      "project.json",
+      "eslint.config.mjs",
+      ".prettierrc",
+      ".gitignore"
+    ]
+  },
   "scripts": {
     "build": "pnpm clean && concurrently 'pnpm:build:*'",
     "clean": "rm -rf dist",
