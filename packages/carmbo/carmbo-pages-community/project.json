@@ -1,0 +1,7 @@
+{
+  "name": "carmbo-pages-community",
+  "targets": {
+    "start-btp": {},
+    "btp": {}
+  }
+}
