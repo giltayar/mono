@@ -1,0 +1,7 @@
+{
+  "name": "carmbo-app",
+  "targets": {
+    "start-btp": {},
+    "btp": {}
+  }
+}
