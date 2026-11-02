@@ -1,0 +1,7 @@
+{
+  "name": "carmbo-pages-sale",
+  "targets": {
+    "start-btp": {},
+    "btp": {}
+  }
+}
