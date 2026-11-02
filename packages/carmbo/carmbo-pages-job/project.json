@@ -1,0 +1,7 @@
+{
+  "name": "carmbo-pages-job",
+  "targets": {
+    "start-btp": {},
+    "btp": {}
+  }
+}
