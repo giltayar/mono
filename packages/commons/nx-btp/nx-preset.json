@@ -1,0 +1,22 @@
+{
+  "parallel": 1,
+  "targetDefaults": {
+    "start-btp": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "parallelism": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "parallel": false,
+        "forwardAllArgs": false,
+        "commands": ["pnpm self-update", "pnpm update --latest"]
+      }
+    },
+    "btp": {
+      "executor": "./packages/commons/nx-btp:btp",
+      "cache": false,
+      "parallelism": false,
+      "dependsOn": [{"target": "btp", "dependencies": true, "params": "forward"}]
+    }
+  }
+}

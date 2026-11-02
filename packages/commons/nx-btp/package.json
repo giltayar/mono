@@ -1,0 +1,61 @@
+{
+  "name": "@giltayar/nx-btp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Repository-local Nx workflows for independently managed packages",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/publish.d.ts",
+      "import": "./dist/src/publish.js"
+    },
+    "./next-package-version": {
+      "types": "./dist/src/next-package-version.d.ts",
+      "import": "./dist/src/next-package-version.js"
+    },
+    "./package-changes": {
+      "types": "./dist/src/package-changes.d.ts",
+      "import": "./dist/src/package-changes.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "executors": "./executors.json",
+  "engines": {
+    "node": ">=26.9.0"
+  },
+  "files": [
+    "src",
+    "dist",
+    "executors.json",
+    "publish.schema.json",
+    "nx-preset.json"
+  ],
+  "scripts": {
+    "build": "pnpm clean && concurrently 'pnpm:build:*'",
+    "clean": "rm -rf dist",
+    "build:typescript": "tsc --project tsconfig.build.json",
+    "test": "concurrently 'pnpm:test:*'",
+    "test:eslint": "eslint --max-warnings=0 .",
+    "test:typescript": "tsc",
+    "test:node": "node --test 'test/unit/*.test.ts'",
+    "test:e2e": "node --test 'test/e2e/*.test.ts'"
+  },
+  "peerDependencies": {
+    "nx": "^24.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.13.0",
+    "eslint-plugin-n": "^18.5.0",
+    "eslint-plugin-prettier": "^5.5.7",
+    "globals": "^17.13.0",
+    "nx": "24.0.3",
+    "prettier": "^3.9.10",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "verdaccio": "^7.0.2"
+  },
+  "packageManager": "pnpm@12.16.1"
+}

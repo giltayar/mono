@@ -33,6 +33,10 @@
       "path": "packages/commons/node-test-commons",
     },
     {
+      "name": "nx-btp",
+      "path": "packages/commons/nx-btp",
+    },
+    {
       "name": "pino-testkit",
       "path": "packages/commons/pino-testkit",
     },

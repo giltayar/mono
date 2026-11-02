@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "version": 2,
+  "title": "Build, test, and publish (btp) a Carmbo package",
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "alias": "msg",
+      "description": "Commit message, prefixed with the package folder's initials. Required unless --dry-run"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "default": false,
+      "description": "Report whether the package would be published, and as which version, without changing anything"
+    }
+  },
+  "additionalProperties": false
+}

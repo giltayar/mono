@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "./packages/commons/nx-btp/nx-preset.json",
+  "analytics": false
+}

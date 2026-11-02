@@ -359,8 +359,9 @@ visible across these independent packages.
 
 ### 1. Add the published dependency
 
-Add the exact compatible `@giltayar/carmbo-pages-<domain>` version to `carmbo-app/package.json`,
-then run `pnpm install` in `carmbo-app`.
+Add a caret range for the compatible published `@giltayar/carmbo-pages-<domain>` version (for example
+`"^1.2.3"`) to `carmbo-app/package.json`, then run `pnpm install` in `carmbo-app`. Caret ranges keep
+Nx's dependency edges between the Carmbo projects intact after later releases.
 
 Remove dependencies from `carmbo-app` only when no remaining app code uses them.
 

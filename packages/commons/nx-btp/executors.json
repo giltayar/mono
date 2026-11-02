@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "btp": {
+      "implementation": "./src/publish.ts#publishExecutor",
+      "schema": "./publish.schema.json",
+      "description": "Build, test, publish, and commit the current Carmbo package"
+    }
+  }
+}

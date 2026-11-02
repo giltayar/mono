@@ -139,3 +139,11 @@
   `import` -> `./dist/src/*.js`). The `files` array publishes `src` and `dist`.
 - Cross-package dependencies are on published `@giltayar/*` versions in `dependencies` /
   `devDependencies`, consistent with the "no workspaces / package independence" rules above.
+  Specify them as caret ranges (`"^2.3.0"`), not exact versions, so Nx keeps the dependency edges
+  between projects after a dependency is released. Packages that set pnpm's `minimumReleaseAge`
+  must list `'@giltayar/*'` in `minimumReleaseAgeExclude`, so freshly released internal versions
+  are not hidden.
+- Packages published through Nx declare a top-level `"btp": {"exclude": [globs...]}` listing
+  files, relative to the package folder, that do not affect the published package (tests, docs,
+  lint/format config, `project.json`). Change detection ignores them when deciding whether a
+  package needs publishing; keep build inputs such as `tsconfig*.json` and lockfiles out of it.
