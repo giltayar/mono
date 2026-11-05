@@ -9,8 +9,12 @@ import {
   initializeJobExecutor,
   triggerJobsExecution,
 } from '@giltayar/carmbo-pages-job/jobs/executor'
-import {registerJobHandler} from '@giltayar/carmbo-pages-job/jobs/handler'
-import {TEST_resetJobHandlers} from '../../testkit/carmbo-pages-job-testkit.ts'
+import {
+  registerJobHandler,
+  type JobHandler,
+  type JobSubmitter,
+} from '@giltayar/carmbo-pages-job/jobs/handler'
+import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
 
 const baseNow = new Date('2026-01-01T00:00:00.000Z')
 const executionNow = new Date('2026-01-01T00:01:00.000Z')
@@ -102,28 +106,159 @@ describe('job execution', () => {
     assert.equal(jobs[0].error, null)
   })
 
-  test('retries failures and records the final error', async () => {
-    const attempts: number[] = []
-    const submitJob = registerJobHandler(
-      'failing-job',
+  test(
+    'automatically executes ordinary submissions with the existing defaults',
+    {timeout: 5000},
+    async () => {
+      const execution = Promise.withResolvers<{jobId: number; isLastAttempt: boolean}>()
+      const submitJob = registerJobHandler(
+        'automatic-job',
+        nowService,
+        {isTrivial: false},
+        () => 'automatic job',
+        async ({jobId, isLastAttempt}) => {
+          execution.resolve({jobId, isLastAttempt})
+        },
+      )
+
+      const jobId = await submitJob({}, {})
+      assert.deepEqual(await execution.promise, {jobId, isLastAttempt: false})
+      await triggerJobsExecution(nowService)
+
+      const [job] = await sql`SELECT * FROM job`
+      assert.equal(job.numberOfRetries, 3)
+      assert.equal(job.attempts, 0)
+      assert.ok(job.finishedAt)
+    },
+  )
+
+  test('enqueues within a transaction and executes only after commit and an explicit trigger', async (t) => {
+    const executions: number[] = []
+    const info = t.mock.method(logger, 'info')
+    const submitJob: JobSubmitter<{message: string}> = registerJobHandler(
+      'transactional-job',
       nowService,
       {isTrivial: false},
-      () => 'failing job',
-      async (_data, attempt) => {
-        attempts.push(attempt)
+      ({message}) => message,
+      async ({jobId}) => {
+        executions.push(jobId)
+      },
+    )
+
+    const jobId = await sql.begin(async (transaction) => {
+      const jobId = await submitJob({message: 'committed job'}, {transaction, retries: 1})
+      const [job] = await transaction`SELECT * FROM job WHERE id = ${jobId}`
+      assert.equal(job.description, 'committed job')
+      assert.deepEqual(job.payload, {message: 'committed job'})
+      assert.equal(job.numberOfRetries, 1)
+      assert.equal(job.finishedAt, null)
+      assert.equal((await sql`SELECT * FROM job`).length, 0)
+
+      await triggerJobsExecution(nowService)
+      assert.deepEqual(executions, [])
+      assert.equal(
+        info.mock.calls.filter((call) => call.arguments[1] === 'execute-jobs-started').length,
+        1,
+      )
+      return jobId
+    })
+
+    const [queued] = await sql`SELECT * FROM job WHERE id = ${jobId}`
+    assert.equal(queued.finishedAt, null)
+    assert.deepEqual(executions, [])
+
+    await triggerJobsExecution(nowService)
+    assert.deepEqual(executions, [jobId])
+    const [finished] = await sql`SELECT * FROM job WHERE id = ${jobId}`
+    assert.ok(finished.finishedAt)
+  })
+
+  test('rolls back transactional submissions without executing them', async () => {
+    const executions: number[] = []
+    const submitJob = registerJobHandler(
+      'rolled-back-job',
+      nowService,
+      {isTrivial: false},
+      () => 'rolled back job',
+      async ({jobId}) => {
+        executions.push(jobId)
+      },
+    )
+
+    await assert.rejects(
+      sql.begin(async (transaction) => {
+        await submitJob({}, {transaction})
+        throw new Error('rollback membership creation')
+      }),
+      {message: 'rollback membership creation'},
+    )
+
+    await triggerJobsExecution(nowService)
+    assert.equal((await sql`SELECT * FROM job`).length, 0)
+    assert.deepEqual(executions, [])
+  })
+
+  for (const retries of [0, 1, 3]) {
+    test(`reports the last attempt and records the final error with ${retries} retries`, async () => {
+      const attempts: Array<{attempt: number; isLastAttempt: boolean}> = []
+      const handler: JobHandler = async ({isLastAttempt}, attempt) => {
+        attempts.push({attempt, isLastAttempt})
         throw new Error(`failure ${attempt}`)
+      }
+      const submitJob = registerJobHandler(
+        'failing-job',
+        nowService,
+        {isTrivial: false},
+        () => 'failing job',
+        handler,
+      )
+
+      await submitJob({}, {scheduledAt: executionNow, retries})
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        await triggerJobsExecution(() => executionNow)
+        const [job] = await sql`SELECT * FROM job`
+        assert.equal(job.attempts, attempt + 1)
+        assert.equal(job.errorMessage, `failure ${attempt}`)
+        assert.equal(job.finishedAt !== null, attempt === retries)
+      }
+      await triggerJobsExecution(() => executionNow)
+      assert.deepEqual(
+        attempts,
+        Array.from({length: retries + 1}, (_, attempt) => ({
+          attempt,
+          isLastAttempt: attempt === retries,
+        })),
+      )
+    })
+  }
+
+  test('allows a job to succeed on its last attempt', async () => {
+    const attempts: Array<{attempt: number; isLastAttempt: boolean}> = []
+    const submitJob = registerJobHandler(
+      'eventually-successful-job',
+      nowService,
+      {isTrivial: false},
+      () => 'pending job',
+      async ({isLastAttempt}, attempt) => {
+        attempts.push({attempt, isLastAttempt})
+        if (!isLastAttempt) throw new Error('retry')
+        return {description: 'success on last attempt'}
       },
     )
 
     await submitJob({}, {scheduledAt: executionNow, retries: 1})
     await triggerJobsExecution(() => executionNow)
     await triggerJobsExecution(() => executionNow)
+    await triggerJobsExecution(() => executionNow)
 
+    assert.deepEqual(attempts, [
+      {attempt: 0, isLastAttempt: false},
+      {attempt: 1, isLastAttempt: true},
+    ])
     const [job] = await sql`SELECT * FROM job`
-    assert.deepEqual(attempts, [0, 1])
-    assert.equal(job.attempts, 2)
-    assert.equal(job.errorMessage, 'failure 1')
     assert.ok(job.finishedAt)
+    assert.equal(job.attempts, 1)
+    assert.equal(job.description, 'success on last attempt')
   })
 
   test('records direct job success and failure', async () => {

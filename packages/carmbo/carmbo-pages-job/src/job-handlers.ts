@@ -1,10 +1,19 @@
-import type {JSONValue} from 'postgres'
+import type {JSONValue, TransactionSql} from 'postgres'
 import {triggerJobsExecution} from './job-executor.ts'
 import {globalSql, jobHandlers, type JobHandler} from './job-state.ts'
 
+export type {JobHandler} from './job-state.ts'
+
+export type JobSubmissionOptions = {
+  parentJobId?: number
+  scheduledAt?: Date
+  retries?: number
+  transaction?: TransactionSql
+}
+
 export type JobSubmitter<TPayload = unknown> = (
   payload: TPayload,
-  options: {parentJobId?: number; scheduledAt?: Date; retries?: number},
+  options: JobSubmissionOptions,
 ) => Promise<number>
 
 export function registerJobHandler<TPayload extends JSONValue>(
@@ -18,9 +27,10 @@ export function registerJobHandler<TPayload extends JSONValue>(
 
   jobHandlers.set(type, handler as JobHandler<unknown>)
 
-  return async function (payload: TPayload, {scheduledAt, parentJobId, retries = 3}) {
-    const result = await globalSql`
-      INSERT INTO job ${globalSql({
+  return async function (payload: TPayload, {scheduledAt, parentJobId, retries = 3, transaction}) {
+    const sql = transaction ?? globalSql
+    const result = await sql`
+      INSERT INTO job ${sql({
         parentJobId: parentJobId ?? null,
         type,
         payload,
@@ -33,7 +43,7 @@ export function registerJobHandler<TPayload extends JSONValue>(
       RETURNING id
     `
 
-    triggerJobsExecution(nowService)
+    if (!transaction) triggerJobsExecution(nowService)
 
     return parseInt(result[0].id, 10)
   }

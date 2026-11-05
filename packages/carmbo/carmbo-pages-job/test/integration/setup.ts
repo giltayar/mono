@@ -11,7 +11,7 @@ import postgres, {type Sql} from 'postgres'
 import {apiRoutes, routes} from '@giltayar/carmbo-pages-job/routes'
 import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {registerJobLocaleResources} from '../../src/locale-resources.ts'
-import {TEST_resetJobHandlers} from '../../testkit/carmbo-pages-job-testkit.ts'
+import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
 
 export const baseNow = new Date('2026-01-01T00:00:00.000Z')
 export const executionNow = new Date('2026-01-01T00:01:00.000Z')

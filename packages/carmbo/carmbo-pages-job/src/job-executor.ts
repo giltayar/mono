@@ -80,6 +80,7 @@ async function executeJob(
 ): Promise<void> {
   const attempts = parseInt(job.attempts)
   const numberOfRetries = parseInt(job.numberOfRetries)
+  const isLastAttempt = attempts >= numberOfRetries
 
   const handler = jobHandlers.get(job.type)
 
@@ -101,7 +102,11 @@ async function executeJob(
 
   logger.info({attempts, numberOfRetries}, 'executing-job-handler')
   try {
-    const result = await handler({payload: job.payload, jobId: job.id}, attempts, logger)
+    const result = await handler(
+      {payload: job.payload, jobId: job.id, isLastAttempt},
+      attempts,
+      logger,
+    )
     const now = nowService()
     logger.info({}, 'executing-job-handler-success')
 
@@ -120,7 +125,7 @@ async function executeJob(
       UPDATE job SET ${sql({
         attempts: attempts + 1,
         updatedAt: now,
-        finishedAt: attempts >= numberOfRetries ? now : null,
+        finishedAt: isLastAttempt ? now : null,
         errorMessage: (err as any).message ?? null,
         error: (err as any).stack ?? (typeof err === 'object' ? JSON.stringify(err) : String(err)),
       })}

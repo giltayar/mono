@@ -2,7 +2,7 @@ import type {FastifyBaseLogger} from 'fastify'
 import type {Sql} from 'postgres'
 
 export type JobHandler<TPayload = unknown> = (
-  data: {payload: TPayload; jobId: number},
+  data: {payload: TPayload; jobId: number; isLastAttempt: boolean},
   attempt: number,
   logger: FastifyBaseLogger,
 ) => Promise<{description: string} | void>
