@@ -16,7 +16,14 @@ export function MainLayout({
   banner?: Banner
   children: string[]
   activeNavItem:
-    'no-nav-bar' | 'students' | 'communities' | 'products' | 'sales-events' | 'sales' | 'jobs'
+    | 'no-nav-bar'
+    | 'students'
+    | 'communities'
+    | 'emails'
+    | 'products'
+    | 'sales-events'
+    | 'sales'
+    | 'jobs'
 }): string {
   const version = getVersion()
   const dir = i18next.dir()
@@ -63,7 +70,8 @@ export function MainLayout({
 function NavBar({
   activeNavItem,
 }: {
-  activeNavItem: 'students' | 'communities' | 'products' | 'sales-events' | 'sales' | 'jobs'
+  activeNavItem:
+    'students' | 'communities' | 'emails' | 'products' | 'sales-events' | 'sales' | 'jobs'
 }) {
   const version = getVersion()
   const uiConfiguration = getUiConfiguration()
@@ -106,6 +114,14 @@ function NavBar({
                     class="nav-link ${activeNavItem === 'communities' ? 'active' : ''}"
                     href="/communities"
                     >${t('nav.communities')}</a
+                  >
+                </li>
+                <li class="nav-item" role="menuitem">
+                  <a
+                    class="nav-link ${activeNavItem === 'emails' ? 'active' : ''}"
+                    href="/emails"
+                    aria-current=${activeNavItem === 'emails' ? 'page' : undefined}
+                    >${t('nav.emails')}</a
                   >
                 </li>
               `

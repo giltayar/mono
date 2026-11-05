@@ -23,6 +23,19 @@ describe('compiled package consumer', () => {
     assert.equal(typeof createAllPagesPageModel, 'function')
   })
 
+  it('renders an active emails nav link through the compiled layout export', async () => {
+    setVersion('10.0.1')
+    setUiConfiguration('carmel', {withCommunities: true})
+    await initializei18next('en')
+
+    const translated: LayoutResources['nav']['emails'] = i18next.t('nav.emails', {
+      ns: 'layout',
+    })
+    assert.equal(translated, 'Emails')
+    const result = MainLayout({title: 'Emails', children: [], activeNavItem: 'emails'})
+    assert.match(result, /class="nav-link active"\s+href="\/emails"\s+aria-current="page"/)
+  })
+
   it('exposes asset routes without exposing internal asset roots', async () => {
     const assets = await import('@giltayar/carmbo-commons/layout/assets')
     assert.deepEqual(Object.keys(assets), ['layoutAssetRoutes'])
@@ -160,9 +173,12 @@ describe('compiled package consumer', () => {
     assert.match(hebrewPage.body, /bootstrap\.rtl\.min\.css/)
     assert.match(hebrewPage.body, /configurations\/liraz\/logo\.svg/)
     assert.doesNotMatch(hebrewPage.body, /href="\/communities"/)
+    assert.doesNotMatch(hebrewPage.body, /href="\/emails"/)
 
     setUiConfiguration('liraz', {withCommunities: true})
     const communitiesPage = await app.inject('/')
     assert.match(communitiesPage.body, /href="\/communities"/)
+    assert.match(communitiesPage.body, /href="\/emails"/)
+    assert.ok(communitiesPage.body.includes(i18next.t('nav.emails', {ns: 'layout'})))
   })
 })

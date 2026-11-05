@@ -55,7 +55,10 @@ Layout translations and logos are resolved relative to this package, not the wor
 
 `getVersion()` returns the configured **application** version, not this package's version.
 Use it for app-specific asset links too. It throws if the version was not configured.
-`withCommunities` (required) controls whether the navigation bar links to `/communities`.
+`withCommunities` (required) controls whether the navigation bar links to `/communities` and
+`/emails`; there is no separate emails flag. Hosts enabling communities must mount both sets of
+pages. Email pages use `activeNavItem: 'emails'` to highlight their navigation item. The shared
+page model exposes `emailsMenuItem` for browser tests.
 Unknown brands throw rather than silently choosing a different logo. Version, branding,
 translations, and provider caches retain their existing process-global behavior; apps needing
 different configurations must run in separate processes.
@@ -214,6 +217,46 @@ History operation codes are `add`, `request-registration`, `update-roles`, `appr
 `re-add`, and `unblock-and-re-add`. Valid statuses, operations, status/reason combinations, email
 timestamps, transitions, concurrency handling, and archived-community restrictions are enforced by
 the membership model in the later community-pages stage, not by database checks or foreign keys.
+
+### Emails
+
+Migration 47 adds `email` and a nullable `community_member.registration_email_number` reverse
+reference. It is schema-only: existing memberships remain unlinked, and no email is sent.
+Email records are updated by send jobs and delivery callbacks, not user edits, so there are no
+email history/data tables.
+
+| Columns | Meaning |
+|---|---|
+| `email_number` | Consecutive email identifier |
+| `purpose` | Currently only `registration-email` |
+| `to_email`, `from_email`, `subject`, `html`, `text`, `language`, `tags` | Saved provider payload and language; writers must keep them unchanged for retries |
+| `job_id` | Unique send-job identifier used to derive the Resend idempotency key |
+| `resend_email_id` | Optional unique provider identifier for correlating callbacks |
+| `created_at` | Email creation time |
+| `delivered_at` | Resend API acceptance time, not confirmed mailbox delivery |
+| `success_at` | Delivery time reported by a verified `email.delivered` callback |
+| `sending_timestamps` | JSON array of ISO timestamp strings, one per provider attempt start |
+| `retry_timestamps` | JSON array of ISO timestamp strings, one per failed attempt that queues a retry |
+| `status` | `sending`, `retrying`, `delivered`, `success`, or `failure` |
+| `error_text` | Optional send/retry or terminal delivery failure diagnostic |
+| `last_provider_event_at` | Provider event time used to order delivery/failure callbacks |
+
+`created_at` defaults to the current time, `status` to `sending`, timestamp arrays to `[]`, and
+tags to `{}`. Database checks restrict purpose/status and require arrays/object JSON shapes;
+writers must validate the JSON contents and lifecycle transitions. Payload immutability is a
+writer responsibility, not enforced by a trigger.
+
+List emails by `created_at DESC, email_number DESC`, supported by `email_created_idx`. Find an
+email's optional community/member association through the indexed reverse reference on
+`community_member`, not a member reference in `email`. This link is not part of membership
+snapshots or history. As with other membership references, writers validate its existence rather
+than relying on a foreign key. `job_id` also deliberately has no foreign key: finished jobs are
+deleted after 30 days, but email records and their idempotency identifiers must remain.
+
+The status names distinguish API acceptance (`delivered`) from delivery confirmation (`success`).
+Resend retains idempotency keys for only 24 hours; reusing the job-derived key on a later retry
+cannot guarantee duplicate prevention beyond that window. Sending, retries, callbacks, pages, and
+membership lifecycle changes will be implemented separately.
 
 ## Development and verification
 

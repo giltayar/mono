@@ -13,6 +13,9 @@ export function createAllPagesPageModel(page: Page) {
         studentsMenuItem: (locator = menuLocator.getByRole('menuitem', {name: 'Students'})) => ({
           locator,
         }),
+        emailsMenuItem: (locator = menuLocator.getByRole('menuitem', {name: 'Emails'})) => ({
+          locator,
+        }),
         productsMenuItem: (locator = menuLocator.getByRole('menuitem', {name: 'Products'})) => ({
           locator,
         }),

@@ -49,7 +49,7 @@ describe('application configuration', () => {
     assert.match(result, /nav-link active/)
   })
 
-  it('hides the communities nav link by default', async () => {
+  it('hides the communities and emails nav links when communities are disabled', async () => {
     setVersion('10.0.1')
     setUiConfiguration('carmel', {withCommunities: false})
     await initializei18next(undefined)
@@ -58,6 +58,8 @@ describe('application configuration', () => {
     const result = MainLayout({title: 'Test', children: [], activeNavItem: 'students'})
     assert.doesNotMatch(result, /\/communities/)
     assert.doesNotMatch(result, /Communities/)
+    assert.doesNotMatch(result, /\/emails/)
+    assert.doesNotMatch(result, /Emails/)
     assert.doesNotMatch(result, />false</)
   })
 
@@ -70,6 +72,30 @@ describe('application configuration', () => {
     const result = MainLayout({title: 'Test', children: [], activeNavItem: 'communities'})
     assert.match(result, /class="nav-link active"\s+href="\/communities"\s*>Communities</)
     assert.match(result, /class="nav-link "\s+href="\/students"/)
+    assert.match(result, /class="nav-link "\s+href="\/emails"\s*>Emails</)
+  })
+
+  it('renders an active emails nav link when communities are shown', async () => {
+    setVersion('10.0.1')
+    setUiConfiguration('carmel', {withCommunities: true})
+    await initializei18next('en')
+
+    const result = MainLayout({title: 'Test', children: [], activeNavItem: 'emails'})
+    assert.match(
+      result,
+      /class="nav-link active"\s+href="\/emails"\s+aria-current="page"\s*>Emails</,
+    )
+    assert.match(result, /class="nav-link "\s+href="\/communities"/)
+  })
+
+  it('omits navigation on no-nav-bar pages even when communities are enabled', async () => {
+    setVersion('10.0.1')
+    setUiConfiguration('carmel', {withCommunities: true})
+    await initializei18next('en')
+
+    const result = MainLayout({title: 'Test', children: [], activeNavItem: 'no-nav-bar'})
+    assert.doesNotMatch(result, /<nav\b/)
+    assert.doesNotMatch(result, /href="\/emails"/)
   })
 
   it('supports Hebrew, RTL styling, and the Liraz SVG logo', async () => {
@@ -82,6 +108,7 @@ describe('application configuration', () => {
     assert.match(result, /configurations\/liraz\/logo\.svg/)
     assert.ok(result.includes(heLayout.nav.students))
     assert.ok(result.includes(heLayout.nav.communities))
+    assert.ok(result.includes(heLayout.nav.emails))
     assert.equal(i18next.t('nav.students', {ns: 'layout'}), heLayout.nav.students)
   })
 
