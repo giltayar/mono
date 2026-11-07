@@ -9,15 +9,33 @@ membership role/lifecycle/history pages.
 
 The host must initialize i18next, the app version, and the UI configuration, register
 `@fastify/formbody`, `@fastify/request-context`, the Zod validator/serializer compilers, and run
-the `@giltayar/carmbo-commons@2.4.0` migrations (including membership and email schemas). Then mount the routes:
+the `@giltayar/carmbo-commons@2.4.0` migrations (including membership and email schemas).
+Initialize the published jobs `1.0.5` executor and register the email handler before mounting routes:
 
 ```ts
 import {routes as communityRoutes} from '@giltayar/carmbo-pages-community/routes'
 import {routes as emailRoutes} from '@giltayar/carmbo-pages-community/email/routes'
+import {registerRegistrationEmailJobs} from '@giltayar/carmbo-pages-community/email/jobs'
+import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
+import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
 
-app.register(communityRoutes, {prefix: '/communities', sql, nowService: () => new Date()})
+const nowService = () => new Date()
+initializeJobExecutor(sql, app.log)
+const registrationEmails = registerRegistrationEmailJobs({
+  sql,
+  nowService,
+  emailService: createResendEmailService({apiKey}),
+  from,
+  language: 'en', // Use the configured app language: 'en' or 'he'.
+})
+app.register(communityRoutes, {prefix: '/communities', sql, nowService, registrationEmails})
 app.register(emailRoutes, {prefix: '/emails', sql})
 ```
+
+`registrationEmails` is required; missing sending configuration must not silently skip email creation.
+Register the handler once per application process. Trigger `registrationEmails.execute()` after startup
+to resume persisted jobs, and reuse the host's existing job-execution triggers for retries.
+The executor and all page packages must share one published jobs/commons runtime instance.
 
 Optionally pass `smooveIntegration` and `ravmesserIntegration` to use the host's configured student
 contact integrations when creating students. These options are backwards-compatible and do not send
@@ -76,7 +94,8 @@ live in [member.ts](./src/view/member.ts), with shared translations in
   link back to that list, not to the community Details page.
 - One membership exists per community/student pair. Adding an existing membership is an explicit
   error; use its re-add action instead. Re-add/unblock preserves its identity and roles, starts a new
-  registration, refreshes the entry date/order, and clears the previous attempt's diagnostics and
+  registration directly in `registered` status without sending another email, refreshes the entry
+  date/order, and clears the previous attempt's diagnostics and
   email-sent timestamp. Ordinary role/status edits do not change entry order.
 - Every change atomically appends immutable history/data snapshots and moves `last_history_id`.
   Current data is resolved through history, never a denormalized current-data pointer. Mutations
@@ -95,18 +114,35 @@ Supported statuses are `requested-registration`, `started-registration`, `regist
 `email-sending-failed`/`timeout`; unregistration reasons are `self`/`removed`/`blocked`/`rejected`,
 with optional diagnostic text. The model validates status/reason/email-timestamp combinations.
 
-**Deferred:** member-triggered registration-email jobs and delivery callbacks, automatic timeout processing, public/self-service
-registration endpoints, and community permission enforcement. Future integrations may produce the
-request/email/failure states; this step models and renders them but adds no such producer. The planned
+**Deferred:** delivery callbacks, member-page status polling/email links, automatic timeout processing,
+public/self-service registration endpoints, community permission enforcement, and carmbo-app integration.
+The planned
 timeout is seven days after sending the registration email, not after adding a student.
 
 ## Emails
 
 Email code lives under `src/email`, separate from the community route/controller/view/model.
-The email pages are read-only and show existing database records. This stage does not create email
-jobs, send on member addition, update member status, receive webhooks, or poll member pages.
-Registration templates, application integration, and the direct-to-registered re-add change remain
-for the next stage.
+The email pages are read-only. Adding a member now atomically creates the membership, initial
+history snapshot, saved registration email, reverse member link, and `sendEmail` job.
+Only after commit does the controller trigger background execution; no provider request runs inside
+the creation transaction. A failed creation leaves none of those partial records.
+
+The simple English/Hebrew registration email contains the student and community names, HTML and
+plain text, but no registration link yet. Its complete payload and language are saved before sending;
+student/community edits and retries do not change what is sent. Approval does not send another email.
+Re-add and unblock-and-re-add go directly to `registered` and retain the original stable email link.
+
+Every send attempt appends its start timestamp; retries also append their actual retry-start timestamp.
+API acceptance records the provider ID and acceptance timestamp and adds a `registration-email-sent`
+member snapshot. A failed attempt sets the email to `retrying`; the fourth failed attempt sets it to
+`failure` and adds `registration-failed` with reason `email-sending-failed` and the provider error text.
+Role edits are preserved; subsequent cancellation, blocking, registration, re-add, and community
+archival prevent the job from overwriting the current member lifecycle.
+
+Retries reuse `sendEmail/<job-id>` as the idempotency key. Known local acceptance is never resent.
+Resend retains keys for 24 hours, so an unknown acceptance retried after that window can send a duplicate.
+Retry execution uses existing job triggers, not a new scheduler or backoff policy. Webhooks are not
+implemented yet, so actual sending stops at `delivered` (API acceptance), not `success`.
 
 - `/emails` lists all emails, including unlinked ones, by creation time descending, then email number
   descending. Search matches recipient address, current community name, or current student name;
@@ -147,7 +183,7 @@ normalization in either the real service or the fake. Resend validates requests 
 The service uses the Resend SDK, preserves the idempotency key and tags, and
 returns `{id}` on API acceptance. It performs no automatic retries or database writes. Provider
 errors throw `EmailSendingError` with `code`, `statusCode` (nullable for transport errors), and the
-provider's message; malformed responses also reject. `apiUrl` can override the endpoint for local
+provider's message. The job rejects a missing provider ID. `apiUrl` can override the endpoint for local
 adapter tests. Callers must store the complete payload and reuse it unchanged on retries.
 
 The fake has the same `sendEmail` interface, observable `attempts` and `sentEmails` snapshots, and
@@ -159,6 +195,19 @@ After 24 hours, a new send can occur, matching Resend's idempotency limitation.
 Public types are `EmailService`, `EmailMessage`, `EmailSendOptions`, `EmailSendResult`,
 and `FakeEmailService`. Email page models are exported from
 `@giltayar/carmbo-pages-community/testkit/page-model/email.model`.
+
+### Standalone app
+
+`pnpm start` loads the gitignored `.env.local`, respecting existing environment-variable precedence.
+Set `RESEND_API_KEY` and `RESEND_FROM`; the existing `RESEND_TEST_API_KEY` and `RESEND_TEST_FROM`
+are also accepted as fallbacks. Missing configuration fails at startup; no fake is substituted.
+The standalone host sends real emails when members are added. Resend's test sender may only send
+to your account's authorized recipient; use a verified sender/domain for other recipients.
+
+The host mounts `/jobs` and the existing localhost job trigger endpoint at
+`POST /api/jobs/trigger-job-execution?secret=...`. Set `JOB_API_SECRET` to protect this endpoint.
+Startup and member additions also trigger execution. A current member page may need reloading
+to show the completed job's status; automatic polling remains deferred.
 
 ### Real Resend E2E
 
@@ -189,10 +238,15 @@ Run `pnpm build` before `pnpm test`. Tests include unit validation/mapping/trans
 compiled-export checks, and PostgreSQL-backed Playwright membership and community regressions.
 Member-page tests perform actions and inspect membership state/history through page models, including
 concurrent browser tabs for stale edits. Database access is limited to fixture setup and seeding
-future-produced registration states that have no UI producer yet.
+requested/timeout registration states that have no UI producer yet.
 Email tests cover the adapter/fake, stored-model mapping, public exports, PostgreSQL queries,
 search/paging/order, status metadata, safe previews/source, errors, and English/Hebrew pages.
 Run `pnpm test:playwright email` for focused email-page coverage.
+Registration tests also cover UI sending, immutable payloads, atomic rollback, intermediate retries,
+four-attempt exhaustion and last-attempt success, lost responses, database failure after acceptance,
+acceptance reconciliation, concurrent triggers, member action/role races, and standalone restart.
+Sending tests assert visible state through the email, member, and job pages. Direct SQL is reserved
+for fixtures and storage-only invariants: orphan snapshots and transaction lock availability.
 Docker and an installed Playwright Chromium browser are required. For focused membership coverage:
 
 ```bash

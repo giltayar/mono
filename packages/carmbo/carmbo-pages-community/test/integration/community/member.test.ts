@@ -103,7 +103,13 @@ test('add an existing student, edit independent roles, and navigate full histori
   await newMember.submit().locator.click()
 
   await expect(page).toHaveURL(new URL(base, url()).href)
-  await expect(memberPage.state().locator).toContainText('Started registration')
+  await expect
+    .poll(async () => {
+      await page.reload()
+      return memberPage.state().field('Status').locator.innerText()
+    })
+    .toBe('Registration email sent')
+  await expect(memberPage.state().locator).toContainText('Registration email sent')
   const breadcrumb = memberPage.breadcrumb()
   await expect(breadcrumb.items().locator).toHaveText(['Communities', 'Community', 'Alice Student'])
   await expect(breadcrumb.link('Communities').locator).toHaveAttribute('href', '/communities')
@@ -117,6 +123,7 @@ test('add an existing student, edit independent roles, and navigate full histori
     'Student',
     'Email',
     'Date of entry',
+    'Registration email sent at',
   ])
   await expect(memberPage.state().student('Alice Student').locator).toHaveAttribute(
     'href',
@@ -143,18 +150,18 @@ test('add an existing student, edit independent roles, and navigate full histori
   await memberPage.roles().checkbox('User approver').locator.check()
   await memberPage.roles().save().locator.click()
 
-  await expect(memberPage.history().items().locator).toHaveCount(2)
+  await expect(memberPage.history().items().locator).toHaveCount(3)
   await expect(memberPage.roles().checkbox('Poster').locator).not.toBeChecked()
 
   await memberPage.actions().button('Mark registered').locator.click()
   await expect(memberPage.state().locator).toContainText('Registered')
 
-  await expect(memberPage.history().items().locator).toHaveCount(3)
+  await expect(memberPage.history().items().locator).toHaveCount(4)
   await memberPage.history().link('Added').locator.click()
 
   await expect(memberPage.historical().locator).toBeVisible()
   await expect(memberPage.history().items().dates().locator).toHaveText(
-    Array.from({length: 3}, () => now.toLocaleDateString('he-IL')),
+    Array.from({length: 4}, () => now.toLocaleDateString('he-IL')),
   )
   await expect(memberPage.history().items().item(0).date().locator).toHaveAttribute(
     'title',
@@ -264,7 +271,7 @@ test('blocked members require explicit unblock, preserving roles and clearing at
   await membershipActions(page, studentNumber, 'Unblock and re-add')
 
   await expect(page).toHaveURL(new URL(base, url()).href)
-  await expect(memberPage.state().field('Status').locator).toHaveText('Started registration')
+  await expect(memberPage.state().field('Status').locator).toHaveText('Registered')
   await expect(memberPage.roles().checkbox('Live streamer').locator).toBeChecked()
   await expect(memberPage.roles().checkbox('User blocker').locator).toBeChecked()
   for (const field of ['Reason', 'Reason / error text', 'Registration email sent at']) {
@@ -340,7 +347,7 @@ for (const [status, reasonCode, operation] of [
   })
 }
 
-test('rejection, cancellation, and both unregister reasons are recorded', async ({page}) => {
+test('rejection, direct re-add, and both unregister reasons are recorded', async ({page}) => {
   const {communityNumber, studentNumber, base} = await createMemberFixture(
     sql(),
     now,
@@ -362,20 +369,17 @@ test('rejection, cancellation, and both unregister reasons are recorded', async 
   await expect(memberPage.state().field('Reason').locator).toHaveText('Registration rejected')
   await expect(memberPage.state().field('Reason / error text').locator).toHaveText('Not eligible')
 
-  await membershipActions(page, studentNumber, 'Re-add member')
-  await membershipActions(page, studentNumber, 'Cancel registration')
-  await expect(memberPage.state().field('Status').locator).toHaveText('Cancelled')
   for (const [button, reason] of [
     ['Unregister (member request)', 'Left voluntarily'],
     ['Unregister (by you)', 'Removed by backoffice'],
   ]) {
     await membershipActions(page, studentNumber, 'Re-add member')
-    await membershipActions(page, studentNumber, 'Mark registered')
+    await expect(memberPage.state().field('Status').locator).toHaveText('Registered')
     await membershipActions(page, studentNumber, button)
     await expect(memberPage.state().field('Status').locator).toHaveText('Unregistered')
     await expect(memberPage.state().field('Reason').locator).toHaveText(reason)
   }
-  await expect(memberPage.history().items().locator).toHaveCount(11)
+  await expect(memberPage.history().items().locator).toHaveCount(7)
   await memberPage.history().link('Request rejected').locator.click()
   await expect(memberPage.state().field('Reason / error text').locator).toHaveText('Not eligible')
 })

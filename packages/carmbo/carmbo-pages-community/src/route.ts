@@ -37,6 +37,9 @@ type CommunityRouteOptions = MemberServices & {
 }
 
 export function routes(app: FastifyInstance, options: CommunityRouteOptions): void {
+  if (!options.registrationEmails) {
+    throw new Error('Community routes require registration email jobs')
+  }
   const {sql, nowService} = options
   registerCommunityLocaleResources()
 

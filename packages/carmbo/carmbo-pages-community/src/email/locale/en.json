@@ -29,6 +29,12 @@
   "back": "Back to emails",
   "empty": "No emails found",
   "notFound": "Email not found",
+  "registration": {
+    "subject": "Welcome to {{communityName}}",
+    "greeting": "Hello {{studentName}},",
+    "body": "Welcome to {{communityName}}! We are happy to have you in our community.",
+    "closing": "The community team"
+  },
   "statuses": {
     "sending": "Sending",
     "retrying": "Retrying",

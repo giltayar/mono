@@ -29,6 +29,12 @@
   "back": "חזרה לאימיילים",
   "empty": "לא נמצאו אימיילים",
   "notFound": "האימייל לא נמצא",
+  "registration": {
+    "subject": "ברוכים הבאים לקהילת {{communityName}}",
+    "greeting": "שלום {{studentName}},",
+    "body": "ברוכים הבאים לקהילת {{communityName}}! שמחים שהצטרפתם לקהילה שלנו.",
+    "closing": "צוות הקהילה"
+  },
   "statuses": {
     "sending": "בשליחה",
     "retrying": "בניסיון חוזר",

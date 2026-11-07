@@ -185,7 +185,13 @@ describe('membership transitions', () => {
         registrationEmailSentAt: new Date('2026-10-02T10:00:00Z'),
       }
       const result = transitionMember(previous, action, '', now, '42')
-      assert.deepEqual(result, {...initial, poster: false, enteredAt: now, entryOrder: '42'})
+      assert.deepEqual(result, {
+        ...initial,
+        status: 'registered',
+        poster: false,
+        enteredAt: now,
+        entryOrder: '42',
+      })
       assert.equal(previous.reasonText, 'old error')
     }
   })

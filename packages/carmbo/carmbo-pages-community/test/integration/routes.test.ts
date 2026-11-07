@@ -65,6 +65,9 @@ for (const [language, title, direction] of [
       await expect(page).toHaveURL(
         new URL(`/communities/${communityNumber}/members/${studentNumber}`, url()).href,
       )
+      await expect
+        .poll(async () => (await queryMember(communityNumber, studentNumber, sql())).member.status)
+        .toBe('registration-email-sent')
       const {member, history} = await queryMember(communityNumber, studentNumber, sql())
       expect(member).toMatchObject({
         poster: true,
@@ -72,10 +75,10 @@ for (const [language, title, direction] of [
         moderator: false,
         userBlocker: false,
         userApprover: false,
-        status: 'started-registration',
-        registrationEmailSentAt: null,
+        status: 'registration-email-sent',
+        registrationEmailSentAt: expect.any(Date),
       })
-      expect(history).toHaveLength(1)
+      expect(history).toHaveLength(2)
     })
 
     test('registers locale resources and serves package assets', async ({page, request}) => {

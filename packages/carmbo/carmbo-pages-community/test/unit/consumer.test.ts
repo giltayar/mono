@@ -10,8 +10,9 @@ import * as viewCommunityHistoryPageModel from '@giltayar/carmbo-pages-community
 import * as memberPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 import * as newMemberPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-member-page.model'
 import * as emailRoutes from '@giltayar/carmbo-pages-community/email/routes'
-import * as emailService from '../../src/email/email-service.ts'
-import * as emailTestkit from '../../testkit/fake-email-service.ts'
+import * as emailService from '@giltayar/carmbo-pages-community/email/service'
+import * as emailTestkit from '@giltayar/carmbo-pages-community/testkit/email-service'
+import * as emailJobs from '@giltayar/carmbo-pages-community/email/jobs'
 import * as emailPageModels from '@giltayar/carmbo-pages-community/testkit/page-model/email.model'
 
 test('publishes the intended package entry points', () => {
@@ -32,6 +33,7 @@ test('publishes the intended package entry points', () => {
   assert.deepEqual(Object.keys(emailRoutes), ['routes'])
   assert.deepEqual(Object.keys(emailService), ['EmailSendingError', 'createResendEmailService'])
   assert.deepEqual(Object.keys(emailTestkit), ['createFakeEmailService'])
+  assert.deepEqual(Object.keys(emailJobs), ['registerRegistrationEmailJobs'])
   assert.deepEqual(Object.keys(emailPageModels), [
     'createEmailListPageModel',
     'createEmailPageModel',

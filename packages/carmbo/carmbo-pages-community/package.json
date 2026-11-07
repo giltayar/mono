@@ -13,12 +13,16 @@
       "import": "./dist/src/email/route.js"
     },
     "./email/service": {
-      "types": "./dist/src/email/service.d.ts",
-      "import": "./dist/src/email/service.js"
+      "types": "./dist/src/email/email-service.d.ts",
+      "import": "./dist/src/email/email-service.js"
+    },
+    "./email/jobs": {
+      "types": "./dist/src/email/jobs.d.ts",
+      "import": "./dist/src/email/jobs.js"
     },
     "./testkit/email-service": {
-      "types": "./dist/testkit/email-service.d.ts",
-      "import": "./dist/testkit/email-service.js"
+      "types": "./dist/testkit/fake-email-service.d.ts",
+      "import": "./dist/testkit/fake-email-service.js"
     },
     "./testkit/page-model/*": {
       "types": "./dist/testkit/page-model/*.d.ts",
@@ -85,6 +89,7 @@
   },
   "dependencies": {
     "@giltayar/carmbo-commons": "^2.4.0",
+    "@giltayar/carmbo-pages-job": "^1.0.5",
     "@giltayar/carmbo-pages-student": "^1.1.1",
     "resend": "^6.37.0"
   },

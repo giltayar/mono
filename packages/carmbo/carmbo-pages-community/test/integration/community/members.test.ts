@@ -149,7 +149,7 @@ test('ordering follows entry, not edits, with deterministic ties and 50-row pagi
   await expect(page).toHaveURL(
     new URL(`/communities/${communityNumber}/members/${studentNumber}`, url()).href,
   )
-  await expect(memberPage.state().field('Status').locator).toHaveText('Started registration')
+  await expect(memberPage.state().field('Status').locator).toHaveText('Registered')
   const member = (await queryMember(communityNumber, studentNumber, sql())).member
   expect(member.communityMemberNumber).toBe(original.communityMemberNumber)
   expect(member.poster).toBe(true)

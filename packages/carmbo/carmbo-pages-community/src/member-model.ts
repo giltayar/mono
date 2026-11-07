@@ -1,7 +1,8 @@
-import type {Sql} from 'postgres'
+import type {Sql, TransactionSql} from 'postgres'
 import {z} from 'zod'
 import {TEST_executeHook} from '@giltayar/carmbo-commons/commons/TEST_hooks'
 import {sqlTextSearch} from '@giltayar/carmbo-commons/commons/sql-commons'
+import type {RegistrationEmailJobs} from './email/jobs.ts'
 
 export const roleNames = [
   'poster',
@@ -158,13 +159,19 @@ export function transitionMember(
   const next = {...memberData, reasonCode: null, reasonText: reasonText.trim() || null}
   switch (action) {
     case 'approve':
-    case 're-add':
-    case 'unblock-and-re-add':
       return MemberDataSchema.parse({
         ...next,
         status: 'started-registration',
         registrationEmailSentAt: null,
-        ...(action === 'approve' ? {} : {enteredAt: now, entryOrder}),
+      })
+    case 're-add':
+    case 'unblock-and-re-add':
+      return MemberDataSchema.parse({
+        ...next,
+        status: 'registered',
+        registrationEmailSentAt: null,
+        enteredAt: now,
+        entryOrder,
       })
     case 'reject':
       return MemberDataSchema.parse({...next, status: 'unregistered', reasonCode: 'rejected'})
@@ -351,11 +358,12 @@ export async function addMember(
     userBlocker: false,
     userApprover: false,
   },
+  registrationEmails?: RegistrationEmailJobs,
 ): Promise<void> {
   z.number().int().positive().parse(studentNumber)
   await sql.begin(async (tx) => {
-    await assertCommunity(communityNumber, tx, {writable: true})
-    await studentChoice(studentNumber, tx, true)
+    const community = await assertCommunity(communityNumber, tx, {writable: true})
+    const student = await studentChoice(studentNumber, tx, true)
     const [row] = await tx<{communityMemberNumber: number}[]>`
       INSERT INTO community_member (community_number, student_number, last_history_id)
       VALUES (${communityNumber}, ${studentNumber}, ${crypto.randomUUID()})
@@ -378,7 +386,65 @@ export async function addMember(
       now,
       tx,
     )
+    if (registrationEmails) {
+      await registrationEmails.submit(
+        {
+          communityNumber,
+          studentNumber,
+          communityMemberNumber: row.communityMemberNumber,
+          communityName: community.name,
+          studentName: student.name,
+          toEmail: student.email,
+        },
+        tx,
+      )
+    }
   })
+}
+
+export async function recordRegistrationEmailResult(
+  communityNumber: number,
+  studentNumber: number,
+  emailNumber: number,
+  result: {sentAt: Date} | {errorText: string},
+  now: Date,
+  tx: TransactionSql,
+): Promise<void> {
+  await tx`SELECT community_number FROM community
+    WHERE community_number = ${communityNumber} FOR UPDATE`
+  const community = await assertCommunity(communityNumber, tx)
+  const {member} = await queryMember(communityNumber, studentNumber, tx)
+  const [link] = await tx<{registrationEmailNumber: number | null}[]>`
+    SELECT registration_email_number FROM community_member
+    WHERE community_member_number = ${member.communityMemberNumber}
+  `
+  if (
+    link.registrationEmailNumber !== emailNumber ||
+    member.status !== 'started-registration' ||
+    community.archived
+  ) {
+    return
+  }
+  const [reentry] = await tx`
+    SELECT id FROM community_member_history
+    WHERE community_member_number = ${member.communityMemberNumber}
+      AND operation IN ('re-add', 'unblock-and-re-add')
+  `
+  if (reentry) return
+  const sent = 'sentAt' in result
+  await writeSnapshot(
+    member.communityMemberNumber,
+    {
+      ...member,
+      status: sent ? 'registration-email-sent' : 'registration-failed',
+      registrationEmailSentAt: sent ? result.sentAt : null,
+      reasonCode: sent ? null : 'email-sending-failed',
+      reasonText: sent ? null : result.errorText,
+    },
+    sent ? 'registration-email-sent' : 'registration-failed',
+    now,
+    tx,
+  )
 }
 
 export async function changeMember(

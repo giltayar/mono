@@ -7,6 +7,7 @@ import {exceptionToBanner} from '@giltayar/carmbo-commons/layout/banner'
 import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {getFixedT} from 'i18next'
 import {z} from 'zod'
+import type {RegistrationEmailJobs} from './email/jobs.ts'
 import {
   ActionSchema,
   addMember,
@@ -40,6 +41,7 @@ const t = getFixedT(null, 'community')
 
 export type MemberServices = {
   nowService: NowService
+  registrationEmails: RegistrationEmailJobs
   smooveIntegration?: Parameters<typeof createStudent>[2]
   ravmesserIntegration?: Parameters<typeof createStudent>[3]
 }
@@ -211,13 +213,23 @@ export async function createMembership(
   communityNumber: number,
   view: NewMemberView,
   sql: Sql,
-  {nowService, logger}: Options,
+  {nowService, logger, registrationEmails}: Options,
 ): Promise<ControllerResult> {
   let selected: StudentChoiceView | undefined
   try {
     const studentNumber = studentNumberFromInput(view.studentNumber)
     selected = await studentChoice(studentNumber, sql, true)
-    await addMember(communityNumber, studentNumber, nowService(), sql, viewToRoles(view))
+    await addMember(
+      communityNumber,
+      studentNumber,
+      nowService(),
+      sql,
+      viewToRoles(view),
+      registrationEmails,
+    )
+    void registrationEmails.execute().catch((err: unknown) => {
+      logger.error({err}, 'trigger-registration-email-jobs-failed')
+    })
     return {htmxRedirect: `/communities/${communityNumber}/members/${studentNumber}`}
   } catch (error) {
     logger.error({err: error}, 'add-community-member')

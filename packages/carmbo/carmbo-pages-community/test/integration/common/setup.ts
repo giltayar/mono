@@ -15,8 +15,13 @@ import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
 import {routes} from '../../../src/route.ts'
 import {routes as emailRoutes} from '../../../src/email/route.ts'
+import {routes as jobRoutes} from '@giltayar/carmbo-pages-job/routes'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
+import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
+import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
+import {registerRegistrationEmailJobs, type RegistrationEmailJobs} from '../../../src/email/jobs.ts'
+import {createFakeEmailService, type FakeEmailService} from '../../../testkit/fake-email-service.ts'
 
 export function setup(
   testUrl: string,
@@ -31,12 +36,16 @@ export function setup(
   url: () => URL
   sql: () => Sql
   TEST_hooks: Record<string, TEST_HookFunction>
+  emailService: () => FakeEmailService
+  registrationEmails: () => RegistrationEmailJobs
 } {
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
   let app: FastifyInstance
   let database: Sql
   let baseUrl: URL
   let teardown: (() => Promise<void>) | undefined
+  let fake = createFakeEmailService({nowService})
+  let emailJobs: RegistrationEmailJobs | undefined
 
   test.beforeAll(async () => {
     const dockerCompose = await runDockerCompose(
@@ -76,6 +85,15 @@ export function setup(
     setUiConfiguration(language === 'he' ? 'liraz' : 'carmel', {withCommunities: true})
 
     app = fastify()
+    TEST_resetJobHandlers()
+    initializeJobExecutor(database, app.log)
+    emailJobs = registerRegistrationEmailJobs({
+      sql: database,
+      nowService,
+      emailService: {sendEmail: (message, options) => fake.sendEmail(message, options)},
+      from: 'Community <sender@example.com>',
+      language,
+    })
     app.register(formbody, {parser: (body) => qs.parse(body)})
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
@@ -116,8 +134,10 @@ export function setup(
       prefix: '/communities',
       sql: database,
       nowService,
+      registrationEmails: emailJobs,
     })
     app.register(emailRoutes, {prefix: '/emails', sql: database})
+    app.register(jobRoutes, {prefix: '/jobs', sql: database})
     app.register(studentRoutes, {
       prefix: '/students',
       sql: database,
@@ -134,12 +154,15 @@ export function setup(
   })
 
   test.beforeEach(async () => {
+    if (emailJobs) await emailJobs.execute()
+    fake = createFakeEmailService({nowService})
     for (const hookName of Object.keys(TEST_hooks)) {
       delete TEST_hooks[hookName]
     }
     await database`
       TRUNCATE TABLE
         email,
+        job,
         community,
         community_history,
         community_data,
@@ -162,6 +185,7 @@ export function setup(
   })
 
   test.afterAll(async () => {
+    if (emailJobs) await emailJobs.execute()
     await app?.close()
     await database?.end()
     await teardown?.()
@@ -171,5 +195,10 @@ export function setup(
     url: () => baseUrl,
     sql: () => database,
     TEST_hooks,
+    emailService: () => fake,
+    registrationEmails: () => {
+      if (!emailJobs) throw new Error('Registration email jobs are not initialized')
+      return emailJobs
+    },
   }
 }
