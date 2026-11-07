@@ -10,6 +10,7 @@ import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import packageJson from '../package.json' with {type: 'json'}
 import {routes} from '../src/route.ts'
+import {routes as emailRoutes} from '../src/email/route.ts'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
 
@@ -40,6 +41,7 @@ export async function createApp(database: Sql): Promise<FastifyInstance> {
     sql: database,
     nowService: () => new Date(),
   })
+  app.register(emailRoutes, {prefix: '/emails', sql: database})
   app.register(studentRoutes, {
     prefix: '/students',
     sql: database,

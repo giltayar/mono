@@ -3,3 +3,4 @@ dist
 *.tgz
 .test-results
 start/dist
+.env.local

@@ -14,6 +14,7 @@ import type {AddressInfo} from 'node:net'
 import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
 import {routes} from '../../../src/route.ts'
+import {routes as emailRoutes} from '../../../src/email/route.ts'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
 
@@ -116,6 +117,7 @@ export function setup(
       sql: database,
       nowService,
     })
+    app.register(emailRoutes, {prefix: '/emails', sql: database})
     app.register(studentRoutes, {
       prefix: '/students',
       sql: database,
@@ -137,6 +139,7 @@ export function setup(
     }
     await database`
       TRUNCATE TABLE
+        email,
         community,
         community_history,
         community_data,
