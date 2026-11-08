@@ -17,12 +17,13 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
+import qs from 'qs'
 import {z} from 'zod'
 import packageJson from '../package.json' with {type: 'json'}
-import type {EmailService} from '../src/email-service.ts'
-import {registerSendEmailJobHandler} from '../src/jobs.ts'
+import type {EmailService} from '../src/emails/email-service.ts'
+import {registerSendEmailJobHandler} from '../src/emails/jobs.ts'
 import {routes as emailRoutes} from '../src/route.ts'
-import {webhookRoutes} from '../src/webhook-route.ts'
+import {webhookRoutes} from '../src/emails/webhook-route.ts'
 
 const RESEND_WEBHOOK_ROUTE_PREFIX = '/api/emails/resend'
 export const RESEND_WEBHOOK_PATH = `${RESEND_WEBHOOK_ROUTE_PREFIX}/webhook`
@@ -47,7 +48,7 @@ export async function createApp(
   initializeJobExecutor(database, app.log)
   // Test emails have no owning domain, so no result handler is registered.
   const queueEmail = registerSendEmailJobHandler({sql: database, nowService, emailService})
-  app.register(formbody)
+  app.register(formbody, {parser: (body) => qs.parse(body)})
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
   app.register(fastifyRequestContext, {
@@ -61,7 +62,7 @@ export async function createApp(
     immutable: true,
     maxAge: '1y',
   })
-  app.register(emailRoutes, {prefix: '/emails', sql: database})
+  app.register(emailRoutes, {prefix: '/emails', sql: database, emailService, from, nowService})
   app.register(webhookRoutes, {
     prefix: RESEND_WEBHOOK_ROUTE_PREFIX,
     sql: database,

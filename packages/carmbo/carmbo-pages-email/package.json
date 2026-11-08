@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-pages-email",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Email sending, delivery tracking, and email pages for Carmbo applications",
   "type": "module",
   "exports": {
@@ -9,16 +9,16 @@
       "import": "./dist/src/route.js"
     },
     "./webhook-routes": {
-      "types": "./dist/src/webhook-route.d.ts",
-      "import": "./dist/src/webhook-route.js"
+      "types": "./dist/src/emails/webhook-route.d.ts",
+      "import": "./dist/src/emails/webhook-route.js"
     },
     "./service": {
-      "types": "./dist/src/email-service.d.ts",
-      "import": "./dist/src/email-service.js"
+      "types": "./dist/src/emails/email-service.d.ts",
+      "import": "./dist/src/emails/email-service.js"
     },
     "./jobs": {
-      "types": "./dist/src/jobs.d.ts",
-      "import": "./dist/src/jobs.js"
+      "types": "./dist/src/emails/jobs.d.ts",
+      "import": "./dist/src/emails/jobs.js"
     },
     "./testkit/email-service": {
       "types": "./dist/testkit/fake-email-service.d.ts",
@@ -54,6 +54,7 @@
     "prestart": "rm -rf start/dist && mkdir -p start/dist && concurrently 'node:prestart:*'",
     "prestart:bootstrap": "cp node_modules/bootstrap/dist/css/bootstrap.min.css node_modules/bootstrap/dist/css/bootstrap.rtl.min.css node_modules/bootstrap/dist/js/bootstrap.bundle.min.js start/dist/",
     "prestart:htmx": "cp node_modules/htmx.org/dist/htmx.min.js start/dist/",
+    "prestart:client": "pnpm build:client",
     "start": "concurrently --kill-others 'node:start:*'",
     "start:app": "node --watch start/start.ts",
     "start:postgres": "docker compose --file start/docker-compose.yaml up",
@@ -61,6 +62,7 @@
     "build": "pnpm clean && concurrently 'node:build:*'",
     "clean": "rm -rf dist",
     "build:typescript": "tsc --project tsconfig.build.json",
+    "build:client": "node scripts/build-client.ts",
     "test": "concurrently 'node:test:*'",
     "test:eslint": "eslint --max-warnings=0 .",
     "test:typescript": "tsc",
@@ -88,8 +90,19 @@
     "zod": "^4.6.5"
   },
   "dependencies": {
-    "@giltayar/carmbo-commons": "^2.4.0",
+    "@giltayar/carmbo-commons": "^2.4.1",
     "@giltayar/carmbo-pages-job": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.2.1",
+    "@radix-ui/react-icons": "^1.3.2",
+    "@radix-ui/react-popover": "^1.3.1",
+    "@radix-ui/react-toolbar": "^1.2.1",
+    "@react-email/editor": "^1.8.1",
+    "@tiptap/core": "^3.33.0",
+    "@tiptap/react": "^3.33.0",
+    "handlebars": "^4.7.10",
+    "htm": "^3.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "resend": "^6.37.0",
     "standardwebhooks": "^1.1.1"
   },
@@ -100,9 +113,13 @@
     "@giltayar/docker-compose-testkit": "^2.1.0",
     "@playwright/test": "^1.65.0",
     "@types/node": "^26.6.6",
+    "@types/qs": "^6.15.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "bootstrap": "^5.3.8",
     "concurrently": "^10.0.7",
+    "esbuild": "^0.28.2",
     "eslint": "^10.14.0",
     "eslint-plugin-n": "^18.5.0",
     "eslint-plugin-prettier": "^5.5.7",
@@ -113,6 +130,7 @@
     "i18next": "^26.7.2",
     "postgres": "3.4.7",
     "prettier": "^3.9.10",
+    "qs": "^6.17.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.72.1",
     "zod": "^4.6.7"

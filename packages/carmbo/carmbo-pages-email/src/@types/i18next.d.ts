@@ -1,4 +1,4 @@
-import enEmail from '../locale/en.json'
+import enEmail from '../emails/locale/en.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {

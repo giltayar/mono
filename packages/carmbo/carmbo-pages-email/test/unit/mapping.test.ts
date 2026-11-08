@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
-import {EmailSchema} from '../../src/model.ts'
-import {emailToView} from '../../src/view-model-mapping.ts'
+import {EmailSchema} from '../../src/emails/model.ts'
+import {emailToView} from '../../src/emails/view-model-mapping.ts'
 
 const stored = {
   emailNumber: 1,

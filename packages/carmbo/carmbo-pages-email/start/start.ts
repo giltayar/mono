@@ -2,7 +2,7 @@ import {createApp, RESEND_WEBHOOK_PATH, TEST_EMAIL_PATH} from './app.ts'
 import {initializePostgres} from './postgres.ts'
 import {existsSync} from 'node:fs'
 import {loadEnvFile} from 'node:process'
-import {createResendEmailService} from '../src/email-service.ts'
+import {createResendEmailService} from '../src/emails/email-service.ts'
 import {openCloudflaredTunnel} from './cloudflared-tunnel.ts'
 
 const host = '127.0.0.1'

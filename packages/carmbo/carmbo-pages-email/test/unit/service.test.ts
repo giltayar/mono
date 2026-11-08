@@ -6,7 +6,7 @@ import {
   EmailSendingError,
   HANDLED_RESEND_EVENTS,
   type EmailMessage,
-} from '../../src/email-service.ts'
+} from '../../src/emails/email-service.ts'
 import {createFakeEmailService} from '../../testkit/fake-email-service.ts'
 
 const message: EmailMessage = {
