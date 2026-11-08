@@ -4,5 +4,5 @@
     "noEmit": false
   },
   "include": ["src/**/*.ts", "testkit/**/*.ts"],
-  "exclude": ["test/**/*.ts"]
+  "exclude": ["test/**/*.ts", "src/templates/client/**"]
 }

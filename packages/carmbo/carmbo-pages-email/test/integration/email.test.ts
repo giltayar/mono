@@ -4,7 +4,7 @@ import {
   createEmailPageModel,
 } from '@giltayar/carmbo-pages-email/testkit/page-model/email.model'
 import {createFakeEmailService} from '../../testkit/fake-email-service.ts'
-import {listEmails} from '../../src/model.ts'
+import {listEmails} from '../../src/emails/model.ts'
 import {setup} from './common/setup.ts'
 import {now, seedEmail, seedMemberLink} from './common/fixture.ts'
 

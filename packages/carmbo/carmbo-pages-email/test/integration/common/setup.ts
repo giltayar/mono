@@ -1,3 +1,4 @@
+import formbody from '@fastify/formbody'
 import {fastifyRequestContext} from '@fastify/request-context'
 import {initializei18next} from '@giltayar/carmbo-commons/commons/i18next-utils'
 import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configuration'
@@ -12,17 +13,18 @@ import type {AddressInfo} from 'node:net'
 import {randomBytes} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
+import qs from 'qs'
 import {routes as jobRoutes} from '@giltayar/carmbo-pages-job/routes'
 import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
 import {routes as emailRoutes} from '../../../src/route.ts'
-import {webhookRoutes} from '../../../src/webhook-route.ts'
+import {webhookRoutes} from '../../../src/emails/webhook-route.ts'
 import {
   registerSendEmailJobHandler,
   type EmailResultHandler,
   type EmailToQueue,
   type QueueEmail,
-} from '../../../src/jobs.ts'
+} from '../../../src/emails/jobs.ts'
 import {createFakeEmailService, type FakeEmailService} from '../../../testkit/fake-email-service.ts'
 
 export type RecordedResult = Omit<Parameters<EmailResultHandler>[0], 'tx'>
@@ -112,6 +114,7 @@ export function setup(
         },
       },
     })
+    app.register(formbody, {parser: (body) => qs.parse(body)})
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
     app.register(fastifyRequestContext, {defaultStoreValues: () => ({TEST_hooks: undefined})})
@@ -145,7 +148,13 @@ export function setup(
         .type(asset.contentType)
         .send(await readFile(new URL(`../../../node_modules/${asset.path}`, import.meta.url)))
     })
-    app.register(emailRoutes, {prefix: '/emails', sql: database})
+    app.register(emailRoutes, {
+      prefix: '/emails',
+      sql: database,
+      nowService,
+      from: 'Sender <sender@example.com>',
+      emailService: {sendEmail: (message, options) => fake.sendEmail(message, options)},
+    })
     app.register(webhookRoutes, {
       prefix: '/api/emails/resend',
       sql: database,
@@ -165,6 +174,10 @@ export function setup(
     results = []
     await database`
       TRUNCATE TABLE
+        email_template,
+        email_template_data,
+        email_template_history,
+        email_template_search,
         email,
         job,
         community,

@@ -98,6 +98,12 @@ then be given a fake.
   object of functions whose leaves are `{locator}`. Tests do not call `page.getBy*` directly.
 - Assert through the UI whenever the state is visible there; query the database only for fixtures
   and for invariants the UI cannot show.
+- ⚠️ **No visual testing.** Do not assert layout or geometry: no bounding boxes, `x`/`y`
+  positions, widths or heights, viewport resizing, `toBeInViewport`, scroll widths, or layout CSS
+  (`position`, `display`, margins, borders). Assert behavior and content instead: text, roles,
+  accessible names, attributes, values, focus, and enabled/disabled state. Check a computed style
+  only when that style _is_ the feature under test (for example, a style a user applied in an
+  editor).
 - Tests run in English (pin `locale: 'en-US'` in the Playwright config), so page models hardcode
   English strings. Only tests that deliberately check another language use other strings.
 - Gotchas:

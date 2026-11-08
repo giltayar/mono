@@ -9,7 +9,7 @@ import {
 } from '@giltayar/carmbo-pages-email/testkit/page-model/email.model'
 import type {FastifyInstance} from 'fastify'
 import postgres, {type Sql} from 'postgres'
-import {createResendEmailService, type ResendEmailService} from '../../src/email-service.ts'
+import {createResendEmailService, type ResendEmailService} from '../../src/emails/email-service.ts'
 import {createApp, RESEND_WEBHOOK_PATH, TEST_EMAIL_PATH} from '../../start/app.ts'
 import {openCloudflaredTunnel, type CloudflaredTunnel} from '../../start/cloudflared-tunnel.ts'
 

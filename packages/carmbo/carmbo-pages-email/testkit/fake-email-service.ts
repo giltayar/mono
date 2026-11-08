@@ -4,7 +4,7 @@ import {
   type EmailSendOptions,
   type EmailSendResult,
   type EmailService,
-} from '../src/email-service.ts'
+} from '../src/emails/email-service.ts'
 
 const IDEMPOTENCY_RETENTION_MS = 24 * 60 * 60 * 1000
 

@@ -1,5 +1,5 @@
 import type {Sql} from 'postgres'
-import type {Email} from '../../../src/model.ts'
+import type {Email} from '../../../src/emails/model.ts'
 import {createFakeEmailService, type FakeEmailService} from '../../../testkit/fake-email-service.ts'
 
 export const now = new Date('2026-01-01T12:00:00Z')
