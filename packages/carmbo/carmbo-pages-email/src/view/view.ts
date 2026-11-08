@@ -2,6 +2,7 @@ import {html} from '@giltayar/carmbo-commons/commons/html-templates'
 import {MainLayout} from '@giltayar/carmbo-commons/layout/main-view'
 import i18next, {getFixedT} from 'i18next'
 import type {EmailView} from './model.ts'
+import {templateTabs} from '../templates/view.ts'
 
 const t = getFixedT(null, 'email')
 
@@ -11,6 +12,7 @@ export function renderEmailsPage(
 ): string | string[] {
   return html`
     <${MainLayout} title=${t('emails')} activeNavItem="emails">
+      ${templateTabs('emails')}
       <div class="emails-view py-4">
         <div class="d-flex flex-wrap gap-3 align-items-center border-bottom pb-2">
           <h2 class="mb-0">${t('emails')}</h2>

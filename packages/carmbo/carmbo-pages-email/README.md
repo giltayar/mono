@@ -2,7 +2,8 @@
 
 Email sending, delivery tracking, and email pages for Carmbo applications: a Resend email service,
 a persistent `sendEmail` background job with retries and idempotency, a signed Resend delivery-callback
-route, and read-only email list/detail pages.
+route, read-only sent-email list/detail pages, and editable email templates with history and preview
+sending.
 
 The package is domain-agnostic. Domains (such as communities) render their own email content, queue it
 with `queueEmail` in their own transaction, and react to the outcome through a per-purpose result
@@ -12,7 +13,7 @@ handler. This package never imports domain code.
 
 The host must initialize i18next, the app version, and the UI configuration, register
 `@fastify/request-context` and the Zod validator/serializer compilers, and run the
-`@giltayar/carmbo-commons@2.4.0` migrations (including the `email` schema).
+`@giltayar/carmbo-commons@2.4.1` migrations (including the `email` and `email_template` schemas).
 Initialize the published jobs `1.0.5` executor and register the email handler before mounting routes:
 
 ```ts
@@ -35,7 +36,13 @@ const queueEmail = registerSendEmailJobHandler({
   emailService,
   resultHandlers: {'registration-email': handleRegistrationEmailResult},
 })
-app.register(emailRoutes, {prefix: '/emails', sql})
+app.register(emailRoutes, {
+  prefix: '/emails',
+  sql,
+  nowService,
+  emailService,
+  from: 'Carmbo <sender@your-verified-domain.example>',
+})
 // Outside the browser-authentication boundary: Resend calls it, authenticated by its signature.
 app.register(webhookRoutes, {
   prefix: '/api/emails/resend',
@@ -49,6 +56,111 @@ app.addHook('onClose', () => emailService.dispose())
 Call `setUiConfiguration(name, {withCommunities: true})` to show the Emails navigation item. Mount
 the email pages inside the host's authentication boundary; this package does not configure
 authentication itself.
+
+**Registration API change:** email routes now require `nowService`, `emailService`, and `from` in
+addition to `sql`, so template preview sending can reuse the host's configured provider. Route
+registration fails if these services are missing. This package does not construct an SDK client in
+its controllers or change existing queued-email purposes or payloads.
+
+### Email templates
+
+The Emails/Templates tabs lead to `/emails/templates`, with name/description search, 50-row infinite
+scrolling, and an Include archived filter. `/emails/templates/new` creates a template;
+`/emails/templates/:number` edits it. Templates have a name, description, subject template,
+independently editable plain-text template, HTML template, and Hebrew/English content language.
+The list follows the student/community list layout: inline title/search/archive controls, numbered
+row buttons, and the shared floating plus-circle action. Archived rows are marked beside the name.
+Template detail pages use the same bordered headings, top action groups, floating-label form cards,
+and history lists as student/community pages. Metadata is half-width on desktop and full-width on
+mobile; the HTML editor keeps the full available width for its editing controls.
+
+Create/update append immutable data/history snapshots. Archive and restore append history entries
+without changing the content. Archived templates and `/emails/templates/:number/by-history/:historyId`
+are read-only. Restore re-enables editing. Template names need not be unique.
+
+The browser-only React Email editor supports rich text, headings, lists, tables, columns,
+links/buttons, themes/style inspectors, and images by HTTP(S) URL. Image-file paste/drop/upload is
+disabled; no upload endpoint or storage service is provided. Its Radix toolbar uses grouped icon
+buttons with active formatting states, keyboard navigation, text-style/insert menus, and popovers
+for links, images, and Handlebars expressions. To edit a link's URL, click its text (or a linked
+button) and open Link in the toolbar: it loads the selected link's current URL. Apply link updates
+the whole link; opening Link on unlinked text starts with an empty URL. Image URLs are separate.
+The toolbar and custom style inspector support English and Hebrew. The inspector sits beside the
+editor on desktop and below it on smaller screens. Selecting text enables span mode (text color,
+font size, background); placing the caret in a paragraph enables paragraph mode, adding solid
+border color/width/radius and left/right padding and margin. Clicking outside a paragraph selects
+container mode: left/right/top padding and margin, background, and the same border controls.
+Colors use native color pickers; numeric controls use pixels and native increment/decrement arrows.
+All three modes group their controls into clearly titled, bordered Text, Padding, Margin, Border,
+and Background sections, showing only the sections relevant to the current mode.
+Field labels are concise within their section (Left, Right, Color, etc.); accessible names retain
+the full property context.
+Span changes preserve existing formatting and affect only selected text. Paragraph styles live on
+the paragraph; container styles are saved on the editor's content container and exported on an
+inner content div, never on the email body or outer layout table. Existing layout/theme defaults
+remain intact. The theme selector remains available, and read-only revisions hide the inspector.
+Content language sets the email's language/direction independently of the application's UI
+language; individual text blocks can switch between RTL and LTR. Saved editor JSON and its format
+version preserve the editable document; exported HTML is saved alongside it for email use.
+Exported content carries its own direction and start alignment, independent of the renderer's
+LTR body defaults or an email client's surrounding layout. Explicit block directions and alignments
+remain intact in both preview and sent HTML.
+
+Subject, plain text, HTML text, and URL fields accept Handlebars. Built-in conditionals, loops,
+nested paths, and triple-brace raw HTML are supported, but custom helpers and external partials are
+not. Missing values use normal Handlebars empty/false behavior. Normal HTML substitutions are
+escaped; plain text and subjects are not HTML-escaped. Use the expression insertion control to add
+standalone opening/else/closing block statements around structured content, rather than wrapping
+them inside ordinary paragraphs. Raw HTML is intentional, but executable markup and unsafe resolved
+URLs are rejected during preview/send. Provider subjects cannot contain newlines.
+
+Sample fields deliberately use regex discovery for simple `{{name}}` expressions only. Dotted paths,
+helper/block expressions, triple braces, and unusual names are ignored. Every value is a string;
+there is no nested-object or array input. To supply a value used only in a complex expression,
+reference its simple name elsewhere in the template. Sample values are saved with each revision,
+including values whose expressions were later removed. They are sample data, not a domain-variable
+catalog; use non-sensitive examples.
+
+View raw HTML opens a read-only, selectable source dialog for the current unsaved HTML template,
+with Handlebars expressions intact (not replaced by sample values). It does not save or send.
+Archived and historical templates expose their stored HTML through the same action.
+
+Preview opens a modal showing the current unsaved subject, HTML, and an expandable plain-text body.
+Its sandboxed iframe blocks remote resources and uses an email-sized viewport rather than centering
+the email across the entire page. The email HTML and its own layout styles are not changed.
+Remote image URLs remain in sent email. Send preview email opens a separate modal with a recipient
+field and Send/Cancel controls. Send submits the current subject, both bodies, and sample substitutions
+using the configured sender. The recipient is remembered in this browser's local storage across
+templates and browser restarts; clearing the field removes it. It is not stored with the template
+or sent automatically. If browser storage is unavailable, the dialog remains usable and logs the
+storage failure without logging the address. Cancel or Escape dismisses the dialog without sending.
+While a send is in progress, dismissal is disabled. Failures stay in the dialog for retry; success closes it and
+shows the provider-acceptance message on the page. It calls the provider
+directly: **no email/job rows, template revision, queue, retry job, or delivery tracking are created**.
+Success means provider acceptance, not delivery confirmation. Errors preserve page edits; retrying
+the same failed attempt reuses its idempotency key. A subsequent successful-send action is a new send.
+
+Template mutations use JSON requests; normal list interactions remain HTMX. Template writes and
+preview endpoints are private under the same host authentication boundary as the email pages.
+Requests are limited to 4 MiB; bodies are limited to one million characters each, sample values to
+10,000 characters, and editor nesting to 40 levels. Unsupported document versions/nodes are rejected.
+
+### Browser build
+
+`pnpm build` runs TypeScript and esbuild in parallel after one clean. `build:client` bundles React,
+the editor, and CSS into `dist/browser/email-template`. Only template edit/history pages load these
+assets, from versioned `/emails/templates/assets/<package-version>/editor.js` and `editor.css` routes.
+Their URLs also include a content hash, so rebuilding without a package version bump invalidates
+previous browser caches. Hashes are computed once when the server loads the template view module.
+Asset responses require revalidation rather than immutable caching.
+The package serves only these allowlisted assets; the host does not need to copy them.
+
+`pnpm start` builds client assets in its prestart lifecycle. When changing browser code during local
+development, run `pnpm build:client`, restart the server to refresh the asset URLs, and reload the page.
+Server runtime modules do not import TSX. Both published and source-run routes use the built assets.
+
+The standalone app includes template management and uses its existing sender/service configuration.
+`carmbo-app` integration and adoption by community registration emails remain separate work.
 
 ### Queueing emails
 

@@ -1,12 +1,23 @@
 import type {FastifyInstance} from 'fastify'
-import type {Sql} from 'postgres'
 import type {ZodTypeProvider} from 'fastify-type-provider-zod'
 import {z} from 'zod'
 import {dealWithControllerResult} from '@giltayar/carmbo-commons/commons/routes-commons'
 import {registerEmailLocaleResources} from './locale-resources.ts'
 import {showEmail, showEmails, showEmailSource} from './controller.ts'
+import {templateRoutes} from './templates/route.ts'
+import type {TemplateServices} from './templates/controller.ts'
 
-export function routes(app: FastifyInstance, {sql}: {sql: Sql}): void {
+export function routes(app: FastifyInstance, options: TemplateServices): void {
+  const {sql} = options
+  if (
+    !options.emailService?.sendEmail ||
+    !options.from?.trim() ||
+    /[\r\n]/.test(options.from) ||
+    !options.nowService
+  ) {
+    throw new Error('Email routes require emailService, from, and nowService')
+  }
+  app.register(templateRoutes, {...options, prefix: '/templates'})
   registerEmailLocaleResources()
   const typed = app.withTypeProvider<ZodTypeProvider>()
   const params = z.object({number: z.coerce.number().int().positive()})

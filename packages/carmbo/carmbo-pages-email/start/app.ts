@@ -61,7 +61,7 @@ export async function createApp(
     immutable: true,
     maxAge: '1y',
   })
-  app.register(emailRoutes, {prefix: '/emails', sql: database})
+  app.register(emailRoutes, {prefix: '/emails', sql: database, emailService, from, nowService})
   app.register(webhookRoutes, {
     prefix: RESEND_WEBHOOK_ROUTE_PREFIX,
     sql: database,

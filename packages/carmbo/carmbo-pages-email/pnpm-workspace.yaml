@@ -1,5 +1,6 @@
 allowBuilds:
   es5-ext: false
+  esbuild: true
 
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:

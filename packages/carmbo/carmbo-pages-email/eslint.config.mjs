@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config([
   {
-    files: ['src/**/*.[jt]s', 'testkit/**/*.[jt]s', 'start/**/*.[jt]s', 'test/**/*.[jt]s'],
+    files: ['src/**/*.{ts,tsx,js}', 'testkit/**/*.[jt]s', 'start/**/*.[jt]s', 'test/**/*.[jt]s'],
     ignores: ['start/dist/**'],
     plugins: {prettier, n},
     extends: [n.configs['flat/recommended'], ...tseslint.configs.recommended],
@@ -41,6 +41,13 @@ export default tseslint.config([
         'error',
         {ignores: ['assert.partialDeepStrictEqual']},
       ],
+    },
+  },
+  {
+    files: ['src/templates/client/**/*.{ts,tsx}'],
+    rules: {
+      // Browser localStorage is unrelated to Node's experimental storage API.
+      'n/no-unsupported-features/node-builtins': ['error', {ignores: ['localStorage']}],
     },
   },
 ])

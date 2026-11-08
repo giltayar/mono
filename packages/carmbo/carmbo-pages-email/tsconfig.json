@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
+    "jsx": "react-jsx",
     "target": "esnext",
     "module": "nodenext",
     "moduleResolution": "nodenext",
@@ -20,6 +21,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "testkit/**/*.ts", "start/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "testkit/**/*.ts", "start/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

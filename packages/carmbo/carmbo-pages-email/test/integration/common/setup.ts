@@ -145,7 +145,13 @@ export function setup(
         .type(asset.contentType)
         .send(await readFile(new URL(`../../../node_modules/${asset.path}`, import.meta.url)))
     })
-    app.register(emailRoutes, {prefix: '/emails', sql: database})
+    app.register(emailRoutes, {
+      prefix: '/emails',
+      sql: database,
+      nowService,
+      from: 'Sender <sender@example.com>',
+      emailService: {sendEmail: (message, options) => fake.sendEmail(message, options)},
+    })
     app.register(webhookRoutes, {
       prefix: '/api/emails/resend',
       sql: database,
@@ -165,6 +171,10 @@ export function setup(
     results = []
     await database`
       TRUNCATE TABLE
+        email_template,
+        email_template_data,
+        email_template_history,
+        email_template_search,
         email,
         job,
         community,
