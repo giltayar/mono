@@ -130,9 +130,10 @@ With `CI=1` and `FORCE_COLOR=1`, the executor runs, in order:
 5. `pnpm --if-present test`
 6. `pnpm publish --no-git-checks`
 7. Stage only the current package.
-8. Commit with the prefix and a Copilot co-author trailer.
+8. Commit with the prefix and a Copilot co-author trailer. If the package has nothing staged (for
+   example, a never-published package already committed at its version), skip the commit.
 9. Create the annotated release tag `<package-folder>@<version>` (e.g. `carmbo-pages-auth@1.0.4`)
-   on that commit.
+   on that commit (or on the current commit when nothing was committed).
 10. `git push --follow-tags`, which pushes the commit and its release tag.
 
 Existing pnpm lifecycle hooks still run, including the Carmbo app's Docker hooks.
@@ -198,8 +199,9 @@ normal configuration.
 
 An unpublished local version stays unchanged. If the version already exists, the script
 increments the patch repeatedly until it finds an unused version. Only stable `major.minor.patch`
-local versions are supported. Registry lookup failures, including package-not-found, fail explicitly;
-publish a brand-new package manually first.
+local versions are supported. A package that is not in the registry yet (npm fails with `E404`)
+has no published versions, so a brand-new package is published at its local version. Other
+registry lookup failures, such as authentication or network errors, fail explicitly.
 
 You can run version selection separately from a package directory:
 

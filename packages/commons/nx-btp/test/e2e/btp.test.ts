@@ -25,6 +25,20 @@ describe('nx btp', {concurrency: true}, () => {
     assert.deepEqual(mono.remoteTags(), ['carmbo-alpha@1.0.1'])
   })
 
+  test('a package that was never published is published at its local version', async (t) => {
+    const mono = await createMonorepo(t, [{name: 'carmbo-alpha', dependsOn: [], unpublished: true}])
+
+    const result = await mono.nx('btp', 'carmbo-alpha', '--message', 'first release')
+
+    assert.equal(result.code, 0, result.output)
+    assert.match(result.output, /@fixture\/carmbo-alpha is not in the registry yet/)
+    assert.deepEqual(await mono.publishedVersions('carmbo-alpha'), ['1.0.0'])
+    assert.equal(mono.version('carmbo-alpha'), '1.0.0')
+    // The package was already committed, so the release only tags that commit.
+    assert.deepEqual(mono.remoteCommits(), ['initial'])
+    assert.deepEqual(mono.remoteTags(), ['carmbo-alpha@1.0.0'])
+  })
+
   test('an unchanged package is not published again', async (t) => {
     const mono = await createMonorepo(t, ['carmbo-alpha'])
 

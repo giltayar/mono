@@ -13,6 +13,11 @@ import {
   type CommandCall,
 } from './fixtures.ts'
 
+// The package-local staged-files check that decides whether there is anything to commit.
+function isPackageDiff(args: readonly string[]): boolean {
+  return args[0] === 'diff' && args.includes('--')
+}
+
 test('publishes sequentially with package-local commands and literal commit messages', async (t) => {
   const context = fixture(t)
   setNoTests(t)
@@ -20,6 +25,7 @@ test('publishes sequentially with package-local commands and literal commit mess
   const message = 'fix "quotes", \'apostrophes\', $HOME, $(echo nope); `echo nope`\nand a new line'
   const result = await publishExecutor({message}, context, (command, args, options) => {
     calls.push({command, args, options})
+    if (isPackageDiff(args)) return 'package.json\0'
     return command === 'npm' ? '"0.9.0"' : options.captureOutput ? '' : null
   })
   assert.deepEqual(result, {success: true})
@@ -34,6 +40,7 @@ test('publishes sequentially with package-local commands and literal commit mess
       ['pnpm', 'publish', '--no-git-checks'],
       ['git', 'diff', '--cached', '--no-renames', '--name-only', '-z'],
       ['git', 'add', '--', '.'],
+      ['git', 'diff', '--cached', '--name-only', '-z', '--', '.'],
       ['git', 'commit', '-m', `cpa: ${message}`, '--trailer', coauthor],
       [
         'git',
@@ -47,7 +54,8 @@ test('publishes sequentially with package-local commands and literal commit mess
     ],
   )
   for (const {command, args, options} of calls) {
-    assert.equal(options.cwd, command === 'git' && args[0] === 'diff' ? context.root : context.cwd)
+    const stagingCheck = command === 'git' && args[0] === 'diff' && !isPackageDiff(args)
+    assert.equal(options.cwd, stagingCheck ? context.root : context.cwd)
     assert.equal(options.env.CI, '1')
     assert.equal(options.env.FORCE_COLOR, '1')
   }
@@ -62,6 +70,7 @@ for (const [name, prefix] of projects.map((name, index) => [
     const calls: CommandCall[] = []
     await publishExecutor({message: 'fix'}, context, (command, args, options) => {
       calls.push({command, args, options})
+      if (isPackageDiff(args)) return 'package.json\0'
       return command === 'npm' ? '"0.9.0"' : ''
     })
     assert.equal(calls.find(({args}) => args[0] === 'commit')?.args[2], `${prefix}: fix`)
@@ -156,7 +165,7 @@ test('rechecks staging after publishing and stops before committing unrelated ch
   assert.ok(!calls.some(({args}) => ['add', 'commit', 'tag', 'push'].includes(args[0])))
 })
 
-for (let failureIndex = 0; failureIndex < 11; failureIndex++) {
+for (let failureIndex = 0; failureIndex < 12; failureIndex++) {
   test(`stops immediately when command ${failureIndex + 1} fails`, async (t) => {
     const context = fixture(t)
     setNoTests(t)
@@ -166,6 +175,7 @@ for (let failureIndex = 0; failureIndex < 11; failureIndex++) {
       publishExecutor({message: 'fix'}, context, (command, args, options) => {
         calls.push({command, args, options})
         if (calls.length === failureIndex + 1) throw error
+        if (isPackageDiff(args)) return 'package.json\0'
         return command === 'npm' ? '"0.9.0"' : ''
       }),
       (caught) => caught === error,
@@ -188,4 +198,36 @@ test('real Git detects staged renames from outside into the package before publi
     /Unrelated staged changes.*unrelated\.txt/,
   )
   assert.equal(JSON.parse(readFileSync(join(context.cwd, 'package.json'), 'utf8')).version, '1.0.0')
+})
+
+test('tags and pushes without committing when the package has nothing to commit', async (t) => {
+  const context = fixture(t)
+  setNoTests(t, '1')
+  const calls: CommandCall[] = []
+  const result = await publishExecutor(
+    {message: 'first release'},
+    context,
+    (command, args, options) => {
+      calls.push({command, args, options})
+      return command === 'npm' ? '"0.9.0"' : options.captureOutput ? '' : null
+    },
+  )
+  assert.deepEqual(result, {success: true})
+  assert.deepEqual(
+    calls.slice(-4).map(({command, args}) => [command, ...args]),
+    [
+      ['git', 'add', '--', '.'],
+      ['git', 'diff', '--cached', '--name-only', '-z', '--', '.'],
+      [
+        'git',
+        'tag',
+        '--annotate',
+        'carmbo-pages-auth@1.0.0',
+        '--message',
+        'carmbo-pages-auth@1.0.0',
+      ],
+      ['git', 'push', '--follow-tags'],
+    ],
+  )
+  assert.ok(!calls.some(({args}) => args[0] === 'commit'))
 })

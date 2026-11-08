@@ -70,7 +70,14 @@ export function fetchPublishedVersions(
     }
   }
 
-  const output = runner('npm', args, {cwd, env, captureOutput: true})
+  let output: string | null
+  try {
+    output = runner('npm', args, {cwd, env, captureOutput: true})
+  } catch (error) {
+    if (!isPackageNotFound(error)) throw error
+    console.log(`${manifest.name} is not in the registry yet; treating it as a new package`)
+    return new Set<string>()
+  }
   if (output === null) throw new Error('npm info returned no version output')
   const response: unknown = JSON.parse(output)
   const versions = typeof response === 'string' ? [response] : response
@@ -78,6 +85,18 @@ export function fetchPublishedVersions(
     throw new Error('npm info must return a version string or an array of version strings')
   }
   return new Set<string>(versions)
+}
+
+// `npm info --json` exits non-zero for a missing package and prints `{"error": {"code": "E404"}}`.
+// Only that failure means "never published"; auth, network, and other errors still propagate.
+function isPackageNotFound(error: unknown): boolean {
+  if (!isObject(error) || typeof error.stdout !== 'string') return false
+  try {
+    const response: unknown = JSON.parse(error.stdout)
+    return isObject(response) && isObject(response.error) && response.error.code === 'E404'
+  } catch {
+    return false
+  }
 }
 
 export function selectVersion(current: string, published: ReadonlySet<string>): string {

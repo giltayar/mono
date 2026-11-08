@@ -141,10 +141,49 @@ for (const output of [
 }
 
 for (const code of ['E404', 'E401', 'E403', 'ENOTFOUND', 'ECONNRESET']) {
-  test(`propagates ${code} without mutation`, (t) => {
+  test(`propagates ${code} without npm error output, and without mutation`, (t) => {
     const {cwd} = fixture(t)
     const before = readFileSync(join(cwd, 'package.json'), 'utf8')
     const error = new Error(code)
+    assert.throws(
+      () =>
+        nextPackageVersion(cwd, () => {
+          throw error
+        }),
+      (caught) => caught === error,
+    )
+    assert.equal(readFileSync(join(cwd, 'package.json'), 'utf8'), before)
+  })
+}
+
+// Shaped like the error `execFileSync` throws when `npm info --json` exits non-zero.
+function npmFailure(code: string): Error & {stdout: string} {
+  return Object.assign(new Error('Command failed: npm info'), {
+    status: 1,
+    stdout: JSON.stringify({error: {code, summary: `${code} summary`, detail: ''}}, null, 2),
+    stderr: `npm error code ${code}\n`,
+  })
+}
+
+test('treats a package that is not in the registry as having no published versions', (t) => {
+  const {cwd} = fixture(t)
+  const before = readFileSync(join(cwd, 'package.json'), 'utf8')
+  assert.equal(
+    nextPackageVersion(cwd, () => {
+      throw npmFailure('E404')
+    }),
+    '1.0.0',
+  )
+  assert.equal(readFileSync(join(cwd, 'package.json'), 'utf8'), before)
+})
+
+for (const output of ['E401', 'E403', 'E500']
+  .map((code) => npmFailure(code).stdout)
+  .concat(['', 'not json', '{"error":"E404"}'])) {
+  test(`propagates npm failures with output ${JSON.stringify(output)} without mutation`, (t) => {
+    const {cwd} = fixture(t)
+    const before = readFileSync(join(cwd, 'package.json'), 'utf8')
+    const error = Object.assign(new Error('Command failed: npm info'), {status: 1, stdout: output})
     assert.throws(
       () =>
         nextPackageVersion(cwd, () => {

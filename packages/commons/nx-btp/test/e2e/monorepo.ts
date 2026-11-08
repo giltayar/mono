@@ -62,8 +62,11 @@ const fakeBuild = `import {cpSync} from 'node:fs'
 cpSync('src', 'dist', {recursive: true})
 `
 
-/** A fake package and the fake packages it depends on (as `^1.0.0`, their published version). */
-export type FakePackage = string | {name: string; dependsOn: string[]}
+/**
+ * A fake package and the fake packages it depends on (as `^1.0.0`, their published version).
+ * `unpublished` packages are committed but never published, like a brand-new package.
+ */
+export type FakePackage = string | {name: string; dependsOn: string[]; unpublished?: boolean}
 
 /** Like the real packages: the targets are declared here, and defined by the nx-btp preset. */
 const fakeTargets = {'start-btp': {}, btp: {}}
@@ -183,8 +186,9 @@ async function run(
 }
 
 /**
- * Creates a fake monorepo whose packages each have version 1.0.0 published to a private
- * Verdaccio registry, committed, and pushed to a bare `origin` repository, without release tags.
+ * Creates a fake monorepo whose packages each have version 1.0.0 published (unless `unpublished`)
+ * to a private Verdaccio registry, committed, and pushed to a bare `origin` repository, without
+ * release tags.
  * That mirrors packages whose first release was published manually. Packages are seeded in the
  * given order, so list dependencies before their dependents.
  */
@@ -208,9 +212,13 @@ export async function createMonorepo(t: TestContext, packages: FakePackage[]): P
 
   const packageDir = (name: string) => join(root, 'packages/carmbo', name)
   for (const fake of packages) {
-    const {name, dependsOn} = typeof fake === 'string' ? {name: fake, dependsOn: []} : fake
+    const {name, dependsOn, unpublished} =
+      typeof fake === 'string' ? {name: fake, dependsOn: [], unpublished: false} : fake
     writeFakePackage(packageDir(name), name, dependsOn)
-    for (const args of [['install'], ['run', 'build'], ['publish', '--no-git-checks']]) {
+    const seeding = unpublished
+      ? [['install']]
+      : [['install'], ['run', 'build'], ['publish', '--no-git-checks']]
+    for (const args of seeding) {
       const result = await run('pnpm', args, packageDir(name), env)
       assert.equal(result.code, 0, `seeding ${name}: pnpm ${args.join(' ')}\n${result.output}`)
     }

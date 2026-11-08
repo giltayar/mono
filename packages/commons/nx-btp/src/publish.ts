@@ -93,11 +93,20 @@ export async function publishExecutor(
   runner('pnpm', ['publish', '--no-git-checks'], commandOptions)
   checkStaging()
   runner('git', ['add', '--', '.'], commandOptions)
-  runner(
-    'git',
-    ['commit', '-m', `${prefix}: ${options.message}`, '--trailer', coauthor],
-    commandOptions,
-  )
+  const packageChanges = runner('git', ['diff', '--cached', '--name-only', '-z', '--', '.'], {
+    ...commandOptions,
+    captureOutput: true,
+  })
+  // A package released for the first time at an already committed version has nothing to commit.
+  if (packageChanges) {
+    runner(
+      'git',
+      ['commit', '-m', `${prefix}: ${options.message}`, '--trailer', coauthor],
+      commandOptions,
+    )
+  } else {
+    console.log(`${manifest.name}: nothing to commit; tagging the current commit`)
+  }
   const tag = releaseTag(projectRoot, version)
   runner('git', ['tag', '--annotate', tag, '--message', tag], commandOptions)
   runner('git', ['push', '--follow-tags'], commandOptions)
