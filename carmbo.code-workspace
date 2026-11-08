@@ -101,6 +101,10 @@
       "path": "packages/carmbo/carmbo-pages-community",
     },
     {
+      "name": "carmbo-pages-email",
+      "path": "packages/carmbo/carmbo-pages-email",
+    },
+    {
       "name": "carmbo-app",
       "path": "packages/carmbo/carmbo-app",
     },
