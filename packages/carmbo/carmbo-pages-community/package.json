@@ -1,6 +1,6 @@
 {
   "name": "@giltayar/carmbo-pages-community",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Community pages for Carmbo applications",
   "type": "module",
   "exports": {
@@ -8,25 +8,9 @@
       "types": "./dist/src/route.d.ts",
       "import": "./dist/src/route.js"
     },
-    "./email/routes": {
-      "types": "./dist/src/email/route.d.ts",
-      "import": "./dist/src/email/route.js"
-    },
-    "./email/service": {
-      "types": "./dist/src/email/email-service.d.ts",
-      "import": "./dist/src/email/email-service.js"
-    },
-    "./email/jobs": {
-      "types": "./dist/src/email/jobs.d.ts",
-      "import": "./dist/src/email/jobs.js"
-    },
-    "./email/webhook-routes": {
-      "types": "./dist/src/email/webhook-route.d.ts",
-      "import": "./dist/src/email/webhook-route.js"
-    },
-    "./testkit/email-service": {
-      "types": "./dist/testkit/fake-email-service.d.ts",
-      "import": "./dist/testkit/fake-email-service.js"
+    "./registration-email": {
+      "types": "./dist/src/registration-email-result.d.ts",
+      "import": "./dist/src/registration-email-result.js"
     },
     "./testkit/page-model/*": {
       "types": "./dist/testkit/page-model/*.d.ts",
@@ -93,10 +77,9 @@
   },
   "dependencies": {
     "@giltayar/carmbo-commons": "^2.4.0",
+    "@giltayar/carmbo-pages-email": "^1.0.0",
     "@giltayar/carmbo-pages-job": "^1.0.5",
-    "@giltayar/carmbo-pages-student": "^1.1.1",
-    "resend": "^6.37.0",
-    "standardwebhooks": "^1.1.1"
+    "@giltayar/carmbo-pages-student": "^1.1.1"
   },
   "devDependencies": {
     "@fastify/formbody": "^9.0.1",
@@ -108,7 +91,7 @@
     "@types/qs": "^6.15.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "bootstrap": "^5.3.8",
-    "concurrently": "^10.0.6",
+    "concurrently": "^10.0.7",
     "eslint": "^10.14.0",
     "eslint-plugin-n": "^18.5.0",
     "eslint-plugin-prettier": "^5.5.7",
@@ -120,6 +103,7 @@
     "postgres": "3.4.7",
     "prettier": "^3.9.10",
     "qs": "^6.17.1",
+    "standardwebhooks": "^1.1.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.72.1",
     "zod": "^4.6.7"

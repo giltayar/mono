@@ -38,8 +38,8 @@ type CommunityRouteOptions = MemberServices & {
 }
 
 export function routes(app: FastifyInstance, options: CommunityRouteOptions): void {
-  if (!options.registrationEmail?.submitSendEmailJob) {
-    throw new Error('Community routes require the registration email job submitter')
+  if (!options.registrationEmail?.queueEmail) {
+    throw new Error('Community routes require the registration email queueEmail function')
   }
   if (!options.registrationEmail.from?.trim()) {
     throw new Error('Registration email sender is required')

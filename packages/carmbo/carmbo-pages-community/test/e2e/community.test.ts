@@ -12,13 +12,16 @@ import {
 import {
   createEmailListPageModel,
   createEmailPageModel,
-} from '@giltayar/carmbo-pages-community/testkit/page-model/email.model'
+} from '@giltayar/carmbo-pages-email/testkit/page-model/email.model'
 import {createNewCommunityMemberPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-member-page.model'
 import {createNewCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-page.model'
 import {createUpdateCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/update-community-page.model'
 import type {FastifyInstance} from 'fastify'
 import postgres, {type Sql} from 'postgres'
-import {createResendEmailService, type ResendEmailService} from '../../src/email/email-service.ts'
+import {
+  createResendEmailService,
+  type ResendEmailService,
+} from '@giltayar/carmbo-pages-email/service'
 import {createApp, RESEND_WEBHOOK_PATH} from '../../start/app.ts'
 import {openCloudflaredTunnel, type CloudflaredTunnel} from '../../start/cloudflared-tunnel.ts'
 

@@ -6,7 +6,7 @@ import {
 import {
   createEmailListPageModel,
   createEmailPageModel,
-} from '@giltayar/carmbo-pages-community/testkit/page-model/email.model'
+} from '@giltayar/carmbo-pages-email/testkit/page-model/email.model'
 import {createNewCommunityMemberPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-member-page.model'
 import {createUpdateCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/update-community-page.model'
 import {createUpdateStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/update-student-page.model'
@@ -124,7 +124,7 @@ test('creation commits the member, email, link and job together and sends only a
   await expect(email.details().field('Member').link().locator).toHaveAttribute('href', base)
   await expect(email.details().field('Status').locator).toHaveText('Sending')
   const job = await openJob(page)
-  await expect(job).toContainText('Registration email for community')
+  await expect(job).toContainText('Send email (communityNumber: ')
   await expect(page.getByText('Finished: still working...', {exact: true})).toBeVisible()
   expect(emailService().attempts).toHaveLength(0)
   await executeJobs()
@@ -231,20 +231,6 @@ test('four failed attempts exhaust the job and preserve error diagnostics in the
   expect(emailService().attempts).toHaveLength(4)
 })
 
-test('a lost response is retried with the same key and sends only once', async ({page}) => {
-  await enqueue()
-  emailService().failNextSend(new Error('Lost response'), {afterAcceptance: true})
-  await executeJobs()
-  const email = await openEmail(page)
-  await expect(email.details().field('Status').locator).toHaveText('Retrying')
-  expect(emailService().sentEmails).toHaveLength(1)
-  await executeJobs()
-  await page.reload()
-  await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
-  expect(emailService().sentEmails).toHaveLength(1)
-  expect(emailService().attempts).toHaveLength(2)
-})
-
 test('role edits survive completion and cancellations and re-adds are not overwritten', async ({
   page,
 }) => {
@@ -299,27 +285,6 @@ test('duplicate adds and archived communities cannot create another email or ove
   await executeJobs()
   const member = await openMember(page, base)
   await expect(member.state().field('Status').locator).toHaveText('Started registration')
-  const email = await openEmail(page)
-  await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
-})
-
-test('provider calls hold no database transaction open, and concurrent triggers send once', async ({
-  page,
-}) => {
-  const {communityNumber} = await enqueue()
-  const fake = emailService()
-  const send = fake.sendEmail.bind(fake)
-  fake.sendEmail = async (message, options) => {
-    // Lock availability cannot be observed through the UI.
-    await sql().begin(async (tx) => {
-      await tx`SELECT community_number FROM community
-        WHERE community_number = ${communityNumber} FOR UPDATE NOWAIT`
-      await tx`SELECT email_number FROM email FOR UPDATE NOWAIT`
-    })
-    return send(message, options)
-  }
-  await Promise.all([executeJobs(), executeJobs()])
-  expect(fake.attempts).toHaveLength(1)
   const email = await openEmail(page)
   await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
 })

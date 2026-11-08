@@ -9,12 +9,7 @@ import * as updateCommunityPageModel from '@giltayar/carmbo-pages-community/test
 import * as viewCommunityHistoryPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/view-community-history-page.model'
 import * as memberPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 import * as newMemberPageModel from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-member-page.model'
-import * as emailRoutes from '@giltayar/carmbo-pages-community/email/routes'
-import * as emailService from '@giltayar/carmbo-pages-community/email/service'
-import * as emailTestkit from '@giltayar/carmbo-pages-community/testkit/email-service'
-import * as emailJobs from '@giltayar/carmbo-pages-community/email/jobs'
-import * as emailWebhookRoutes from '@giltayar/carmbo-pages-community/email/webhook-routes'
-import * as emailPageModels from '@giltayar/carmbo-pages-community/testkit/page-model/email.model'
+import * as registrationEmail from '@giltayar/carmbo-pages-community/registration-email'
 
 test('publishes the intended package entry points', () => {
   assert.deepEqual(Object.keys(communityRoutes), ['routes'])
@@ -31,19 +26,7 @@ test('publishes the intended package entry points', () => {
     'createCommunityMembersPageModel',
   ])
   assert.deepEqual(Object.keys(newMemberPageModel), ['createNewCommunityMemberPageModel'])
-  assert.deepEqual(Object.keys(emailRoutes), ['routes'])
-  assert.deepEqual(Object.keys(emailService), [
-    'EmailSendingError',
-    'HANDLED_RESEND_EVENTS',
-    'createResendEmailService',
-  ])
-  assert.deepEqual(Object.keys(emailTestkit), ['createFakeEmailService'])
-  assert.deepEqual(Object.keys(emailJobs), ['registerSendEmailJobHandler'])
-  assert.deepEqual(Object.keys(emailWebhookRoutes), ['webhookRoutes'])
-  assert.deepEqual(Object.keys(emailPageModels), [
-    'createEmailListPageModel',
-    'createEmailPageModel',
-  ])
+  assert.deepEqual(Object.keys(registrationEmail), ['handleRegistrationEmailResult'])
 })
 
 test('does not publish internal modules', async () => {
@@ -51,8 +34,11 @@ test('does not publish internal modules', async () => {
     '@giltayar/carmbo-pages-community/model',
     '@giltayar/carmbo-pages-community/src/model.ts',
     '@giltayar/carmbo-pages-community/dist/src/controller.js',
-    '@giltayar/carmbo-pages-community/email/model',
-    '@giltayar/carmbo-pages-community/email/testkit',
+    '@giltayar/carmbo-pages-community/email/routes',
+    '@giltayar/carmbo-pages-community/email/jobs',
+    '@giltayar/carmbo-pages-community/email/service',
+    '@giltayar/carmbo-pages-community/testkit/email-service',
+    '@giltayar/carmbo-pages-community/registration-email-result',
   ]) {
     await assert.rejects(import(specifier), {code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'})
   }

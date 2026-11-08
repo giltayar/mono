@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
 import {initializei18next} from '@giltayar/carmbo-commons/commons/i18next-utils'
-import {registrationEmailContent} from '../../../src/email/registration-template.ts'
+import {registrationEmailContent} from '../../src/registration-email.ts'
 
 test('registration emails include names, escape HTML and use the selected language', async () => {
   await initializei18next('en')

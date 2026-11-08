@@ -5,7 +5,7 @@ import {createCommunityMemberPageModel} from '@giltayar/carmbo-pages-community/t
 import {
   createEmailListPageModel,
   createEmailPageModel,
-} from '@giltayar/carmbo-pages-community/testkit/page-model/email.model'
+} from '@giltayar/carmbo-pages-email/testkit/page-model/email.model'
 import {addMember, DEFAULT_MEMBER_ROLES} from '../../../src/member-model.ts'
 import {setup} from '../common/setup.ts'
 import {createMemberFixture} from '../common/member-fixture.ts'
@@ -168,99 +168,6 @@ for (const [type, data, errorText] of [
     await expect(member.history().items().locator).toHaveCount(2)
   })
 }
-
-test('duplicate and out-of-order callbacks never regress the latest provider state', async ({
-  page,
-  request,
-}) => {
-  const {email, providerEmailId} = await acceptedEmail(page)
-  const delivered = resendEvent('email.delivered', {
-    providerEmailId,
-    createdAt: new Date('2026-11-07T10:00:10Z'),
-  })
-  const bounce = {bounce: {message: 'Unknown user', subType: 'General', type: 'Permanent'}}
-
-  expect(await (await postEvent(request, delivered)).json()).toEqual({outcome: 'applied'})
-  expect(await (await postEvent(request, delivered)).json()).toEqual({outcome: 'stale'})
-  const olderBounce = resendEvent('email.bounced', {
-    providerEmailId,
-    createdAt: new Date('2026-11-07T10:00:05Z'),
-    data: bounce,
-  })
-  expect(await (await postEvent(request, olderBounce)).json()).toEqual({outcome: 'stale'})
-
-  await page.reload()
-  await expect(email.details().field('Status').locator).toHaveText('Delivery confirmed')
-  await expect(email.details().field('Delivery confirmed').timestamps().locator).toHaveAttribute(
-    'datetime',
-    '2026-11-07T10:00:10.000Z',
-  )
-
-  const laterBounce = resendEvent('email.bounced', {
-    providerEmailId,
-    createdAt: new Date('2026-11-07T10:00:20Z'),
-    data: bounce,
-  })
-  expect(await (await postEvent(request, laterBounce)).json()).toEqual({outcome: 'applied'})
-  await page.reload()
-  await expect(email.details().field('Status').locator).toHaveText('Failure')
-})
-
-test('unsigned, tampered, wrongly signed, and malformed callbacks are rejected', async ({
-  page,
-  request,
-}) => {
-  const {email, providerEmailId} = await acceptedEmail(page)
-  const delivered = resendEvent('email.delivered', {providerEmailId, createdAt: now})
-  const webhookUrl = new URL('/api/emails/resend/webhook', url()).href
-
-  const unsigned = await request.post(webhookUrl, {
-    headers: {'content-type': 'application/json'},
-    data: JSON.stringify(delivered),
-  })
-  expect(unsigned.status()).toBe(400)
-  const wrongSecret = await postEvent(request, delivered, {
-    secret: `whsec_${Buffer.from('a-different-webhook-secret-value!').toString('base64')}`,
-  })
-  expect(wrongSecret.status()).toBe(400)
-  const tampered = await postEvent(request, delivered, {
-    signedBody: JSON.stringify({...delivered, type: 'email.opened'}),
-  })
-  expect(tampered.status()).toBe(400)
-  const malformed = await postEvent(request, {type: 'email.delivered', created_at: 'not a date'})
-  expect(malformed.status()).toBe(400)
-  expect(await malformed.json()).toEqual({error: 'Invalid webhook payload'})
-
-  await page.reload()
-  await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
-})
-
-test('unrelated and unsupported events are acknowledged without changes', async ({
-  page,
-  request,
-}) => {
-  const {email, providerEmailId} = await acceptedEmail(page)
-
-  const unrelated = await postEvent(
-    request,
-    resendEvent('email.delivered', {
-      providerEmailId: 'another-apps-email',
-      correlationId: randomUUID(),
-      createdAt: now,
-    }),
-  )
-  expect(unrelated.status()).toBe(200)
-  expect(await unrelated.json()).toEqual({outcome: 'unknown-email'})
-  const opened = await postEvent(
-    request,
-    resendEvent('email.opened', {providerEmailId, createdAt: now}),
-  )
-  expect(opened.status()).toBe(200)
-  expect(await opened.json()).toEqual({outcome: 'unsupported'})
-
-  await page.reload()
-  await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
-})
 
 test('a callback during a lost API response is kept, and the retry neither resends nor regresses it', async ({
   page,

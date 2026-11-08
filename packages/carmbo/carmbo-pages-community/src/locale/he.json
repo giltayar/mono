@@ -154,5 +154,11 @@
   "validation": {
     "name": "שם הוא שדה חובה",
     "description": "התיאור אינו תקין"
+  },
+  "registrationEmail": {
+    "subject": "ברוכים הבאים לקהילת {{communityName}}",
+    "greeting": "שלום {{studentName}},",
+    "body": "ברוכים הבאים לקהילת {{communityName}}! שמחים שהצטרפתם לקהילה שלנו.",
+    "closing": "צוות הקהילה"
   }
 }

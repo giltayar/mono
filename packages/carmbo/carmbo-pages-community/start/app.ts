@@ -10,14 +10,15 @@ import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {Sql} from 'postgres'
 import packageJson from '../package.json' with {type: 'json'}
 import {routes} from '../src/route.ts'
-import {routes as emailRoutes} from '../src/email/route.ts'
+import {routes as emailRoutes} from '@giltayar/carmbo-pages-email/routes'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
 import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {routes as jobRoutes, apiRoutes as jobApiRoutes} from '@giltayar/carmbo-pages-job/routes'
-import {registerSendEmailJobHandler} from '../src/email/jobs.ts'
-import type {EmailService} from '../src/email/email-service.ts'
-import {webhookRoutes} from '../src/email/webhook-route.ts'
+import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-email/jobs'
+import type {EmailService} from '@giltayar/carmbo-pages-email/service'
+import {webhookRoutes} from '@giltayar/carmbo-pages-email/webhook-routes'
+import {handleRegistrationEmailResult} from '../src/registration-email-result.ts'
 
 const RESEND_WEBHOOK_ROUTE_PREFIX = '/api/emails/resend'
 export const RESEND_WEBHOOK_PATH = `${RESEND_WEBHOOK_ROUTE_PREFIX}/webhook`
@@ -39,10 +40,11 @@ export async function createApp(
   const app = fastify({logger: true})
   const nowService = () => new Date()
   initializeJobExecutor(database, app.log)
-  const submitSendEmailJob = registerSendEmailJobHandler({
+  const queueEmail = registerSendEmailJobHandler({
     sql: database,
     nowService,
     emailService,
+    resultHandlers: {'registration-email': handleRegistrationEmailResult},
   })
   app.register(formbody, {parser: (body) => qs.parse(body)})
   app.setValidatorCompiler(validatorCompiler)
@@ -62,7 +64,7 @@ export async function createApp(
     prefix: '/communities',
     sql: database,
     nowService,
-    registrationEmail: {submitSendEmailJob, from, language},
+    registrationEmail: {queueEmail, from, language},
   })
   app.register(emailRoutes, {prefix: '/emails', sql: database})
   app.register(webhookRoutes, {

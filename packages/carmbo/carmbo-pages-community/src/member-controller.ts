@@ -7,7 +7,7 @@ import {exceptionToBanner} from '@giltayar/carmbo-commons/layout/banner'
 import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {getFixedT} from 'i18next'
 import {z} from 'zod'
-import type {RegistrationEmailSettings} from './email/model.ts'
+import type {RegistrationEmailSettings} from './registration-email.ts'
 import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {
   ActionSchema,

@@ -2,8 +2,7 @@ import type {Sql, TransactionSql} from 'postgres'
 import {z} from 'zod'
 import {TEST_executeHook} from '@giltayar/carmbo-commons/commons/TEST_hooks'
 import {sqlTextSearch} from '@giltayar/carmbo-commons/commons/sql-commons'
-import type {RegistrationEmailSettings} from './email/model.ts'
-import {sendRegistrationEmail} from './email/model.ts'
+import {queueRegistrationEmail, type RegistrationEmailSettings} from './registration-email.ts'
 
 export const roleNames = [
   'poster',
@@ -417,7 +416,7 @@ export async function addMember(
       tx,
     )
     if (registrationEmail) {
-      await sendRegistrationEmail(
+      await queueRegistrationEmail(
         {
           communityNumber,
           studentNumber,

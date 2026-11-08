@@ -15,16 +15,20 @@ import {randomBytes} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
 import {routes} from '../../../src/route.ts'
-import {routes as emailRoutes} from '../../../src/email/route.ts'
-import {webhookRoutes} from '../../../src/email/webhook-route.ts'
+import {routes as emailRoutes} from '@giltayar/carmbo-pages-email/routes'
+import {webhookRoutes} from '@giltayar/carmbo-pages-email/webhook-routes'
 import {routes as jobRoutes} from '@giltayar/carmbo-pages-job/routes'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
 import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
-import {registerSendEmailJobHandler} from '../../../src/email/jobs.ts'
-import type {RegistrationEmailSettings} from '../../../src/email/model.ts'
-import {createFakeEmailService, type FakeEmailService} from '../../../testkit/fake-email-service.ts'
+import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-email/jobs'
+import {
+  createFakeEmailService,
+  type FakeEmailService,
+} from '@giltayar/carmbo-pages-email/testkit/email-service'
+import type {RegistrationEmailSettings} from '../../../src/registration-email.ts'
+import {handleRegistrationEmailResult} from '../../../src/registration-email-result.ts'
 
 export function setup(
   testUrl: string,
@@ -95,10 +99,11 @@ export function setup(
     TEST_resetJobHandlers()
     initializeJobExecutor(database, app.log)
     registrationEmail = {
-      submitSendEmailJob: registerSendEmailJobHandler({
+      queueEmail: registerSendEmailJobHandler({
         sql: database,
         nowService,
         emailService: {sendEmail: (message, options) => fake.sendEmail(message, options)},
+        resultHandlers: {'registration-email': handleRegistrationEmailResult},
       }),
       from: 'Community <sender@example.com>',
       language,

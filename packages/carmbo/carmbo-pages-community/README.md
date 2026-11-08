@@ -10,29 +10,38 @@ membership role/lifecycle/history pages.
 The host must initialize i18next, the app version, and the UI configuration, register
 `@fastify/formbody`, `@fastify/request-context`, the Zod validator/serializer compilers, and run
 the `@giltayar/carmbo-commons@2.4.0` migrations (including membership and email schemas).
-Initialize the published jobs `1.0.5` executor and register the email handler before mounting routes:
+
+Registration emails are sent through [`@giltayar/carmbo-pages-email`](../carmbo-pages-email/README.md).
+Initialize the published jobs `1.0.5` executor and register the email job handler, with this
+package's `registration-email` result handler, before mounting routes:
 
 ```ts
 import {routes as communityRoutes} from '@giltayar/carmbo-pages-community/routes'
-import {routes as emailRoutes} from '@giltayar/carmbo-pages-community/email/routes'
-import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-community/email/jobs'
-import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
+import {handleRegistrationEmailResult} from '@giltayar/carmbo-pages-community/registration-email'
+import {routes as emailRoutes} from '@giltayar/carmbo-pages-email/routes'
+import {webhookRoutes} from '@giltayar/carmbo-pages-email/webhook-routes'
+import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-email/jobs'
+import {createResendEmailService} from '@giltayar/carmbo-pages-email/service'
 import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 
 const nowService = () => new Date()
 initializeJobExecutor(sql, app.log)
-// Registers a Resend webhook for `webhookUrl`; dispose() deletes it on shutdown.
 const emailService = await createResendEmailService({
   apiKey,
   webhookUrl: 'https://your-host.example/api/emails/resend/webhook',
 })
-const submitSendEmailJob = registerSendEmailJobHandler({sql, nowService, emailService})
+const queueEmail = registerSendEmailJobHandler({
+  sql,
+  nowService,
+  emailService,
+  resultHandlers: {'registration-email': handleRegistrationEmailResult},
+})
 app.register(communityRoutes, {
   prefix: '/communities',
   sql,
   nowService,
   // `language` is the configured app language: 'en' or 'he'.
-  registrationEmail: {submitSendEmailJob, from, language: 'en'},
+  registrationEmail: {queueEmail, from, language: 'en'},
 })
 app.register(emailRoutes, {prefix: '/emails', sql})
 // Outside the browser-authentication boundary: Resend calls it, authenticated by its signature.
@@ -45,26 +54,16 @@ app.addHook('onListen', () => void triggerJobsExecution(nowService))
 app.addHook('onClose', () => emailService.dispose())
 ```
 
-`webhookRoutes` comes from `@giltayar/carmbo-pages-community/email/webhook-routes` and exposes
-`POST <prefix>/webhook`. `createResendEmailService` is async: during initialization it registers a
-Resend webhook for the required public HTTPS `webhookUrl`, subscribed to `email.delivered`,
-`email.bounced`, `email.failed`, and `email.suppressed` (`HANDLED_RESEND_EVENTS`), and exposes that
-webhook's `webhookSigningSecret`. Registration failures (for example, a sending-only API key) reject
-initialization; a missing signing secret fails route registration. Whoever creates the service owns
-`dispose()`, which deletes the webhook (repeated calls do nothing). Before registering, initialization
-deletes any webhook already registered for exactly the same URL: with one server per URL, that is a
-leftover from a process killed without disposing, which would otherwise keep receiving every event
-signed with a secret nobody has. Webhooks for any other URL (other environments, dev tunnels) are
-never touched. During a deploy overlap, the old process's callbacks then fail and are retried by
-Resend until they reach the new one.
+See the email package for the email service, webhook, email pages, the fake email service, and the
+email page models (`@giltayar/carmbo-pages-email/testkit/*`).
 
 `registrationEmail` is required, including a non-empty `from`; missing sending configuration must not
-silently skip email creation. Email creation (the saved email row, its member link, and its job
-submitted in the same transaction) lives in the email model; `registerSendEmailJobHandler` only
-registers the `sendEmail` handler, once per application process, and returns its job submitter.
-After adding a member, the routes call `triggerJobsExecution`; hosts trigger it after startup to
-resume persisted jobs, and reuse their existing job-execution triggers for retries.
-The executor and all page packages must share one published jobs/commons runtime instance.
+silently skip email creation. Adding a member renders the registration email, queues it with
+`queueEmail` in the member-creation transaction, and links it to the membership. Without
+`handleRegistrationEmailResult` registered, emails are still sent but memberships never move past
+`started-registration`. After adding a member, the routes call `triggerJobsExecution`; hosts trigger
+it after startup to resume persisted jobs, and reuse their existing job-execution triggers for
+retries. The executor and all page packages must share one published jobs/commons runtime instance.
 
 Optionally pass `smooveIntegration` and `ravmesserIntegration` to use the host's configured student
 contact integrations when creating students. These options are backwards-compatible and do not send
@@ -160,99 +159,28 @@ public/self-service registration endpoints, community permission enforcement, an
 The planned
 timeout is seven days after sending the registration email, not after adding a student.
 
-## Emails
+## Registration emails
 
-Email code lives under `src/email`, separate from the community route/controller/view/model.
-The email pages are read-only. Adding a member now atomically creates the membership, initial
-history snapshot, saved registration email, reverse member link, and `sendEmail` job.
-Only after commit does the controller trigger background execution; no provider request runs inside
-the creation transaction. A failed creation leaves none of those partial records.
+The registration email lives in [registration-email.ts](./src/registration-email.ts); sending,
+retries, idempotency, delivery callbacks, and the `/emails` pages belong to
+`@giltayar/carmbo-pages-email`. Adding a member atomically creates the membership, initial history
+snapshot, saved registration email, reverse member link (`community_member.registration_email_number`),
+and `sendEmail` job. Only after commit does the controller trigger background execution; no provider
+request runs inside the creation transaction. A failed creation leaves none of those partial records.
 
 The simple English/Hebrew registration email contains the student and community names, HTML and
-plain text, but no registration link yet. Its complete payload and language are saved before sending;
-student/community edits and retries do not change what is sent. Approval does not send another email.
-Re-add and unblock-and-re-add go directly to `registered` and retain the original stable email link.
+plain text, but no registration link yet. Its strings are in the `community` locale under
+`registrationEmail`. Its complete payload and language are saved before sending; student/community
+edits and retries do not change what is sent. Approval does not send another email. Re-add and
+unblock-and-re-add go directly to `registered` and retain the original stable email link.
 
-Every send attempt appends its start timestamp; retries also append their actual retry-start timestamp.
-API acceptance records the provider ID and acceptance timestamp and adds a `registration-email-sent`
-member snapshot. A failed attempt sets the email to `retrying`; the fourth failed attempt sets it to
-`failure` and adds `registration-failed` with reason `email-sending-failed` and the provider error text.
-Role edits are preserved; subsequent cancellation, blocking, registration, re-add, and community
-archival prevent the job from overwriting the current member lifecycle.
-
-Retries reuse `registration-email/<uuid>` as the idempotency key, where the UUID is the email's
-immutable `carmbo_email_id` tag. Local job IDs restart in every database sharing a Resend account, so
-they would collide across environments. Known local acceptance is never resent.
-Resend retains keys for 24 hours, so an unknown acceptance retried after that window can send a duplicate.
-Retry execution uses existing job triggers, not a new scheduler or backoff policy.
-
-### Delivery callbacks
-
-Signed Resend callbacks update only the email record, never the membership:
-
-- `email.delivered` sets `success` with the event time as the delivery-confirmed time.
-- `email.bounced`, `email.failed`, and `email.suppressed` set `failure` with the provider's reason.
-- Callbacks are matched by provider email ID, or by the `carmbo_email_id` tag when they arrive before
-  the API response was saved (for example, a lost response). A known provider ID proves acceptance,
-  so the job then records acceptance without calling Resend again, even if its own attempt failed.
-- Each event applies only if it is newer than the last applied provider event, so duplicate and
-  out-of-order callbacks are acknowledged as `stale` without regressing the status. API acceptance
-  never overrides a callback's `success` or `failure`.
-- Missing, invalid, or tampered signatures and malformed payloads return 400. Events for unknown
-  emails (one Resend webhook receives the whole account's events) and unsupported event types are
-  acknowledged with 200 and logged. Processing failures return 500, so Resend retries.
-
-- `/emails` lists all emails, including unlinked ones, by creation time descending, then email number
-  descending. Search matches recipient address, current community name, or current student name;
-  SQL wildcard characters are literal. Paging uses 50-row HTMX infinite scrolling.
-- Each row links to `/emails/:number`, showing purpose, recipient, optional community/member links,
-  creation/acceptance/delivery times, all retry/send timestamps, status, and diagnostic text.
-  Detail also shows the saved sender, subject, language, job/provider IDs, tags, HTML and plain text.
-- HTML previews use a sandboxed iframe with scripts disabled and a content security policy blocking
-  remote resources, including tracking images. `/emails/:number/html` serves the original source as
-  plain text with `nosniff`, never executable application-origin HTML.
-- `delivered` means API acceptance and `success` means provider-confirmed delivery. The UI labels
-  make that distinction explicit. Both English and Hebrew/RTL are supported.
-- The member association is resolved through `community_member.registration_email_number`, not a
-  member reference on the email or a history snapshot. Unlinked emails remain fully viewable.
-
-The host can create a real email service or a fake independently of the pages:
-
-```ts
-import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
-import {createFakeEmailService} from '@giltayar/carmbo-pages-community/testkit/email-service'
-
-const service = await createResendEmailService({apiKey, webhookUrl})
-const fake = createFakeEmailService()
-
-const message = {
-  from: 'Carmbo <sender@your-verified-domain.example>',
-  to: 'delivered@resend.dev',
-  subject: 'Registration',
-  html: '<p>Hello Student, welcome to Community.</p>',
-  text: 'Hello Student, welcome to Community.',
-  tags: {email_number: '123'},
-}
-const result = await service.sendEmail(message, {idempotencyKey: 'sendEmail/42'})
-```
-
-Messages and send options use plain TypeScript types, with no runtime request validation or
-normalization in either the real service or the fake. Resend validates requests on the provider side.
-The service uses the Resend SDK, preserves the idempotency key and tags, and
-returns `{id}` on API acceptance. It performs no automatic retries or database writes. Provider
-errors throw `EmailSendingError` with `code`, `statusCode` (nullable for transport errors), and the
-provider's message. The job rejects a missing provider ID. `apiUrl` can override the endpoint for local
-adapter tests. Callers must store the complete payload and reuse it unchanged on retries.
-
-The fake has the same `sendEmail` interface, observable `attempts` and `sentEmails` snapshots, and
-`failNextSend(error, {afterAcceptance: true})` for simulating a lost response after acceptance.
-Without that option, the failure happens before acceptance. Inject `nowService` to test expiry.
-Reusing a key with identical content returns the original ID for 24 hours; changed content rejects.
-After 24 hours, a new send can occur, matching Resend's idempotency limitation.
-
-Public types are `EmailService`, `ResendEmailService`, `EmailMessage`, `EmailSendOptions`,
-`EmailSendResult`, and `FakeEmailService`. The fake has no webhook or `dispose`. Email page models are
-exported from `@giltayar/carmbo-pages-community/testkit/page-model/email.model`.
+`handleRegistrationEmailResult` (from `./registration-email`) updates the membership when the email
+job finishes. API acceptance adds a `registration-email-sent` member snapshot. After the fourth
+failed attempt, it adds `registration-failed` with reason `email-sending-failed` and the provider
+error text. Role edits are preserved; subsequent cancellation, blocking, registration, re-add, and
+community archival prevent the job from overwriting the current member lifecycle. If the handler
+fails, the job retries without sending the email again. Signed Resend delivery callbacks update only
+the email record, never the membership.
 
 ### Standalone app
 
@@ -311,17 +239,14 @@ compiled-export checks, and PostgreSQL-backed Playwright membership and communit
 Member-page tests perform actions and inspect membership state/history through page models, including
 concurrent browser tabs for stale edits. Database access is limited to fixture setup and seeding
 requested/timeout registration states that have no UI producer yet.
-Email tests cover the adapter/fake, stored-model mapping, public exports, PostgreSQL queries,
-search/paging/order, status metadata, safe previews/source, errors, and English/Hebrew pages.
-Run `pnpm test:playwright email` for focused email-page coverage.
-Registration tests also cover UI sending, immutable payloads, atomic rollback, intermediate retries,
-four-attempt exhaustion and last-attempt success, lost responses, database failure after acceptance,
-acceptance reconciliation, concurrent triggers, member action/role races, and standalone restart.
-Sending tests assert visible state through the email, member, and job pages. Direct SQL is reserved
-for fixtures and storage-only invariants: orphan snapshots and transaction lock availability.
-Callback tests (`email/webhook.test.ts`) post locally signed events and cover delivery and each
-failure type, unchanged memberships, duplicates and out-of-order events, invalid signatures and
-payloads, unrelated/unsupported events, and callbacks racing a lost or failing API response.
+Registration-email tests (`registration-email/`, plus the template unit test) cover UI sending,
+immutable payloads, atomic rollback, intermediate retries, four-attempt exhaustion and last-attempt
+success, result-handler failure after acceptance, member action/role races, the Hebrew email, and
+standalone restart. They assert visible state through the email, member, and job pages. Direct SQL is
+reserved for fixtures and storage-only invariants such as orphan snapshots. Callback tests
+(`registration-email/webhook.test.ts`) post locally signed events and check that delivery and each
+failure type leave memberships unchanged, including callbacks racing a lost or failing API response.
+Email-only behavior (adapter, pages, signatures, idempotency) is tested in `carmbo-pages-email`.
 Docker and an installed Playwright Chromium browser are required. For focused membership coverage:
 
 ```bash

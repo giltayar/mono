@@ -154,5 +154,11 @@
   "validation": {
     "name": "Name is required",
     "description": "Description is invalid"
+  },
+  "registrationEmail": {
+    "subject": "Welcome to {{communityName}}",
+    "greeting": "Hello {{studentName}},",
+    "body": "Welcome to {{communityName}}! We are happy to have you in our community.",
+    "closing": "The community team"
   }
 }
