@@ -1,0 +1,7 @@
+{
+  "name": "carmbo-pages-email",
+  "targets": {
+    "start-btp": {},
+    "btp": {}
+  }
+}

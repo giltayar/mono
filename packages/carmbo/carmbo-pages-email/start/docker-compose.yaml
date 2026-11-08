@@ -1,0 +1,16 @@
+name: carmbo-pages-email
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: carmbo_email
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - '5436:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d carmbo_email']
+      interval: 1s
+      timeout: 5s
+      retries: 30
