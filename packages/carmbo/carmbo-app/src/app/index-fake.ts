@@ -8,7 +8,7 @@ import {prepareDatabase} from './prepare-database.ts'
 import {range, when} from '@giltayar/functional-commons'
 import {initializeAppI18next} from './i18next.ts'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
-import {createFakeEmailService} from '@giltayar/carmbo-pages-community/testkit/email-service'
+import {createFakeEmailService} from '@giltayar/carmbo-pages-email/testkit/email-service'
 import {randomBytes} from 'node:crypto'
 import {z} from 'zod'
 

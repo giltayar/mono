@@ -20,7 +20,7 @@ import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-in
 import {
   createFakeEmailService,
   type FakeEmailService,
-} from '@giltayar/carmbo-pages-community/testkit/email-service'
+} from '@giltayar/carmbo-pages-email/testkit/email-service'
 
 export type SmooveContact = {
   id: number

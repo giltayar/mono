@@ -1,6 +1,6 @@
 import process from 'node:process'
 import {makeApp, RESEND_WEBHOOK_PATH} from './carmbo-app.ts'
-import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
+import {createResendEmailService} from '@giltayar/carmbo-pages-email/service'
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'

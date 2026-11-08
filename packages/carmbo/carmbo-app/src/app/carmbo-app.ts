@@ -8,10 +8,11 @@ import fastifyCompress from '@fastify/compress'
 import postgres from 'postgres'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import {routes as communityRoutes} from '@giltayar/carmbo-pages-community/routes'
-import {routes as emailRoutes} from '@giltayar/carmbo-pages-community/email/routes'
-import {webhookRoutes as emailWebhookRoutes} from '@giltayar/carmbo-pages-community/email/webhook-routes'
-import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-community/email/jobs'
-import type {EmailService} from '@giltayar/carmbo-pages-community/email/service'
+import {handleRegistrationEmailResult} from '@giltayar/carmbo-pages-community/registration-email'
+import {routes as emailRoutes} from '@giltayar/carmbo-pages-email/routes'
+import {webhookRoutes as emailWebhookRoutes} from '@giltayar/carmbo-pages-email/webhook-routes'
+import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-email/jobs'
+import type {EmailService} from '@giltayar/carmbo-pages-email/service'
 import {
   apiRoutes as saleApiRoutes,
   landingPageRoutes as saleLandingPageRoutes,
@@ -147,10 +148,11 @@ export function makeApp({
   initializeJobExecutor(sql, app.log)
   const registrationEmail = communities
     ? {
-        submitSendEmailJob: registerSendEmailJobHandler({
+        queueEmail: registerSendEmailJobHandler({
           sql,
           nowService,
           emailService: communities.emailService,
+          resultHandlers: {'registration-email': handleRegistrationEmailResult},
         }),
         from: communities.emailFrom,
         language: communities.emailLanguage,

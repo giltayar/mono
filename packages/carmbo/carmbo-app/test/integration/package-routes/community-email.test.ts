@@ -6,7 +6,7 @@ import {
   createCommunityMemberPageModel,
   createCommunityMembersPageModel,
 } from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
-import {createEmailPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/email.model'
+import {createEmailPageModel} from '@giltayar/carmbo-pages-email/testkit/page-model/email.model'
 import {createNewCommunityMemberPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-member-page.model'
 import {createNewCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-page.model'
 import {setup} from '../common/setup.ts'
