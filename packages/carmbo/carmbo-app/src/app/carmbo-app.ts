@@ -216,9 +216,15 @@ export function makeApp({
       ravmesserIntegration,
       nowService,
     })
-    if (registrationEmail) {
+    if (registrationEmail && communities) {
       app.register(communityRoutes, {prefix: '/communities', sql, nowService, registrationEmail})
-      app.register(emailRoutes, {prefix: '/emails', sql})
+      app.register(emailRoutes, {
+        prefix: '/emails',
+        sql,
+        nowService,
+        emailService: communities.emailService,
+        from: communities.emailFrom,
+      })
     }
     app.register(salePageRoutes, saleRouteOptions)
     app.register(jobsRoutes, {prefix: '/jobs', sql})

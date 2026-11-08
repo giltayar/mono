@@ -9,13 +9,51 @@ import {createProductListPageModel} from '@giltayar/carmbo-pages-sale/testkit/pa
 import {createNewSalesEventPageModel} from '@giltayar/carmbo-pages-sale/testkit/page-model/sales-events/new-sales-event-page.model'
 import {createSalesEventListPageModel} from '@giltayar/carmbo-pages-sale/testkit/page-model/sales-events/sales-event-list-page.model'
 import {createSaleListPageModel} from '@giltayar/carmbo-pages-sale/testkit/page-model/sales/sale-list-page.model'
+import {
+  createTemplateListPageModel,
+  createTemplatePageModel,
+} from '@giltayar/carmbo-pages-email/testkit/page-model/template.model'
 import {waitForHtmx} from '@giltayar/playwright-commons'
 import {createJobListPageModel} from '../../page-model/jobs/job-list-page.model.ts'
 import {setup} from '../common/setup.ts'
 import {cardcomWebhookUrl} from '../common/cardcom-webhook.ts'
 
 test.describe('package routes', () => {
-  const {url, cardcomIntegration} = setup(import.meta.url, {withCommunities: true})
+  const {url, cardcomIntegration, emailService} = setup(import.meta.url, {withCommunities: true})
+
+  test('email templates load the bundled editor, save, preview and send through app services', async ({
+    page,
+  }) => {
+    const list = createTemplateListPageModel(page)
+    const editor = createTemplatePageModel(page)
+    await page.goto(new URL('/emails/templates', url()).href)
+    await list.new().locator.click()
+    await editor.name().locator.fill('Mounted template')
+    await editor.subject().locator.fill('Hello {{name}}')
+    await editor.text().locator.fill('Plain hello {{name}}')
+    await editor.content().locator.fill('HTML hello {{name}}')
+    await editor.sample('name').locator.fill('Ada')
+    await editor.action('Save template').locator.click()
+    await page.waitForURL(/\/emails\/templates\/\d+$/)
+    await page.goto(new URL('/emails/templates', url()).href)
+    await list.template('Mounted template').locator.click()
+    await expect(editor.content().locator).toContainText('HTML hello {{name}}')
+    await editor.action('Preview').locator.click()
+    await expect(editor.preview().frame().locator).toContainText('HTML hello Ada')
+    await editor.action('Close').locator.click()
+    await editor.action('Send preview email').locator.click()
+    await editor.recipient().locator.fill('preview@example.com')
+    await editor.action('Send').locator.click()
+    await expect(editor.status().locator).toContainText('accepted')
+    expect(emailService().sentEmails).toHaveLength(1)
+    expect(emailService().sentEmails[0].message).toMatchObject({
+      from: 'Carmbo <sender@example.com>',
+      to: 'preview@example.com',
+      subject: 'Hello Ada',
+      text: 'Plain hello Ada',
+    })
+    expect(emailService().sentEmails[0].message.html).toContain('HTML hello Ada')
+  })
 
   test('community route lists a created community', async ({page}) => {
     await page.goto(new URL('/communities', url()).href)
@@ -159,6 +197,22 @@ test.describe('package routes', () => {
   })
 })
 
+test.describe('Hebrew email templates', () => {
+  const {url} = setup(`${import.meta.url}/hebrew-templates`, {
+    withCommunities: true,
+    language: 'he',
+  })
+
+  test('published editor loads with Hebrew controls inside the app', async ({page}) => {
+    const editor = createTemplatePageModel(page)
+    await page.goto(new URL('/emails/templates/new', url()).href)
+    await expect(editor.languagePage().locator).toHaveAttribute('dir', 'rtl')
+    await expect(editor.action('שמירת תבנית').locator).toBeEnabled()
+    await expect(editor.hebrewContent().locator).toBeEditable()
+    await expect(editor.inspector().locator).toHaveAccessibleName('עיצוב')
+  })
+})
+
 test.describe('communities disabled', () => {
   const {url} = setup(`${import.meta.url}/without-communities`, {withCommunities: false})
 
@@ -166,6 +220,13 @@ test.describe('communities disabled', () => {
     for (const [method, path] of [
       ['GET', '/communities'],
       ['GET', '/emails'],
+      ['GET', '/emails/templates'],
+      ['GET', '/emails/templates/new'],
+      ['GET', '/emails/templates/style.css'],
+      ['GET', '/emails/templates/assets/1.1.1/editor.js'],
+      ['POST', '/emails/templates/'],
+      ['POST', '/emails/templates/new/preview'],
+      ['POST', '/emails/templates/new/send-preview'],
       ['POST', '/api/emails/resend/webhook'],
     ]) {
       const response = await request.fetch(new URL(path, url()).href, {method})

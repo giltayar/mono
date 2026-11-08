@@ -42,6 +42,21 @@ test('community routes require login when Firebase authentication is enabled', a
     {method: 'GET', path: '/emails'},
     {method: 'GET', path: '/emails/1'},
     {method: 'GET', path: '/emails/1/html'},
+    {method: 'GET', path: '/emails/templates'},
+    {method: 'GET', path: '/emails/templates/new'},
+    {method: 'GET', path: '/emails/templates/1'},
+    {method: 'GET', path: '/emails/templates/style.css'},
+    {method: 'GET', path: '/emails/templates/assets/1.1.1/editor.js'},
+    {method: 'GET', path: '/emails/templates/assets/1.1.1/editor.css'},
+    {
+      method: 'GET',
+      path: '/emails/templates/1/by-history/00000000-0000-4000-8000-000000000000',
+    },
+    {method: 'POST', path: '/emails/templates/', form: {name: 'Blocked'}},
+    {method: 'PUT', path: '/emails/templates/1', form: {name: 'Blocked'}},
+    {method: 'DELETE', path: '/emails/templates/1?delete-operation=delete'},
+    {method: 'POST', path: '/emails/templates/new/preview', form: {name: 'Blocked'}},
+    {method: 'POST', path: '/emails/templates/new/send-preview', form: {name: 'Blocked'}},
   ]) {
     const response = await request.fetch(new URL(path, url()).href, {
       method,

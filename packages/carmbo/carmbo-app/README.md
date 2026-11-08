@@ -30,8 +30,9 @@ and fails if credentials are missing or rejected; run `docker login` and retry.
 ## Community pages
 
 The published `@giltayar/carmbo-pages-community` package owns the community list, create/update
-forms, archive/restore actions, history, memberships, registration emails, the email pages,
-translations, and assets. Its page routes are mounted at `/communities` and `/emails` in the same
+forms, archive/restore actions, history, memberships, and registration emails.
+The published `@giltayar/carmbo-pages-email` package owns email pages, reusable templates, and their
+translations and assets. Their page routes are mounted at `/communities` and `/emails` in the same
 Firebase-authenticated scope as students when `WITH_COMMUNITIES=true`.
 Communities are disabled by default: unset or `WITH_COMMUNITIES=false` omits the routes
 (including their assets), the delivery webhook, and the Communities and Emails navigation items.
@@ -55,8 +56,20 @@ Emails are written in `LANGUAGE` (`he` for Hebrew, English otherwise). Fake mode
 (`FAKE=-fake WITH_COMMUNITIES=true pnpm start`) uses the package's fake email service, needs none of
 these settings, and never sends anything. To try real sending locally, point `APP_BASE_URL` at a
 public tunnel to the local app.
-The community and email tables are created by the installed `@giltayar/carmbo-commons@2.4.0`
+The community, email, and email-template tables are created by the installed `@giltayar/carmbo-commons@2.4.1`
 migrations.
+
+### Email templates
+
+The Emails/Templates navigation opens `/emails/templates`. The published email package supplies
+the template editor and its prebuilt React/JavaScript/CSS assets; the app does not bundle them again.
+Template pages, assets, preview, and send-preview endpoints share the Firebase authentication
+boundary and are disabled when communities are disabled.
+
+The app passes its database, clock, email service, and configured sender to the email routes.
+Preview emails use that service directly without creating queued emails or jobs. Fake mode uses
+the same fake provider as community emails. Existing community registration emails do not yet use
+saved templates; adopting them is a separate change.
 
 ## Database backup
 

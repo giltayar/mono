@@ -285,7 +285,8 @@ export function setup(
     emailService = createFakeEmailService({nowService: () => overridingDate ?? new Date()})
     await sql`
       TRUNCATE TABLE community, community_history, community_data, community_search,
-        community_member, community_member_data, community_member_history, email
+        community_member, community_member_data, community_member_history, email,
+        email_template, email_template_history, email_template_data, email_template_search
       RESTART IDENTITY CASCADE
     `
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`

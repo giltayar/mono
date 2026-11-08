@@ -4,6 +4,8 @@ allowBuilds:
   '@swc/core': false
   protobufjs: false
   es5-ext: false
+  # The email package ships its browser bundle; the app does not run esbuild.
+  esbuild: false
 
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
