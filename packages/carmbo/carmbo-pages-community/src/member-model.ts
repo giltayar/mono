@@ -110,6 +110,8 @@ export interface StudentChoice {
 export interface Member extends MemberData, StudentChoice {
   communityMemberNumber: number
   historyId: string
+  // Stable association on the member row, not part of the versioned snapshot.
+  registrationEmailNumber: number | null
 }
 
 export interface MemberHistory {
@@ -244,6 +246,7 @@ export async function searchStudents(query: string, sql: Sql): Promise<StudentCh
 function memberSelect(sql: Sql) {
   return sql`
     SELECT m.community_member_number, m.student_number, h.id AS history_id,
+      m.registration_email_number,
       d.entered_at, d.entry_order::text, d.poster, d.live_streamer, d.moderator,
       d.user_blocker, d.user_approver, d.status, d.reason_code, d.reason_text,
       d.registration_email_sent_at, concat(n.first_name, ' ', n.last_name) AS name, e.email
@@ -260,6 +263,31 @@ function memberSelect(sql: Sql) {
 
 function checkedMember(member: Member): Member {
   return {...member, ...MemberDataSchema.parse(member)}
+}
+
+// Only the initial registration waits for the background email job, so only it changes on its own.
+export function awaitsRegistrationEmail(
+  member: Pick<Member, 'status' | 'registrationEmailNumber'>,
+): boolean {
+  return member.status === 'started-registration' && member.registrationEmailNumber !== null
+}
+
+const EMAIL_JOB_OPERATIONS: MemberOperation[] = ['registration-email-sent', 'registration-failed']
+
+// True when `current` differs from `known` only by the email job's lifecycle update, so forms
+// rendered from `known` may adopt the current history id without hiding anybody's edit.
+export function changedOnlyByEmailJob(
+  known: Member,
+  current: Member,
+  currentOperation: MemberOperation,
+): boolean {
+  return (
+    EMAIL_JOB_OPERATIONS.includes(currentOperation) &&
+    awaitsRegistrationEmail(known) &&
+    known.enteredAt.getTime() === current.enteredAt.getTime() &&
+    known.entryOrder === current.entryOrder &&
+    roleNames.every((role) => known[role] === current[role])
+  )
 }
 
 export async function listMembers(

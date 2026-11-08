@@ -32,6 +32,8 @@ export function createCommunityMemberPageModel(page: Page) {
       student: (name: string) => ({
         locator: state.getByRole('link', {name, exact: true}),
       }),
+      registrationEmail: () => ({locator: state.getByRole('link', {name: /^Email \d+$/})}),
+      pollingError: () => ({locator: state.getByRole('alert')}),
     }),
     breadcrumb: () => ({
       locator: breadcrumb,

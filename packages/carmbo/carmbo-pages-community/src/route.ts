@@ -20,6 +20,7 @@ import {
   createMembership,
   showAddMember,
   showMember,
+  showMemberState,
   showMembers,
   showMemberStudentResults,
   selectMemberStudent,
@@ -262,6 +263,23 @@ export function routes(app: FastifyInstance, options: CommunityRouteOptions): vo
       dealWithControllerResult(
         reply,
         await showMember(request.params.number, request.params.studentNumber, sql),
+      ),
+  )
+
+  appWithTypes.get(
+    '/:number/members/:studentNumber/state',
+    {
+      schema: {params: memberParams, querystring: z.object({knownHistoryId: z.uuid()})},
+    },
+    async (request, reply) =>
+      dealWithControllerResult(
+        reply,
+        await showMemberState(
+          request.params.number,
+          request.params.studentNumber,
+          request.query.knownHistoryId,
+          sql,
+        ),
       ),
   )
 

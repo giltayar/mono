@@ -48,6 +48,7 @@ export interface MemberView extends StudentChoiceView {
   reasonCode: string
   reasonText: string
   registrationEmailSentAt: string
+  registrationEmailNumber: string
 }
 
 export interface MemberHistoryView {
@@ -62,6 +63,8 @@ export interface MemberPageView {
   communityName: string
   readOnly: boolean
   historical: boolean
+  // Poll the status panel: the background email job will change it.
+  polling: boolean
   currentHistoryId: string
   member: MemberView
   history: MemberHistoryView[]

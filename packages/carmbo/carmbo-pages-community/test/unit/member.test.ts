@@ -3,9 +3,12 @@ import {describe, it} from 'node:test'
 import {
   actionNames,
   availableActions,
+  awaitsRegistrationEmail,
+  changedOnlyByEmailJob,
   MemberDataSchema,
   RolesSchema,
   transitionMember,
+  type Member,
   type MemberData,
 } from '../../src/member-model.ts'
 import {memberToView, viewToRoles} from '../../src/member-view-model-mapping.ts'
@@ -130,9 +133,11 @@ describe('membership state and roles', () => {
       name: 'Student',
       email: 'student@example.com',
       historyId: crypto.randomUUID(),
+      registrationEmailNumber: null,
     })
     assert.equal(view.moderator, 'on')
     assert.equal(view.reasonCode, '')
+    assert.equal(view.registrationEmailNumber, '')
     assert.equal(view.enteredAt, initial.enteredAt.toISOString())
   })
 })
@@ -217,5 +222,53 @@ describe('membership transitions', () => {
     assert.equal(registered.reasonText, null)
     assert.equal(registered.entryOrder, '1')
     assert.equal(registered.status, 'registered')
+  })
+})
+
+describe('background email status', () => {
+  const awaiting: Member = {
+    ...initial,
+    communityMemberNumber: 1,
+    studentNumber: 2,
+    name: 'Student',
+    email: 'student@example.com',
+    historyId: crypto.randomUUID(),
+    registrationEmailNumber: 7,
+  }
+  const sent: Member = {
+    ...awaiting,
+    historyId: crypto.randomUUID(),
+    status: 'registration-email-sent',
+    registrationEmailSentAt: now,
+  }
+
+  it('awaits the email only for an initial registration that has an email', () => {
+    assert.equal(awaitsRegistrationEmail(awaiting), true)
+    assert.equal(awaitsRegistrationEmail({...awaiting, registrationEmailNumber: null}), false)
+    for (const status of [
+      'registration-email-sent',
+      'registration-failed',
+      'registered',
+    ] as const) {
+      assert.equal(awaitsRegistrationEmail({...awaiting, status}), false)
+    }
+  })
+
+  it('treats only the email job outcome as a change forms may adopt', () => {
+    assert.equal(changedOnlyByEmailJob(awaiting, sent, 'registration-email-sent'), true)
+    assert.equal(changedOnlyByEmailJob(awaiting, sent, 'registration-failed'), true)
+    assert.equal(changedOnlyByEmailJob(awaiting, sent, 'update-roles'), false)
+    assert.equal(
+      changedOnlyByEmailJob(awaiting, {...sent, moderator: false}, 'registration-email-sent'),
+      false,
+    )
+    assert.equal(
+      changedOnlyByEmailJob(awaiting, {...sent, entryOrder: '9'}, 'registration-email-sent'),
+      false,
+    )
+    assert.equal(
+      changedOnlyByEmailJob({...awaiting, status: 'cancelled'}, sent, 'registration-email-sent'),
+      false,
+    )
   })
 })

@@ -96,70 +96,11 @@ export function renderMemberPage(
               </div>`
             : ''
         }
-        <section aria-label=${t('members.summary')} class="card shadow-sm mb-4">
-          <div class="card-body p-4">
-            <dl class="member-state row g-4 mb-0">
-              <div class="col-md-6 col-lg-3">
-                <dt class="small text-body-secondary fw-normal mb-1">${t('members.statusLabel')}</dt>
-                <dd class="mb-0"><span class="badge rounded-pill ${
-                  page.member.status === 'registered'
-                    ? 'text-bg-success'
-                    : blocked || page.member.status === 'registration-failed'
-                      ? 'text-bg-danger'
-                      : 'text-bg-secondary'
-                }">${memberText('statuses', page.member.status)}</span></dd>
-              </div>
-              <div class="col-md-6 col-lg-3">
-                <dt class="small text-body-secondary fw-normal mb-1">${t('members.student')}</dt>
-                <dd class="mb-0 text-break"><a href="/students/${page.member.studentNumber}">${page.member.name}</a></dd>
-              </div>
-              <div class="col-md-6 col-lg-3">
-                <dt class="small text-body-secondary fw-normal mb-1">${t('members.email')}</dt>
-                <dd class="mb-0 text-break" dir="auto">${page.member.email}</dd>
-              </div>
-              <div class="col-md-6 col-lg-3">
-                <dt class="small text-body-secondary fw-normal mb-1">${t('members.enteredAt')}</dt>
-                <dd class="mb-0"><${MemberDate} timestamp=${page.member.enteredAt} /></dd>
-              </div>
-              ${
-                page.member.reasonCode
-                  ? html`<div class="col-md-4">
-                      <dt class="small text-body-secondary fw-normal mb-1">
-                        ${t('members.reason')}
-                      </dt>
-                      <dd class="mb-0">${memberText('reasons', page.member.reasonCode)}</dd>
-                    </div>`
-                  : ''
-              }
-              ${
-                page.member.reasonText
-                  ? html`<div class="col-md-8">
-                      <dt class="small text-body-secondary fw-normal mb-1">
-                        ${t('members.reasonText')}
-                      </dt>
-                      <dd class="mb-0 text-break">${page.member.reasonText}</dd>
-                    </div>`
-                  : ''
-              }
-              ${
-                page.member.registrationEmailSentAt
-                  ? html`<div class="col-md-4">
-                      <dt class="small text-body-secondary fw-normal mb-1">
-                        ${t('members.emailSentAt')}
-                      </dt>
-                      <dd class="mb-0">
-                        <${MemberDate} timestamp=${page.member.registrationEmailSentAt} />
-                      </dd>
-                    </div>`
-                  : ''
-              }
-            </dl>
-          </div>
-        </section>
+        <${MemberSummary} page=${page} base=${base} />
         <div class="row g-4 mb-4">
         <div class=${page.readOnly ? 'col-12' : 'col-lg-6'}>
         <form aria-labelledby="member-roles-heading" hx-put="${base}/roles" hx-target="body" hx-disabled-elt="find button" class="member-roles card shadow-sm h-100">
-          <input type="hidden" name="expectedHistoryId" value=${rolesView?.expectedHistoryId ?? page.member.historyId} />
+          <input type="hidden" id="member-roles-expected-history-id" name="expectedHistoryId" value=${rolesView?.expectedHistoryId ?? page.member.historyId} />
           <div class="card-body p-4">
           <h3 id="member-roles-heading" class="fs-5 fw-semibold mb-3">${t('members.roleLabel')}</h3>
           <fieldset aria-labelledby="member-roles-heading" disabled=${page.readOnly || blocked}>
@@ -186,6 +127,7 @@ export function renderMemberPage(
                     </h3>
                     <input
                       type="hidden"
+                      id="member-actions-expected-history-id"
                       name="expectedHistoryId"
                       value=${actionView?.expectedHistoryId ?? page.member.historyId}
                     />
@@ -226,34 +168,185 @@ ${actionView?.reasonText ?? ''}</textarea>
         }
         </div>
         <h5 id="member-history-heading" class="mt-3 col-md-6 border-bottom">${t('members.history')}</h5>
-        <ul aria-labelledby="member-history-heading" class="member-history list-group mt-3 pb-3 col-md-6" style="font-size: 0.9rem">
-          ${page.history.map(
-            (entry) =>
-              html`<li class="list-group-item d-flex" style="text-transform: capitalize;">
-                ${
-                  entry.historyId === page.member.historyId
-                    ? html`<strong class="d-block"
-                        >${memberText('operations', entry.operation)}</strong
-                      >`
-                    : html`<a
-                        class="d-block"
-                        href=${entry.historyId === page.currentHistoryId ? base : `${base}/by-history/${entry.historyId}`}
-                        >${memberText('operations', entry.operation)}</a
-                      >`
-                }
-                <span class="ms-3">${entry.operationReason}</span>
-                <time
-                  class="d-block ms-auto"
-                  datetime=${entry.timestamp}
-                  title=${new Date(entry.timestamp).toLocaleTimeString('he-IL')}
-                  >${new Date(entry.timestamp).toLocaleDateString('he-IL')}</time
-                >
-              </li>`,
-          )}
-        </ul>
+        <${MemberHistoryList} page=${page} base=${base} />
         </div>
       </${Layout}>
     </${MainLayout}>
+  `
+}
+
+function MemberSummary({page, base}: {page: MemberPageView; base: string}) {
+  const blocked = page.member.status === 'unregistered' && page.member.reasonCode === 'blocked'
+  const polling = page.polling
+    ? {
+        'hx-get': `${base}/state?knownHistoryId=${encodeURIComponent(page.member.historyId)}`,
+        'hx-trigger': 'every 3s',
+        'hx-swap': 'outerHTML',
+        'hx-on::response-error': "this.querySelector('[data-poll-error]').hidden = false",
+        'hx-on::send-error': "this.querySelector('[data-poll-error]').hidden = false",
+      }
+    : {}
+  return html`<section
+    id="member-summary"
+    aria-label=${t('members.summary')}
+    class="card shadow-sm mb-4"
+    ...${polling}
+  >
+    <div class="card-body p-4">
+      <dl class="member-state row g-4 mb-0">
+        <div class="col-md-6 col-lg-3">
+          <dt class="small text-body-secondary fw-normal mb-1">${t('members.statusLabel')}</dt>
+          <dd class="mb-0">
+            <span
+              class="badge rounded-pill ${
+                page.member.status === 'registered'
+                  ? 'text-bg-success'
+                  : blocked || page.member.status === 'registration-failed'
+                    ? 'text-bg-danger'
+                    : 'text-bg-secondary'
+              }"
+              >${memberText('statuses', page.member.status)}</span
+            >
+          </dd>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <dt class="small text-body-secondary fw-normal mb-1">${t('members.student')}</dt>
+          <dd class="mb-0 text-break">
+            <a href="/students/${page.member.studentNumber}">${page.member.name}</a>
+          </dd>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <dt class="small text-body-secondary fw-normal mb-1">${t('members.email')}</dt>
+          <dd class="mb-0 text-break" dir="auto">${page.member.email}</dd>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <dt class="small text-body-secondary fw-normal mb-1">${t('members.enteredAt')}</dt>
+          <dd class="mb-0"><${MemberDate} timestamp=${page.member.enteredAt} /></dd>
+        </div>
+        ${
+          page.member.reasonCode
+            ? html`<div class="col-md-4">
+                <dt class="small text-body-secondary fw-normal mb-1">${t('members.reason')}</dt>
+                <dd class="mb-0">${memberText('reasons', page.member.reasonCode)}</dd>
+              </div>`
+            : ''
+        }
+        ${
+          page.member.reasonText
+            ? html`<div class="col-md-8">
+                <dt class="small text-body-secondary fw-normal mb-1">${t('members.reasonText')}</dt>
+                <dd class="mb-0 text-break">${page.member.reasonText}</dd>
+              </div>`
+            : ''
+        }
+        ${
+          page.member.registrationEmailSentAt
+            ? html`<div class="col-md-4">
+                <dt class="small text-body-secondary fw-normal mb-1">
+                  ${t('members.emailSentAt')}
+                </dt>
+                <dd class="mb-0">
+                  <${MemberDate} timestamp=${page.member.registrationEmailSentAt} />
+                </dd>
+              </div>`
+            : ''
+        }
+        ${
+          page.member.registrationEmailNumber
+            ? html`<div class="col-md-4">
+                <dt class="small text-body-secondary fw-normal mb-1">
+                  ${t('members.registrationEmail')}
+                </dt>
+                <dd class="mb-0">
+                  <a href="/emails/${page.member.registrationEmailNumber}"
+                    >${t('members.registrationEmailLink', {
+                      number: page.member.registrationEmailNumber,
+                    })}</a
+                  >
+                </dd>
+              </div>`
+            : ''
+        }
+      </dl>
+      ${
+        page.polling
+          ? html`<div class="alert alert-warning mt-3 mb-0" role="alert" hidden data-poll-error>
+              ${t('members.pollError')}
+            </div>`
+          : ''
+      }
+    </div>
+  </section>`
+}
+
+function MemberHistoryList({
+  page,
+  base,
+  outOfBand = false,
+}: {
+  page: MemberPageView
+  base: string
+  outOfBand?: boolean
+}) {
+  return html`<ul
+    id="member-history"
+    aria-labelledby="member-history-heading"
+    class="member-history list-group mt-3 pb-3 col-md-6"
+    style="font-size: 0.9rem"
+    hx-swap-oob=${outOfBand ? 'true' : undefined}
+  >
+    ${page.history.map(
+      (entry) =>
+        html`<li class="list-group-item d-flex" style="text-transform: capitalize;">
+          ${
+            entry.historyId === page.member.historyId
+              ? html`<strong class="d-block">${memberText('operations', entry.operation)}</strong>`
+              : html`<a
+                  class="d-block"
+                  href=${
+                    entry.historyId === page.currentHistoryId
+                      ? base
+                      : `${base}/by-history/${entry.historyId}`
+                  }
+                  >${memberText('operations', entry.operation)}</a
+                >`
+          }
+          <span class="ms-3">${entry.operationReason}</span>
+          <time
+            class="d-block ms-auto"
+            datetime=${entry.timestamp}
+            title=${new Date(entry.timestamp).toLocaleTimeString('he-IL')}
+            >${new Date(entry.timestamp).toLocaleDateString('he-IL')}</time
+          >
+        </li>`,
+    )}
+  </ul>`
+}
+
+// The response to a status poll: the refreshed panel (which stops polling once the email job is
+// done), the history list, and, only when the job alone changed the member, the forms' tokens.
+export function renderMemberStateUpdate(
+  page: MemberPageView,
+  {adoptCurrentHistory}: {adoptCurrentHistory: boolean},
+): string | string[] {
+  const base = `/communities/${page.communityNumber}/members/${page.member.studentNumber}`
+  return html`
+    <${MemberSummary} page=${page} base=${base} />
+    <${MemberHistoryList} page=${page} base=${base} outOfBand=${true} />
+    ${
+      adoptCurrentHistory
+        ? ['member-roles-expected-history-id', 'member-actions-expected-history-id'].map(
+            (id) =>
+              html`<input
+                id=${id}
+                type="hidden"
+                name="expectedHistoryId"
+                value=${page.member.historyId}
+                hx-swap-oob="true"
+              />`,
+          )
+        : ''
+    }
   `
 }
 

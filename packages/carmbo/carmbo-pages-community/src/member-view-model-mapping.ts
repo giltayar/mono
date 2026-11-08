@@ -17,6 +17,8 @@ export function memberToView(member: Member): MemberView {
     reasonCode: member.reasonCode ?? '',
     reasonText: member.reasonText ?? '',
     registrationEmailSentAt: member.registrationEmailSentAt?.toISOString() ?? '',
+    registrationEmailNumber:
+      member.registrationEmailNumber === null ? '' : String(member.registrationEmailNumber),
   }
 }
 

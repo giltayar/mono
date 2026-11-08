@@ -7,7 +7,6 @@ import {
 } from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 import {setup} from '../common/setup.ts'
 import {createMemberFixture} from '../common/member-fixture.ts'
-import {queryMember} from '../../../src/member-model.ts'
 
 const now = new Date('2026-10-28T10:00:00Z')
 const {sql, url, TEST_hooks} = setup(import.meta.url, {nowService: () => now})
@@ -61,10 +60,9 @@ test('create a student in the dialog; failed add preserves selection and chosen 
   for (const role of ['Live streamer', 'User blocker', 'User approver']) {
     await expect(memberPage.roles().checkbox(role).locator).not.toBeChecked()
   }
-  await expect
-    .poll(async () => (await queryMember(communityNumber, selectedNumber, sql())).member.status)
-    .toBe('registration-email-sent')
-  await page.reload()
+  await expect(memberPage.state().field('Status').locator).toHaveText('Registration email sent', {
+    timeout: 10_000,
+  })
   await expect(memberPage.history().items().locator).toHaveCount(2)
 
   await memberPage.breadcrumb().link('Community').locator.click()

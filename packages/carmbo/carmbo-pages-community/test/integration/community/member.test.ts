@@ -108,12 +108,10 @@ test('add an existing student, edit independent roles, and navigate full histori
   await newMember.submit().locator.click()
 
   await expect(page).toHaveURL(new URL(base, url()).href)
-  await expect
-    .poll(async () => {
-      await page.reload()
-      return memberPage.state().field('Status').locator.innerText()
-    })
-    .toBe('Registration email sent')
+  // The status panel refreshes itself while the background email job runs.
+  await expect(memberPage.state().field('Status').locator).toHaveText('Registration email sent', {
+    timeout: 10_000,
+  })
   await expect(memberPage.state().locator).toContainText('Registration email sent')
   const breadcrumb = memberPage.breadcrumb()
   await expect(breadcrumb.items().locator).toHaveText(['Communities', 'Community', 'Alice Student'])
@@ -129,6 +127,7 @@ test('add an existing student, edit independent roles, and navigate full histori
     'Email',
     'Date of entry',
     'Registration email sent at',
+    'Registration email',
   ])
   await expect(memberPage.state().student('Alice Student').locator).toHaveAttribute(
     'href',

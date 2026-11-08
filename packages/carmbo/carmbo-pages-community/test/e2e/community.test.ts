@@ -81,7 +81,6 @@ test('a new community member receives a registration email that Resend confirms 
 }) => {
   const run = randomUUID()
   const recipient = `delivered+${run}@resend.dev`
-  const reloadUntil = {timeout: 90_000, intervals: [1000, 2000, 3000]}
 
   await page.goto(`${baseUrl}/communities`)
   await createCommunityListPageModel(page).createNewCommunityButton().locator.click()
@@ -109,12 +108,10 @@ test('a new community member receives a registration email that Resend confirms 
 
   const member = createCommunityMemberPageModel(page)
   await page.waitForURL(member.urlRegex)
-  await expect
-    .poll(async () => {
-      await page.reload()
-      return member.state().field('Status').locator.innerText()
-    }, reloadUntil)
-    .toBe('Registration email sent')
+  // The status panel refreshes itself while the email is being sent.
+  await expect(member.state().field('Status').locator).toHaveText('Registration email sent', {
+    timeout: 90_000,
+  })
 
   await createAllPagesPageModel(page).header().menu().emailsMenuItem().locator.click()
   const emails = createEmailListPageModel(page)
@@ -124,11 +121,15 @@ test('a new community member receives a registration email that Resend confirms 
 
   const email = createEmailPageModel(page)
   await expect(email.details().field('Recipient').locator).toHaveText(recipient)
+  // The email page does not refresh itself; the delivery callback arrives in the background.
   await expect
-    .poll(async () => {
-      await page.reload()
-      return email.details().field('Status').locator.innerText()
-    }, reloadUntil)
+    .poll(
+      async () => {
+        await page.reload()
+        return email.details().field('Status').locator.innerText()
+      },
+      {timeout: 90_000, intervals: [1000, 2000, 3000]},
+    )
     .toBe('Delivery confirmed')
   await expect(email.details().field('Delivery confirmed').timestamps().locator).toHaveCount(1)
 })

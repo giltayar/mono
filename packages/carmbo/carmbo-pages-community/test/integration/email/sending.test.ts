@@ -75,12 +75,9 @@ test('adding a member through the UI sends a registration email and records both
   await expect(page).toHaveURL(new URL(base, url()).href)
 
   const memberPage = createCommunityMemberPageModel(page)
-  await expect
-    .poll(async () => {
-      await page.reload()
-      return memberPage.state().field('Status').locator.innerText()
-    })
-    .toBe('Registration email sent')
+  await expect(memberPage.state().field('Status').locator).toHaveText('Registration email sent', {
+    timeout: 10_000,
+  })
   await expect(memberPage.history().items().locator).toHaveCount(2)
   await expect(memberPage.roles().checkbox('Moderator').locator).toBeChecked()
   await memberPage.history().link('Added').locator.click()
@@ -257,9 +254,8 @@ test('role edits survive completion and cancellations and re-adds are not overwr
   await member.roles().save().locator.click()
   await expect(member.history().items().locator).toHaveCount(2)
   await executeJobs()
-  await page.reload()
-  await expect(member.roles().checkbox('Moderator').locator).toBeChecked()
   await expect(member.state().field('Status').locator).toHaveText('Registration email sent')
+  await expect(member.roles().checkbox('Moderator').locator).toBeChecked()
 
   const second = await createMemberFixture(sql(), now, 'Bob', 'bob@example.com')
   await addMember(
@@ -411,7 +407,7 @@ for (const [action, status] of [
 test('the standalone host registers handlers and executes persisted jobs after restart', async ({
   page,
 }) => {
-  await enqueue()
+  const {base} = await enqueue()
   TEST_resetJobHandlers()
   const app = await createApp(sql(), {
     emailService: emailService(),
@@ -420,15 +416,11 @@ test('the standalone host registers handlers and executes persisted jobs after r
   })
   try {
     const address = await app.listen({host: '127.0.0.1', port: 0})
-    await page.goto(`${address}/emails`)
-    await createEmailListPageModel(page).rows().row(0).number().locator.click()
-    const email = createEmailPageModel(page)
-    await expect
-      .poll(async () => {
-        await page.reload()
-        return email.details().field('Status').locator.innerText()
-      })
-      .toBe('Accepted by Resend')
+    await page.goto(`${address}${base}`)
+    const member = createCommunityMemberPageModel(page)
+    await expect(member.state().field('Status').locator).toHaveText('Registration email sent', {
+      timeout: 10_000,
+    })
     expect(emailService().sentEmails).toHaveLength(1)
   } finally {
     await app.close()

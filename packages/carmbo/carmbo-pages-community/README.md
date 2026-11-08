@@ -133,13 +133,25 @@ live in [member.ts](./src/view/member.ts), with shared translations in
 - Archived communities show memberships/history read-only and reject membership mutations.
   Archived students cannot be added or re-added. Blocked memberships require explicit unblock-and-
   re-add and do not allow role edits while blocked.
+- A member with a registration email links to it from the summary (`/emails/:number`). The link is
+  the stable `community_member.registration_email_number` association, so historical snapshots
+  show it too.
+- While the background email job is pending (status `started-registration` with a registration
+  email), a current member page polls `GET .../members/:studentNumber/state?knownHistoryId=...`
+  every 3 seconds and swaps only the summary panel, plus the history list out of band. The
+  refreshed panel stops polling once the job records `registration-email-sent` or
+  `registration-failed`. No other status, historical snapshot, or archived community polls.
+  Unsaved role and action input is never replaced. If the job alone changed the member (same
+  roles and entry), the response also updates the forms' expected history ID, so the next save is
+  not rejected; any other change leaves them stale, and saving reports that the membership changed.
+  A failed poll shows a warning in the panel, and polling continues.
 
 Supported statuses are `requested-registration`, `started-registration`, `registration-email-sent`,
 `registration-failed`, `registered`, `cancelled`, and `unregistered`. Failure reasons are
 `email-sending-failed`/`timeout`; unregistration reasons are `self`/`removed`/`blocked`/`rejected`,
 with optional diagnostic text. The model validates status/reason/email-timestamp combinations.
 
-**Deferred:** member-page status polling/email links, automatic timeout processing,
+**Deferred:** automatic timeout processing,
 public/self-service registration endpoints, community permission enforcement, and carmbo-app integration.
 The planned
 timeout is seven days after sending the registration email, not after adding a student.
@@ -258,8 +270,8 @@ Resend dashboard. Each `node --watch` restart opens a new tunnel.
 
 The host mounts `/jobs` and the existing localhost job trigger endpoint at
 `POST /api/jobs/trigger-job-execution?secret=...`. Set `JOB_API_SECRET` to protect this endpoint.
-Startup and member additions also trigger execution. A current member page may need reloading
-to show the completed job's status; automatic polling remains deferred.
+Startup and member additions also trigger execution. The member page refreshes its status panel
+while the email is being sent.
 
 ### Real Resend E2E
 

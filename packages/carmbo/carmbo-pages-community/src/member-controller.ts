@@ -12,6 +12,8 @@ import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {
   ActionSchema,
   addMember,
+  awaitsRegistrationEmail,
+  changedOnlyByEmailJob,
   queryCommunity,
   availableActions,
   changeMember,
@@ -25,6 +27,7 @@ import {historyToView, memberToView, viewToRoles} from './member-view-model-mapp
 import {
   renderAddMemberPage,
   renderMemberPage,
+  renderMemberStateUpdate,
   renderMemberStudentDialog,
   renderMemberStudentResults,
   renderMemberStudentSelection,
@@ -260,6 +263,7 @@ export async function showMember(
           communityName: community.name,
           historical: !!historyId,
           readOnly: community.archived || !!historyId,
+          polling: !historyId && !community.archived && awaitsRegistrationEmail(member),
           currentHistoryId,
           member: memberToView(member),
           history: historyToView(history),
@@ -271,6 +275,52 @@ export async function showMember(
             ? exceptionToBanner(t('members.errors.operation'), localizedError(failure.error))
             : undefined,
         },
+      ),
+    )
+  } catch (error) {
+    return readError(error)
+  }
+}
+
+export async function showMemberState(
+  communityNumber: number,
+  studentNumber: number,
+  knownHistoryId: string,
+  sql: Sql,
+): Promise<ControllerResult> {
+  try {
+    const community = await queryCommunity(communityNumber, sql)
+    const {member, history, currentHistoryId} = await queryMember(
+      communityNumber,
+      studentNumber,
+      sql,
+    )
+    let adoptCurrentHistory = false
+    if (member.historyId !== knownHistoryId) {
+      const known = await queryMember(communityNumber, studentNumber, sql, knownHistoryId).catch(
+        (error: unknown) => {
+          if (error instanceof MemberError && error.code === 'notFound') return undefined
+          throw error
+        },
+      )
+      const operation = history.find((entry) => entry.historyId === member.historyId)?.operation
+      adoptCurrentHistory =
+        !!known && !!operation && changedOnlyByEmailJob(known.member, member, operation)
+    }
+    return finalHtml(
+      renderMemberStateUpdate(
+        {
+          communityNumber,
+          communityName: community.name,
+          historical: false,
+          readOnly: community.archived,
+          polling: !community.archived && awaitsRegistrationEmail(member),
+          currentHistoryId,
+          member: memberToView(member),
+          history: historyToView(history),
+          actions: availableActions(member),
+        },
+        {adoptCurrentHistory},
       ),
     )
   } catch (error) {
