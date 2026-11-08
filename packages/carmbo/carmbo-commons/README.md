@@ -258,6 +258,48 @@ Resend retains idempotency keys for only 24 hours; reusing the job-derived key o
 cannot guarantee duplicate prevention beyond that window. Sending, retries, callbacks, pages, and
 membership lifecycle changes will be implemented separately.
 
+### Email templates
+
+Migration 48 adds the email-template schema only. Template pages, the React Email editor,
+Handlebars rendering, and preview sending will be implemented in `carmbo-pages-email` after this
+package is published. Existing email records, jobs, and community registration content are unchanged.
+
+- `email_template` assigns a stable `email_template_number` and stores the current revision's
+  `last_history_id` and denormalized `last_data_id`.
+- `email_template_data` stores an immutable snapshot: `name`, `description`, `subject`, `text`,
+  `html`, `language`, `editor_document`, `editor_document_version`, and `preview_values`.
+  Each snapshot also records its owning `email_template_number`.
+- `email_template_history` records the template number, snapshot `data_id`, operation, timestamp,
+  and optional operation reason. Operations are `create`, `update`, `delete` (archive), and
+  `restore`.
+- `email_template_search` stores the name/description search text for each snapshot, keyed by
+  `data_id`. Do not include email bodies or preview values in search text.
+
+Create/update writers allocate new history and data UUIDs, insert the snapshot and search text,
+and update both current pointers in the same transaction. Archive/restore append a history entry
+referencing the existing snapshot and update only `last_history_id`; they never discard content.
+Historical snapshots are not updated in place. As with memberships, ownership, references,
+immutability, and lifecycle transitions are writer responsibilities, not foreign keys or triggers.
+
+List templates by number descending, joining the current history to exclude `delete` operations
+unless archived templates were requested. Read the current snapshot/search text through
+`last_data_id`. The history index supports lookup by template number and timestamp descending;
+use `id` as a deterministic tie-breaker when timestamps match.
+
+Names and subjects must be nonblank, but names are not unique. Description defaults to an empty
+string; plain text and HTML are stored separately and must not overwrite one another. Language is
+`he` or `en`. The editor document is a JSON object used to reopen the visual editor without
+reparsing exported email HTML; its positive format version defaults to `1`. Writers must validate
+the supported version and document contents.
+
+`preview_values` defaults to `{}` and stores the saved sample string values for Handlebars
+preview fields with each revision. The database checks that it is an object; writers must validate
+its keys and string values. Preview fields will discover only simple `{{name}}` expressions by
+regex, ignoring dotted paths and complex expressions, even though rendering supports full built-in
+Handlebars syntax. Sample data cannot represent arrays or nested objects. Preview sending will
+use current unsaved content directly through the email service, without creating an `email` row,
+job, or template revision.
+
 ## Development and verification
 
 ```sh
