@@ -1,6 +1,14 @@
 import {Resend} from 'resend'
 import {z} from 'zod'
 
+// The provider events the webhook subscribes to and the callback routes apply.
+export const HANDLED_RESEND_EVENTS = [
+  'email.delivered',
+  'email.bounced',
+  'email.failed',
+  'email.suppressed',
+] as const
+
 export type EmailMessage = {
   from: string
   to: string
@@ -27,21 +35,43 @@ export class EmailSendingError extends Error {
   }
 }
 
-export function createResendEmailService({
+export interface ResendEmailService extends EmailService {
+  // Pass to the webhook routes: callbacks from this service's webhook are signed with it.
+  readonly webhookSigningSecret: string
+  // Deletes the webhook registered at initialization. Idempotent.
+  dispose(): Promise<void>
+}
+
+export async function createResendEmailService({
   apiKey,
   apiUrl,
+  webhookUrl,
 }: {
   apiKey: string
   apiUrl?: string
-}): EmailService {
-  const key = z.string().trim().min(1).parse(apiKey)
-  if (apiUrl !== undefined) z.url().parse(apiUrl)
+  webhookUrl: string
+}): Promise<ResendEmailService> {
   const resend = new Resend(
-    key,
+    apiKey,
     apiUrl === undefined ? undefined : {baseUrl: apiUrl.replace(/\/+$/, '')},
   )
 
+  const {data: webhook, error: webhookError} = await resend.webhooks.create({
+    endpoint: webhookUrl,
+    events: [...HANDLED_RESEND_EVENTS],
+  })
+  if (webhookError || !webhook) {
+    throw new EmailSendingError(
+      `Could not register the Resend webhook: ${webhookError?.message ?? 'no data'}`,
+      webhookError?.name ?? 'missing_response',
+      webhookError?.statusCode ?? null,
+    )
+  }
+  const webhookSigningSecret = z.string().min(1).parse(webhook.signing_secret)
+  let webhookId: string | undefined = webhook.id
+
   return {
+    webhookSigningSecret,
     async sendEmail(message, options) {
       const {tags, ...content} = message
 
@@ -55,6 +85,19 @@ export function createResendEmailService({
       }
 
       return data
+    },
+    async dispose() {
+      if (!webhookId) return
+      const id = webhookId
+      webhookId = undefined
+      const {error} = await resend.webhooks.remove(id)
+      if (error) {
+        throw new EmailSendingError(
+          `Could not delete Resend webhook ${id}: ${error.message}`,
+          error.name,
+          error.statusCode ?? null,
+        )
+      }
     },
   }
 }

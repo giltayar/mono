@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
-import fastify from 'fastify'
+import fastify, {type FastifyInstance} from 'fastify'
 import {
   createResendEmailService,
   EmailSendingError,
+  HANDLED_RESEND_EVENTS,
   type EmailMessage,
 } from '../../../src/email/email-service.ts'
 import {createFakeEmailService} from '../../../testkit/fake-email-service.ts'
@@ -17,10 +18,40 @@ const message: EmailMessage = {
   tags: {email_number: '123'},
 }
 const options = {idempotencyKey: 'sendEmail/42'}
+const webhookUrl = 'https://callbacks.example.test/api/emails/resend/webhook'
+
+// The SDK sends DELETE requests with a JSON content type and an empty body, which Resend accepts.
+function acceptEmptyJsonBodies(app: FastifyInstance) {
+  app.removeContentTypeParser('application/json')
+  app.addContentTypeParser('application/json', {parseAs: 'string'}, (_request, body, done) =>
+    done(null, body ? JSON.parse(String(body)) : undefined),
+  )
+}
+
+function mockWebhookApi(app: FastifyInstance) {
+  acceptEmptyJsonBodies(app)
+  const created: unknown[] = []
+  const removed: string[] = []
+  app.post('/webhooks', async (request) => {
+    created.push(request.body)
+    return {object: 'webhook', id: 'webhook-id', signing_secret: 'whsec_c2VjcmV0'}
+  })
+  app.delete<{Params: {id: string}}>('/webhooks/:id', async (request) => {
+    removed.push(request.params.id)
+    return {object: 'webhook', id: request.params.id, deleted: true}
+  })
+  return {created, removed}
+}
+
+async function serviceFor(app: FastifyInstance) {
+  const apiUrl = await app.listen({host: '127.0.0.1', port: 0})
+  return createResendEmailService({apiKey: 'test-api-key', apiUrl, webhookUrl})
+}
 
 test('Resend adapter sends the complete payload and idempotency header', async (t) => {
   const app = fastify()
   t.after(() => app.close())
+  const webhooks = mockWebhookApi(app)
   app.post('/emails', async (request) => {
     assert.equal(request.headers.authorization, 'Bearer test-api-key')
     assert.equal(request.headers['idempotency-key'], options.idempotencyKey)
@@ -31,21 +62,69 @@ test('Resend adapter sends the complete payload and idempotency header', async (
     return {id: 'provider-id'}
   })
   const apiUrl = await app.listen({host: '127.0.0.1', port: 0})
-  const service = createResendEmailService({apiKey: 'test-api-key', apiUrl: `${apiUrl}/`})
+  const service = await createResendEmailService({
+    apiKey: 'test-api-key',
+    apiUrl: `${apiUrl}/`,
+    webhookUrl,
+  })
+  assert.deepEqual(webhooks.created, [{endpoint: webhookUrl, events: [...HANDLED_RESEND_EVENTS]}])
+  assert.equal(service.webhookSigningSecret, 'whsec_c2VjcmV0')
   assert.deepEqual(await service.sendEmail(message, options), {id: 'provider-id'})
+})
+
+test('dispose deletes the registered webhook exactly once', async (t) => {
+  const app = fastify()
+  t.after(() => app.close())
+  const webhooks = mockWebhookApi(app)
+  const service = await serviceFor(app)
+  await service.dispose()
+  await service.dispose()
+  assert.deepEqual(webhooks.removed, ['webhook-id'])
+})
+
+test('webhook registration and deletion failures are reported', async (t) => {
+  const app = fastify()
+  t.after(() => app.close())
+  acceptEmptyJsonBodies(app)
+  let failRemoval = false
+  app.post('/webhooks', async (_request, reply) =>
+    failRemoval
+      ? {object: 'webhook', id: 'webhook-id', signing_secret: 'whsec_c2VjcmV0'}
+      : reply
+          .status(403)
+          .send({name: 'restricted_api_key', message: 'Sending only', statusCode: 403}),
+  )
+  app.delete('/webhooks/:id', async (_request, reply) =>
+    reply.status(500).send({name: 'internal_server_error', message: 'Down', statusCode: 500}),
+  )
+  const apiUrl = await app.listen({host: '127.0.0.1', port: 0})
+  const create = () => createResendEmailService({apiKey: 'test-api-key', apiUrl, webhookUrl})
+  await assert.rejects(create(), {
+    name: 'EmailSendingError',
+    message: 'Could not register the Resend webhook: Sending only',
+    code: 'restricted_api_key',
+    statusCode: 403,
+  })
+
+  failRemoval = true
+  const service = await create()
+  await assert.rejects(service.dispose(), {
+    message: 'Could not delete Resend webhook webhook-id: Down',
+    statusCode: 500,
+  })
 })
 
 for (const status of [401, 409, 429, 500]) {
   test(`Resend adapter propagates provider errors (${status})`, async (t) => {
     const app = fastify()
     t.after(() => app.close())
+    mockWebhookApi(app)
     app.post('/emails', async (_request, reply) =>
       reply
         .status(status)
         .send({name: 'validation_error', message: `provider error ${status}`, statusCode: status}),
     )
-    const apiUrl = await app.listen({host: '127.0.0.1', port: 0})
-    const service = createResendEmailService({apiKey: 'test-api-key', apiUrl})
+    const service = await serviceFor(app)
     await assert.rejects(service.sendEmail(message, options), (error) => {
       assert.ok(error instanceof EmailSendingError)
       assert.equal(error.message, `provider error ${status}`)
@@ -56,10 +135,14 @@ for (const status of [401, 409, 429, 500]) {
   })
 }
 
-test('Resend adapter validates configuration', () => {
-  assert.throws(() => createResendEmailService({apiKey: ''}))
-  assert.throws(() => createResendEmailService({apiKey: 'test', apiUrl: 'invalid'}))
-  assert.throws(() => createResendEmailService({apiKey: 'test', apiUrl: ''}))
+test('Resend adapter validates configuration before calling the API', async () => {
+  await assert.rejects(createResendEmailService({apiKey: '', webhookUrl}))
+  await assert.rejects(createResendEmailService({apiKey: 'test', apiUrl: 'invalid', webhookUrl}))
+  await assert.rejects(createResendEmailService({apiKey: 'test', apiUrl: '', webhookUrl}))
+  await assert.rejects(createResendEmailService({apiKey: 'test', webhookUrl: ''}))
+  await assert.rejects(
+    createResendEmailService({apiKey: 'test', webhookUrl: 'http://insecure.example.test/hook'}),
+  )
 })
 
 test('fake deduplicates accepted requests but records every attempt', async () => {

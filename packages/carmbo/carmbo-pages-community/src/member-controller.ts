@@ -7,18 +7,19 @@ import {exceptionToBanner} from '@giltayar/carmbo-commons/layout/banner'
 import {createStudent} from '@giltayar/carmbo-pages-student/students'
 import {getFixedT} from 'i18next'
 import {z} from 'zod'
-import type {RegistrationEmailJobs} from './email/jobs.ts'
+import type {RegistrationEmailSettings} from './email/model.ts'
+import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {
   ActionSchema,
   addMember,
-  assertCommunity,
+  queryCommunity,
   availableActions,
   changeMember,
   listMembers,
   MemberError,
   queryMember,
   searchStudents,
-  studentChoice,
+  queryStudent,
 } from './member-model.ts'
 import {historyToView, memberToView, viewToRoles} from './member-view-model-mapping.ts'
 import {
@@ -41,7 +42,7 @@ const t = getFixedT(null, 'community')
 
 export type MemberServices = {
   nowService: NowService
-  registrationEmails: RegistrationEmailJobs
+  registrationEmail: RegistrationEmailSettings
   smooveIntegration?: Parameters<typeof createStudent>[2]
   ravmesserIntegration?: Parameters<typeof createStudent>[3]
 }
@@ -73,7 +74,7 @@ export async function showMembers(
   sql: Sql,
 ): Promise<ControllerResult> {
   try {
-    const community = await assertCommunity(communityNumber, sql)
+    const community = await queryCommunity(communityNumber, sql)
     return finalHtml(
       renderMembersPage({
         communityNumber,
@@ -95,7 +96,7 @@ export async function showAddMember(
   failure?: {error: unknown; view: NewMemberView; selected?: StudentChoiceView},
 ): Promise<ControllerResult> {
   try {
-    const community = await assertCommunity(communityNumber, sql, {writable: true})
+    const community = await queryCommunity(communityNumber, sql, {writable: true})
     return finalHtml(
       renderAddMemberPage({
         communityNumber,
@@ -118,7 +119,7 @@ export async function showMemberStudentResults(
   sql: Sql,
 ): Promise<ControllerResult> {
   try {
-    await assertCommunity(communityNumber, sql, {writable: true})
+    await queryCommunity(communityNumber, sql, {writable: true})
     return finalHtml(renderMemberStudentResults(communityNumber, await searchStudents(query, sql)))
   } catch (error) {
     return readError(error)
@@ -145,8 +146,8 @@ export async function selectMemberStudent(
   {logger}: Options,
 ): Promise<ControllerResult> {
   try {
-    await assertCommunity(communityNumber, sql, {writable: true})
-    const selected = await studentChoice(studentNumberFromInput(input), sql, true)
+    await queryCommunity(communityNumber, sql, {writable: true})
+    const selected = await queryStudent(studentNumberFromInput(input), sql, true)
     return finalHtml(renderMemberStudentSelection(selected))
   } catch (error) {
     logger.error({err: error}, 'select-community-member-student')
@@ -168,7 +169,7 @@ export async function createMemberStudent(
   {nowService, logger, smooveIntegration, ravmesserIntegration}: Options,
 ): Promise<ControllerResult> {
   try {
-    await assertCommunity(communityNumber, sql, {writable: true})
+    await queryCommunity(communityNumber, sql, {writable: true})
     const valid = z
       .object({
         firstName: z.string().trim().min(1),
@@ -190,7 +191,7 @@ export async function createMemberStudent(
       sql,
     )
     return retarget(
-      finalHtml(renderMemberStudentSelection(await studentChoice(studentNumber, sql, true))),
+      finalHtml(renderMemberStudentSelection(await queryStudent(studentNumber, sql, true))),
       '#member-student-field',
     )
   } catch (error) {
@@ -213,21 +214,21 @@ export async function createMembership(
   communityNumber: number,
   view: NewMemberView,
   sql: Sql,
-  {nowService, logger, registrationEmails}: Options,
+  {nowService, logger, registrationEmail}: Options,
 ): Promise<ControllerResult> {
   let selected: StudentChoiceView | undefined
   try {
     const studentNumber = studentNumberFromInput(view.studentNumber)
-    selected = await studentChoice(studentNumber, sql, true)
+    selected = await queryStudent(studentNumber, sql, true)
     await addMember(
       communityNumber,
       studentNumber,
       nowService(),
       sql,
       viewToRoles(view),
-      registrationEmails,
+      registrationEmail,
     )
-    void registrationEmails.execute().catch((err: unknown) => {
+    void triggerJobsExecution(nowService).catch((err: unknown) => {
       logger.error({err}, 'trigger-registration-email-jobs-failed')
     })
     return {htmxRedirect: `/communities/${communityNumber}/members/${studentNumber}`}
@@ -245,7 +246,7 @@ export async function showMember(
   failure?: {error: unknown; rolesView?: MemberRolesView; actionView?: MemberActionView},
 ): Promise<ControllerResult> {
   try {
-    const community = await assertCommunity(communityNumber, sql)
+    const community = await queryCommunity(communityNumber, sql)
     const {member, history, currentHistoryId} = await queryMember(
       communityNumber,
       studentNumber,

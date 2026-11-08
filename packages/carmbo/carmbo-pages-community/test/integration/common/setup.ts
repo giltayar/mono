@@ -11,16 +11,19 @@ import {test} from '@playwright/test'
 import fastify, {type FastifyInstance} from 'fastify'
 import {serializerCompiler, validatorCompiler} from 'fastify-type-provider-zod'
 import type {AddressInfo} from 'node:net'
+import {randomBytes} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
 import postgres, {type Sql} from 'postgres'
 import {routes} from '../../../src/route.ts'
 import {routes as emailRoutes} from '../../../src/email/route.ts'
+import {webhookRoutes} from '../../../src/email/webhook-route.ts'
 import {routes as jobRoutes} from '@giltayar/carmbo-pages-job/routes'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
-import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
+import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
-import {registerRegistrationEmailJobs, type RegistrationEmailJobs} from '../../../src/email/jobs.ts'
+import {registerSendEmailJobHandler} from '../../../src/email/jobs.ts'
+import type {RegistrationEmailSettings} from '../../../src/email/model.ts'
 import {createFakeEmailService, type FakeEmailService} from '../../../testkit/fake-email-service.ts'
 
 export function setup(
@@ -37,15 +40,19 @@ export function setup(
   sql: () => Sql
   TEST_hooks: Record<string, TEST_HookFunction>
   emailService: () => FakeEmailService
-  registrationEmails: () => RegistrationEmailJobs
+  registrationEmail: () => RegistrationEmailSettings
+  executeJobs: () => Promise<void>
+  webhookSigningSecret: string
 } {
   const TEST_hooks: Record<string, TEST_HookFunction> = {}
+  const webhookSigningSecret = `whsec_${randomBytes(32).toString('base64')}`
   let app: FastifyInstance
   let database: Sql
   let baseUrl: URL
   let teardown: (() => Promise<void>) | undefined
   let fake = createFakeEmailService({nowService})
-  let emailJobs: RegistrationEmailJobs | undefined
+  let registrationEmail: RegistrationEmailSettings | undefined
+  const executeJobs = () => triggerJobsExecution(nowService)
 
   test.beforeAll(async () => {
     const dockerCompose = await runDockerCompose(
@@ -87,13 +94,15 @@ export function setup(
     app = fastify()
     TEST_resetJobHandlers()
     initializeJobExecutor(database, app.log)
-    emailJobs = registerRegistrationEmailJobs({
-      sql: database,
-      nowService,
-      emailService: {sendEmail: (message, options) => fake.sendEmail(message, options)},
+    registrationEmail = {
+      submitSendEmailJob: registerSendEmailJobHandler({
+        sql: database,
+        nowService,
+        emailService: {sendEmail: (message, options) => fake.sendEmail(message, options)},
+      }),
       from: 'Community <sender@example.com>',
       language,
-    })
+    }
     app.register(formbody, {parser: (body) => qs.parse(body)})
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
@@ -134,9 +143,14 @@ export function setup(
       prefix: '/communities',
       sql: database,
       nowService,
-      registrationEmails: emailJobs,
+      registrationEmail,
     })
     app.register(emailRoutes, {prefix: '/emails', sql: database})
+    app.register(webhookRoutes, {
+      prefix: '/api/emails/resend',
+      sql: database,
+      signingSecret: webhookSigningSecret,
+    })
     app.register(jobRoutes, {prefix: '/jobs', sql: database})
     app.register(studentRoutes, {
       prefix: '/students',
@@ -154,7 +168,7 @@ export function setup(
   })
 
   test.beforeEach(async () => {
-    if (emailJobs) await emailJobs.execute()
+    if (registrationEmail) await executeJobs()
     fake = createFakeEmailService({nowService})
     for (const hookName of Object.keys(TEST_hooks)) {
       delete TEST_hooks[hookName]
@@ -185,7 +199,7 @@ export function setup(
   })
 
   test.afterAll(async () => {
-    if (emailJobs) await emailJobs.execute()
+    if (registrationEmail) await executeJobs()
     await app?.close()
     await database?.end()
     await teardown?.()
@@ -195,10 +209,12 @@ export function setup(
     url: () => baseUrl,
     sql: () => database,
     TEST_hooks,
+    webhookSigningSecret,
     emailService: () => fake,
-    registrationEmails: () => {
-      if (!emailJobs) throw new Error('Registration email jobs are not initialized')
-      return emailJobs
+    executeJobs,
+    registrationEmail: () => {
+      if (!registrationEmail) throw new Error('Registration email settings are not initialized')
+      return registrationEmail
     },
   }
 }

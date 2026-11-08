@@ -7,7 +7,7 @@ import {createAllPagesPageModel} from '@giltayar/carmbo-commons/testkit/page-mod
 import {createFakeEmailService} from '../../../testkit/fake-email-service.ts'
 import {setup} from '../common/setup.ts'
 import {createMemberFixture} from '../common/member-fixture.ts'
-import {addMember} from '../../../src/member-model.ts'
+import {addMember, DEFAULT_MEMBER_ROLES} from '../../../src/member-model.ts'
 import {listEmails} from '../../../src/email/model.ts'
 import {updateCommunity} from '../../../src/model.ts'
 import {now, seedEmail} from './fixture.ts'
@@ -29,7 +29,14 @@ test('shows fake-backed email metadata, member links, preview, text and raw HTML
   request,
 }) => {
   const member = await createMemberFixture(sql(), now, 'Ada', 'ada@example.com')
-  await addMember(member.communityNumber, member.studentNumber, now, sql())
+  await addMember(
+    member.communityNumber,
+    member.studentNumber,
+    now,
+    sql(),
+    DEFAULT_MEMBER_ROLES,
+    undefined,
+  )
   const fake = createFakeEmailService()
   const emailNumber = await seedEmail(
     sql(),
@@ -134,7 +141,14 @@ test('searches recipient, community and student names literally and case-insensi
   page,
 }) => {
   const member = await createMemberFixture(sql(), now, 'Unique Student', 'linked@example.com')
-  await addMember(member.communityNumber, member.studentNumber, now, sql())
+  await addMember(
+    member.communityNumber,
+    member.studentNumber,
+    now,
+    sql(),
+    DEFAULT_MEMBER_ROLES,
+    undefined,
+  )
   const linked = await seedEmail(sql(), {toEmail: 'linked@example.com'})
   await seedEmail(sql(), {toEmail: 'other@example.com'})
   await seedEmail(sql(), {toEmail: 'literal_address@example.com'})

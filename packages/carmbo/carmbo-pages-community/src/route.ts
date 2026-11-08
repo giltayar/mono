@@ -37,8 +37,11 @@ type CommunityRouteOptions = MemberServices & {
 }
 
 export function routes(app: FastifyInstance, options: CommunityRouteOptions): void {
-  if (!options.registrationEmails) {
-    throw new Error('Community routes require registration email jobs')
+  if (!options.registrationEmail?.submitSendEmailJob) {
+    throw new Error('Community routes require the registration email job submitter')
+  }
+  if (!options.registrationEmail.from?.trim()) {
+    throw new Error('Registration email sender is required')
   }
   const {sql, nowService} = options
   registerCommunityLocaleResources()

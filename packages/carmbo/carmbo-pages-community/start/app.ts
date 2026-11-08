@@ -13,14 +13,22 @@ import {routes} from '../src/route.ts'
 import {routes as emailRoutes} from '../src/email/route.ts'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import qs from 'qs'
-import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
+import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 import {routes as jobRoutes, apiRoutes as jobApiRoutes} from '@giltayar/carmbo-pages-job/routes'
-import {registerRegistrationEmailJobs} from '../src/email/jobs.ts'
+import {registerSendEmailJobHandler} from '../src/email/jobs.ts'
 import type {EmailService} from '../src/email/email-service.ts'
+import {webhookRoutes} from '../src/email/webhook-route.ts'
+
+const RESEND_WEBHOOK_ROUTE_PREFIX = '/api/emails/resend'
+export const RESEND_WEBHOOK_PATH = `${RESEND_WEBHOOK_ROUTE_PREFIX}/webhook`
 
 export async function createApp(
   database: Sql,
-  {emailService, from}: {emailService: EmailService; from: string},
+  {
+    emailService,
+    from,
+    webhookSigningSecret,
+  }: {emailService: EmailService; from: string; webhookSigningSecret: string},
 ): Promise<FastifyInstance> {
   const language = process.env.LANGUAGE === 'he' ? 'he' : 'en'
 
@@ -31,12 +39,10 @@ export async function createApp(
   const app = fastify({logger: true})
   const nowService = () => new Date()
   initializeJobExecutor(database, app.log)
-  const registrationEmails = registerRegistrationEmailJobs({
+  const submitSendEmailJob = registerSendEmailJobHandler({
     sql: database,
     nowService,
     emailService,
-    from,
-    language,
   })
   app.register(formbody, {parser: (body) => qs.parse(body)})
   app.setValidatorCompiler(validatorCompiler)
@@ -56,9 +62,14 @@ export async function createApp(
     prefix: '/communities',
     sql: database,
     nowService,
-    registrationEmails,
+    registrationEmail: {submitSendEmailJob, from, language},
   })
   app.register(emailRoutes, {prefix: '/emails', sql: database})
+  app.register(webhookRoutes, {
+    prefix: RESEND_WEBHOOK_ROUTE_PREFIX,
+    sql: database,
+    signingSecret: webhookSigningSecret,
+  })
   app.register(jobRoutes, {prefix: '/jobs', sql: database})
   app.register(jobApiRoutes, {
     prefix: '/api/jobs',
@@ -76,7 +87,8 @@ export async function createApp(
   })
   app.get('/', async (_request, reply) => reply.redirect('/communities'))
   app.addHook('onListen', () => {
-    void registrationEmails.execute().catch((err: unknown) => {
+    // Resumes jobs persisted before a restart.
+    void triggerJobsExecution(nowService).catch((err: unknown) => {
       app.log.error({err}, 'trigger-startup-email-jobs-failed')
     })
   })

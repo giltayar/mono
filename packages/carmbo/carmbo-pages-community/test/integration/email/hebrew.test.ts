@@ -7,10 +7,12 @@ import {
 import {setup} from '../common/setup.ts'
 import {seedEmail} from './fixture.ts'
 import {createMemberFixture} from '../common/member-fixture.ts'
-import {addMember} from '../../../src/member-model.ts'
+import {addMember, DEFAULT_MEMBER_ROLES} from '../../../src/member-model.ts'
 import {listEmails} from '../../../src/email/model.ts'
 
-const {sql, url, registrationEmails, emailService} = setup(import.meta.url, {language: 'he'})
+const {sql, url, registrationEmail, executeJobs, emailService} = setup(import.meta.url, {
+  language: 'he',
+})
 
 test('renders Hebrew email pages with RTL layout and localized statuses', async ({page}) => {
   const number = await seedEmail(sql(), {
@@ -46,8 +48,15 @@ test('new members receive an immutable Hebrew registration email with RTL conten
     'תלמידה',
     'student@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql(), undefined, registrationEmails())
-  await registrationEmails().execute()
+  await addMember(
+    communityNumber,
+    studentNumber,
+    now,
+    sql(),
+    DEFAULT_MEMBER_ROLES,
+    registrationEmail(),
+  )
+  await executeJobs()
   const [email] = await listEmails({query: '', page: 0}, sql())
   expect(email.language).toBe('he')
   expect(email.subject).toBe('ברוכים הבאים לקהילת Community')

@@ -10,16 +10,19 @@ import {
 import {createNewCommunityMemberPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/new-community-member-page.model'
 import {createUpdateCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/update-community-page.model'
 import {createUpdateStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/update-student-page.model'
-import {addMember} from '../../../src/member-model.ts'
+import {addMember, DEFAULT_MEMBER_ROLES} from '../../../src/member-model.ts'
 import {setup} from '../common/setup.ts'
 import {createMemberFixture} from '../common/member-fixture.ts'
 import {createApp} from '../../../start/app.ts'
 import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
 
 let now = new Date('2026-11-07T10:00:00Z')
-const {sql, url, emailService, registrationEmails, TEST_hooks} = setup(import.meta.url, {
-  nowService: () => now,
-})
+const {sql, url, emailService, registrationEmail, executeJobs, TEST_hooks} = setup(
+  import.meta.url,
+  {
+    nowService: () => now,
+  },
+)
 
 test.beforeEach(() => {
   now = new Date('2026-11-07T10:00:00Z')
@@ -32,8 +35,8 @@ async function enqueue() {
     fixture.studentNumber,
     now,
     sql(),
-    undefined,
-    registrationEmails(),
+    DEFAULT_MEMBER_ROLES,
+    registrationEmail(),
   )
   return fixture
 }
@@ -106,8 +109,12 @@ test('adding a member through the UI sends a registration email and records both
   )
   await expect(email.details().field('Retries').timestamps().locator).toHaveCount(0)
   expect(emailService().sentEmails).toHaveLength(1)
-  const jobId = await email.details().field('Job ID').locator.innerText()
-  expect(emailService().attempts[0].options.idempotencyKey).toBe(`sendEmail/${jobId}`)
+  const tags = JSON.parse(await email.details().field('Tags').locator.innerText())
+  expect(Object.keys(tags).sort()).toEqual(['carmbo_email_id', 'job_id'])
+  expect(emailService().attempts[0].message.tags).toEqual(tags)
+  expect(emailService().attempts[0].options.idempotencyKey).toBe(
+    `registration-email/${tags.carmbo_email_id}`,
+  )
 })
 
 test('creation commits the member, email, link and job together and sends only after commit', async ({
@@ -123,9 +130,9 @@ test('creation commits the member, email, link and job together and sends only a
   await expect(job).toContainText('Registration email for community')
   await expect(page.getByText('Finished: still working...', {exact: true})).toBeVisible()
   expect(emailService().attempts).toHaveLength(0)
-  await registrationEmails().execute()
+  await executeJobs()
   expect(emailService().sentEmails).toHaveLength(1)
-  await registrationEmails().execute()
+  await executeJobs()
   expect(emailService().attempts).toHaveLength(1)
 })
 
@@ -165,7 +172,7 @@ test('retries keep the exact saved payload and key after edits, with eventual ac
 }) => {
   const {communityNumber, studentNumber, base} = await enqueue()
   emailService().failNextSend(new Error('Temporary provider failure'))
-  await registrationEmails().execute()
+  await executeJobs()
   const email = await openEmail(page)
   await expect(email.details().field('Status').locator).toHaveText('Retrying')
   await expect(email.details().field('Error').locator).toHaveText('Temporary provider failure')
@@ -186,7 +193,7 @@ test('retries keep the exact saved payload and key after edits, with eventual ac
   await expect(student.history().items().locator).toHaveCount(2)
 
   now = new Date(now.getTime() + 1000)
-  await registrationEmails().execute()
+  await executeJobs()
   await openEmail(page)
   await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
   await expect(email.details().field('Error').locator).toHaveText('-')
@@ -207,7 +214,7 @@ test('four failed attempts exhaust the job and preserve error diagnostics in the
   const {base} = await enqueue()
   for (let attempt = 0; attempt < 4; attempt++) {
     emailService().failNextSend(new Error(`Provider failure ${attempt}`))
-    await registrationEmails().execute()
+    await executeJobs()
     now = new Date(now.getTime() + 1000)
   }
   const email = await openEmail(page)
@@ -223,40 +230,22 @@ test('four failed attempts exhaust the job and preserve error diagnostics in the
   await expect(member.state().field('Reason / error text').locator).toHaveText('Provider failure 3')
   await expect(member.state().field('Registration email sent at').locator).toHaveCount(0)
   await expect(member.history().items().locator).toHaveCount(2)
-  await registrationEmails().execute()
+  await executeJobs()
   expect(emailService().attempts).toHaveLength(4)
 })
 
 test('a lost response is retried with the same key and sends only once', async ({page}) => {
   await enqueue()
   emailService().failNextSend(new Error('Lost response'), {afterAcceptance: true})
-  await registrationEmails().execute()
+  await executeJobs()
   const email = await openEmail(page)
   await expect(email.details().field('Status').locator).toHaveText('Retrying')
   expect(emailService().sentEmails).toHaveLength(1)
-  await registrationEmails().execute()
+  await executeJobs()
   await page.reload()
   await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
   expect(emailService().sentEmails).toHaveLength(1)
   expect(emailService().attempts).toHaveLength(2)
-})
-
-test('known acceptance reconciles an unfinished job without another provider call', async ({
-  page,
-}) => {
-  const {base} = await enqueue()
-  const email = await openEmail(page)
-  const number = await createEmailPageModel(page).heading().locator.innerText()
-  // Delivery callbacks are not implemented yet; seed provider-confirmed acceptance.
-  await sql()`UPDATE email SET resend_email_id = 'already-accepted', delivered_at = ${now},
-    status = 'success', success_at = ${now}
-    WHERE email_number = ${Number(number.replace('Email ', ''))}`
-  await registrationEmails().execute()
-  expect(emailService().attempts).toHaveLength(0)
-  await page.reload()
-  await expect(email.details().field('Status').locator).toHaveText('Delivery confirmed')
-  const member = await openMember(page, base)
-  await expect(member.state().field('Status').locator).toHaveText('Registration email sent')
 })
 
 test('role edits survive completion and cancellations and re-adds are not overwritten', async ({
@@ -267,7 +256,7 @@ test('role edits survive completion and cancellations and re-adds are not overwr
   await member.roles().checkbox('Moderator').locator.check()
   await member.roles().save().locator.click()
   await expect(member.history().items().locator).toHaveCount(2)
-  await registrationEmails().execute()
+  await executeJobs()
   await page.reload()
   await expect(member.roles().checkbox('Moderator').locator).toBeChecked()
   await expect(member.state().field('Status').locator).toHaveText('Registration email sent')
@@ -278,19 +267,19 @@ test('role edits survive completion and cancellations and re-adds are not overwr
     second.studentNumber,
     now,
     sql(),
-    undefined,
-    registrationEmails(),
+    DEFAULT_MEMBER_ROLES,
+    registrationEmail(),
   )
   await openMember(page, second.base)
   await member.actions().button('Cancel registration').locator.click()
   await expect(member.state().field('Status').locator).toHaveText('Cancelled')
-  await registrationEmails().execute()
+  await executeJobs()
   await page.reload()
   await expect(member.state().field('Status').locator).toHaveText('Cancelled')
   await member.actions().button('Re-add member').locator.click()
   await expect(member.state().field('Status').locator).toHaveText('Registered')
   await expect(member.state().field('Registration email sent at').locator).toHaveCount(0)
-  await registrationEmails().execute()
+  await executeJobs()
   expect(emailService().sentEmails).toHaveLength(2)
   await page.goto(new URL('/emails', url()).href)
   await expect(createEmailListPageModel(page).rows().locator).toHaveCount(2)
@@ -311,7 +300,7 @@ test('duplicate adds and archived communities cannot create another email or ove
   const community = createUpdateCommunityPageModel(page)
   await community.form().deleteButton().locator.click()
   await expect(community.pageTitle().locator).toContainText('(archived)')
-  await registrationEmails().execute()
+  await executeJobs()
   const member = await openMember(page, base)
   await expect(member.state().field('Status').locator).toHaveText('Started registration')
   const email = await openEmail(page)
@@ -333,7 +322,7 @@ test('provider calls hold no database transaction open, and concurrent triggers 
     })
     return send(message, options)
   }
-  await Promise.all([registrationEmails().execute(), registrationEmails().execute()])
+  await Promise.all([executeJobs(), executeJobs()])
   expect(fake.attempts).toHaveLength(1)
   const email = await openEmail(page)
   await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
@@ -371,7 +360,7 @@ test('a database failure after provider acceptance retries the identical request
   const member = await openMember(page, base)
   await expect(member.state().field('Status').locator).toHaveText('Started registration')
   delete TEST_hooks.writeMemberSnapshot
-  await registrationEmails().execute()
+  await executeJobs()
   expect(emailService().sentEmails).toHaveLength(1)
   expect(emailService().attempts).toHaveLength(2)
   await openEmail(page)
@@ -384,9 +373,9 @@ test('the last allowed attempt may succeed without adding a failure snapshot', a
   const {base} = await enqueue()
   for (let index = 0; index < 3; index++) {
     emailService().failNextSend(new Error('Temporary failure'))
-    await registrationEmails().execute()
+    await executeJobs()
   }
-  await registrationEmails().execute()
+  await executeJobs()
   const email = await openEmail(page)
   await expect(email.details().field('Status').locator).toHaveText('Accepted by Resend')
   const member = await openMember(page, base)
@@ -408,7 +397,7 @@ for (const [action, status] of [
     await expect(member.state().field('Status').locator).toHaveText(status)
     for (let index = 0; index < 4; index++) {
       emailService().failNextSend(new Error('Provider failure'))
-      await registrationEmails().execute()
+      await executeJobs()
     }
     await page.reload()
     await expect(member.state().field('Status').locator).toHaveText(status)
@@ -424,7 +413,11 @@ test('the standalone host registers handlers and executes persisted jobs after r
 }) => {
   await enqueue()
   TEST_resetJobHandlers()
-  const app = await createApp(sql(), {emailService: emailService(), from: 'sender@example.com'})
+  const app = await createApp(sql(), {
+    emailService: emailService(),
+    from: 'sender@example.com',
+    webhookSigningSecret: `whsec_${Buffer.from('standalone-test-signing-secret!!').toString('base64')}`,
+  })
   try {
     const address = await app.listen({host: '127.0.0.1', port: 0})
     await page.goto(`${address}/emails`)

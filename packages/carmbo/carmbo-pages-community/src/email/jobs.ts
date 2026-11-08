@@ -1,44 +1,30 @@
 import type {Sql, TransactionSql} from 'postgres'
 import type {NowService} from '@giltayar/carmbo-commons/commons/now-service'
-import {registerJobHandler} from '@giltayar/carmbo-pages-job/jobs/handler'
-import {triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
-import {TEST_executeHook} from '@giltayar/carmbo-commons/commons/TEST_hooks'
+import {registerJobHandler, type JobSubmitter} from '@giltayar/carmbo-pages-job/jobs/handler'
 import {recordRegistrationEmailResult} from '../member-model.ts'
 import type {EmailService} from './email-service.ts'
-import {queryEmail} from './model.ts'
-import {registrationEmailContent} from './registration-template.ts'
+import {EMAIL_CORRELATION_TAG, queryEmail, type SendEmailJobPayload} from './model.ts'
 
-type MemberEmail = {
-  communityNumber: number
-  studentNumber: number
-  communityMemberNumber: number
-  communityName: string
-  studentName: string
-  toEmail: string
-}
-type SendEmailPayload = {communityNumber: number; studentNumber: number}
-
-export interface RegistrationEmailJobs {
-  submit(member: MemberEmail, transaction: TransactionSql): Promise<void>
-  execute(): Promise<void>
+// Job IDs restart in every database sharing a Resend account, so the stored per-email UUID is used.
+function idempotencyKey(tags: Record<string, string>, jobId: number): string {
+  const correlationId = tags[EMAIL_CORRELATION_TAG]
+  return correlationId ? `registration-email/${correlationId}` : `sendEmail/${jobId}`
 }
 
-export function registerRegistrationEmailJobs({
+// Registers the `sendEmail` handler once per process. The returned submitter is passed to the
+// community routes (as `registrationEmail.submitSendEmailJob`), which create the email and its job.
+export function registerSendEmailJobHandler({
   sql,
   nowService,
   emailService,
-  from,
-  language,
 }: {
   sql: Sql
   nowService: NowService
   emailService: EmailService
-  from: string
-  language: 'en' | 'he'
-}): RegistrationEmailJobs {
-  if (!from.trim()) throw new Error('Registration email sender is required')
+}): JobSubmitter<SendEmailJobPayload> {
   if (!emailService) throw new Error('Registration email service is required')
-  const submitJob = registerJobHandler<SendEmailPayload>(
+
+  return registerJobHandler<SendEmailJobPayload>(
     'sendEmail',
     nowService,
     {isTrivial: false},
@@ -49,22 +35,20 @@ export function registerRegistrationEmailJobs({
         SELECT email_number FROM email WHERE job_id = ${jobId}
       `
       if (!row) throw new Error(`Email record not found for job ${jobId}`)
+
       const email = await queryEmail(row.emailNumber, sql)
       if (!email) throw new Error(`Email ${row.emailNumber} not found`)
-      if (email.resendEmailId && email.deliveredAt) {
-        const sentAt = email.deliveredAt
-        await sql.begin(async (tx) => {
-          await recordRegistrationEmailResult(
-            payload.communityNumber,
-            payload.studentNumber,
-            email.emailNumber,
-            {sentAt},
-            nowService(),
-            tx,
-          )
-        })
+
+      // A provider ID (from the API or a delivery callback) proves acceptance: never send again.
+      const knownProviderId = email.resendEmailId
+      if (knownProviderId) {
+        const sentAt = email.deliveredAt ?? nowService()
+        await sql.begin((tx) =>
+          recordAcceptance(email.emailNumber, knownProviderId, sentAt, payload, tx),
+        )
         return
       }
+
       const startedAt = nowService().toISOString()
       await sql`
         UPDATE email SET
@@ -84,14 +68,29 @@ export function registerRegistrationEmailJobs({
             text: email.text,
             tags: email.tags,
           },
-          {idempotencyKey: `sendEmail/${jobId}`},
+          {idempotencyKey: idempotencyKey(email.tags, jobId)},
         )
         if (!result?.id) throw new Error('Email provider returned no email ID')
+
         providerId = result.id
       } catch (error) {
         const errorText = error instanceof Error ? error.message : String(error)
         logger.error({err: error}, 'send-registration-email-failed')
-        await sql.begin(async (tx) => {
+        const acceptedMeanwhile = await sql.begin(async (tx) => {
+          const [current] = await tx<{resendEmailId: string | null; deliveredAt: Date | null}[]>`
+            SELECT resend_email_id, delivered_at FROM email
+            WHERE email_number = ${email.emailNumber} FOR UPDATE
+          `
+          if (current.resendEmailId) {
+            await recordAcceptance(
+              email.emailNumber,
+              current.resendEmailId,
+              current.deliveredAt ?? nowService(),
+              payload,
+              tx,
+            )
+            return true
+          }
           await tx`
             UPDATE email SET status = ${isLastAttempt ? 'failure' : 'retrying'},
               error_text = ${errorText}
@@ -107,54 +106,38 @@ export function registerRegistrationEmailJobs({
               tx,
             )
           }
+          return false
         })
-        throw error
+        if (!acceptedMeanwhile) throw error
+        logger.info({}, 'registration-email-accepted-by-provider-callback')
+        return
       }
       const sentAt = nowService()
-      await sql.begin(async (tx) => {
-        await tx`
-          UPDATE email SET resend_email_id = ${providerId}, delivered_at = ${sentAt},
-            status = CASE WHEN status IN ('success', 'failure') THEN status ELSE 'delivered' END,
-            error_text = CASE WHEN status IN ('success', 'failure') THEN error_text ELSE NULL END
-          WHERE email_number = ${email.emailNumber}
-        `
-        await recordRegistrationEmailResult(
-          payload.communityNumber,
-          payload.studentNumber,
-          email.emailNumber,
-          {sentAt},
-          sentAt,
-          tx,
-        )
-      })
+      await sql.begin((tx) => recordAcceptance(email.emailNumber, providerId, sentAt, payload, tx))
     },
   )
-  return {
-    async submit(member, transaction) {
-      const content = registrationEmailContent({...member, language})
-      const jobId = await submitJob(
-        {communityNumber: member.communityNumber, studentNumber: member.studentNumber},
-        {transaction},
-      )
-      const [email] = await transaction<{emailNumber: number}[]>`
-        INSERT INTO email ${transaction({
-          purpose: 'registration-email',
-          toEmail: member.toEmail,
-          fromEmail: from,
-          ...content,
-          language,
-          tags: {job_id: String(jobId)},
-          jobId,
-          createdAt: nowService(),
-        })}
-        RETURNING email_number
-      `
-      await transaction`
-        UPDATE community_member SET registration_email_number = ${email.emailNumber}
-        WHERE community_member_number = ${member.communityMemberNumber}
-      `
-      await TEST_executeHook('createRegistrationEmail')
-    },
-    execute: () => triggerJobsExecution(nowService),
+
+  async function recordAcceptance(
+    emailNumber: number,
+    providerId: string,
+    sentAt: Date,
+    payload: SendEmailJobPayload,
+    tx: TransactionSql,
+  ) {
+    await tx`
+      UPDATE email SET resend_email_id = ${providerId},
+        delivered_at = COALESCE(delivered_at, ${sentAt}),
+        status = CASE WHEN status IN ('success', 'failure') THEN status ELSE 'delivered' END,
+        error_text = CASE WHEN status IN ('success', 'failure') THEN error_text ELSE NULL END
+      WHERE email_number = ${emailNumber}
+    `
+    await recordRegistrationEmailResult(
+      payload.communityNumber,
+      payload.studentNumber,
+      emailNumber,
+      {sentAt},
+      nowService(),
+      tx,
+    )
   }
 }

@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test'
 import {setup} from './common/setup.ts'
 import {createCommunity} from '../../src/model.ts'
-import {addMember, queryMember} from '../../src/member-model.ts'
+import {addMember, DEFAULT_MEMBER_ROLES, queryMember} from '../../src/member-model.ts'
 import {createStudent} from '@giltayar/carmbo-pages-student/students'
 
 for (const [language, title, direction] of [
@@ -154,7 +154,14 @@ for (const [language, title, direction] of [
         new Date(),
         sql(),
       )
-      await addMember(communityNumber, studentNumber, new Date(), sql())
+      await addMember(
+        communityNumber,
+        studentNumber,
+        new Date(),
+        sql(),
+        DEFAULT_MEMBER_ROLES,
+        undefined,
+      )
       await page.goto(new URL(`/communities/${communityNumber}`, url()).href)
       await expect(memberList).toHaveCount(0)
       await page

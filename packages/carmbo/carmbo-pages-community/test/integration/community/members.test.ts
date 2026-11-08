@@ -5,7 +5,7 @@ import {
   createCommunityMembersPageModel,
 } from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 import {createCommunityListPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/community-list-page.model'
-import {addMember, queryMember} from '../../../src/member-model.ts'
+import {addMember, DEFAULT_MEMBER_ROLES, queryMember} from '../../../src/member-model.ts'
 import {createMemberFixture} from '../common/member-fixture.ts'
 import {setup} from '../common/setup.ts'
 
@@ -22,7 +22,7 @@ test('community tabs open the member list and its add and membership links', asy
     'Alice',
     'alice@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
 
   const members = createCommunityMembersPageModel(page)
   const communities = createCommunityListPageModel(page)
@@ -53,7 +53,7 @@ test('member names in the list open student profiles', async ({page}) => {
     'Alice',
     'alice@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
 
   const members = createCommunityMembersPageModel(page)
   const communities = createCommunityListPageModel(page)
@@ -75,7 +75,7 @@ test('ordering follows entry, not edits, with deterministic ties and 50-row pagi
     'Old',
     'old@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
   let latestStudent = studentNumber
   for (let i = 0; i < 50; i++) {
     latestStudent = await createStudent(
@@ -89,7 +89,7 @@ test('ordering follows entry, not edits, with deterministic ties and 50-row pagi
       now,
       sql(),
     )
-    await addMember(communityNumber, latestStudent, now, sql())
+    await addMember(communityNumber, latestStudent, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
   }
 
   const members = createCommunityMembersPageModel(page)

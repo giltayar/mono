@@ -15,26 +15,51 @@ Initialize the published jobs `1.0.5` executor and register the email handler be
 ```ts
 import {routes as communityRoutes} from '@giltayar/carmbo-pages-community/routes'
 import {routes as emailRoutes} from '@giltayar/carmbo-pages-community/email/routes'
-import {registerRegistrationEmailJobs} from '@giltayar/carmbo-pages-community/email/jobs'
+import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-community/email/jobs'
 import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
-import {initializeJobExecutor} from '@giltayar/carmbo-pages-job/jobs/executor'
+import {initializeJobExecutor, triggerJobsExecution} from '@giltayar/carmbo-pages-job/jobs/executor'
 
 const nowService = () => new Date()
 initializeJobExecutor(sql, app.log)
-const registrationEmails = registerRegistrationEmailJobs({
+// Registers a Resend webhook for `webhookUrl`; dispose() deletes it on shutdown.
+const emailService = await createResendEmailService({
+  apiKey,
+  webhookUrl: 'https://your-host.example/api/emails/resend/webhook',
+})
+const submitSendEmailJob = registerSendEmailJobHandler({sql, nowService, emailService})
+app.register(communityRoutes, {
+  prefix: '/communities',
   sql,
   nowService,
-  emailService: createResendEmailService({apiKey}),
-  from,
-  language: 'en', // Use the configured app language: 'en' or 'he'.
+  // `language` is the configured app language: 'en' or 'he'.
+  registrationEmail: {submitSendEmailJob, from, language: 'en'},
 })
-app.register(communityRoutes, {prefix: '/communities', sql, nowService, registrationEmails})
 app.register(emailRoutes, {prefix: '/emails', sql})
+// Outside the browser-authentication boundary: Resend calls it, authenticated by its signature.
+app.register(webhookRoutes, {
+  prefix: '/api/emails/resend',
+  sql,
+  signingSecret: emailService.webhookSigningSecret,
+})
+app.addHook('onListen', () => void triggerJobsExecution(nowService))
+app.addHook('onClose', () => emailService.dispose())
 ```
 
-`registrationEmails` is required; missing sending configuration must not silently skip email creation.
-Register the handler once per application process. Trigger `registrationEmails.execute()` after startup
-to resume persisted jobs, and reuse the host's existing job-execution triggers for retries.
+`webhookRoutes` comes from `@giltayar/carmbo-pages-community/email/webhook-routes` and exposes
+`POST <prefix>/webhook`. `createResendEmailService` is async: during initialization it registers a
+Resend webhook for the required public HTTPS `webhookUrl`, subscribed to `email.delivered`,
+`email.bounced`, `email.failed`, and `email.suppressed` (`HANDLED_RESEND_EVENTS`), and exposes that
+webhook's `webhookSigningSecret`. Registration failures (for example, a sending-only API key) reject
+initialization; a missing signing secret fails route registration. Whoever creates the service owns
+`dispose()`, which deletes the webhook (repeated calls do nothing). A process killed without
+disposing leaves a stale webhook in the Resend dashboard.
+
+`registrationEmail` is required, including a non-empty `from`; missing sending configuration must not
+silently skip email creation. Email creation (the saved email row, its member link, and its job
+submitted in the same transaction) lives in the email model; `registerSendEmailJobHandler` only
+registers the `sendEmail` handler, once per application process, and returns its job submitter.
+After adding a member, the routes call `triggerJobsExecution`; hosts trigger it after startup to
+resume persisted jobs, and reuse their existing job-execution triggers for retries.
 The executor and all page packages must share one published jobs/commons runtime instance.
 
 Optionally pass `smooveIntegration` and `ravmesserIntegration` to use the host's configured student
@@ -114,7 +139,7 @@ Supported statuses are `requested-registration`, `started-registration`, `regist
 `email-sending-failed`/`timeout`; unregistration reasons are `self`/`removed`/`blocked`/`rejected`,
 with optional diagnostic text. The model validates status/reason/email-timestamp combinations.
 
-**Deferred:** delivery callbacks, member-page status polling/email links, automatic timeout processing,
+**Deferred:** member-page status polling/email links, automatic timeout processing,
 public/self-service registration endpoints, community permission enforcement, and carmbo-app integration.
 The planned
 timeout is seven days after sending the registration email, not after adding a student.
@@ -139,10 +164,27 @@ member snapshot. A failed attempt sets the email to `retrying`; the fourth faile
 Role edits are preserved; subsequent cancellation, blocking, registration, re-add, and community
 archival prevent the job from overwriting the current member lifecycle.
 
-Retries reuse `sendEmail/<job-id>` as the idempotency key. Known local acceptance is never resent.
+Retries reuse `registration-email/<uuid>` as the idempotency key, where the UUID is the email's
+immutable `carmbo_email_id` tag. Local job IDs restart in every database sharing a Resend account, so
+they would collide across environments. Known local acceptance is never resent.
 Resend retains keys for 24 hours, so an unknown acceptance retried after that window can send a duplicate.
-Retry execution uses existing job triggers, not a new scheduler or backoff policy. Webhooks are not
-implemented yet, so actual sending stops at `delivered` (API acceptance), not `success`.
+Retry execution uses existing job triggers, not a new scheduler or backoff policy.
+
+### Delivery callbacks
+
+Signed Resend callbacks update only the email record, never the membership:
+
+- `email.delivered` sets `success` with the event time as the delivery-confirmed time.
+- `email.bounced`, `email.failed`, and `email.suppressed` set `failure` with the provider's reason.
+- Callbacks are matched by provider email ID, or by the `carmbo_email_id` tag when they arrive before
+  the API response was saved (for example, a lost response). A known provider ID proves acceptance,
+  so the job then records acceptance without calling Resend again, even if its own attempt failed.
+- Each event applies only if it is newer than the last applied provider event, so duplicate and
+  out-of-order callbacks are acknowledged as `stale` without regressing the status. API acceptance
+  never overrides a callback's `success` or `failure`.
+- Missing, invalid, or tampered signatures and malformed payloads return 400. Events for unknown
+  emails (one Resend webhook receives the whole account's events) and unsupported event types are
+  acknowledged with 200 and logged. Processing failures return 500, so Resend retries.
 
 - `/emails` lists all emails, including unlinked ones, by creation time descending, then email number
   descending. Search matches recipient address, current community name, or current student name;
@@ -164,7 +206,7 @@ The host can create a real email service or a fake independently of the pages:
 import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
 import {createFakeEmailService} from '@giltayar/carmbo-pages-community/testkit/email-service'
 
-const service = createResendEmailService({apiKey})
+const service = await createResendEmailService({apiKey, webhookUrl})
 const fake = createFakeEmailService()
 
 const message = {
@@ -192,9 +234,9 @@ Without that option, the failure happens before acceptance. Inject `nowService` 
 Reusing a key with identical content returns the original ID for 24 hours; changed content rejects.
 After 24 hours, a new send can occur, matching Resend's idempotency limitation.
 
-Public types are `EmailService`, `EmailMessage`, `EmailSendOptions`, `EmailSendResult`,
-and `FakeEmailService`. Email page models are exported from
-`@giltayar/carmbo-pages-community/testkit/page-model/email.model`.
+Public types are `EmailService`, `ResendEmailService`, `EmailMessage`, `EmailSendOptions`,
+`EmailSendResult`, and `FakeEmailService`. The fake has no webhook or `dispose`. Email page models are
+exported from `@giltayar/carmbo-pages-community/testkit/page-model/email.model`.
 
 ### Standalone app
 
@@ -202,7 +244,17 @@ and `FakeEmailService`. Email page models are exported from
 Set `RESEND_API_KEY` and `RESEND_FROM`; the existing `RESEND_TEST_API_KEY` and `RESEND_TEST_FROM`
 are also accepted as fallbacks. Missing configuration fails at startup; no fake is substituted.
 The standalone host sends real emails when members are added. Resend's test sender may only send
-to your account's authorized recipient; use a verified sender/domain for other recipients.
+to your account's authorized recipient; use a verified sender/domain for other recipients, or add
+members with Resend's `delivered+<label>@resend.dev` / `bounced+<label>@resend.dev` test addresses.
+
+To receive delivery callbacks locally, startup opens a [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+quick tunnel (`brew install cloudflared`; no account needed; see
+[cloudflared-tunnel.ts](./start/cloudflared-tunnel.ts)) and passes its public webhook URL to
+`createResendEmailService`, which registers the temporary Resend webhook. The API key therefore needs
+full access, not sending-only. Startup waits until the callback URL is reachable through the tunnel,
+and Ctrl+C closes the app, disposes the email service (deleting the webhook), and stops the tunnel.
+If the process is killed without cleanup, delete the stale `*.trycloudflare.com` webhook in the
+Resend dashboard. Each `node --watch` restart opens a new tunnel.
 
 The host mounts `/jobs` and the existing localhost job trigger endpoint at
 `POST /api/jobs/trigger-job-execution?secret=...`. Set `JOB_API_SECRET` to protect this endpoint.
@@ -211,7 +263,8 @@ to show the completed job's status; automatic polling remains deferred.
 
 ### Real Resend E2E
 
-`pnpm test:e2e` runs the real-provider Playwright test without launching a browser. For local configuration:
+`pnpm test:e2e` runs one real-provider Playwright test of the community happy path through the UI.
+For local configuration:
 
 ```sh
 cp .env.example .env.local
@@ -221,16 +274,18 @@ Replace the placeholder key in `.env.local` with your real Resend key. The E2E c
 this gitignored file automatically, without overriding existing environment variables.
 Configure
 `RESEND_TEST_API_KEY` and `RESEND_TEST_FROM` (a verified sender); `RESEND_API_KEY` and `RESEND_FROM`
-are accepted alternatives. The API key must allow both sending and retrieving emails (full access,
-not sending-only). Missing configuration fails explicitly. Do not commit credentials.
+are accepted alternatives. The API key needs full access (it creates and deletes a temporary webhook),
+and `cloudflared` must be installed. Missing configuration fails explicitly. Do not commit credentials.
 
-The test sends to a unique `delivered+<run-id>@resend.dev` address and repeats the identical request
-with the same key, asserting the same provider ID. It then polls the sent-email API for up to
-20 seconds until `last_event` is `delivered`. This confirms Resend's simulated delivery, not receipt
-in a readable inbox, delivery webhooks, or member registration. These special recipients are safe
-test destinations but still consume Resend quota. The package's `pnpm test` also includes this E2E
-through its `test:*` scripts, so it requires Resend configuration too. The other tests use local
-simulated Resend responses and the fake, with no external email requests.
+The test starts its own PostgreSQL container, the standalone app, a cloudflared tunnel, and a temporary
+Resend webhook. In the browser it creates a community, creates a student with a unique
+`delivered+<run-id>@resend.dev` address, and adds them as a member. It then waits for the member page
+to show "Registration email sent" and the email page to show "Delivery confirmed", which requires a
+real, signed Resend callback through the tunnel. Cleanup deletes the webhook and stops the tunnel.
+The special recipient simulates delivery; it is not a readable inbox, and it still consumes Resend
+quota. The package's `pnpm test` also includes this E2E through its `test:*` scripts, so it requires
+this configuration too. The other tests use local simulated Resend responses, the fake, and locally
+signed callbacks, with no external requests.
 
 ## Verification
 
@@ -247,6 +302,9 @@ four-attempt exhaustion and last-attempt success, lost responses, database failu
 acceptance reconciliation, concurrent triggers, member action/role races, and standalone restart.
 Sending tests assert visible state through the email, member, and job pages. Direct SQL is reserved
 for fixtures and storage-only invariants: orphan snapshots and transaction lock availability.
+Callback tests (`email/webhook.test.ts`) post locally signed events and cover delivery and each
+failure type, unchanged memberships, duplicates and out-of-order events, invalid signatures and
+payloads, unrelated/unsupported events, and callbacks racing a lost or failing API response.
 Docker and an installed Playwright Chromium browser are required. For focused membership coverage:
 
 ```bash

@@ -1,6 +1,62 @@
-import type {Sql} from 'postgres'
+import type {Sql, TransactionSql} from 'postgres'
+import {randomUUID} from 'node:crypto'
 import {z} from 'zod'
 import {sqlTextSearch} from '@giltayar/carmbo-commons/commons/sql-commons'
+import {TEST_executeHook} from '@giltayar/carmbo-commons/commons/TEST_hooks'
+import type {JobSubmitter} from '@giltayar/carmbo-pages-job/jobs/handler'
+import {registrationEmailContent} from './registration-template.ts'
+
+// Unique across environments sharing a Resend account; links callbacks that arrive before the API response.
+export const EMAIL_CORRELATION_TAG = 'carmbo_email_id'
+
+export type SendEmailJobPayload = {communityNumber: number; studentNumber: number}
+
+export type RegistrationEmailSettings = {
+  submitSendEmailJob: JobSubmitter<SendEmailJobPayload>
+  from: string
+  language: 'en' | 'he'
+}
+
+export type RegistrationEmailRecipient = {
+  communityNumber: number
+  studentNumber: number
+  communityMemberNumber: number
+  communityName: string
+  studentName: string
+  toEmail: string
+}
+
+// Runs inside the member-creation transaction; the caller triggers job execution after commit.
+export async function sendRegistrationEmail(
+  recipient: RegistrationEmailRecipient,
+  {submitSendEmailJob, from, language}: RegistrationEmailSettings,
+  now: Date,
+  tx: TransactionSql,
+): Promise<void> {
+  const content = registrationEmailContent({...recipient, language})
+  const jobId = await submitSendEmailJob(
+    {communityNumber: recipient.communityNumber, studentNumber: recipient.studentNumber},
+    {transaction: tx},
+  )
+  const [email] = await tx<{emailNumber: number}[]>`
+    INSERT INTO email ${tx({
+      purpose: 'registration-email',
+      toEmail: recipient.toEmail,
+      fromEmail: from,
+      ...content,
+      language,
+      tags: {job_id: String(jobId), [EMAIL_CORRELATION_TAG]: randomUUID()},
+      jobId,
+      createdAt: now,
+    })}
+    RETURNING email_number
+  `
+  await tx`
+    UPDATE community_member SET registration_email_number = ${email.emailNumber}
+    WHERE community_member_number = ${recipient.communityMemberNumber}
+  `
+  await TEST_executeHook('createRegistrationEmail')
+}
 
 export const EmailSchema = z.object({
   emailNumber: z.number().int().positive(),
@@ -30,8 +86,9 @@ export const EmailSchema = z.object({
 export type Email = z.infer<typeof EmailSchema>
 
 function selectEmails(sql: Sql) {
+  // Text avoids the camel-case JSON key transform, preserving the exact tags sent to Resend.
   return sql`
-    SELECT e.*, member.community_number, member.community_name,
+    SELECT e.*, e.tags::text AS raw_tags, member.community_number, member.community_name,
       member.student_number, member.student_name
     FROM email e
     LEFT JOIN LATERAL (
@@ -67,11 +124,15 @@ export async function listEmails(
     ORDER BY e.created_at DESC, e.email_number DESC
     LIMIT 50 OFFSET ${page * 50}
   `
-  return rows.map((row) => EmailSchema.parse(row))
+  return rows.map(rowToEmail)
 }
 
 export async function queryEmail(emailNumber: number, sql: Sql): Promise<Email | undefined> {
   const [row] = await sql`${selectEmails(sql)} WHERE e.email_number = ${emailNumber}`
 
-  return row ? EmailSchema.parse(row) : undefined
+  return row ? rowToEmail(row) : undefined
+}
+
+function rowToEmail(row: Record<string, unknown>): Email {
+  return EmailSchema.parse({...row, tags: JSON.parse(z.string().parse(row.rawTags))})
 }

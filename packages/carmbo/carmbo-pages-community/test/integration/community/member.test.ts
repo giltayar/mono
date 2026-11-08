@@ -5,7 +5,12 @@ import {
   createCommunityMembersPageModel,
 } from '@giltayar/carmbo-pages-community/testkit/page-model/community-member.model'
 import {createCommunity} from '../../../src/model.ts'
-import {addMember, type MemberData, type MemberOperation} from '../../../src/member-model.ts'
+import {
+  addMember,
+  DEFAULT_MEMBER_ROLES,
+  type MemberData,
+  type MemberOperation,
+} from '../../../src/member-model.ts'
 import {createCommunityListPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/community-list-page.model'
 import {createUpdateCommunityPageModel} from '@giltayar/carmbo-pages-community/testkit/page-model/update-community-page.model'
 import {createUpdateStudentPageModel} from '@giltayar/carmbo-pages-student/testkit/page-model/update-student-page.model'
@@ -175,7 +180,7 @@ test('add an existing student, edit independent roles, and navigate full histori
   await page.waitForURL(new URL(base, url()).href)
 
   const otherCommunity = await createCommunity({name: 'Other'}, undefined, now, sql())
-  await addMember(otherCommunity, studentNumber, now, sql())
+  await addMember(otherCommunity, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
 
   await memberPage.breadcrumb().link('Communities').locator.click()
 
@@ -228,7 +233,7 @@ test('blocked members require explicit unblock, preserving roles and clearing at
     'Alice',
     'alice@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
   await seedMemberData(
     communityNumber,
     studentNumber,
@@ -304,7 +309,7 @@ for (const [status, reasonCode, operation] of [
       'Alice',
       'alice@example.com',
     )
-    await addMember(communityNumber, studentNumber, now, sql())
+    await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
     await seedMemberData(
       communityNumber,
       studentNumber,
@@ -354,7 +359,7 @@ test('rejection, direct re-add, and both unregister reasons are recorded', async
     'Alice',
     'alice@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
   await seedMemberData(
     communityNumber,
     studentNumber,
@@ -391,7 +396,7 @@ test('a failed edit leaves membership details, roles, and history unchanged', as
     'Alice',
     'alice@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
 
   const memberPage = createCommunityMemberPageModel(page)
   await page.goto(new URL(base, url()).href)
@@ -424,8 +429,22 @@ test('missing resources and foreign history IDs return 404; archived communities
 }) => {
   const first = await createMemberFixture(sql(), now, 'Alice', 'alice@example.com')
   const second = await createMemberFixture(sql(), now, 'Bob', 'bob@example.com')
-  await addMember(first.communityNumber, first.studentNumber, now, sql())
-  await addMember(second.communityNumber, second.studentNumber, now, sql())
+  await addMember(
+    first.communityNumber,
+    first.studentNumber,
+    now,
+    sql(),
+    DEFAULT_MEMBER_ROLES,
+    undefined,
+  )
+  await addMember(
+    second.communityNumber,
+    second.studentNumber,
+    now,
+    sql(),
+    DEFAULT_MEMBER_ROLES,
+    undefined,
+  )
 
   const memberPage = createCommunityMemberPageModel(page)
   await page.goto(new URL(first.base, url()).href)
@@ -513,7 +532,7 @@ test('archived students are excluded from search and rejected by direct add/re-a
     'Alice',
     'alice@example.com',
   )
-  await addMember(communityNumber, studentNumber, now, sql())
+  await addMember(communityNumber, studentNumber, now, sql(), DEFAULT_MEMBER_ROLES, undefined)
   const second = await createCommunity({name: 'Other'}, undefined, now, sql())
 
   const memberPage = createCommunityMemberPageModel(page)

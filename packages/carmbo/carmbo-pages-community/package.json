@@ -20,6 +20,10 @@
       "types": "./dist/src/email/jobs.d.ts",
       "import": "./dist/src/email/jobs.js"
     },
+    "./email/webhook-routes": {
+      "types": "./dist/src/email/webhook-route.d.ts",
+      "import": "./dist/src/email/webhook-route.js"
+    },
     "./testkit/email-service": {
       "types": "./dist/testkit/fake-email-service.d.ts",
       "import": "./dist/testkit/fake-email-service.js"
@@ -91,7 +95,8 @@
     "@giltayar/carmbo-commons": "^2.4.0",
     "@giltayar/carmbo-pages-job": "^1.0.5",
     "@giltayar/carmbo-pages-student": "^1.1.1",
-    "resend": "^6.37.0"
+    "resend": "^6.37.0",
+    "standardwebhooks": "^1.1.1"
   },
   "devDependencies": {
     "@fastify/formbody": "^9.0.1",
