@@ -8,6 +8,8 @@ import {prepareDatabase} from './prepare-database.ts'
 import {range, when} from '@giltayar/functional-commons'
 import {initializeAppI18next} from './i18next.ts'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
+import {createFakeEmailService} from '@giltayar/carmbo-pages-community/testkit/email-service'
+import {randomBytes} from 'node:crypto'
 import {z} from 'zod'
 
 const withCommunities = z.stringbool().default(false).parse(process.env.WITH_COMMUNITIES)
@@ -109,7 +111,15 @@ const {app, sql} = await makeApp({
   apiSecret: undefined,
   appBaseUrl: 'http://localhost:3000',
   uiConfiguration: process.env.UI_CONFIGURATION || 'carmel',
-  withCommunities,
+  // Emails are accepted by the fake and never sent; no delivery callbacks arrive.
+  communities: withCommunities
+    ? {
+        emailService: createFakeEmailService({nowService: () => new Date()}),
+        webhookSigningSecret: `whsec_${randomBytes(32).toString('base64')}`,
+        emailFrom: 'Carmbo <fake@example.com>',
+        emailLanguage: process.env.LANGUAGE === 'he' ? 'he' : 'en',
+      }
+    : undefined,
 })
 
 await prepareDatabase(sql)

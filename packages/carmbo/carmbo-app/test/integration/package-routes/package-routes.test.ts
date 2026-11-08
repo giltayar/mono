@@ -162,8 +162,14 @@ test.describe('package routes', () => {
 test.describe('communities disabled', () => {
   const {url} = setup(`${import.meta.url}/without-communities`, {withCommunities: false})
 
-  test('community route is unavailable', async ({request}) => {
-    const response = await request.get(new URL('/communities', url()).href)
-    expect(response.status()).toBe(404)
+  test('community routes are unavailable', async ({request}) => {
+    for (const [method, path] of [
+      ['GET', '/communities'],
+      ['GET', '/emails'],
+      ['POST', '/api/emails/resend/webhook'],
+    ]) {
+      const response = await request.fetch(new URL(path, url()).href, {method})
+      expect(response.status(), `${method} ${path}`).toBe(404)
+    }
   })
 })

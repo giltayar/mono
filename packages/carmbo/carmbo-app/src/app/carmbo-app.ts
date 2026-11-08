@@ -8,6 +8,10 @@ import fastifyCompress from '@fastify/compress'
 import postgres from 'postgres'
 import {routes as studentRoutes} from '@giltayar/carmbo-pages-student/routes'
 import {routes as communityRoutes} from '@giltayar/carmbo-pages-community/routes'
+import {routes as emailRoutes} from '@giltayar/carmbo-pages-community/email/routes'
+import {webhookRoutes as emailWebhookRoutes} from '@giltayar/carmbo-pages-community/email/webhook-routes'
+import {registerSendEmailJobHandler} from '@giltayar/carmbo-pages-community/email/jobs'
+import type {EmailService} from '@giltayar/carmbo-pages-community/email/service'
 import {
   apiRoutes as saleApiRoutes,
   landingPageRoutes as saleLandingPageRoutes,
@@ -31,6 +35,18 @@ import {setUiConfiguration} from '@giltayar/carmbo-commons/commons/ui-configurat
 import {layoutAssetRoutes} from '@giltayar/carmbo-commons/layout/assets'
 import packageJson from '../../package.json' with {type: 'json'}
 
+const RESEND_WEBHOOK_ROUTE_PREFIX = '/api/emails/resend'
+// The webhook routes serve POST `<prefix>/webhook`.
+export const RESEND_WEBHOOK_PATH = `${RESEND_WEBHOOK_ROUTE_PREFIX}/webhook`
+
+// Communities send registration emails, so enabling them requires the email configuration.
+export type CommunitiesConfiguration = {
+  emailService: EmailService
+  webhookSigningSecret: string
+  emailFrom: string
+  emailLanguage: 'en' | 'he'
+}
+
 export function makeApp({
   db: {connectionString, database, host, port, username, password, backupFile},
   services: {
@@ -47,7 +63,7 @@ export function makeApp({
   apiSecret,
   appBaseUrl,
   uiConfiguration,
-  withCommunities,
+  communities,
   TEST_hooks,
 }: {
   db: {
@@ -78,12 +94,12 @@ export function makeApp({
   apiSecret: string | undefined
   appBaseUrl: string
   uiConfiguration: string
-  withCommunities: boolean
+  communities: CommunitiesConfiguration | undefined
   TEST_hooks?: Record<string, TEST_HookFunction>
 }) {
   const version = packageJson.version
   setVersion(version)
-  setUiConfiguration(uiConfiguration, {withCommunities})
+  setUiConfiguration(uiConfiguration, {withCommunities: !!communities})
 
   const app = fastify({
     logger:
@@ -129,6 +145,17 @@ export function makeApp({
     TEST_hooks,
   }
   initializeJobExecutor(sql, app.log)
+  const registrationEmail = communities
+    ? {
+        submitSendEmailJob: registerSendEmailJobHandler({
+          sql,
+          nowService,
+          emailService: communities.emailService,
+        }),
+        from: communities.emailFrom,
+        language: communities.emailLanguage,
+      }
+    : undefined
   setupFastifyErrorHandler(app)
 
   app.register(formbody, {parser: (str) => qs.parse(str)})
@@ -187,14 +214,23 @@ export function makeApp({
       ravmesserIntegration,
       nowService,
     })
-    if (withCommunities) {
-      app.register(communityRoutes, {prefix: '/communities', sql, nowService})
+    if (registrationEmail) {
+      app.register(communityRoutes, {prefix: '/communities', sql, nowService, registrationEmail})
+      app.register(emailRoutes, {prefix: '/emails', sql})
     }
     app.register(salePageRoutes, saleRouteOptions)
     app.register(jobsRoutes, {prefix: '/jobs', sql})
   })
 
   app.register(saleApiRoutes, saleRouteOptions)
+  if (communities) {
+    // Outside authentication: Resend calls it, and each request is verified by its signature.
+    app.register(emailWebhookRoutes, {
+      prefix: RESEND_WEBHOOK_ROUTE_PREFIX,
+      sql,
+      signingSecret: communities.webhookSigningSecret,
+    })
+  }
   app.register(jobsApiRoutes, {
     prefix: '/api/jobs',
     secret: apiSecret,

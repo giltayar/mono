@@ -23,19 +23,40 @@ The integration tests require Docker/PostgreSQL and Playwright Chromium.
 The Docker image installs the exact pnpm version declared in `package.json` before installing
 dependencies, so package-manager upgrades invalidate the cached installer layer.
 
+Publishing runs a `prepublish` check that validates the stored Docker Hub credentials before the
+npm package is published. Run `pnpm prepublish` to check them manually. The check is non-interactive
+and fails if credentials are missing or rejected; run `docker login` and retry.
+
 ## Community pages
 
 The published `@giltayar/carmbo-pages-community` package owns the community list, create/update
-forms, archive/restore actions, history, translations, and assets. Its routes are mounted at
-`/communities` in the same Firebase-authenticated scope as students when `WITH_COMMUNITIES=true`.
-Communities are disabled by default: unset or `WITH_COMMUNITIES=false` omits both the routes
-(including their assets) and the Communities navigation item. Values are parsed with Zod
+forms, archive/restore actions, history, memberships, registration emails, the email pages,
+translations, and assets. Its page routes are mounted at `/communities` and `/emails` in the same
+Firebase-authenticated scope as students when `WITH_COMMUNITIES=true`.
+Communities are disabled by default: unset or `WITH_COMMUNITIES=false` omits the routes
+(including their assets), the delivery webhook, and the Communities and Emails navigation items.
+Values are parsed with Zod
 `stringbool`: `true`, `1`, `yes`, `on`, `y`, and `enabled` enable communities; `false`, `0`, `no`,
 `off`, `n`, and `disabled` disable them. Matching is case-insensitive; other values fail startup
 validation. This also applies to fake-mode startup.
-Set `WITH_COMMUNITIES=true` in the deployed service's environment to enable them, or start locally
-with `WITH_COMMUNITIES=true pnpm start`.
-The community tables are created by the installed `@giltayar/carmbo-commons@2.2.0` migrations.
+
+Adding a member sends a registration email through Resend, as a background job, and the member page
+refreshes its status while it is sent. With `WITH_COMMUNITIES=true`, startup fails unless these are
+also set in the deployed service's environment:
+
+- `APP_BASE_URL` — the app's public `https://` URL. At startup the app registers a Resend webhook for
+  `<APP_BASE_URL>/api/emails/resend/webhook` (deleting any leftover webhook for that same URL from a
+  previous process) and deletes it when the app closes. That route is mounted outside
+  authentication, since Resend calls it; every request is verified by the webhook's signature.
+- `RESEND_API_KEY` — a **full-access** key (managing webhooks needs more than sending access).
+- `RESEND_FROM` — the sender, on a domain verified in Resend.
+
+Emails are written in `LANGUAGE` (`he` for Hebrew, English otherwise). Fake mode
+(`FAKE=-fake WITH_COMMUNITIES=true pnpm start`) uses the package's fake email service, needs none of
+these settings, and never sends anything. To try real sending locally, point `APP_BASE_URL` at a
+public tunnel to the local app.
+The community and email tables are created by the installed `@giltayar/carmbo-commons@2.4.0`
+migrations.
 
 ## Database backup
 

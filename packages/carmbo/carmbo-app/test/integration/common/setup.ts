@@ -17,6 +17,10 @@ import {TEST_resetJobHandlers} from '@giltayar/carmbo-pages-job/testkit'
 import {initializeAppI18next} from '../../../src/app/i18next.ts'
 import {when} from '@giltayar/functional-commons'
 import {createFakeSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/testkit'
+import {
+  createFakeEmailService,
+  type FakeEmailService,
+} from '@giltayar/carmbo-pages-community/testkit/email-service'
 
 export type SmooveContact = {
   id: number
@@ -73,6 +77,8 @@ export function setup(
   whatsappIntegration: () => ReturnType<typeof createFakeWhatsAppIntegrationService>
   skoolIntegration: () => ReturnType<typeof createFakeSkoolIntegrationService>
   TEST_hooks: Record<string, TEST_HookFunction>
+  emailService: () => FakeEmailService
+  webhookSigningSecret: string
   setTime: (date: Date) => void
   resetTime: () => void
 } {
@@ -95,6 +101,8 @@ export function setup(
   let cardcomIntegration: ReturnType<typeof createFakeCardcomIntegrationService>
   let whatsappIntegration: ReturnType<typeof createFakeWhatsAppIntegrationService>
   let skoolIntegration: ReturnType<typeof createFakeSkoolIntegrationService>
+  let emailService = createFakeEmailService({nowService: () => overridingDate ?? new Date()})
+  const webhookSigningSecret = `whsec_${crypto.randomBytes(32).toString('base64')}`
 
   test.beforeAll(async () => {
     ;({findAddress, teardown} = await runDockerCompose(
@@ -239,7 +247,16 @@ export function setup(
       apiSecret: options?.databaseBackup?.apiSecret,
       appBaseUrl: 'http://localhost:????',
       uiConfiguration: options?.uiConfiguration ?? 'carmel',
-      withCommunities: options?.withCommunities ?? false,
+      communities: options?.withCommunities
+        ? {
+            emailService: {
+              sendEmail: (message, sendOptions) => emailService.sendEmail(message, sendOptions),
+            },
+            webhookSigningSecret,
+            emailFrom: 'Carmbo <sender@example.com>',
+            emailLanguage: options.language === 'he' ? 'he' : 'en',
+          }
+        : undefined,
       TEST_hooks,
     }))
 
@@ -265,8 +282,10 @@ export function setup(
     whatsappIntegration._test_reset()
     skoolIntegration._test_reset()
     overridingDate = undefined
+    emailService = createFakeEmailService({nowService: () => overridingDate ?? new Date()})
     await sql`
-      TRUNCATE TABLE community, community_history, community_data, community_search
+      TRUNCATE TABLE community, community_history, community_data, community_search,
+        community_member, community_member_data, community_member_history, email
       RESTART IDENTITY CASCADE
     `
     await sql`TRUNCATE TABLE student RESTART IDENTITY CASCADE`
@@ -309,6 +328,8 @@ export function setup(
     whatsappIntegration: () => whatsappIntegration,
     skoolIntegration: () => skoolIntegration,
     TEST_hooks,
+    emailService: () => emailService,
+    webhookSigningSecret,
     setTime: (date: Date) => (overridingDate = date),
     resetTime: () => (overridingDate = undefined),
   }

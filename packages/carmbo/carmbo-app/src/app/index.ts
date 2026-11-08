@@ -1,6 +1,6 @@
 import process from 'node:process'
-import {makeApp} from './carmbo-app.ts'
-import * as z from 'zod'
+import {makeApp, RESEND_WEBHOOK_PATH} from './carmbo-app.ts'
+import {createResendEmailService} from '@giltayar/carmbo-pages-community/email/service'
 import {createAcademyIntegrationService} from '@giltayar/carmel-tools-academy-integration/service'
 import {createWhatsAppIntegrationService} from '@giltayar/carmel-tools-whatsapp-integration/service'
 import {createSmooveIntegrationService} from '@giltayar/carmel-tools-smoove-integration/service'
@@ -9,50 +9,8 @@ import {throw_, when} from '@giltayar/functional-commons'
 import {createCardcomIntegrationService} from '@giltayar/carmel-tools-cardcom-integration/service'
 import {prepareDatabase} from './prepare-database.ts'
 import {initializeAppI18next} from './i18next.ts'
+import {EnvironmentVariablesSchema} from './environment.ts'
 import {createSkoolIntegrationService} from '@giltayar/carmel-tools-skool-integration/service'
-
-export const EnvironmentVariablesSchema = z.object({
-  DB_CONNECTION_STRING: z.string().optional(),
-  DB_BACKUP_FILE: z.string().default('/db-backup/db-backup.sql'),
-  DB_DATABASE: z.string().default('carmbo'),
-  DB_HOST: z.string().default('localhost'),
-  DB_PORT: z.coerce.number().default(5432),
-  DB_USERNAME: z.string().default('user'),
-  DB_PASSWORD: z.string().default('password'),
-  APP_BASE_URL: z.string().optional(),
-  HOST: z.string().default('localhost'),
-  PORT: z.coerce.number().default(3000),
-  ACADEMY_ACCOUNTS_APIKEYS: z
-    .string()
-    .optional()
-    .transform((value) =>
-      value
-        ? value.split(',').map((entry) => {
-            const [subdomain, apiKey] = entry.split(':')
-            return {subdomain, apiKey}
-          })
-        : undefined,
-    ),
-  GREEN_API_BASE_URL: z.url().default('https://7105.api.greenapi.com'),
-  GREEN_API_KEY: z.string(),
-  GREEN_API_INSTANCE: z.coerce.number(),
-  SMOOVE_API_KEY: z.string().optional(),
-  SMOOVE_API_URL: z.url().optional().default('https://rest.smoove.io/v1/'),
-  RAVMESSER_CLIENT_ID: z.string().optional(),
-  RAVMESSER_CLIENT_SECRET: z.string().optional(),
-  RAVMESSER_USER_TOKEN: z.string().optional(),
-  RAVMESSER_BIRTHDAY_PERSONAL_FIELD_ID: z.coerce.number().int().positive().optional(),
-  FORCE_NO_AUTH: z.string().optional(),
-  CARMBO_FIREBASE_API_KEY: z.string(),
-  CARMBO_FIREBASE_SERVICE_ACCOUNT_JSON: z.string(),
-  CARMBO_API_SECRET: z.string(),
-  CARDCOM_API_KEY: z.string(),
-  CARDCOM_API_KEY_PASSWORD: z.string(),
-  CARDCOM_TERMINAL_NUMBER: z.coerce.number().default(150067),
-  SKOOL_API_UNIQUE_INVITE_LINK_URL: z.url().optional(),
-  UI_CONFIGURATION: z.string().optional().default('carmel'),
-  WITH_COMMUNITIES: z.stringbool().default(false),
-})
 
 const env = EnvironmentVariablesSchema.parse(
   process.env.NODE_ENV === 'production'
@@ -67,6 +25,14 @@ const env = EnvironmentVariablesSchema.parse(
 const appBaseUrl = env.APP_BASE_URL
   ? env.APP_BASE_URL
   : `http://${env.HOST.includes(':') ? `[${env.HOST}]` : env.HOST}:${env.PORT}`
+
+// The environment schema guarantees the https base URL, API key, and sender with communities.
+const emailService = env.WITH_COMMUNITIES
+  ? await createResendEmailService({
+      apiKey: env.RESEND_API_KEY ?? throw_(new Error('RESEND_API_KEY is not set')),
+      webhookUrl: `${appBaseUrl.replace(/\/+$/, '')}${RESEND_WEBHOOK_PATH}`,
+    })
+  : undefined
 
 const {app, sql} = await makeApp({
   db: {
@@ -127,8 +93,21 @@ const {app, sql} = await makeApp({
   apiSecret: env.CARMBO_API_SECRET,
   appBaseUrl: appBaseUrl,
   uiConfiguration: env.UI_CONFIGURATION,
-  withCommunities: env.WITH_COMMUNITIES,
+  communities: emailService
+    ? {
+        emailService,
+        webhookSigningSecret: emailService.webhookSigningSecret,
+        emailFrom: env.RESEND_FROM ?? throw_(new Error('RESEND_FROM is not set')),
+        emailLanguage: process.env.LANGUAGE === 'he' ? 'he' : 'en',
+      }
+    : undefined,
 })
+
+if (emailService) {
+  // The creator owns the webhook; a process killed without closing leaves it for the next
+  // startup, which deletes it before registering its own.
+  app.addHook('onClose', () => emailService.dispose())
+}
 
 await prepareDatabase(sql)
 

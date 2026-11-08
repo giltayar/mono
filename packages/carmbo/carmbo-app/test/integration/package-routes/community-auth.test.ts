@@ -34,6 +34,14 @@ test('community routes require login when Firebase authentication is enabled', a
     {method: 'POST', path: '/communities/', form: {name: 'Blocked', description: ''}},
     {method: 'PUT', path: '/communities/1', form: {name: 'Blocked', description: ''}},
     {method: 'DELETE', path: '/communities/1?delete-operation=delete'},
+    {method: 'GET', path: '/communities/1/members/1'},
+    {
+      method: 'GET',
+      path: '/communities/1/members/1/state?knownHistoryId=00000000-0000-4000-8000-000000000000',
+    },
+    {method: 'GET', path: '/emails'},
+    {method: 'GET', path: '/emails/1'},
+    {method: 'GET', path: '/emails/1/html'},
   ]) {
     const response = await request.fetch(new URL(path, url()).href, {
       method,
@@ -46,4 +54,13 @@ test('community routes require login when Firebase authentication is enabled', a
 
   const health = await request.get(new URL('/health', url()).href)
   expect(health.status()).toBe(200)
+
+  // Resend cannot log in: the webhook is public and authenticated by its signature instead.
+  const webhook = await request.post(new URL('/api/emails/resend/webhook', url()).href, {
+    headers: {'content-type': 'application/json'},
+    data: '{}',
+    maxRedirects: 0,
+  })
+  expect(webhook.status()).toBe(400)
+  expect(await webhook.json()).toEqual({error: 'Invalid webhook signature'})
 })
