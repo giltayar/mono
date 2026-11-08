@@ -28,10 +28,27 @@ function acceptEmptyJsonBodies(app: FastifyInstance) {
   )
 }
 
-function mockWebhookApi(app: FastifyInstance) {
+function mockWebhookApi(app: FastifyInstance, existing: {id: string; endpoint: string}[]) {
   acceptEmptyJsonBodies(app)
   const created: unknown[] = []
   const removed: string[] = []
+  // Pages of two, like Resend's cursor pagination, to exercise `after`.
+  app.get<{Querystring: {after?: string}}>('/webhooks', async (request) => {
+    const start = request.query.after
+      ? existing.findIndex((webhook) => webhook.id === request.query.after) + 1
+      : 0
+    const page = existing.slice(start, start + 2)
+    return {
+      object: 'list',
+      has_more: start + 2 < existing.length,
+      data: page.map((webhook) => ({
+        ...webhook,
+        created_at: '2026-11-08T00:00:00Z',
+        status: 'enabled',
+        events: [...HANDLED_RESEND_EVENTS],
+      })),
+    }
+  })
   app.post('/webhooks', async (request) => {
     created.push(request.body)
     return {object: 'webhook', id: 'webhook-id', signing_secret: 'whsec_c2VjcmV0'}
@@ -51,7 +68,7 @@ async function serviceFor(app: FastifyInstance) {
 test('Resend adapter sends the complete payload and idempotency header', async (t) => {
   const app = fastify()
   t.after(() => app.close())
-  const webhooks = mockWebhookApi(app)
+  const webhooks = mockWebhookApi(app, [])
   app.post('/emails', async (request) => {
     assert.equal(request.headers.authorization, 'Bearer test-api-key')
     assert.equal(request.headers['idempotency-key'], options.idempotencyKey)
@@ -75,11 +92,26 @@ test('Resend adapter sends the complete payload and idempotency header', async (
 test('dispose deletes the registered webhook exactly once', async (t) => {
   const app = fastify()
   t.after(() => app.close())
-  const webhooks = mockWebhookApi(app)
+  const webhooks = mockWebhookApi(app, [])
   const service = await serviceFor(app)
   await service.dispose()
   await service.dispose()
   assert.deepEqual(webhooks.removed, ['webhook-id'])
+})
+
+test('initialization deletes leftover webhooks for the same URL, and only those', async (t) => {
+  const app = fastify()
+  t.after(() => app.close())
+  const webhooks = mockWebhookApi(app, [
+    {id: 'leftover-1', endpoint: webhookUrl},
+    {id: 'other-app', endpoint: 'https://other.example.test/api/emails/resend/webhook'},
+    {id: 'dev-tunnel', endpoint: 'https://abc.trycloudflare.com/api/emails/resend/webhook'},
+    {id: 'leftover-2', endpoint: webhookUrl},
+    {id: 'similar-path', endpoint: `${webhookUrl}/extra`},
+  ])
+  await serviceFor(app)
+  assert.deepEqual(webhooks.removed, ['leftover-1', 'leftover-2'])
+  assert.equal(webhooks.created.length, 1)
 })
 
 test('webhook registration and deletion failures are reported', async (t) => {
@@ -87,6 +119,7 @@ test('webhook registration and deletion failures are reported', async (t) => {
   t.after(() => app.close())
   acceptEmptyJsonBodies(app)
   let failRemoval = false
+  app.get('/webhooks', async () => ({object: 'list', has_more: false, data: []}))
   app.post('/webhooks', async (_request, reply) =>
     failRemoval
       ? {object: 'webhook', id: 'webhook-id', signing_secret: 'whsec_c2VjcmV0'}
@@ -118,7 +151,7 @@ for (const status of [401, 409, 429, 500]) {
   test(`Resend adapter propagates provider errors (${status})`, async (t) => {
     const app = fastify()
     t.after(() => app.close())
-    mockWebhookApi(app)
+    mockWebhookApi(app, [])
     app.post('/emails', async (_request, reply) =>
       reply
         .status(status)

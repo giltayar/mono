@@ -51,8 +51,12 @@ Resend webhook for the required public HTTPS `webhookUrl`, subscribed to `email.
 `email.bounced`, `email.failed`, and `email.suppressed` (`HANDLED_RESEND_EVENTS`), and exposes that
 webhook's `webhookSigningSecret`. Registration failures (for example, a sending-only API key) reject
 initialization; a missing signing secret fails route registration. Whoever creates the service owns
-`dispose()`, which deletes the webhook (repeated calls do nothing). A process killed without
-disposing leaves a stale webhook in the Resend dashboard.
+`dispose()`, which deletes the webhook (repeated calls do nothing). Before registering, initialization
+deletes any webhook already registered for exactly the same URL: with one server per URL, that is a
+leftover from a process killed without disposing, which would otherwise keep receiving every event
+signed with a secret nobody has. Webhooks for any other URL (other environments, dev tunnels) are
+never touched. During a deploy overlap, the old process's callbacks then fail and are retried by
+Resend until they reach the new one.
 
 `registrationEmail` is required, including a non-empty `from`; missing sending configuration must not
 silently skip email creation. Email creation (the saved email row, its member link, and its job
@@ -266,7 +270,8 @@ quick tunnel (`brew install cloudflared`; no account needed; see
 full access, not sending-only. Startup waits until the callback URL is reachable through the tunnel,
 and Ctrl+C closes the app, disposes the email service (deleting the webhook), and stops the tunnel.
 If the process is killed without cleanup, delete the stale `*.trycloudflare.com` webhook in the
-Resend dashboard. Each `node --watch` restart opens a new tunnel.
+Resend dashboard: every quick tunnel has a new URL, so the next startup cannot recognize it as a
+leftover. Each `node --watch` restart opens a new tunnel.
 
 The host mounts `/jobs` and the existing localhost job trigger endpoint at
 `POST /api/jobs/trigger-job-execution?secret=...`. Set `JOB_API_SECRET` to protect this endpoint.

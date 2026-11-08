@@ -56,6 +56,8 @@ export async function createResendEmailService({
     apiUrl === undefined ? undefined : {baseUrl: apiUrl.replace(/\/+$/, '')},
   )
 
+  await removeWebhooksFor(resend, webhookUrl)
+
   const {data: webhook, error: webhookError} = await resend.webhooks.create({
     endpoint: webhookUrl,
     events: [...HANDLED_RESEND_EVENTS],
@@ -99,5 +101,39 @@ export async function createResendEmailService({
         )
       }
     },
+  }
+}
+
+// A process that was killed without `dispose()` leaves its webhook behind, and Resend would keep
+// sending every event to it, signed with a secret nobody has. Assuming one server per URL, any
+// webhook already registered for this exact URL is such a leftover.
+async function removeWebhooksFor(resend: Resend, webhookUrl: string): Promise<void> {
+  const leftovers: string[] = []
+  let after: string | undefined
+  for (;;) {
+    const {data, error} = await resend.webhooks.list(
+      after === undefined ? {limit: 100} : {limit: 100, after},
+    )
+    if (error || !data) {
+      throw new EmailSendingError(
+        `Could not list Resend webhooks: ${error?.message ?? 'no data'}`,
+        error?.name ?? 'missing_response',
+        error?.statusCode ?? null,
+      )
+    }
+    leftovers.push(...data.data.filter((w) => w.endpoint === webhookUrl).map((w) => w.id))
+    if (!data.has_more || data.data.length === 0) break
+    after = data.data[data.data.length - 1].id
+  }
+
+  for (const id of leftovers) {
+    const {error} = await resend.webhooks.remove(id)
+    if (error) {
+      throw new EmailSendingError(
+        `Could not delete leftover Resend webhook ${id}: ${error.message}`,
+        error.name,
+        error.statusCode ?? null,
+      )
+    }
   }
 }
